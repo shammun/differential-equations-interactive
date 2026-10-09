@@ -350,7 +350,7 @@ window.COURSES = [
       "desc": "The system ẋ = sin(x + y), ẏ = sin(x − y), linearized from first principles.",
       "lesson": "",
       "src": "explorers/c2/u3/recitation5-walkthrough.html",
-      "kb": 2436
+      "kb": 2449
      }
     ]
    }

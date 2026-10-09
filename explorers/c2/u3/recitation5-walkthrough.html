@@ -144,6 +144,10 @@ mjx-container:not([display]){overflow:visible}
 .overlay.min{top:auto;height:auto} .overlay.min .ovbody{display:none}
 #text section.layer{border-left:3px solid transparent;padding:4px 10px 2px;margin:6px -10px;border-radius:0 8px 8px 0;transition:background .25s}
 #text section.layer.current{background:rgba(250,204,21,.16);border-left-color:#caa00a}
+a.golink{color:var(--acc);font-family:var(--ui);font-size:.88em;font-weight:600;text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer;white-space:nowrap}
+a.golink::before{content:'↗ ';font-weight:400}
+.flash{animation:flashbg 2.6s ease-out}
+@keyframes flashbg{0%{background:rgba(250,204,21,.55);box-shadow:0 0 0 4px rgba(250,204,21,.55)}100%{background:transparent;box-shadow:none}}
 #text section.layer .layertag{display:inline-block;font-family:var(--ui);font-size:11px;font-weight:600;color:#8a6300;background:rgba(250,204,21,.35);padding:1px 8px;border-radius:6px;margin:0 0 4px}
 #text section.layer:not(.current) .layertag{background:var(--acc-soft);color:var(--acc)}
 .ovhead{flex:none;display:flex;align-items:center;gap:8px;padding:8px 10px 8px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
@@ -451,7 +455,7 @@ function drawLegend(items){   // small key in the bottom-right corner: what each
   items.forEach((it, i) => { const y = y0 + pad + i * rowH + 7, xa = x0 + pad, xb = xa + sw - 6;
     if (it.k === 'dot'){ dot(xa + 10, y, 5, it.c, '#fff', 1.2); } else if (it.k === 'ring'){ dot(xa + 10, y, 5, '#fff', it.c, 2); }
     else if (it.k === 'arrow'){ arrow(xa, y, xb, y, it.c, 2, 6); } else if (it.k === 'dash'){ line(xa, y, xb, y, it.c, 2, [6, 4]); } else if (it.k === 'dots'){ line(xa, y, xb, y, it.c, 2, [2, 3]); }
-    else if (it.k === 'band'){ ctx.fillStyle = it.c; ctx.fillRect(xa, y - 6, sw - 6, 12); } else if (it.k === 'cross'){ dot(xa + 10, y, 5, '#fff', it.c, 2); line(xa + 6, y - 4, xa + 14, y + 4, it.c, 1.6); line(xa + 6, y + 4, xa + 14, y - 4, it.c, 1.6); }
+    else if (it.k === 'band'){ ctx.fillStyle = it.c; ctx.fillRect(xa, y - 6, sw - 6, 12); } else if (it.k === 'sq'){ ctx.fillStyle = it.c; ctx.font = '600 11px Inter, system-ui, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText('a,b', xa + 2, y); } else if (it.k === 'cross'){ dot(xa + 10, y, 5, '#fff', it.c, 2); line(xa + 6, y - 4, xa + 14, y + 4, it.c, 1.6); line(xa + 6, y + 4, xa + 14, y - 4, it.c, 1.6); }
     else line(xa, y, xb, y, it.c, 2.2);
     ctx.fillStyle = COL.ink; ctx.font = '11px Inter, system-ui, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(it.t, xa + sw, y); });
   ctx.restore();
@@ -547,6 +551,19 @@ function renderCap(){
   if (!p){ el.hidden = true; return; }
   el.hidden = false; el.innerHTML = '<b>' + p.name + ':</b> ' + p.desc + ' <span class="hint">(Esc clears)</span>'; typeset(el);
 }
+/* cross-reference links: <a class="golink" data-step="11" data-anchor="Reading the map">step 11</a> jumps to that step and scrolls to the heading or box whose title starts with the anchor text */
+function jumpTo(step, anchor){
+  go(step - 1);
+  const find = () => { const el = $('text'); const cands = [...el.querySelectorAll('h3, .box > b, details.qa > summary, h2, section.layer .layertag')]; const a = (anchor || '').trim().toLowerCase(); return a ? cands.find(e => e.textContent.trim().toLowerCase().startsWith(a)) : null; };
+  const attempt = (n) => { const t = find(); if (!t && n < 6){ setTimeout(() => attempt(n + 1), 250); return; } if (!t) return;
+    const box = t.closest('.box') || t.closest('details') || t.closest('section.layer') || t;
+    if (box.matches('section.layer') && cur().layerKey && P[cur().layerKey] !== +box.dataset.layer){ P[cur().layerKey] = +box.dataset.layer; buildControls(); changed(); }   // a link to a layer also selects that layer in the figure
+    box.classList.remove('flash'); void box.offsetWidth; box.classList.add('flash'); setTimeout(() => box.classList.remove('flash'), 2700);
+    const el = $('text'); if (MODE === 'main') el.scrollTo({top: box.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop - 8, behavior: 'smooth'}); else window.scrollTo({top: box.getBoundingClientRect().top + window.scrollY - 70, behavior: 'smooth'}); };
+  setTimeout(() => attempt(0), 350);
+}
+document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a.golink'); if (!a) return; e.preventDefault(); jumpTo(parseInt(a.dataset.step, 10), a.dataset.anchor || ''); });
+
 /* controls */
 function buildControls(){
   const st = cur(); const host = $('controls'); host.innerHTML = '';
@@ -703,7 +720,7 @@ function loop(now){
   if (!busy && !heavyT && (calcDirty || expDirty)) heavyT = setTimeout(() => { heavyT = 0; const ps = []; if (calcDirty) ps.push(renderCalc()); if (expDirty) ps.push(renderExp()); if (pendingLayerScroll) Promise.all(ps).then(() => setTimeout(scrollToLayer, 60)); }, 0);
   requestAnimationFrame(loop);
 }
-window.onMathReady = () => { renderText(); renderEq(); renderCalc(); renderExp(); typeset($('controls')); };
+window.onMathReady = () => { renderText(); $('figeq').dataset.tex = ''; renderEq(); renderCalc(); renderExp(); typeset($('controls')); };   // the equation box is re-typeset too: it was filled before the renderer was ready
 /* =====================================================================
    PART (a): steps 1-8
    ===================================================================== */
@@ -711,7 +728,7 @@ Object.assign(P, {
   tx: 0.8, ty: 1.2, showField: true, showReg: true, showBands: true,           // test point
   nSel: 0, mSel: 0, showBoth: false,                           // steps 3-5
   wx0: -2, wx1: 2, wy0: -0.5, wy1: 3.5,                        // step 6 window
-  cN: 0, cM: 0, showLinesC: true,                              // step 7 candidate
+  cN: 0, cM: 0, showLinesC: true, showLetters: true,           // step 7 candidate
   f1stage: 1, showFieldF1: false,                              // step 8
   ovStage: 1
 });
@@ -1059,6 +1076,7 @@ function ladder(top, h, label, lo, hi, isX){
   txt('rung spacing π/2 ≈ 1.571', v.l + v.w, top + 14, {size: 11, align: 'right', color: COL.mut});
   return okset;
 }
+const LETTERS = {'0_0': ['the origin', '(0, 0)'], '0_2': ['(0, a)', 'a = π'], '1_1': ['(b, c)', 'b = c = π/2'], '-1_1': ['(−d, e)', 'd = e = π/2']};
 const Nset = () => { const o = []; for (let k = -6; k <= 6; k++) if (k * PI / 2 >= P.wx0 - 1e-9 && k * PI / 2 <= P.wx1 + 1e-9) o.push(k); return o; };
 const Mset = () => { const o = []; for (let k = -6; k <= 6; k++) if (k * PI / 2 >= P.wy0 - 1e-9 && k * PI / 2 <= P.wy1 + 1e-9) o.push(k); return o; };
 const setTex = a => '\\{' + a.join(',\\,') + '\\}';
@@ -1137,16 +1155,28 @@ For $n$ to be a whole number, $N+M$ must be even. Two whole numbers add up to an
 <p>The solution’s table lists the four survivors, then two of the five rejects as worked counterexamples of what failure looks like. The live panel shows all nine rows; tap a row in the figure (or move the $N$, $M$ sliders) to see $n$, $m$ and the sine check for that candidate. The coordinates in the “critical point” column are just $x=N\pi/2$ and $y=M\pi/2$: for $(N,M)=(0,2)$, $x=0$ and $y=\pi\approx3.142$.</p>
 <div class="box key"><b>Exactly four critical points</b>
 \[(0,0),\qquad\Big(\tfrac{\pi}{2},\tfrac{\pi}{2}\Big),\qquad\Big(-\tfrac{\pi}{2},\tfrac{\pi}{2}\Big),\qquad(0,\pi).\]
-This is an exhaustive search, not a guess: every critical point in the plane has the form $(N\pi/2,\,M\pi/2)$ with $N,M$ of equal parity; the rectangle forces $N\in\{-1,0,1\}$, $M\in\{0,1,2\}$; nine combinations exist; five fail parity; four remain. In the notation of part (d): $(0,a)=(0,\pi)$, $(b,c)=(\tfrac{\pi}{2},\tfrac{\pi}{2})$, $(-d,e)=(-\tfrac{\pi}{2},\tfrac{\pi}{2})$, so $a=\pi$ and $b=c=d=e=\pi/2$.</div>
+This is an exhaustive search, not a guess: every critical point in the plane has the form $(N\pi/2,\,M\pi/2)$ with $N,M$ of equal parity; the rectangle forces $N\in\{-1,0,1\}$, $M\in\{0,1,2\}$; nine combinations exist; five fail parity; four remain.</div>
+<h3>The letters a, b, c, d, e in the question</h3>
+<p>Part (d) of the question says: “You should have found that the other critical points have coordinates $(0,a)$, $(b,c)$, $(-d,e)$, where $a,b,c,d,e>0$.” This sentence is not something to calculate. It is the question telling you in advance what <i>shape</i> your answer to part (a) must have, so that you can check it. Read it as three descriptions:</p>
+<ul>
+<li>$(0,a)$ with $a>0$: a point <b>on the $y$-axis, above the origin</b> (its $x$ is exactly $0$, its $y$ is positive).</li>
+<li>$(b,c)$ with $b,c>0$: a point in the <b>first quadrant</b> (both coordinates positive).</li>
+<li>$(-d,e)$ with $d,e>0$: a point in the <b>second quadrant</b> ($x$ negative, $y$ positive). The minus sign is written out explicitly so that the letter $d$ itself is a positive number.</li></ul>
+<p>Now match the four survivors to these descriptions. Set the origin $(0,0)$ aside (the question says “the <i>other</i> critical points”). Of the remaining three:</p>
+<table class="num"><tr><th>survivor</th><th>where it lies</th><th>matches</th><th>so</th></tr>
+<tr><td>$(0,\pi)$</td><td>on the $y$-axis, above the origin</td><td>$(0,a)$</td><td>$a=\pi\approx3.142$</td></tr>
+<tr><td>$(\tfrac\pi2,\tfrac\pi2)$</td><td>first quadrant</td><td>$(b,c)$</td><td>$b=\tfrac\pi2,\ c=\tfrac\pi2\approx1.571$</td></tr>
+<tr><td>$(-\tfrac\pi2,\tfrac\pi2)$</td><td>second quadrant</td><td>$(-d,e)$</td><td>$-d=-\tfrac\pi2$, so $d=\tfrac\pi2$; $e=\tfrac\pi2$</td></tr></table>
+<div class="box key"><b>Result</b>$a=\pi$ and $b=c=d=e=\pi/2$. The figure shows these letters next to the green dots (switch “Show the question’s letters” off to hide them), and steps 13 and 14 use the letters exactly this way: $(0,a)$ is the saddle at $(0,\pi)$, $(b,c)$ the stable spiral, $(-d,e)$ the unstable spiral.</div>
+<div class="box clar"><b>Why the question gives this away</b>It is a checkpoint. If your part (a) produced, say, a point with a negative $y$, or two points on the $y$-axis, the sentence tells you something went wrong before you spend part (d) linearizing at the wrong places. It also fixes the names used in part (d), so that “the critical point $(0,a)$” means the same point for everyone.</div>
 <div class="box try"><b>Try this</b>Select $(N,M)=(0,1)$, the point $(0,\pi/2)$. The live panel computes $\dot x=\sin(0+\pi/2)=1\ne0$: the point moves, so it is not critical, exactly as the parity rule predicted. Now select $(1,1)$: both sines vanish.</div>`,
   controls: () => [
     {type: 'range', key: 'cN', label: 'Candidate N = n + m', min: -1, max: 1, step: 1, fmt: v => String(v)},
     {type: 'range', key: 'cM', label: 'Candidate M = n − m', min: 0, max: 2, step: 1, fmt: v => String(v)},
-    {type: 'chips', items: [{type: 'check', key: 'showLinesC', label: 'Show the nullclines'}]}
+    {type: 'chips', items: [{type: 'check', key: 'showLinesC', label: 'Show the nullclines'}, {type: 'check', key: 'showLetters', label: 'Show the question’s letters (0, a), (b, c), (−d, e)'}]}
   ],
   figeq: () => { const N = P.cN, M = P.cM; const ok = parity(N) === parity(M); return '(N,M)=(' + N + ',' + M + ')\\ \\Rightarrow\\ n=\\tfrac{' + N + '+' + M + '}{2}=' + fs((N + M) / 2, 1) + ',\\ m=\\tfrac{' + N + '-' + M + '}{2}=' + fs((N - M) / 2, 1) + (ok ? '\\ \\checkmark' : '\\ \\text{(not whole)}'); },
   tap(X, Y){ const v = LV.v; if (!v) return; P.cN = clamp(Math.round(v.x(X) / (PI / 2)), -1, 1); P.cM = clamp(Math.round(v.y(Y) / (PI / 2)), 0, 2); },
-  legend: () => [{k: 'dot', c: COL.green, t: 'same parity: a real crossing'}, {k: 'cross', c: COL.red, t: 'parity fails: no crossing'}, {k: 'dash', c: COL.blue, t: 'x + y = nπ'}, {k: 'dots', c: COL.red, t: 'x − y = mπ'}, {k: 'band', c: 'rgba(250,204,21,.4)', t: 'current candidate'}],
   draw(){
     const v = planeView(26, 24, 34, 16, REG, 0.7); drawAxes(v);
     if (P.showLinesC) drawNullclines(v, 'both', {alpha: .55, w: 1.6});
@@ -1158,6 +1188,7 @@ This is an exhaustive search, not a guess: every critical point in the plane has
       hit('cand' + N + '_' + M, X, Y, 16);
       txt('(N, M) = (' + N + ', ' + M + ')', X + 11, Y - 9, {size: 11, color: ok ? COL.ink : COL.red, bg: 'rgba(255,255,255,.85)'});
       txt(ok ? '(' + halfPiName(N) + ', ' + halfPiName(M) + ')' : 'parity fails', X + 11, Y + 5, {size: 10.5, color: ok ? COL.green : COL.mut, bg: 'rgba(255,255,255,.8)'});
+      if (ok && P.showLetters){ const L = LETTERS[N + '_' + M]; if (L){ txt(L[0], X + 11, Y + 19, {size: 11, bold: true, color: COL.pur, bg: 'rgba(255,255,255,.85)'}); txt(L[1], X + 11, Y + 32, {size: 10.5, color: COL.pur, bg: 'rgba(255,255,255,.85)'}); } }
     }
   },
   calc(){
@@ -1172,9 +1203,11 @@ This is an exhaustive search, not a guess: every critical point in the plane has
     h += C.h4('All nine candidates') + '<table><tr><th>N</th><th>M</th><th>parity</th><th>n</th><th>m</th><th>point</th></tr>';
     for (const nn of [-1, 0, 1]) for (const mm of [0, 1, 2]){ const o = parity(nn) === parity(mm); h += '<tr class="' + (o ? 'ok' : 'bad') + (nn === N && mm === M ? ' cur' : '') + '"><td>' + nn + '</td><td>' + mm + '</td><td>' + parity(nn) + ', ' + parity(mm) + (o ? ' ✓' : ' ✗') + '</td><td>' + (o ? (nn + mm) / 2 : fs((nn + mm) / 2, 1)) + '</td><td>' + (o ? (nn - mm) / 2 : '—') + '</td><td>' + (o ? '(' + halfPiName(nn) + ', ' + halfPiName(mm) + ')' : 'rejected') + '</td></tr>'; }
     h += '</table>' + C.p('Four rows survive (green). The solution’s table shows these four plus two of the rejected rows as examples.');
+    h += C.h4('Matching the question’s letters') + '<table><tr><th>survivor</th><th>lies</th><th>question’s name</th><th>letters</th></tr><tr><td>(0, 0)</td><td>the origin</td><td>“the origin”</td><td>—</td></tr><tr><td>(0, π)</td><td>y-axis, y &gt; 0</td><td>(0, a)</td><td>a = π</td></tr><tr><td>(π/2, π/2)</td><td>x &gt; 0, y &gt; 0</td><td>(b, c)</td><td>b = c = π/2</td></tr><tr><td>(−π/2, π/2)</td><td>x &lt; 0, y &gt; 0</td><td>(−d, e)</td><td>d = e = π/2</td></tr></table>' + C.p('The question states the signs in advance ($a,b,c,d,e>0$) as a check on part (a); matching is by position only: on the $y$-axis, first quadrant, second quadrant.');
     return h;
   },
   explain: () => R`<p>The nine dots are the candidate positions $(N\pi/2,\,M\pi/2)$ for $N\in\{-1,0,1\}$, $M\in\{0,1,2\}$. Green filled dots pass the parity test and are genuine crossings of a blue and a red line. Red crossed dots fail it; notice that no nullcline passes through them. Tap a dot to make it the current candidate.</p>` + TAPHINT,
+  legend: () => [{k: 'dot', c: COL.green, t: 'same parity: a real crossing'}, {k: 'cross', c: COL.red, t: 'parity fails: no crossing'}, {k: 'dash', c: COL.blue, t: 'x + y = nπ'}, {k: 'dots', c: COL.red, t: 'x − y = mπ'}, {k: 'band', c: 'rgba(250,204,21,.4)', t: 'current candidate'}].concat(P.showLetters ? [{k: 'sq', c: COL.pur, t: 'purple: the question’s names (0, a), (b, c), (−d, e)'}] : []),
   parts: Object.fromEntries([].concat(...[-1, 0, 1].map(N => [0, 1, 2].map(M => ['cand' + N + '_' + M, {name: '(N, M) = (' + N + ', ' + M + ') at (' + halfPiName(N) + ', ' + halfPiName(M) + ')', color: parity(N) === parity(M) ? '#14825a' : '#c43434', desc: parity(N) === parity(M) ? 'Same parity: n = ' + (N + M) / 2 + ', m = ' + (N - M) / 2 + '. A critical point.' : 'Different parity: n would be ' + fs((N + M) / 2, 1) + ', not a whole number. Not a critical point.'}]))))
 });
 
@@ -1316,6 +1349,25 @@ function drawLocalAxes(v, o = {}){
 const cpOpts = CPS.map(c => [c.id, c.name + ' — n = ' + c.n + ', m = ' + c.m]);
 const cpTexFull = c => '(' + (c.x === 0 ? '0' : c.x > 0 ? '\\tfrac{\\pi}{2}' : '-\\tfrac{\\pi}{2}') + ',\\ ' + (c.y === 0 ? '0' : c.y > 2 ? '\\pi' : '\\tfrac{\\pi}{2}') + ')';
 const pm1 = n => (n % 2 === 0 ? '+1' : '-1');
+const sumTex = c => (c.x === 0 ? '0' : c.x > 0 ? '\\tfrac{\\pi}{2}' : '-\\tfrac{\\pi}{2}') + (c.y === 0 ? '+0' : c.y > 2 ? '+\\pi' : '+\\tfrac{\\pi}{2}');
+const difTex = c => (c.x === 0 ? '0' : c.x > 0 ? '\\tfrac{\\pi}{2}' : '-\\tfrac{\\pi}{2}') + (c.y === 0 ? '-0' : c.y > 2 ? '-\\pi' : '-\\tfrac{\\pi}{2}');
+const powTex = (n, val) => n >= 0 ? '(-1)^{' + n + '}=' + val : '(-1)^{' + n + '}=\\frac{1}{(-1)^{' + (-n) + '}}=\\frac{1}{' + val + '}=' + val;
+function uvCalc(c){   // where u = cos(x+y) and v = cos(x−y) come from at a critical point, line by line
+  const J = JAC(c.x, c.y); const u = Math.round(J[0][0]), v = Math.round(J[1][0]);
+  let o = C.h4('What u and v are') + C.p('From step 10: $u$ is short for $\\cos(x+y)$ and $v$ for $\\cos(x-y)$, the two numbers that fill the Jacobian $\\J=\\begin{pmatrix}u&u\\\\v&-v\\end{pmatrix}$. Both are evaluated at the critical point.');
+  o += C.h4('u at ' + c.name + ', two ways');
+  o += C.ln('x+y=' + sumTex(c) + '=' + piName(c.n), 'add the two coordinates of the point');
+  o += C.ln('u=\\cos(x+y)=\\cos(' + piName(c.n) + ')=' + fs(u, 0), 'way 1: read the cosine directly (cos 0 = 1, cos π = −1, cos 2π = 1, …)');
+  o += C.ln('x+y=' + c.n + '\\cdot\\pi\\ \\Rightarrow\\ n=' + c.n + '\\ (' + parity(c.n) + ')', 'how many whole multiples of π: this n is the blue-line label of part (a)');
+  o += C.ln('u=\\cos(n\\pi)=(-1)^n=' + powTex(c.n, fs(u, 0)), 'way 2, the shortcut: cos(nπ) alternates +1, −1, +1, … and so does (−1)^n; the exponent is n itself' + (c.n % 2 === 0 ? ' (even n: +1)' : ' (odd n: −1)'));
+  o += C.h4('v at ' + c.name + ', the same two ways');
+  o += C.ln('x-y=' + difTex(c) + '=' + piName(c.m), 'subtract the coordinates');
+  o += C.ln('v=\\cos(x-y)=\\cos(' + piName(c.m) + ')=' + fs(v, 0), c.m < 0 ? 'cosine is even, cos(−θ) = cos θ, so cos(−π) = cos π = −1' : 'read directly from the cosine graph');
+  o += C.ln('x-y=' + c.m + '\\cdot\\pi\\ \\Rightarrow\\ m=' + c.m + '\\ (' + parity(c.m) + ')', 'the red-line label of part (a)');
+  o += C.ln('v=\\cos(m\\pi)=(-1)^m=' + powTex(c.m, fs(v, 0)), c.m < 0 ? 'a negative exponent means a reciprocal, and 1/(−1) = −1; the sign still only depends on whether m is odd or even' : 'odd m gives −1, even m gives +1');
+  o += C.res('$u=' + fs(u, 0) + '$, $v=' + fs(v, 0) + '$: ' + (parity(c.n) === parity(c.m) ? 'same sign (same parity), so $\\det\\J=-2uv=-2<0$: a saddle.' : 'opposite signs (opposite parity), so $\\det\\J=-2uv=+2>0$: a spiral.'));
+  return o;
+}
 
 /* ---------- step 9: Jacobian ---------- */
 STEPS.push({
@@ -1401,6 +1453,12 @@ STEPS.push({
 <h3>Why cosines, and why ±1</h3>
 <p>Step 9 gave $\J=\begin{pmatrix}\cos(x+y)&\cos(x+y)\\ \cos(x-y)&-\cos(x-y)\end{pmatrix}$. Compare with the velocity $(\sin(x+y),\sin(x-y))$: the velocity uses sines, the Jacobian uses cosines of the <i>same</i> two numbers $x+y$ and $x-y$. At a critical point those two numbers are $n\pi$ and $m\pi$ (step 5). The sine of a multiple of $\pi$ is $0$ (that is why the point is critical), but the cosine of a multiple of $\pi$ is never $0$: it alternates $+1,-1,+1,\dots$ as the top panel shows.</p>
 <p>A concrete case: at $(\tfrac\pi2,\tfrac\pi2)$ we have $x+y=\pi$ and $x-y=0$. So $\cos(x+y)=\cos\pi=-1$ and $\cos(x-y)=\cos0=+1$, giving $\J=\begin{pmatrix}-1&-1\\ 1&-1\end{pmatrix}$. No calculus, no decimals: just two signs.</p>
+<details class="qa" open><summary>Why cos(nπ) = (−1)ⁿ, and what the exponent is</summary><div>
+<p>The exponent is simply $n$, the number of whole multiples of $\pi$ in $x+y$ (for $u$) or in $x-y$ (for $v$). Compare the two rows:</p>
+<table class="num"><tr><th>$n$</th><th>−2</th><th>−1</th><th>0</th><th>1</th><th>2</th><th>3</th></tr>
+<tr><td>$\cos(n\pi)$</td><td>+1</td><td>−1</td><td>+1</td><td>−1</td><td>+1</td><td>−1</td></tr>
+<tr><td>$(-1)^n$</td><td>+1</td><td>−1</td><td>+1</td><td>−1</td><td>+1</td><td>−1</td></tr></table>
+<p>They agree for every $n$: even $n$ gives $+1$, odd $n$ gives $-1$. A negative exponent is a reciprocal, $(-1)^{-1}=1/(-1)=-1$, so the rule holds for negative $n$ too. The point of the shortcut is that you never need to evaluate a cosine at a critical point: you only need to know whether $n$ (or $m$) is even or odd.</p></div></details>
 <h3>Naming the two signs</h3>
 <p>A change of notation that pays off: abbreviate
 \[u=\cos(x+y),\qquad v=\cos(x-y),\] so that \[\J=\begin{pmatrix}u&u\\ v&-v\end{pmatrix}.\]
@@ -1614,10 +1672,14 @@ STEPS.push({
   grp: 'part (d)', nav: '(0, π)', title: 'Part (d), first point: (0, π) has the same eigenvalues but swapped directions',
   figtitle: 'The two saddles side by side, in local coordinates.', figsub: 'Red: direction of leaving. Green: direction of approach. Notice they trade places.',
   text: () => R`
-<div class="box prob"><b>Problem 1(d), the point (0, a) with a = π</b>Find the eigenvalues of the linearized system, its type, and whether it is stable.</div>
+<div class="box prob"><b>Problem 1(d), the point (0, a)</b>Find the eigenvalues of the linearized system, its type, and whether it is stable. Here $(0,a)$ is the question’s name for the critical point on the positive $y$-axis; step 7 matched it to $(0,\pi)$, so $a=\pi$ (<a class="golink" data-step="7" data-anchor="The letters a, b, c, d, e">step 7, the letters</a>).</div>
 <p>At $(0,\pi)$: $x+y=\pi$ and $x-y=-\pi$, so $n=1$ and $m=-1$, both odd. Therefore $u=\cos\pi=-1$ and $v=\cos(-\pi)=-1$:
 \[\J(0,\pi)=\begin{pmatrix}-1&-1\\-1&1\end{pmatrix},\qquad \tr\J=-1+1=0,\] \[\det\J=(-1)(1)-(-1)(-1)=-1-1=-2.\]
 Same trace and determinant as the origin, so the same characteristic equation $\lambda^2-2=0$ and the same eigenvalues $\lambda=\pm\sqrt2$. <b>Saddle, unstable</b>, and since it is not a spiral there is no sense of rotation to report.</p>
+<div class="box clar"><b>Where u = −1 comes from, slowly</b>
+<p>$u$ is not a new quantity: it is the name given in step 10 (<a class="golink" data-step="10" data-anchor="Naming the two signs">step 10, Naming the two signs</a>) to $\cos(x+y)$, the entry that appears twice in the top row of the Jacobian. To find it at $(0,\pi)$, add the coordinates: $x+y=0+\pi=\pi$. Then $u=\cos\pi=-1$, read straight off the cosine graph.</p>
+<p>The solution writes the same value as $u=(-1)^1$. Why that form? At any critical point $x+y$ is a whole multiple of $\pi$, say $x+y=n\pi$, and the cosine at the multiples of $\pi$ alternates: $\cos0=+1$, $\cos\pi=-1$, $\cos2\pi=+1$, $\cos3\pi=-1$, and so on. The expression $(-1)^n$ produces exactly the same alternation: $(-1)^0=1$, $(-1)^1=-1$, $(-1)^2=1$, $(-1)^3=-1$. So $\cos(n\pi)=(-1)^n$ for every whole number $n$, and the only thing you need to know is $n$. Here $x+y=\pi=1\cdot\pi$, so $n=1$, which is why the exponent is $1$: $u=(-1)^1=-1$.</p>
+<p>The same for $v=\cos(x-y)$: $x-y=0-\pi=-\pi=(-1)\cdot\pi$, so $m=-1$ and $v=(-1)^{-1}=\tfrac{1}{-1}=-1$. (Directly: $\cos(-\pi)=\cos\pi=-1$, because the cosine is an even function.) The live panel shows both routes side by side.</p></div>
 <h3>But the eigendirections have swapped</h3>
 <p>Solve $(\J-\sqrt2I)\bw=\mathbf0$ with the top row $(-1-\sqrt2)w_1-w_2=0$, so $w_2=-(1+\sqrt2)w_1$:
 \[\begin{gathered}\lambda_1=\sqrt2:\ \bw_1=\binom{1}{-1-\sqrt2},\\[2pt] \lambda_2=-\sqrt2:\ \bw_2=\binom{1}{\sqrt2-1}.\end{gathered}\]
@@ -1642,10 +1704,8 @@ Compare with the origin: there, the <i>shallow</i> direction ($22.5^\circ$) was 
       txt('u', v.X(u[0]) + 6, v.Y(u[1]) - 6, {size: 11, bold: true, bg: 'rgba(255,255,255,.85)'}); txt('Ju', v.X(Ju[0]) + 6, v.Y(Ju[1]) + 12, {size: 11, bold: true, color: COL.pur, bg: 'rgba(255,255,255,.85)'}); }
   },
   calc(){
-    let o = C.h4('Reading n, m, u, v at (0, π)');
-    o += C.ln('x+y=0+\\pi=1\\cdot\\pi\\ \\Rightarrow\\ n=1\\ (\\text{odd})') + C.ln('u=(-1)^1=-1');
-    o += C.ln('x-y=0-\\pi=(-1)\\pi\\ \\Rightarrow\\ m=-1\\ (\\text{odd})') + C.ln('v=(-1)^{-1}=-1');
-    o += C.dln('\\J(0,\\pi)=' + C.mat('u', 'u', 'v', '-v') + '=' + matTex(JT));
+    let o = uvCalc(cpById('top'));
+    o += C.h4('The Jacobian at (0, π)') + C.dln('\\J(0,\\pi)=' + C.mat('u', 'u', 'v', '-v') + '=' + matTex(JT));
     o += C.ln('\\tr\\J=-1+1=0') + C.ln('\\det\\J=(-1)(1)-(-1)(-1)=-1-1=-2', 'same as the origin');
     o += C.ln('\\lambda^2-0\\cdot\\lambda-2=0\\ \\Rightarrow\\ \\lambda_{1,2}=\\pm\\sqrt2');
     o += C.res('Saddle, unstable. No rotation direction (not a spiral or centre).');
@@ -1670,7 +1730,7 @@ STEPS.push({
   figtitle: 'The linearized portrait at the chosen spiral, with the test displacement (1, 0) and its velocity.', figsub: 'A moving dot follows one trajectory; click anywhere to restart it from that direction.',
   rebuildKeys: ['spSel'],
   text: () => R`
-<div class="box prob"><b>Problem 1(d), the points (b, c) and (−d, e)</b>Eigenvalues, type, direction of rotation if a spiral or centre, and stability.</div>
+<div class="box prob"><b>Problem 1(d), the points (b, c) and (−d, e)</b>Eigenvalues, type, direction of rotation if a spiral or centre, and stability. The question’s names: $(b,c)$ is the critical point in the first quadrant, $(\tfrac\pi2,\tfrac\pi2)$, so $b=c=\tfrac\pi2$; $(-d,e)$ is the one in the second quadrant, $(-\tfrac\pi2,\tfrac\pi2)$, so $d=e=\tfrac\pi2$ (<a class="golink" data-step="7" data-anchor="The letters a, b, c, d, e">step 7, the letters</a>).</div>
 <h3>(π/2, π/2): n = 1 odd, m = 0 even</h3>
 <p>Opposite parity: $u=-1$, $v=+1$, so
 \[\J=\begin{pmatrix}-1&-1\\1&-1\end{pmatrix},\qquad \tr\J=-2,\] \[\det\J=(-1)(-1)-(-1)(1)=1+1=2,\] \[\Delta=(-2)^2-4\cdot2=-4<0.\]
@@ -1721,7 +1781,7 @@ Real part $+1>0$: solutions grow like $\exp(t)$, an <b>unstable</b> spiral, traj
   calc(){
     const c = cpById(P.spSel); const J = JAC(c.x, c.y); const li = linInfo(J); const u = J[0][0], vv = J[1][0];
     let o = C.h4('At ' + c.name);
-    o += C.ln('n=' + c.n + '\\ (' + parity(c.n) + '),\\ m=' + c.m + '\\ (' + parity(c.m) + ')\\ \\Rightarrow\\ u=' + fs(u, 0) + ',\\ v=' + fs(vv, 0), 'opposite parity');
+    o = uvCalc(c) + C.h4('The Jacobian at ' + c.name);
     o += C.dln('\\J=' + matTex(J)) + C.ln('\\tr\\J=u-v=' + fs(li.tr, 0) + ',\\qquad \\det\\J=-2uv=' + fs(li.det, 0));
     o += C.ln('\\Delta=\\tr^2-4\\det=' + fs(li.tr * li.tr, 0) + '-8=' + fs(li.D, 0) + '<0', 'complex eigenvalues: a spiral (or centre if tr were 0)');
     o += C.ln('\\lambda=\\frac{' + fs(li.tr, 0) + '\\pm\\sqrt{-4}}{2}=\\frac{' + fs(li.tr, 0) + '\\pm2i}{2}=' + fs(li.re, 0) + '\\pm i');
@@ -1797,9 +1857,16 @@ STEPS.push({
   text: () => R`
 <div class="box prob"><b>Problem 1(e)</b>Sketch the phase portrait of the system using the steps summarised at the end of the lecture.</div>
 <p class="hint">The five layers of the lecture’s recipe are described below. The layer selected with the buttons under the figure is highlighted and scrolled into view, in this window and in any linked window.</p>
-<section class="layer" data-layer="1"><span class="layertag">Layer 1 of 5: nullclines</span><h3>Draw the nullclines</h3><p>$x+y=n\pi$ (blue, crossed vertically) and $x-y=m\pi$ (red, crossed horizontally). They divide the rectangle into diagonal cells; in each cell the signs of $\dot x$ and $\dot y$ are fixed (step 8). Click anywhere to put the test point there and read its velocity: inside one cell the arrow always points into the same quadrant.</p></section>
-<section class="layer" data-layer="2"><span class="layertag">Layer 2 of 5: critical points</span><h3>Mark the critical points</h3><p>At the intersections: $(0,0)$, $(0,\pi)$, $(\pm\tfrac\pi2,\tfrac\pi2)$ (steps 5–8). Everything else in the sketch is organised around these four dots.</p></section>
-<section class="layer" data-layer="3"><span class="layertag">Layer 3 of 5: local pictures</span><h3>Draw the local picture at each one</h3><p>A saddle at $(0,0)$ and at $(0,\pi)$ with their eigenlines at $22.5^\circ$ and $-67.5^\circ$ (roles swapped between the two, steps 12–13); an inward anticlockwise spiral at $(\tfrac\pi2,\tfrac\pi2)$; an outward clockwise spiral at $(-\tfrac\pi2,\tfrac\pi2)$ (step 14). The figure draws a few short true trajectories around each point; Hartman–Grobman (step 15) guarantees they look like the linear pictures.</p></section>
+<section class="layer" data-layer="1"><span class="layertag">Layer 1 of 5: nullclines</span><h3>Draw the nullclines</h3><p>$x+y=n\pi$ (blue, crossed vertically) and $x-y=m\pi$ (red, crossed horizontally). They divide the rectangle into diagonal cells; in each cell the signs of $\dot x$ and $\dot y$ are fixed (<a class="golink" data-step="8" data-anchor="Layer 6 of 6">step 8, layer 6</a>). Click anywhere to put the test point there and read its velocity: inside one cell the arrow always points into the same quadrant.</p></section>
+<section class="layer" data-layer="2"><span class="layertag">Layer 2 of 5: critical points</span><h3>Mark the critical points</h3><p>At the intersections: $(0,0)$, $(0,\pi)$, $(\pm\tfrac\pi2,\tfrac\pi2)$ (<a class="golink" data-step="7" data-anchor="Exactly four critical points">step 7, exactly four critical points</a>; <a class="golink" data-step="8" data-anchor="Layer 4 of 6">step 8, layer 4</a>). Everything else in the sketch is organised around these four dots.</p></section>
+<section class="layer" data-layer="3"><span class="layertag">Layer 3 of 5: local pictures</span><h3>Draw the local picture at each one</h3><p>A saddle at $(0,0)$ and at $(0,\pi)$ with their eigenlines at $22.5^\circ$ and $-67.5^\circ$ (roles swapped between the two); an inward anticlockwise spiral at $(\tfrac\pi2,\tfrac\pi2)$; an outward clockwise spiral at $(-\tfrac\pi2,\tfrac\pi2)$. The figure draws a few short true trajectories around each point.</p>
+<div class="box clar"><b>How do we know (0, 0) and (0, π) are saddles? The chain, with where each link was established</b>
+<ol>
+<li><b>Build the Jacobian at the point</b> (<a class="golink" data-step="9" data-anchor="The Jacobian">step 9, The Jacobian</a>). At $(0,0)$ both cosines are $\cos0=1$: $\J=\begin{pmatrix}1&1\\1&-1\end{pmatrix}$. At $(0,\pi)$ both are $\cos\pi=-1$: $\J=\begin{pmatrix}-1&-1\\-1&1\end{pmatrix}$ (<a class="golink" data-step="10" data-anchor="Only four Jacobians">step 10, Only four Jacobians are possible</a>).</li>
+<li><b>Compute the determinant.</b> $(0,0)$: $(1)(-1)-(1)(1)=-2$. $(0,\pi)$: $(-1)(1)-(-1)(-1)=-2$. In the shorthand $\det\J=-2uv$: same parity of $n$ and $m$ gives $u=v$, hence $-2<0$ (<a class="golink" data-step="13" data-anchor="Where u = −1 comes from">step 13, Where u = −1 comes from</a>).</li>
+<li><b>Negative determinant means saddle</b> (<a class="golink" data-step="11" data-anchor="Reading the map">step 11, Reading the map</a>). The eigenvalues multiply to $\det\J$, so they are real with opposite signs: $\lambda^2-2=0$, $\lambda=\pm\sqrt2$. One direction grows like $\exp(\sqrt2\,t)$, one shrinks like $\exp(-\sqrt2\,t)$: one way in, one way out, which is what a saddle is, and why it is unstable (<a class="golink" data-step="12" data-anchor="Step 2: trace">step 12, trace, determinant, type</a>). On the trace–determinant map both points sit at $(0,-2)$, below the axis.</li>
+<li><b>The nonlinear system has a saddle there too.</b> Both eigenvalues have nonzero real part, so Hartman–Grobman applies (<a class="golink" data-step="15" data-anchor="Hartman–Grobman theorem">step 15, Hartman–Grobman theorem</a>).</li></ol>
+<p>What differs between the two saddles is only the directions: eigenvectors put the outgoing line at $22.5^\circ$ for $(0,0)$ and at $-67.5^\circ$ for $(0,\pi)$ (<a class="golink" data-step="12" data-anchor="Step 4: eigenvectors">step 12, eigenvectors</a>, <a class="golink" data-step="13" data-anchor="But the eigendirections have swapped">step 13, the swap</a>). The spirals follow the same chain with $\det\J=+2$ and $\Delta<0$ (<a class="golink" data-step="14" data-anchor="(π/2, π/2): n = 1 odd">step 14</a>).</p></div></section>
 <section class="layer" data-layer="4"><span class="layertag">Layer 4 of 5: separatrices</span><h3>Extend the saddle separatrices</h3><p>Follow the eigenlines of each saddle out into the whole rectangle. The unstable manifolds (red, flowing out of a saddle) must go somewhere, and the only attractor available is the stable spiral. The stable manifolds (green, flowing into a saddle) trace backwards to the only repeller, the unstable spiral. These four curves are the skeleton of the portrait.</p></section>
 <section class="layer" data-layer="5"><span class="layertag">Layer 5 of 5: fill in</span><h3>Fill in typical trajectories</h3><p>Add a few ordinary trajectories, consistent with the cell directions from layer 1 and never crossing a separatrix. Click anywhere inside the rectangle to add the trajectory through that point (purple) and move the test point there.</p></section>
 <div class="box key"><b>The traffic pattern</b>
