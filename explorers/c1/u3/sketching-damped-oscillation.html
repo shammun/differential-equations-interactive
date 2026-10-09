@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sketching y(t) = e⁻²ᵗ(cos t + 2 sin t) — step by step</title>
+<style>
+  :root{
+    --bg:#edf1fa;
+    --card:#ffffff;
+    --ink:#1d2440;
+    --muted:#5d6787;
+    --faint:#98a3c0;
+    --line:#e3e8f6;
+    --grid:#e9edf8;
+    --teal:#0d9aa0;         /* the solution curve (output) */
+    --teal-soft:rgba(13,154,160,.45);
+    --orange:#ee8631;       /* the envelope / decay factor (input) */
+    --orange-soft:rgba(238,134,49,.10);
+    --purple:#6c5ce7;       /* actions, landmarks, attention */
+    --purple-deep:#5647c9;
+    --slate:#6f83b8;        /* the raw sum cos t + 2 sin t */
+    --parent:#b9c4de;       /* the two parent waves */
+    --shadow:0 14px 40px rgba(97,86,196,.13);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55;
+    padding:14px 18px 10px;
+    height:100vh;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  .top{max-width:1240px;width:100%;margin:0 auto 10px;flex:0 0 auto;}
+  .eyebrow{
+    font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--purple);font-weight:700;margin-bottom:4px;
+  }
+  h1{font-size:1.38rem;margin:0 0 3px;font-weight:800;letter-spacing:-.01em;}
+  h1 .m, .m{font-family:Georgia,"Times New Roman",serif;font-weight:600;}
+  .sub{color:var(--muted);margin:0 0 8px;font-size:.92rem;}
+  .phases{display:flex;gap:8px;flex-wrap:wrap;}
+  .phase{
+    font-size:.8rem;font-weight:600;color:var(--muted);
+    background:#fff;border:1px solid var(--line);
+    padding:6px 12px;border-radius:999px;transition:all .3s;
+    cursor:pointer;font-family:inherit;
+  }
+  .phase:hover{border-color:var(--purple);color:var(--purple);}
+  .phase.active{background:var(--purple);border-color:var(--purple);color:#fff;box-shadow:0 6px 16px rgba(108,92,231,.35);}
+  .phase.active:hover{color:#fff;}
+  .phase.done{color:var(--purple);border-color:#cdc6f5;}
+
+  .wrap{
+    max-width:1240px;width:100%;margin:0 auto;
+    display:grid;grid-template-columns:minmax(0,.92fr) minmax(360px,1.08fr);gap:16px;
+    align-items:stretch;
+    flex:1;min-height:0;
+  }
+  .card{
+    background:var(--card);border:1px solid var(--line);
+    border-radius:18px;box-shadow:var(--shadow);
+  }
+  .graphcard{padding:12px;display:flex;flex-direction:column;min-height:0;}
+  .graphtools{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    min-height:36px;margin:2px 4px 8px;
+  }
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#f6f8ff;}
+  .seg button{
+    border:0;background:transparent;padding:7px 12px;font-size:.82rem;font-weight:600;
+    color:var(--muted);cursor:pointer;
+  }
+  .seg button.active{background:var(--purple);color:#fff;}
+  .badge{
+    font-size:.76rem;color:#9a5c17;background:#fdf1e3;border:1px solid #f5ddc0;
+    padding:5px 10px;border-radius:999px;
+  }
+  .replaybtn{
+    margin-left:auto;border:1px solid var(--line);background:#fff;color:var(--purple);
+    font-weight:700;font-size:.82rem;padding:7px 12px;border-radius:10px;cursor:pointer;
+  }
+  .replaybtn:hover{background:#f4f2ff;}
+  #graph{display:block;width:100%;height:100%;flex:1;min-height:0;}
+  svg text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+
+  .probe{
+    margin:12px 6px 2px;padding:12px 14px;border:1px solid var(--line);
+    border-radius:12px;background:#f8faff;
+  }
+  .probe label{font-size:.8rem;font-weight:700;color:var(--muted);}
+  .probe input[type=range]{width:100%;accent-color:var(--purple);margin:6px 0 8px;}
+  .readout{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    font-variant-numeric:tabular-nums;font-size:.92rem;
+  }
+  .rchip{padding:6px 10px;border-radius:9px;font-weight:600;background:#fff;border:1px solid var(--line);}
+  .rchip.env{color:#b05f14;border-color:#f2d9bc;background:#fef7ee;}
+  .rchip.wav{color:#0b7f85;border-color:#c4e7e8;background:#eefafa;}
+  .rchip.res{color:#fff;background:var(--teal);border-color:var(--teal);}
+  .rop{color:var(--faint);font-weight:800;}
+
+  .lesson{padding:16px 20px 14px;display:flex;flex-direction:column;min-height:0;}
+  .stepeyebrow{font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);font-weight:800;margin-bottom:4px;}
+  .lesson h2{margin:0 0 10px;font-size:1.22rem;letter-spacing:-.01em;}
+  #stepBody{flex:1;min-height:0;overflow-y:auto;padding-right:8px;}
+  .lesson p{margin:0 0 10px;font-size:.95rem;color:#333c5e;}
+  .lesson strong{color:var(--ink);}
+  .formula{
+    font-family:Georgia,"Times New Roman",serif;font-size:1.05rem;
+    background:#f6f8ff;border-left:3px solid var(--purple);
+    padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0;
+    overflow-x:auto;white-space:nowrap;
+  }
+  .formula i{padding:0 1px;}
+  .formula .tag{float:right;color:var(--faint);font-family:inherit;font-style:normal;font-size:.85rem;}
+  .note{
+    background:#eefafa;border:1px solid #c4e7e8;border-radius:10px;
+    padding:9px 12px;margin:10px 0;font-size:.88rem;color:#0b6b70;
+  }
+  .warn{
+    background:#fef7ee;border:1px solid #f2d9bc;border-radius:10px;
+    padding:9px 12px;margin:10px 0;font-size:.88rem;color:#9a5c17;
+  }
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0 2px;}
+  .legend span{display:inline-flex;align-items:center;gap:6px;font-size:.84rem;color:var(--muted);font-weight:600;}
+  .dotk{width:12px;height:12px;border-radius:50%;display:inline-block;}
+  ol.recipe{margin:6px 0 10px;padding-left:20px;font-size:.93rem;color:#333c5e;}
+  ol.recipe li{margin-bottom:6px;}
+
+  .nav{display:flex;align-items:center;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);flex:0 0 auto;}
+  .nav button{
+    border:0;border-radius:12px;padding:11px 18px;font-size:.92rem;font-weight:700;cursor:pointer;
+  }
+  #prev{background:#f1f3fb;color:var(--muted);}
+  #prev:hover:not(:disabled){background:#e6e9f7;}
+  #next{background:var(--purple);color:#fff;box-shadow:0 8px 18px rgba(108,92,231,.35);margin-left:auto;}
+  #next:hover:not(:disabled){background:var(--purple-deep);}
+  .nav button:disabled{opacity:.4;cursor:default;box-shadow:none;}
+  .dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;flex:1;}
+  .dots button{
+    width:11px;height:11px;padding:0;border-radius:50%;border:0;cursor:pointer;
+    background:#d7dcf0;transition:all .25s;
+  }
+  .dots button.cur{background:var(--purple);transform:scale(1.35);}
+  .dots button.seen{background:#b3a9f2;}
+  .kbd{font-size:.78rem;color:var(--faint);text-align:center;margin-top:8px;}
+
+  .tri{margin:6px auto 2px;display:block;width:230px;height:150px;}
+
+  footer{max-width:1240px;margin:8px auto 0;flex:0 0 auto;color:var(--faint);font-size:.75rem;text-align:center;}
+
+  /* layer visibility */
+  .layer{opacity:0;transition:opacity .5s ease;pointer-events:none;}
+  .layer.on{opacity:1;}
+
+  button:focus-visible, input:focus-visible{outline:3px solid rgba(108,92,231,.5);outline-offset:2px;}
+
+  @media (max-width:980px){
+    body{height:auto;overflow:auto;display:block;}
+    .wrap{grid-template-columns:1fr;}
+    h1{font-size:1.2rem;}
+    #graph{height:auto;flex:none;}
+    #stepBody{overflow:visible;padding-right:0;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .layer{transition:none;}
+    .phase{transition:none;}
+  }
+
+</style>
+</head>
+<body>
+
+
+
+<header class="top">
+  <div class="eyebrow">MIT 18.03x · Spring–mass–dashpot &nbsp;(<span class="m"><i>m</i> = 1, <i>b</i> = 4, <i>k</i> = 5</span>)</div>
+  <h1>Sketching <span class="m"><i>y</i>(<i>t</i>) = e<sup>−2<i>t</i></sup>(cos <i>t</i> + 2 sin <i>t</i>)</span></h1>
+  <p class="sub">From equation (5.16) to the chalkboard picture — one small move at a time.</p>
+  <div class="phases">
+    <button type="button" class="phase" id="phase0" title="Jump to Step 1">Phase 1 · Rewrite as one cosine</button>
+    <button type="button" class="phase" id="phase1" title="Jump to Step 6">Phase 2 · Build the envelope</button>
+    <button type="button" class="phase" id="phase2" title="Jump to Step 8">Phase 3 · Weave the wave inside</button>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="card graphcard">
+    <div class="graphtools">
+      <div class="seg" id="scaleSeg" hidden>
+        <button id="btnSketch" class="active" type="button">Sketch pacing</button>
+        <button id="btnTrue" type="button">True scale e<sup>−2t</sup></button>
+      </div>
+      <span class="badge" id="schemBadge" hidden></span>
+      <button class="replaybtn" id="replay" type="button" hidden>↻ Replay the trace</button>
+    </div>
+
+    <svg id="graph" viewBox="0 0 900 520" role="img" aria-label="Interactive graph that builds up the sketch step by step"></svg>
+
+    <div class="probe" id="probeBox" hidden>
+      <label for="probeT">Slide <span class="m"><i>t</i></span> and watch the product: amplitude × wave = height</label>
+      <input type="range" id="probeT" min="0" max="9.5" step="0.01" value="2.00">
+      <div class="readout" id="probeRead"></div>
+    </div>
+  </section>
+
+  <section class="card lesson">
+    <div class="stepeyebrow" id="stepEyebrow"></div>
+    <h2 id="stepTitle"></h2>
+    <div id="stepBody"></div>
+    <div class="nav">
+      <button id="prev" type="button">← Back</button>
+      <div class="dots" id="dots"></div>
+      <button id="next" type="button">Next →</button>
+    </div>
+    <div class="kbd">Tip: use the ← → arrow keys to step</div>
+  </section>
+
+</main>
+
+<footer>Companion to the 18.03x lecture segment “amplitude–phase form” — the dashed chalk curve is √5·e<sup>−2t</sup>, the blue chalk curve is the solution.</footer>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- constants of the problem ---------- */
+var SQ5  = Math.sqrt(5);          // 2.2360679...
+var PHI  = Math.atan(2);          // 1.1071487... rad  =  63.435 deg
+var PI   = Math.PI;
+var K_TRUE  = 2.0;                // the real decay rate in e^(-2t)
+var K_CHALK = 0.35;               // slowed decay used for the schematic sketch
+var kDisp = K_CHALK;              // decay rate currently drawn
+var userTouchedScale = false;
+
+var Z1 = PHI + PI/2;              // zeros of cos(t - phi): 2.678, 5.820, 8.961
+var Z2 = Z1 + PI, Z3 = Z2 + PI;
+var TU1 = PHI, TL1 = PHI + PI, TU2 = PHI + 2*PI;   // touch points (upper, lower, upper)
+
+/* ---------- plot geometry ---------- */
+var W=900, H=520, M={l:58,r:14,t:16,b:44};
+var T0=-0.6, T1=9.8, YMIN=-2.6, YMAX=2.6;
+function X(t){ return M.l + (t-T0)/(T1-T0)*(W-M.l-M.r); }
+function Y(y){ return M.t + (YMAX-y)/(YMAX-YMIN)*(H-M.t-M.b); }
+
+var svg = document.getElementById('graph');
+var NS = 'http://www.w3.org/2000/svg';
+function el(name, attrs, parent){
+  var e = document.createElementNS(NS, name);
+  for (var k in attrs) e.setAttribute(k, attrs[k]);
+  (parent || svg).appendChild(e);
+  return e;
+}
+function layer(id){ return el('g', {'class':'layer', id:id}); }
+function pathOf(fn, t0, t1){
+  var d='', t, first=true;
+  for(t=t0; t<=t1+1e-9; t+=0.02){
+    d += (first?'M':'L') + X(t).toFixed(2) + ' ' + Y(fn(t)).toFixed(2);
+    first=false;
+  }
+  return d;
+}
+function txt(parent, x, y, s, attrs){
+  var a = attrs || {};
+  a.x = x; a.y = y;
+  var e = el('text', a, parent);
+  e.textContent = s;
+  return e;
+}
+
+/* ---------- the functions we draw ---------- */
+function fCos(t){ return Math.cos(t); }
+function f2Sin(t){ return 2*Math.sin(t); }
+function fSum(t){ return Math.cos(t) + 2*Math.sin(t); }          // = sqrt5 cos(t - phi)
+function fGhost(t){ return SQ5*Math.cos(t - PHI); }              // undamped wave
+function fEnvU(t){ return  SQ5*Math.exp(-kDisp*t); }
+function fEnvL(t){ return -SQ5*Math.exp(-kDisp*t); }
+function fMain(t){ return SQ5*Math.exp(-kDisp*t)*Math.cos(t - PHI); }
+
+/* ---------- static layers ---------- */
+var gGrid = layer('gGrid');
+(function(){
+  var t, y;
+  for(t=0; t<=9; t++) el('line',{x1:X(t),y1:Y(YMIN),x2:X(t),y2:Y(YMAX),stroke:'var(--grid)','stroke-width':1},gGrid);
+  for(y=-2; y<=2; y++) if(y!==0) el('line',{x1:X(T0),y1:Y(y),x2:X(T1),y2:Y(y),stroke:'var(--grid)','stroke-width':1},gGrid);
+})();
+
+var gAxes = layer('gAxes');
+(function(){
+  el('line',{x1:X(T0),y1:Y(0),x2:X(T1),y2:Y(0),stroke:'var(--faint)','stroke-width':1.6},gAxes);
+  el('line',{x1:X(0),y1:Y(YMIN),x2:X(0),y2:Y(YMAX),stroke:'var(--faint)','stroke-width':1.6},gAxes);
+  var t,y;
+  for(t=2; t<=9; t+=2){
+    el('line',{x1:X(t),y1:Y(0)-4,x2:X(t),y2:Y(0)+4,stroke:'var(--faint)','stroke-width':1.4},gAxes);
+    txt(gAxes, X(t), Y(0)+18, String(t), {'font-size':'12','fill':'var(--faint)','text-anchor':'middle'});
+  }
+  for(y=-2; y<=2; y++) if(y!==0){
+    el('line',{x1:X(0)-4,y1:Y(y),x2:X(0)+4,y2:Y(y),stroke:'var(--faint)','stroke-width':1.4},gAxes);
+    txt(gAxes, X(0)-10, Y(y)+4, String(y), {'font-size':'12','fill':'var(--faint)','text-anchor':'end'});
+  }
+  txt(gAxes, X(T1)-6, Y(0)-10, 't', {'font-size':'15','fill':'var(--muted)','font-style':'italic','text-anchor':'end'});
+  txt(gAxes, X(0)+12, Y(YMAX)+14, 'y', {'font-size':'15','fill':'var(--muted)','font-style':'italic'});
+})();
+
+/* Phase 1 layers */
+var gParents = layer('gParents');
+el('path',{d:pathOf(fCos,0,T1), fill:'none', stroke:'var(--parent)','stroke-width':2},gParents);
+el('path',{d:pathOf(f2Sin,0,T1),fill:'none', stroke:'var(--parent)','stroke-width':2,'stroke-dasharray':'2 4'},gParents);
+txt(gParents, X(6.4), Y(1.25), 'cos t', {'font-size':'13','fill':'#8b98bd','font-style':'italic'});
+txt(gParents, X(7.55), Y(-2.1), '2 sin t', {'font-size':'13','fill':'#8b98bd','font-style':'italic'});
+
+var gSum = layer('gSum');
+el('path',{d:pathOf(fSum,0,T1), fill:'none', stroke:'var(--slate)','stroke-width':2.6},gSum);
+txt(gSum, X(1.55), Y(2.42), 'cos t + 2 sin t', {'font-size':'13','fill':'var(--slate)','font-weight':'700','font-style':'italic'});
+
+var gIdent = layer('gIdent');   // dashed ink overlay: sqrt5 cos(t-phi) lies exactly on the sum
+el('path',{d:pathOf(fGhost,0,T1), fill:'none', stroke:'var(--ink)','stroke-width':1.8,'stroke-dasharray':'7 6'},gIdent);
+txt(gIdent, X(4.35), Y(2.42), '√5 cos(t − φ)  — same curve!', {'font-size':'13','fill':'var(--ink)','font-weight':'700'});
+
+var gBand = layer('gBand');     // horizontal amplitude lines at +-sqrt5
+el('line',{x1:X(0),y1:Y(SQ5),x2:X(T1),y2:Y(SQ5),stroke:'var(--purple)','stroke-width':1.3,'stroke-dasharray':'3 5'},gBand);
+el('line',{x1:X(0),y1:Y(-SQ5),x2:X(T1),y2:Y(-SQ5),stroke:'var(--purple)','stroke-width':1.3,'stroke-dasharray':'3 5'},gBand);
+txt(gBand, X(T1)-4, Y(SQ5)-7, 'A = √5 ≈ 2.24', {'font-size':'12.5','fill':'var(--purple)','font-weight':'700','text-anchor':'end'});
+txt(gBand, X(T1)-4, Y(-SQ5)+16, '−√5', {'font-size':'12.5','fill':'var(--purple)','font-weight':'700','text-anchor':'end'});
+
+var gPhi = layer('gPhi');       // phi tick on the t axis
+el('line',{x1:X(PHI),y1:Y(0)-6,x2:X(PHI),y2:Y(0)+6,stroke:'var(--purple)','stroke-width':2.4},gPhi);
+txt(gPhi, X(PHI), Y(0)+20, 'φ ≈ 1.11', {'font-size':'12.5','fill':'var(--purple)','font-weight':'700','text-anchor':'middle'});
+
+/* Phase 2 layers */
+var gSq5 = layer('gSq5');       // sqrt5 marked on the y axis
+el('line',{x1:X(0)-5,y1:Y(SQ5),x2:X(0)+5,y2:Y(SQ5),stroke:'var(--ink)','stroke-width':2.4},gSq5);
+txt(gSq5, X(0)-10, Y(SQ5)+4, '√5', {'font-size':'14','fill':'var(--ink)','font-weight':'800','text-anchor':'end'});
+
+var gTube = layer('gTube');
+var tubePath = el('path',{d:'', fill:'var(--orange-soft)', stroke:'none'},gTube);
+
+var gEnvU = layer('gEnvU');
+var envUPath = el('path',{d:'', fill:'none', stroke:'var(--orange)','stroke-width':2.6,'stroke-dasharray':'8 6'},gEnvU);
+var envULab = txt(gEnvU, X(1.7), 0, '√5 e⁻²ᵗ', {'font-size':'14','fill':'var(--orange)','font-weight':'800'});
+
+var gEnvL = layer('gEnvL');
+var envLPath = el('path',{d:'', fill:'none', stroke:'var(--orange)','stroke-width':2.6,'stroke-dasharray':'8 6'},gEnvL);
+var envLLab = txt(gEnvL, X(1.7), 0, '−√5 e⁻²ᵗ', {'font-size':'14','fill':'var(--orange)','font-weight':'800'});
+
+/* Phase 3 layers */
+var gGhost = layer('gGhost');   // the undamped wave, dashed teal
+el('path',{d:pathOf(fGhost,0,T1), fill:'none', stroke:'var(--teal-soft)','stroke-width':2.2,'stroke-dasharray':'6 6'},gGhost);
+el('circle',{cx:X(PHI),cy:Y(SQ5),r:4.5,fill:'var(--teal)'},gGhost);
+txt(gGhost, X(PHI)+8, Y(SQ5)-8, 'first peak at t = φ', {'font-size':'12.5','fill':'var(--teal)','font-weight':'700'});
+
+var gZeros = layer('gZeros');
+[Z1,Z2,Z3].forEach(function(z,i){
+  el('circle',{cx:X(z),cy:Y(0),r:5,fill:'#fff',stroke:'var(--purple)','stroke-width':2.6},gZeros);
+  txt(gZeros, X(z)+7, Y(0)-10, 't ≈ '+z.toFixed(2), {'font-size':'12','fill':'var(--purple)','font-weight':'700'});
+});
+txt(gZeros, X(Z1)-6, Y(0)-28, 'first zero: t = φ + π/2', {'font-size':'12','fill':'var(--purple)','font-weight':'700'});
+el('line',{x1:X(Z1),y1:Y(0)+30,x2:X(Z2),y2:Y(0)+30,stroke:'var(--purple)','stroke-width':1.4},gZeros);
+el('line',{x1:X(Z1),y1:Y(0)+25,x2:X(Z1),y2:Y(0)+35,stroke:'var(--purple)','stroke-width':1.4},gZeros);
+el('line',{x1:X(Z2),y1:Y(0)+25,x2:X(Z2),y2:Y(0)+35,stroke:'var(--purple)','stroke-width':1.4},gZeros);
+txt(gZeros, (X(Z1)+X(Z2))/2, Y(0)+46, 'zeros are π ≈ 3.14 apart', {'font-size':'12','fill':'var(--purple)','font-weight':'700','text-anchor':'middle'});
+
+var gTang = layer('gTang');
+var tangDots = [
+  el('circle',{cx:X(TU1),cy:0,r:5,fill:'var(--orange)'},gTang),
+  el('circle',{cx:X(TL1),cy:0,r:5,fill:'var(--orange)'},gTang),
+  el('circle',{cx:X(TU2),cy:0,r:5,fill:'var(--orange)'},gTang)
+];
+var tangLabs = [
+  txt(gTang, X(TU1)+8, 0, 'kiss: t = φ', {'font-size':'12','fill':'#c26a17','font-weight':'700'}),
+  txt(gTang, X(TL1)+8, 0, 'kiss: t = φ + π', {'font-size':'12','fill':'#c26a17','font-weight':'700'}),
+  txt(gTang, X(TU2)+8, 0, 't = φ + 2π', {'font-size':'12','fill':'#c26a17','font-weight':'700'})
+];
+
+var gStart = layer('gStart');
+el('line',{x1:X(-0.45),y1:Y(1),x2:X(0.45),y2:Y(1),stroke:'var(--teal)','stroke-width':2.4,'stroke-dasharray':'4 3'},gStart);
+el('circle',{cx:X(0),cy:Y(1),r:5.5,fill:'var(--teal)',stroke:'#fff','stroke-width':2},gStart);
+txt(gStart, X(0)+10, Y(1)-12, 'start (0, 1), flat: y′(0) = 0', {'font-size':'12.5','fill':'var(--teal)','font-weight':'700'});
+
+var gCurve = layer('gCurve');
+var mainPath = el('path',{d:'', fill:'none', stroke:'var(--teal)','stroke-width':3.2,'stroke-linecap':'round'},gCurve);
+
+var gProbe = layer('gProbe');
+var probeLine = el('line',{x1:0,y1:Y(YMIN),x2:0,y2:Y(YMAX),stroke:'var(--purple)','stroke-width':1.4,'stroke-dasharray':'4 4'},gProbe);
+var probeEnvDot  = el('circle',{cx:0,cy:0,r:5,fill:'var(--orange)',stroke:'#fff','stroke-width':1.5},gProbe);
+var probeMainDot = el('circle',{cx:0,cy:0,r:6,fill:'var(--teal)',stroke:'#fff','stroke-width':2},gProbe);
+
+var LAYERS = {grid:gGrid, axes:gAxes, parents:gParents, sum:gSum, ident:gIdent, band:gBand,
+              phi:gPhi, sq5:gSq5, tube:gTube, envU:gEnvU, envL:gEnvL, ghost:gGhost,
+              zeros:gZeros, tang:gTang, start:gStart, curve:gCurve, probe:gProbe};
+
+/* ---------- rebuild everything that depends on the drawn decay rate ---------- */
+function rebuildDynamic(){
+  envUPath.setAttribute('d', pathOf(fEnvU, 0, T1));
+  envLPath.setAttribute('d', pathOf(fEnvL, 0, T1));
+  var d='', t;
+  for(t=0;t<=T1+1e-9;t+=0.05) d += (d?'L':'M') + X(t).toFixed(2)+' '+Y(fEnvU(t)).toFixed(2);
+  for(t=T1;t>=0-1e-9;t-=0.05) d += 'L' + X(t).toFixed(2)+' '+Y(fEnvL(t)).toFixed(2);
+  tubePath.setAttribute('d', d+'Z');
+
+  envULab.setAttribute('y', Y(fEnvU(1.7))-12);
+  envLLab.setAttribute('y', Y(fEnvL(1.7))+22);
+  envULab.textContent = (kDisp===K_TRUE) ? '√5 e⁻²ᵗ' : '√5 e⁻ᵏᵗ (decay slowed)';
+  envLLab.textContent = (kDisp===K_TRUE) ? '−√5 e⁻²ᵗ' : '−√5 e⁻ᵏᵗ';
+
+  clearTrace();
+  mainPath.setAttribute('d', pathOf(fMain, 0, T1));
+
+  tangDots[0].setAttribute('cy', Y(fEnvU(TU1)));
+  tangDots[1].setAttribute('cy', Y(fEnvL(TL1)));
+  tangDots[2].setAttribute('cy', Y(fEnvU(TU2)));
+  tangLabs[0].setAttribute('y', Y(fEnvU(TU1))-10);
+  tangLabs[1].setAttribute('y', Y(fEnvL(TL1))+20);
+  tangLabs[2].setAttribute('y', Y(fEnvU(TU2))-10);
+
+  updateProbe();
+}
+
+/* ---------- trace animation ---------- */
+var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function clearTrace(){
+  mainPath.style.transition = 'none';
+  mainPath.style.strokeDasharray = '';
+  mainPath.style.strokeDashoffset = '';
+}
+function traceCurve(){
+  if (reduceMotion) return;
+  var L = mainPath.getTotalLength();
+  mainPath.style.transition = 'none';
+  mainPath.style.strokeDasharray = L + ' ' + L;
+  mainPath.style.strokeDashoffset = L;
+  mainPath.getBoundingClientRect();          // force reflow
+  mainPath.style.transition = 'stroke-dashoffset 6s cubic-bezier(.4,0,.2,1)';
+  mainPath.style.strokeDashoffset = '0';
+}
+
+/* ---------- probe ---------- */
+var probeT = document.getElementById('probeT');
+var probeRead = document.getElementById('probeRead');
+function updateProbe(){
+  var t = parseFloat(probeT.value);
+  var env = SQ5*Math.exp(-kDisp*t);
+  var wav = Math.cos(t - PHI);
+  var y = env*wav;
+  probeLine.setAttribute('x1', X(t)); probeLine.setAttribute('x2', X(t));
+  probeEnvDot.setAttribute('cx', X(t)); probeEnvDot.setAttribute('cy', Y(env));
+  probeMainDot.setAttribute('cx', X(t)); probeMainDot.setAttribute('cy', Y(y));
+  var kTxt = (kDisp===K_TRUE) ? '2' : '0.35';
+  probeRead.innerHTML =
+    '<span class="rchip env">amplitude&nbsp; √5·e<sup>−'+kTxt+'·'+t.toFixed(2)+'</sup> = '+env.toFixed(2)+'</span>'+
+    '<span class="rop">×</span>'+
+    '<span class="rchip wav">wave&nbsp; cos('+t.toFixed(2)+' − 1.11) = '+wav.toFixed(2)+'</span>'+
+    '<span class="rop">=</span>'+
+    '<span class="rchip res">y = '+y.toFixed(2)+'</span>';
+}
+probeT.addEventListener('input', updateProbe);
+
+/* ---------- scale toggle ---------- */
+var btnSketch = document.getElementById('btnSketch');
+var btnTrue = document.getElementById('btnTrue');
+var badge = document.getElementById('schemBadge');
+function setScale(mode, byUser){
+  if (byUser) userTouchedScale = true;
+  kDisp = (mode==='true') ? K_TRUE : K_CHALK;
+  btnSketch.classList.toggle('active', mode!=='true');
+  btnTrue.classList.toggle('active', mode==='true');
+  badge.innerHTML = (mode==='true')
+    ? 'True scale: the drawn decay is the real e<sup>−2t</sup>.'
+    : 'Schematic: decay drawn as e<sup>−0.35t</sup> so the wiggles stay visible. The real factor is e<sup>−2t</sup>.';
+  rebuildDynamic();
+}
+btnSketch.addEventListener('click', function(){ setScale('sketch', true); });
+btnTrue.addEventListener('click', function(){ setScale('true', true); });
+document.getElementById('replay').addEventListener('click', function(){ clearTrace(); requestAnimationFrame(traceCurve); });
+
+/* ---------- the steps ---------- */
+var F = function(s, tag){ return '<div class="formula">'+ (tag ? '<span class="tag">'+tag+'</span>' : '') + s + '</div>'; };
+
+var steps = [
+
+/* ---- PHASE 1 ---- */
+{
+  phase:0,
+  eyebrow:'Step 1 of 14 · The starting point',
+  title:'What we are up against',
+  layers:['grid','axes','parents'],
+  body:
+    '<p>From the lecture we have the solution and its initial conditions:</p>'
+    + F('<i>y</i>(<i>t</i>) = e<sup>−2<i>t</i></sup>(cos <i>t</i> + 2 sin <i>t</i>), &nbsp;&nbsp; <i>y</i>(0) = 1, &nbsp; <i>y</i>′(0) = 0', '(5.16)')
+    + '<p>Quick reminder of where the numbers come from: the characteristic equation <span class="m"><i>r</i>² + 4<i>r</i> + 5 = 0</span> has roots <span class="m"><i>r</i> = −2 ± i</span>, so the decay rate is 2 and the angular frequency is 1.</p>'
+    + '<p>The graph shows the <strong>two waves inside the parentheses</strong>: cos <i>t</i> (height 1) and 2 sin <i>t</i> (height 2). To sketch <i>y</i> directly you would have to add these point by point <em>and</em> shrink the result by e<sup>−2<i>t</i></sup>. Nobody sketches that way.</p>'
+    + '<p>Instead we make three moves:</p>'
+    + '<ol class="recipe"><li><strong>Rewrite</strong> the two waves as one single cosine.</li>'
+    + '<li><strong>Build the envelope</strong> — the decaying “walls” ±√5 e<sup>−2t</sup>.</li>'
+    + '<li><strong>Weave</strong> the cosine inside the walls.</li></ol>'
+},
+{
+  phase:0,
+  eyebrow:'Step 2 of 14 · A key fact',
+  title:'The sum of the two waves is still one wave',
+  layers:['grid','axes','parents','sum'],
+  body:
+    '<p>Here is the sum cos <i>t</i> + 2 sin <i>t</i> drawn on top of its two parents (solid slate curve). Look at it closely — it behaves like a <strong>single, ordinary sinusoid</strong>:</p>'
+    + '<p>• same period as the parents, 2π ≈ 6.28;<br>'
+    + '• a <strong>bigger amplitude</strong> — its peaks reach about 2.24, higher than either parent;<br>'
+    + '• its peaks land <strong>later</strong> than the cosine’s peaks — the whole wave is slid to the right.</p>'
+    + '<p>This is a general fact: two sinusoids of the <em>same frequency</em> always add up to one sinusoid of that frequency. So there must exist numbers <i>A</i> (the amplitude) and φ (the phase lag) with</p>'
+    + F('cos <i>t</i> + 2 sin <i>t</i> = <i>A</i> cos(<i>t</i> − φ)')
+    + '<p>Our whole job in Phase 1 is to find <i>A</i> and φ.</p>'
+},
+{
+  phase:0,
+  eyebrow:'Step 3 of 14 · Setting up the match',
+  title:'Expand, then compare coefficients',
+  layers:['grid','axes','sum'],
+  body:
+    '<p>Expand the right-hand side with the cosine difference identity (the “TRIG IDEN” on the chalkboard):</p>'
+    + F('<i>A</i> cos(<i>t</i> − φ) = <i>A</i> cos φ · cos <i>t</i> + <i>A</i> sin φ · sin <i>t</i>')
+    + '<p>Now line it up against what we actually have, <span class="m">1 · cos <i>t</i> + 2 · sin <i>t</i></span>. The coefficient of cos <i>t</i> must match, and the coefficient of sin <i>t</i> must match:</p>'
+    + F('<i>A</i> cos φ = 1 &nbsp;&nbsp;&nbsp; and &nbsp;&nbsp;&nbsp; <i>A</i> sin φ = 2')
+    + '<p>Two equations, two unknowns. The next step solves them with a picture instead of algebra.</p>'
+},
+{
+  phase:0,
+  eyebrow:'Step 4 of 14 · The triangle',
+  title:'A right triangle does the algebra for us',
+  layers:['grid','axes','sum','ident','band','phi'],
+  body:
+    '<p>Put the two matching equations into a right triangle: adjacent side <i>A</i> cos φ = 1, opposite side <i>A</i> sin φ = 2, so the hypotenuse is <i>A</i>. (This is the little triangle Mattuck draws under the equation.)</p>'
+    + '<svg class="tri" width="230" height="150" viewBox="0 0 230 150" role="img" aria-label="Right triangle with legs 1 and 2 and hypotenuse square root of 5">'
+    +   '<polygon points="30,125 185,125 185,25" fill="rgba(108,92,231,.08)" stroke="var(--purple)" stroke-width="2"/>'
+    +   '<path d="M 62 125 A 32 32 0 0 0 58 111" fill="none" stroke="var(--purple)" stroke-width="1.6"/>'
+    +   '<rect x="171" y="111" width="14" height="14" fill="none" stroke="var(--faint)" stroke-width="1.4"/>'
+    +   '<text x="107" y="143" font-size="14" fill="#1d2440" font-weight="700">1</text>'
+    +   '<text x="194" y="80"  font-size="14" fill="#1d2440" font-weight="700">2</text>'
+    +   '<text x="86"  y="62"  font-size="14" fill="#6c5ce7" font-weight="800">√5</text>'
+    +   '<text x="70" y="120" font-size="13" fill="#6c5ce7" font-weight="700">φ</text>'
+    + '</svg>'
+    + '<p><strong>Square and add</strong> the two equations: <span class="m"><i>A</i>² = 1² + 2² = 5</span>, so</p>'
+    + F('<i>A</i> = √5 ≈ 2.236')
+    + '<p><strong>Divide</strong> them: <span class="m">tan φ = 2/1 = 2</span>, so</p>'
+    + F('φ = arctan 2 ≈ 1.107 rad ≈ 63.4°')
+    + '<p>On the board Mattuck just eyeballs the angle: “φ ~ 70° ± 5°.” The exact value is 63.4° — inside his error bars.</p>'
+    + '<div class="warn"><strong>Same angle, two different units — why the t-axis says 1.11 and not 63.4.</strong> 63.4° and 1.107 are the <em>same</em> angle, measured once in degrees and once in radians. A cosine can only eat an <em>angle</em>, measured in <strong>radians</strong> — and in this problem the angle happens to equal t numerically (the box below explains why) — so the wave repeats every 2π ≈ 6.28 axis-units and a quarter period is π/2 ≈ 1.57. And φ gets <em>subtracted from t</em> inside cos(t − φ), so it must be in the same units as t before it can be marked on the axis.</div>'
+    + '<p><strong>The conversion</strong>, from scratch: a half turn is 180° = π ≈ 3.1416 rad, so 1° = π/180 ≈ 0.01745 rad. Therefore</p>'
+    + F('φ = 63.43° × π/180 = 63.43 × 0.01745 ≈ 1.107 rad ≈ 1.11')
+    + '<p>Sanity check with angles you already know: 60° is π/3 ≈ 1.047 and 90° is π/2 ≈ 1.571, so 63.4° must land just past 1.05 — and it does: 1.107. (Shortcut: put your calculator in <em>radian mode</em> and arctan 2 returns 1.1071 directly, no conversion needed.)</p>'
+    + '<div class="note"><strong>So is t in radians or in seconds?</strong> t itself is <em>time, in seconds</em> — the mass really bobs as the clock runs. But a cosine can only accept an angle, so the true argument is ω<i>t</i> − φ, where ω is the angular frequency in rad/s: it converts elapsed seconds into accumulated angle. Our solution has ω = 1 rad/s (the imaginary part of the roots −2 ± i), so after t seconds the angle is 1 · t = t radians — the axis numbers are seconds that <em>happen to coincide</em> with the phase in radians. The peak condition is ωt − φ = 0, giving t = φ/ω = 1.107/1 = 1.107 <em>seconds</em>. Had the roots been −2 ± 3i instead (ω = 3 rad/s), φ would still be 1.107 rad but the peak would sit at t = 1.107/3 ≈ 0.37 s — dividing by ω is what turns a phase lag in radians into a time lag in seconds.</div>'
+    + '<p>Look at the graph: the dashed dark curve is √5 cos(<i>t</i> − φ). It sits <strong>exactly on top of</strong> cos <i>t</i> + 2 sin <i>t</i> — same curve, new name. Its amplitude fills the dashed ±√5 band, and its first peak lands at <i>t</i> = φ/ω = 1.107/1 ≈ 1.11 — that many <em>seconds</em> of time, which is also that many radians of phase, since ω = 1.</p>'
+    + '<div class="note">Keep two small numbers for later: cos φ = 1/√5 ≈ 0.447 and sin φ = 2/√5 ≈ 0.894. They come straight off the triangle.</div>'
+},
+{
+  phase:0,
+  eyebrow:'Step 5 of 14 · The payoff',
+  title:'The solution, rewritten and ready to sketch',
+  layers:['grid','axes','sq5'],
+  body:
+    '<p>Substitute the amplitude–phase form back into (5.16):</p>'
+    + F('<i>y</i>(<i>t</i>) = √5 e<sup>−2<i>t</i></sup> cos(<i>t</i> − φ), &nbsp;&nbsp; φ = arctan 2')
+    + '<p>Read it as a <strong>product of two simple factors</strong>:</p>'
+    + '<div class="legend">'
+    + '<span><span class="dotk" style="background:var(--orange)"></span> √5 e<sup>−2t</sup> — a shrinking amplitude (starts at √5, decays to 0)</span>'
+    + '<span><span class="dotk" style="background:var(--teal)"></span> cos(t − φ) — one clean wave, bouncing between −1 and +1</span>'
+    + '</div>'
+    + '<p>That is the whole sketching strategy: draw the shrinking amplitude first as a pair of walls, then let the wave bounce between the walls.</p>'
+    + '<p>We start with a fresh set of axes. The only mark we need so far is <strong>√5 ≈ 2.24 on the y-axis</strong> — exactly the “√5” chalked at the top of the board.</p>'
+},
+
+/* ---- PHASE 2 ---- */
+{
+  phase:1,
+  eyebrow:'Step 6 of 14 · Envelope, part 1',
+  title:'Draw the upper envelope √5 e⁻²ᵗ',
+  layers:['grid','axes','sq5','envU'],
+  opts:{toggle:true},
+  body:
+    '<p>The orange dashed curve is the amplitude factor</p>'
+    + F('√5 e<sup>−2<i>t</i></sup>')
+    + '<p>Three things to know about it:</p>'
+    + '<p>• at <i>t</i> = 0 we have e<sup>0</sup> = 1, so it starts exactly at <strong>√5 ≈ 2.24</strong> — that is why √5 is marked on the y-axis;<br>'
+    + '• it <strong>only decays</strong>, never oscillates;<br>'
+    + '• it decays <em>fast</em>: e<sup>−2t</sup> halves every ln 2 / 2 ≈ 0.35 time units. By <i>t</i> = 2 it is already down to about 4% of its starting height.</p>'
+    + '<div class="warn"><strong>About the drawing:</strong> a true-scale e<sup>−2t</sup> collapses so fast that the later wiggles would be invisible. Like Mattuck’s chalk drawing, this sketch slows the decay (we draw e<sup>−0.35t</sup>) so you can see the <em>shape</em>. Every landmark we mark — √5, φ, the zeros, the touch points — sits at its true position on the t-axis. Use the toggle above the graph any time to see the honest version.</div>'
+},
+{
+  phase:1,
+  eyebrow:'Step 7 of 14 · Envelope, part 2',
+  title:'Mirror it: the curve lives inside a funnel',
+  layers:['grid','axes','sq5','envU','envL','tube'],
+  opts:{toggle:true},
+  body:
+    '<p>The wave factor satisfies <span class="m">−1 ≤ cos(<i>t</i> − φ) ≤ 1</span>. Multiply through by the (positive) amplitude √5 e<sup>−2t</sup>:</p>'
+    + F('−√5 e<sup>−2<i>t</i></sup> &nbsp;≤&nbsp; <i>y</i>(<i>t</i>) &nbsp;≤&nbsp; √5 e<sup>−2<i>t</i></sup>')
+    + '<p>So we mirror the upper envelope to get a lower one, <span class="m">−√5 e<sup>−2t</sup></span>. Together they form the shaded <strong>funnel</strong> (both dashed on the chalkboard, above and below the axis).</p>'
+    + '<p>Two rules the final curve must obey:</p>'
+    + '<p>• it can <strong>never leave</strong> the funnel;<br>'
+    + '• it <strong>touches a wall only</strong> at the instants when cos(<i>t</i> − φ) = +1 (upper wall) or −1 (lower wall).</p>'
+    + '<p>The funnel is the “decay” half of the story. Now we need the “wiggle” half.</p>'
+},
+
+/* ---- PHASE 3 ---- */
+{
+  phase:2,
+  eyebrow:'Step 8 of 14 · The wave',
+  title:'Meet the wave that will live inside: cos(t − φ)',
+  layers:['grid','axes','sq5','envU','envL','tube','ghost','phi'],
+  opts:{toggle:true},
+  body:
+    '<p>The dashed teal curve is <span class="m">√5 cos(<i>t</i> − φ)</span> — the wave <em>before</em> any damping. It is an ordinary cosine, just <strong>slid to the right by φ ≈ 1.11</strong>:</p>'
+    + '<p>• a plain cosine peaks at <i>t</i> = 0; this one peaks at <strong><i>t</i> = φ</strong> (teal dot);<br>'
+    + '• a plain cosine first crosses zero at π/2; this one first crosses at <strong><i>t</i> = φ + π/2 ≈ 1.11 + 1.57 = 2.68</strong>;<br>'
+    + '• after that it crosses zero every <strong>π ≈ 3.14</strong>: at 2.68, 5.82, 8.96, …</p>'
+    + '<p>This is what the tick mark on the chalkboard t-axis is recording — the first crossing sits π/2 to the right of φ.</p>'
+    + '<div class="note">Everything on this list depends only on the cosine, not on the decay. That is what makes these points so useful: damping will squash heights, but it cannot move these t-values.</div>'
+},
+{
+  phase:2,
+  eyebrow:'Step 9 of 14 · Landmarks',
+  title:'Pin the landmarks onto the sketch',
+  layers:['grid','axes','sq5','envU','envL','tube','ghost','zeros','tang'],
+  opts:{toggle:true},
+  body:
+    '<p>Now transfer the wave’s special points onto the damped picture.</p>'
+    + '<p><strong>Zeros (purple rings).</strong> The product √5 e<sup>−2t</sup> cos(<i>t</i> − φ) is zero exactly when the cosine is zero — the envelope is never zero, so it cannot create or destroy a crossing. The damped curve crosses the axis at</p>'
+    + F('<i>t</i> = φ + π/2 + <i>k</i>π &nbsp;≈&nbsp; 2.68, &nbsp;5.82, &nbsp;8.96, …')
+    + '<p><strong>Touch points (orange dots).</strong> Where cos(<i>t</i> − φ) = +1, the curve equals the upper wall exactly; where it is −1, it sits on the lower wall:</p>'
+    + F('upper: <i>t</i> = φ ≈ 1.11, &nbsp; φ + 2π ≈ 7.39; &nbsp;&nbsp; lower: <i>t</i> = φ + π ≈ 4.25')
+    + '<p>These kisses alternate — upper wall, lower wall, upper wall — one every π, and each one is π/2 away from the neighboring zeros. The skeleton of the sketch is done; we just have to connect the dots.</p>'
+},
+{
+  phase:2,
+  eyebrow:'Step 10 of 14 · The kiss, explained',
+  title:'Why does it kiss — and why exactly at t = φ?',
+  layers:['grid','axes','sq5','envU','envL','tube','curve','tang'],
+  opts:{toggle:true},
+  body:
+    '<p>The finished curve is drawn so you can stare at the touch points while we ask the two honest questions: <em>why</em> does the curve meet the wall at all — and why is the meeting a graze (a “kiss”) rather than a crossing?</p>'
+    + '<p><strong>1 · Why it touches, and where.</strong> Every height is a product: (wall height) × cos(<i>t</i> − φ). The cosine factor swings between −1 and +1, and it equals <strong>+1</strong> exactly when its angle is 0, 2π, 4π, …</p>'
+    + F('<i>t</i> − φ = 0 &nbsp; gives &nbsp; <i>t</i> = φ ≈ 1.11, &nbsp; then <i>t</i> = φ + 2π ≈ 7.39, …')
+    + '<p>At those instants <i>y</i> = (wall) × 1: the curve has <em>exactly the wall’s own height</em>. Likewise the factor equals −1 at <i>t</i> = φ + π ≈ 4.25, putting the curve exactly on the lower wall.</p>'
+    + '<p><strong>2 · Why it cannot cross.</strong> Because |cos(<i>t</i> − φ)| ≤ 1 at <em>every</em> t, we always have |<i>y</i>(<i>t</i>)| ≤ √5 e<sup>−2t</sup> — the curve is trapped inside the funnel with no exceptions, ever. So when it reaches a wall there is nowhere further to go: it must turn back at once. A touch that can never become a crossing is precisely a tangency.</p>'
+    + '<p><strong>3 · The clincher: the slopes match exactly.</strong> Differentiate the product (true decay, k = 2):</p>'
+    + F('<i>y</i>′(<i>t</i>) = √5 e<sup>−2t</sup> [ −2 cos(<i>t</i> − φ) − sin(<i>t</i> − φ) ]')
+    + '<p>Evaluate at <i>t</i> = φ. The angle <i>t</i> − φ is 0, so the sine term is 0 — <strong>the wave’s own motion vanishes</strong> — and the cosine is 1. What survives is</p>'
+    + F('<i>y</i>′(φ) = −2 · √5 e<sup>−2φ</sup>')
+    + '<p>Now the wall: E(<i>t</i>) = √5 e<sup>−2t</sup> has slope E′(<i>t</i>) = −2 · √5 e<sup>−2t</sup>, so E′(φ) = −2 · √5 e<sup>−2φ</sup> — <strong>the identical number</strong>. Concretely: e<sup>−2 × 1.107</sup> ≈ 0.109, so at the kiss both curve and wall sit at height √5 × 0.109 ≈ 0.24 and both are falling with slope −2 × 0.24 ≈ −0.49. Equal height <em>and</em> equal slope at one point is the definition of tangency. (In the slowed sketch the kiss is drawn higher up — but at the same t, with the same matching-slopes logic.)</p>'
+    + '<div class="note"><strong>The intuition behind the algebra.</strong> At its crest the cosine factor momentarily stops changing — its rate of change, −sin(<i>t</i> − φ), is zero right there. So for that one instant the curve’s only motion is the shrinking of its amplitude: it slides <em>along with</em> the falling wall, at the wall’s own speed. A moment later the cosine eases back below 1 and the curve peels away into the tube. That is a kiss: match the wall’s height, match its velocity, then let go.</div>'
+    + '<div class="warn">One caution to carry forward: a kiss is <em>not</em> the curve’s local peak. The wall itself is falling, so the top of each hump comes slightly <em>earlier</em> than the touch — the final step returns to this.</div>'
+},
+{
+  phase:2,
+  eyebrow:'Step 11 of 14 · Initial conditions',
+  title:'Where does the curve begin?',
+  layers:['grid','axes','sq5','envU','envL','tube','zeros','tang','start'],
+  opts:{toggle:true},
+  body:
+    '<p>Before drawing, check <i>t</i> = 0 against the initial conditions — a free sanity test.</p>'
+    + '<p><strong>Height.</strong> Using cos φ = 1/√5 from the triangle:</p>'
+    + F('<i>y</i>(0) = √5 · e<sup>0</sup> · cos(−φ) = √5 cos φ = √5 · (1/√5) = 1 ✓')
+    + '<p>It matches <i>y</i>(0) = 1. Notice the curve starts <strong>below the envelope</strong> (1 &lt; 2.24): at <i>t</i> = 0 the wave is only at cos φ ≈ 0.45 of full height, because its peak doesn’t arrive until <i>t</i> = φ.</p>'
+    + '<p><strong>Slope.</strong> Differentiate the original form — nearly everything cancels:</p>'
+    + F('<i>y</i>′(<i>t</i>) = e<sup>−2<i>t</i></sup>(−5 sin <i>t</i>) &nbsp;⇒&nbsp; <i>y</i>′(0) = 0 ✓')
+    + '<p>So the true curve leaves (0, 1) <strong>perfectly flat</strong> — the teal dot with the horizontal tick.</p>'
+    + '<div class="warn">Small honesty note: in our slowed-decay sketch the drawn curve bends slightly <em>upward</em> after the flat start, to kiss the slowed wall at t = φ. With the real e<sup>−2t</sup> the wall drops faster than the wave can rise, so (0, 1) is actually the highest point the solution ever reaches. Flip to “True scale” to see it — and the final step comes back to this.</div>'
+},
+{
+  phase:2,
+  eyebrow:'Step 12 of 14 · Draw it',
+  title:'Connect the dots: trace the curve',
+  layers:['grid','axes','sq5','envU','envL','tube','zeros','tang','start','curve'],
+  opts:{toggle:true, replay:true, trace:true},
+  body:
+    '<p>Now sweep one smooth curve through the skeleton, in order:</p>'
+    + '<ol class="recipe">'
+    + '<li>Leave <strong>(0, 1)</strong> flat…</li>'
+    + '<li>…cross the axis at the first zero, <strong>t ≈ 2.68</strong>…</li>'
+    + '<li>…dip down and <strong>kiss the lower wall at t ≈ 4.25</strong>…</li>'
+    + '<li>…back up through the zero at <strong>t ≈ 5.82</strong>…</li>'
+    + '<li>…<strong>kiss the upper wall at t ≈ 7.39</strong>, cross at <strong>8.96</strong>, and so on forever — each swing squashed by the ever-lower walls.</li>'
+    + '</ol>'
+    + '<p>The rhythm to internalize: <strong>kiss → zero → kiss → zero</strong> — a kiss every π, with a zero exactly halfway (π/2) between consecutive kisses. The oscillation’s “pseudo-period” (upper kiss to upper kiss) is the full 2π ≈ 6.28.</p>'
+    + '<p>That is precisely the blue chalk curve: starting at height 1, weaving between the dashed walls, dying away along the axis.</p>'
+},
+{
+  phase:2,
+  eyebrow:'Step 13 of 14 · Why it works',
+  title:'Read any point of the graph as a product',
+  layers:['grid','axes','envU','envL','tube','zeros','tang','start','curve','probe'],
+  opts:{toggle:true, probe:true},
+  body:
+    '<p>The deepest way to understand the picture: at every instant, the height is literally</p>'
+    + F('<i>y</i>(<i>t</i>) = (amplitude at time <i>t</i>) × (wave at time <i>t</i>)')
+    + '<p>Drag the slider under the graph and watch the arithmetic happen:</p>'
+    + '<p>• the <strong>orange dot</strong> rides the envelope — the current amplitude;<br>'
+    + '• the <strong>teal dot</strong> is the actual solution — amplitude times cos(<i>t</i> − φ).</p>'
+    + '<p>Try these positions:</p>'
+    + '<p>• <strong>t = 2.68</strong>: the wave factor is 0, so <i>y</i> = (something) × 0 = 0 — a zero, no matter what the envelope is doing;<br>'
+    + '• <strong>t = 4.25</strong>: the wave factor is −1, so the teal dot lands exactly on the lower wall;<br>'
+    + '• <strong>t = 1.11</strong>: wave factor +1 — the curve touches the upper wall.</p>'
+},
+{
+  phase:2,
+  eyebrow:'Step 14 of 14 · Fine print',
+  title:'True scale, and the honest recipe',
+  layers:['grid','axes','sq5','envU','envL','zeros','tang','start','curve'],
+  opts:{toggle:true, trueScale:true},
+  body:
+    '<p>The graph has switched to the <strong>real decay e<sup>−2t</sup></strong>. With b = 4 the damping is heavy: the curve leaves (0, 1) flat, plunges, barely pokes below the axis (its minimum, near t = π, is only about −0.002), and is essentially dead by t = 3. Every textbook and every chalkboard exaggerates the later wiggles — deliberately — because the <em>structure</em> (zeros π apart, alternating kisses) is what matters.</p>'
+    + '<p>One last subtlety for honesty: the <strong>true peaks are not at the touch points</strong>. Since y′ = −5e<sup>−2t</sup> sin t, the real maxima and minima are at t = 0, π, 2π, … — each one <em>earlier</em> than the corresponding kiss at φ, φ + π, … The falling wall drags every peak forward in time (here by exactly arctan 2 = φ). In a schematic sketch the difference is small and nobody draws it; just know it is there.</p>'
+    + '<p><strong>The recipe you now own</strong>, for any y = e<sup>−kt</sup>(a cos ωt + b sin ωt):</p>'
+    + '<ol class="recipe">'
+    + '<li>Triangle: A = √(a² + b²), tan φ = b/a → rewrite as A e<sup>−kt</sup> cos(ωt − φ).</li>'
+    + '<li>Mark A on the y-axis; draw the dashed walls ±A e<sup>−kt</sup>.</li>'
+    + '<li>Mark zeros at ωt = φ + π/2 + kπ (spaced π/ω apart).</li>'
+    + '<li>Mark alternating kisses on the walls at ωt = φ + kπ.</li>'
+    + '<li>Start at the initial condition — checking y(0) and y′(0) — and weave through the marks.</li>'
+    + '</ol>'
+    + '<p>Flip back to “Sketch pacing” to compare with the chalkboard one more time.</p>'
+}
+];
+
+/* ---------- navigation ---------- */
+var cur = 0;
+var stepEyebrow = document.getElementById('stepEyebrow');
+var stepTitle = document.getElementById('stepTitle');
+var stepBody = document.getElementById('stepBody');
+var prevBtn = document.getElementById('prev');
+var nextBtn = document.getElementById('next');
+var dotsBox = document.getElementById('dots');
+var seg = document.getElementById('scaleSeg');
+var replayBtn = document.getElementById('replay');
+var probeBox = document.getElementById('probeBox');
+
+steps.forEach(function(_, i){
+  var d = document.createElement('button');
+  d.type = 'button';
+  d.setAttribute('aria-label','Go to step '+(i+1));
+  d.addEventListener('click', function(){ go(i); });
+  dotsBox.appendChild(d);
+});
+
+function go(i){
+  cur = Math.max(0, Math.min(steps.length-1, i));
+  var s = steps[cur];
+  var opts = s.opts || {};
+
+  stepEyebrow.textContent = s.eyebrow;
+  stepTitle.innerHTML = s.title;
+  stepBody.innerHTML = s.body;
+  stepBody.scrollTop = 0;
+
+  for (var key in LAYERS) LAYERS[key].classList.toggle('on', s.layers.indexOf(key) !== -1);
+
+  seg.hidden = !opts.toggle;
+  badge.hidden = !opts.toggle;
+  replayBtn.hidden = !opts.replay;
+  probeBox.hidden = !opts.probe;
+
+  if (opts.trueScale && !userTouchedScale) setScale('true', false);
+  else if (!opts.trueScale && !userTouchedScale && kDisp === K_TRUE) setScale('sketch', false);
+
+  if (opts.trace){ clearTrace(); requestAnimationFrame(traceCurve); }
+  else clearTrace();
+
+  prevBtn.disabled = (cur === 0);
+  nextBtn.disabled = (cur === steps.length-1);
+  nextBtn.textContent = (cur === steps.length-1) ? 'Done ✓' : 'Next →';
+
+  Array.prototype.forEach.call(dotsBox.children, function(d, j){
+    d.classList.toggle('cur', j === cur);
+    d.classList.toggle('seen', j < cur);
+  });
+  [0,1,2].forEach(function(p){
+    var chip = document.getElementById('phase'+p);
+    chip.classList.toggle('active', s.phase === p);
+    chip.classList.toggle('done', s.phase > p);
+  });
+}
+
+prevBtn.addEventListener('click', function(){ go(cur-1); });
+nextBtn.addEventListener('click', function(){ go(cur+1); });
+var PHASE_START = [0, 5, 7];   // first step index of each phase
+[0,1,2].forEach(function(p){
+  document.getElementById('phase'+p).addEventListener('click', function(){ go(PHASE_START[p]); });
+});
+document.addEventListener('keydown', function(e){
+  if (e.key === 'ArrowRight') go(cur+1);
+  if (e.key === 'ArrowLeft') go(cur-1);
+});
+
+/* ---------- boot ---------- */
+setScale('sketch', false);
+go(0);
+
+})();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

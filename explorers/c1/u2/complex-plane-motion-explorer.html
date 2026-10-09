@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How complex numbers move as t → ∞</title>
+<style>
+  :root{
+    --bg:#eef3fb; --card:#ffffff; --ink:#1d2540; --muted:#5b6784;
+    --input:#f28c28; --output:#12a5a0; --action:#7b5cd6; --grid:#dfe6f3;
+    --shadow:0 8px 24px rgba(123,92,214,.14);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,-apple-system,sans-serif;line-height:1.55}
+  .wrap{max-width:1100px;margin:0 auto;padding:28px 18px 60px}
+  h1{font-size:1.7rem;margin:0 0 6px}
+  h2{font-size:1.15rem;margin:0 0 10px;color:var(--action)}
+  .sub{color:var(--muted);margin-bottom:18px}
+  .card{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:20px 22px;margin-bottom:22px}
+  .grid{display:grid;grid-template-columns:1.2fr 1fr;gap:22px}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}}
+  canvas{width:100%;height:auto;border-radius:12px;background:#fbfcff;border:1px solid var(--grid)}
+  .controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:12px 0}
+  input[type=range]{flex:1;min-width:180px;accent-color:var(--input)}
+  button,select{border:none;border-radius:10px;padding:9px 14px;font-size:.95rem;cursor:pointer;background:var(--action);color:#fff;font-weight:600}
+  button.ghost{background:#efeafc;color:var(--action)}
+  select{background:#fff;color:var(--ink);border:2px solid var(--action);max-width:100%}
+  .picker{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:8px}
+  .picker select{font-size:1.05rem;padding:10px 14px}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-weight:700;font-size:.9rem}
+  .in{background:#fff0e3;color:var(--input)} .out{background:#e1f6f5;color:var(--output)}
+  .eq{background:#f6f8fd;border-left:4px solid var(--action);border-radius:8px;padding:12px 14px;font-family:"Cambria","Georgia",serif;font-size:1.08rem;margin:8px 0}
+  .eq b.v{color:var(--input)} .eq b.o{color:var(--output)}
+  .big{font-size:1.3rem}
+  table{border-collapse:collapse;width:100%;font-size:.95rem}
+  td,th{padding:6px 8px;border-bottom:1px solid var(--grid);text-align:center}
+  th{color:var(--muted);font-weight:600}
+  tr.now td{background:#fff5ea;font-weight:700}
+  ol.steps{padding-left:20px} ol.steps li{margin-bottom:12px}
+  .verdict{font-size:1.05rem;padding:12px 14px;border-radius:10px;background:#e1f6f5;border:2px solid var(--output);margin-top:10px}
+  .note{font-size:.92rem;color:var(--muted)}
+  .legend span{margin-right:14px}
+  .dot{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:middle;margin-right:5px}
+  .rule{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:10px}
+  .rule div{background:#f6f8fd;border-radius:10px;padding:10px 12px;font-size:.93rem}
+  .rule b{display:block;color:var(--action)}
+  @media(max-width:700px){.rule{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="picker">
+    <label><b>Choose the function to explore:</b></label>
+    <select id="fn"></select>
+  </div>
+  <h1 id="title"></h1>
+  <div class="sub" id="subtitle"></div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Interactive: the complex plane</h2>
+      <div class="controls">
+        <label style="min-width:120px"><span class="pill in">t = <span id="tval">1.00</span></span></label>
+        <input type="range" id="t" min="0" max="10" step="0.01" value="1">
+        <button id="play">▶ Play t → ∞</button>
+        <button id="reset" class="ghost">Reset</button>
+      </div>
+      <canvas id="plane" width="640" height="560"></canvas>
+      <div class="legend note" style="margin-top:8px">
+        <span><i class="dot" style="background:var(--output)"></i>current value f(t)</span>
+        <span><i class="dot" style="background:#9be0dd"></i>path already travelled</span>
+        <span><i class="dot" style="background:#c9b8f5"></i>reference line / ray</span>
+        <span><i class="dot" style="background:var(--input)"></i>input t or fixed number</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>What the equation says right now</h2>
+      <div class="eq big" id="eqMain"></div>
+      <div class="eq" id="eqRect"></div>
+      <div class="eq" id="eqPolar"></div>
+      <div class="note" id="fnNote"></div>
+
+      <h2 style="margin-top:20px">How r and θ are calculated (live)</h2>
+      <div class="note" style="margin-bottom:6px">For any point x + iy: &nbsp; r = √(x² + y²) &nbsp;and&nbsp; θ = arctan(y / x) — the angle of the line from the origin to the point.</div>
+      <div class="eq" id="calcXY"></div>
+      <div class="eq" id="calcR"></div>
+      <div class="eq" id="calcTh"></div>
+
+      <h2 style="margin-top:20px">A few sample values</h2>
+      <table id="tbl">
+        <tr><th>t</th><th>f(t)</th><th>(Re, Im)</th><th>y / x</th><th>r</th><th>θ</th></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" id="stepsCard">
+    <h2 id="stepsTitle"></h2>
+    <ol class="steps" id="steps"></ol>
+    <div class="verdict" id="verdict"></div>
+  </div>
+
+  <div class="card">
+    <h2>The quick test for any of these questions</h2>
+    <p>Write f(t) = x(t) + i·y(t), then ask:</p>
+    <div class="rule">
+      <div><b>Is θ constant? (is y/x constant, or is y = 0?)</b> Yes → radial: it stays on one spoke from the origin. Then r growing = outward, r shrinking = inward.</div>
+      <div><b>Is one coordinate a non-zero constant?</b> Yes → a horizontal or vertical line that misses the origin. (If the constant is 0 the line passes through the origin and the motion is radial.)</div>
+      <div><b>Is r constant while θ turns?</b> Yes → circle. r and θ both changing with rotation → spiral. Both coordinates changing with no rotation → some curve (parabola, hyperbola…).</div>
+    </div>
+    <p class="note" style="margin-top:12px">The recurring trap: graphing y = t² on (t, t²) axes gives a parabola, and y = 1/t gives a hyperbola. But in the complex plane the point is (Re f(t), Im f(t)) — t is not an axis, only a knob. Plot what the number <em>is</em>, not what it looks like as a graph.</p>
+  </div>
+</div>
+
+<script>
+const S13=Math.sqrt(13);
+const fns = [
+ {key:'sq', primary:true, f:t=>[t*t,0], tmin:0,tmax:10, range:100, cx:0.32, cy:0.55, label:'t²', ref:'realaxis', showT:true,
+  title:'how does <span class="pill out">t²</span> move in the complex plane?',
+  sub:'Answer: <b>radially outward</b> — it slides along the positive real axis, straight away from the origin.',
+  note:'Modulus r = t² grows, angle θ stays exactly 0°. Growing r with fixed θ = one ray from the origin = <b>radially outward</b>.',
+  xy:t=>`x = t² = ${fmt(t)}² = <b class="o">${fmt(t*t)}</b>, &nbsp; y = <b class="o">0</b> (no imaginary part)`,
+  thExtra:'y = 0 for every t, so θ is stuck at 0°.',
+  stepsTitle:'Step-by-step: why "radially outward"',
+  steps:[
+   '<b>What is t?</b> A positive real number growing without bound: 1, 2, 3, 10, 100, …',
+   '<b>What is t²?</b> t times itself: 1, 4, 9, 100, 10000, … Still a positive real number — squaring a real never creates an imaginary part.',
+   '<b>Where does it sit?</b> A real number lives on the horizontal axis: t² = t² + 0·i is the point (t², 0).<div class="eq">t = 1 → (1, 0) &nbsp; t = 2 → (4, 0) &nbsp; t = 3 → (9, 0)</div>',
+   '<b>Polar view.</b><div class="eq">r = |t²| = t² (grows to ∞) &nbsp;&nbsp; θ = arg(t²) = 0 (never changes)</div>Fixed angle ⇒ stays on one ray (the positive real axis). Growing r ⇒ moves away from the origin.',
+   '<b>Match the choices.</b> Along a ray from the origin = "radially"; distance increasing = "outward". No rotation rules out circles and spirals; the ray passes through the origin, so it is not "a line not through the origin".'],
+  verdict:'✔ <b>Radially outward.</b> The point t² starts near 0 and slides right along the positive real axis forever.'},
+
+ {key:'q2', primary:true, f:t=>[1,t*t], tmin:0,tmax:5, range:10, cx:0.32, cy:0.82, label:'1 + i·t²', ref:'lineRe1', showT:false,
+  title:'how does <span class="pill out">1 + i·t²</span> move in the complex plane?',
+  sub:'Answer: <b>along part of a line that does not pass through the origin</b> — the vertical line Re = 1, climbing upward.',
+  note:'Re is frozen at 1, Im = t² climbs. θ = arctan(t²) rises from 0° toward 90° (never reaching it), so this is <b>not</b> radial — it is a vertical line at Re = 1, which misses the origin.',
+  xy:t=>`x = <b class="o">1</b> (constant), &nbsp; y = t² = ${fmt(t)}² = <b class="o">${fmt(t*t)}</b>`,
+  thExtra:'y/x = t²/1 keeps growing, so θ keeps changing ⇒ not radial.',
+  stepsTitle:'Step-by-step: why "a line not through the origin"',
+  steps:[
+   '<b>Split into real and imaginary parts.</b><div class="eq">1 + i·t² = <b class="o">1</b> + <b class="o">t²</b>·i ⇒ Re = 1, Im = t² ⇒ point (1, t²)</div>',
+   '<b>Watch each coordinate.</b> The real part is the constant 1 — it does not depend on t. The imaginary part grows: 0, 1, 4, 9, 16, …<div class="eq">t = 0 → (1, 0) &nbsp; t = 1 → (1, 1) &nbsp; t = 2 → (1, 4) &nbsp; t = 3 → (1, 9)</div>',
+   '<b>Recognize the shape.</b> Every point has x = 1. All such points form the vertical line Re = 1; the point just slides up it.',
+   '<b>Does the line pass through the origin?</b> The origin is (0, 0), whose x is 0, not 1. So no — the line stays 1 unit to the right of the origin forever.',
+   '<b>Why "part of" the line?</b> t² ≥ 0, so the point starts at (1, 0) and only climbs; the lower half (Im &lt; 0) is never visited.',
+   '<b>Why not radial?</b> θ = arctan(t²) changes: 0° at t = 0, 45° at t = 1, ≈ 76° at t = 2, creeping toward 90°. The point crosses spoke after spoke. Delete the "1" and you get i·t², which <em>is</em> radial — try it in the dropdown.'],
+  verdict:'✔ <b>Along part of a line that does not pass through the origin.</b> The line is Re = 1; the point climbs its upper half as t → ∞.'},
+
+ {key:'q3', primary:true, f:t=>[2/t,3/t], tmin:0.5,tmax:10, range:4, cx:0.5, cy:0.5, label:'(2 + 3i)/t', ref:'ray23', showT:false,
+  title:'how does <span class="pill out">(2 + 3i) / t</span> move in the complex plane?',
+  sub:'Answer: <b>radially inward</b> — it slides along the ray from the origin through 2 + 3i, shrinking toward 0.',
+  note:'y/x = 3/2 for every t, so θ = arctan(1.5) ≈ 56.31° is frozen. r = √13/t shrinks toward 0 ⇒ <b>radially inward</b> along the ray through 2 + 3i.',
+  xy:t=>`x = 2 / ${fmt(t)} = <b class="o">${fmt(2/t)}</b>, &nbsp; y = 3 / ${fmt(t)} = <b class="o">${fmt(3/t)}</b>`,
+  rExtra:t=>`shortcut: r = √13 / t = 3.606 / ${fmt(t)} = ${fmt(S13/t)}`,
+  thExtra:'y / x = (3/t)/(2/t) = 3/2 — the t cancels, so θ never changes.',
+  stepsTitle:'Step-by-step: why "radially inward"',
+  steps:[
+   '<b>Divide into real and imaginary parts.</b> Dividing by a real number t divides each part separately:<div class="eq">(2 + 3i)/t = <b class="o">2/t</b> + <b class="o">3/t</b>·i ⇒ point (2/t, 3/t)</div>',
+   '<b>Plug in numbers.</b><div class="eq">t = 1 → (2, 3) &nbsp; t = 2 → (1, 1.5) &nbsp; t = 4 → (0.5, 0.75) &nbsp; t = 10 → (0.2, 0.3)</div>Both coordinates shrink toward 0.',
+   '<b>Check the direction.</b> Im/Re = (3/t)/(2/t) = 3/2 — the t cancels!<div class="eq">θ = arctan(3/2) ≈ 56.31° for every t</div>Constant angle ⇒ the point never leaves the ray from 0 through 2 + 3i. That is "radial".',
+   '<b>Check the distance.</b><div class="eq">r = |2 + 3i| / t = √(2² + 3²) / t = √13 / t ≈ 3.61 / t</div>3.61, 1.80, 0.90, 0.36, … → 0. Same spoke, decreasing distance = <b>inward</b>.',
+   '<b>The official solution\'s idea.</b> 1/t is a positive real number. Multiplying a complex number by a positive real only rescales its length, never rotates it. So (2 + 3i)·(1/t) keeps the direction of 2 + 3i and just gets shorter. Multiply by t instead and the same ray is traced outward.'],
+  verdict:'✔ <b>Radially inward.</b> Fixed angle 56.31°, distance √13/t → 0. The point runs down the ray toward the origin (approaching but never reaching it).'},
+
+ // ---- extra comparisons ----
+ {key:'inv', f:t=>[t>0?1/t:1e9,0], tmin:0.5,tmax:10, range:3, cx:0.32,cy:0.55, label:'1/t', ref:'realaxis',
+  title:'how does <span class="pill out">1/t</span> move in the complex plane?', sub:'Answer: <b>radially inward</b> along the positive real axis.',
+  note:'θ = 0° always, r = 1/t shrinks ⇒ <b>radially inward</b>. Same ray as t², opposite direction.', thExtra:'y = 0 for every t ⇒ θ = 0° fixed.', generic:true},
+ {key:'it2', f:t=>[0,t*t], tmin:0,tmax:5, range:10, cx:0.5,cy:0.82, label:'i·t²', ref:null,
+  title:'how does <span class="pill out">i·t²</span> move in the complex plane?', sub:'Answer: <b>radially outward</b> along the positive imaginary axis.',
+  note:'Re = 0 for all t: on the imaginary axis. θ = 90° constant, r = t² growing ⇒ <b>radially outward</b>. The "+1" in 1 + i·t² is the whole difference.', thExtra:'x = 0 ⇒ θ = 90° fixed.', generic:true},
+ {key:'line1', f:t=>[1,t], tmin:0,tmax:10, range:10, cx:0.32,cy:0.82, label:'1 + i·t', ref:'lineRe1',
+  title:'how does <span class="pill out">1 + i·t</span> move in the complex plane?', sub:'Answer: <b>along part of a line not through the origin</b> (Re = 1).',
+  note:'Same line Re = 1 as 1 + i·t², just a slower climb. The shape of the path is what matters, not the speed.', thExtra:'y/x = t changes ⇒ not radial.', generic:true},
+ {key:'mul', f:t=>[2*t,3*t], tmin:0,tmax:10, range:40, cx:0.5,cy:0.5, label:'(2 + 3i)·t', ref:'ray23',
+  title:'how does <span class="pill out">(2 + 3i)·t</span> move in the complex plane?', sub:'Answer: <b>radially outward</b> along the ray through 2 + 3i.',
+  note:'Same ray (θ = 56.31° frozen), but r = √13·t grows ⇒ <b>radially outward</b>. Multiplying by t or 1/t only changes length, never direction.', thExtra:'y / x = 3t/2t = 3/2 — t cancels ⇒ θ fixed.', generic:true},
+ {key:'lineIm', f:t=>[2,3/t], tmin:0.5,tmax:10, range:4, cx:0.5,cy:0.5, label:'2 + 3i/t', ref:null,
+  title:'how does <span class="pill out">2 + 3i/t</span> move in the complex plane?', sub:'Answer: <b>along part of a line not through the origin</b> (Re = 2).',
+  note:'Re = 2 fixed, only Im shrinks ⇒ vertical line Re = 2. θ changes from 56° toward 0°, so <b>not</b> radial.', thExtra:'y/x = 1.5/t changes ⇒ not radial.', generic:true},
+ {key:'circ', f:t=>[Math.cos(t),Math.sin(t)], tmin:0,tmax:10, range:2, cx:0.5,cy:0.5, label:'eⁱᵗ', ref:null,
+  title:'how does <span class="pill out">eⁱᵗ</span> move in the complex plane?', sub:'Answer: <b>counterclockwise along a circle</b>.',
+  note:'r = 1 forever, θ = t grows: the point only rotates, never changes distance ⇒ <b>counterclockwise along a circle</b>.', thExtra:'θ = t (in radians) keeps increasing ⇒ rotation.', generic:true},
+ {key:'spiralOut', f:t=>[t*Math.cos(t),t*Math.sin(t)], tmin:0,tmax:10, range:10, cx:0.5,cy:0.5, label:'t·eⁱᵗ', ref:null,
+  title:'how does <span class="pill out">t·eⁱᵗ</span> move in the complex plane?', sub:'Answer: <b>spirals outward, counterclockwise</b>.',
+  note:'r = t grows and θ = t keeps turning ⇒ <b>spirals outward, counterclockwise</b>.', thExtra:'θ = t increases while r = t increases ⇒ spiral.', generic:true},
+ {key:'spiralCW', f:t=>[t*Math.cos(-3*t),t*Math.sin(-3*t)], tmin:0,tmax:10, range:10, cx:0.5,cy:0.5, label:'t·e⁻³ⁱᵗ', ref:null,
+  title:'how does <span class="pill out">t·e⁻³ⁱᵗ</span> move in the complex plane?', sub:'Answer: <b>spirals outward, clockwise</b>.',
+  note:'Polar form directly: r = t (grows) and θ = −3t (decreases, i.e. turns clockwise, 3 radians per unit of t). Growing r + clockwise turning ⇒ <b>spirals outward, clockwise</b>. Compare with t·eⁱᵗ, which turns counterclockwise.',
+  xy:t=>`x = t·cos(−3t) = ${fmt(t)}·cos(${fmt(-3*t)}) = <b class="o">${fmt(t*Math.cos(-3*t))}</b>, &nbsp; y = t·sin(−3t) = ${fmt(t)}·sin(${fmt(-3*t)}) = <b class="o">${fmt(t*Math.sin(-3*t))}</b>`,
+  rExtra:t=>`shortcut: r = |t|·|e⁻³ⁱᵗ| = t·1 = ${fmt(t)}`,
+  thExtra:'θ = −3t (radians), reduced to the range −180°…180°. It keeps decreasing ⇒ clockwise rotation. A negative sign in the exponent means clockwise.', generic:true},
+ {key:'spiralIn', f:t=>[(2*Math.cos(t)-3*Math.sin(t))/t,(2*Math.sin(t)+3*Math.cos(t))/t], tmin:0.5,tmax:10, range:4, cx:0.5,cy:0.5, label:'(2 + 3i)·eⁱᵗ/t', ref:null,
+  title:'how does <span class="pill out">(2 + 3i)·eⁱᵗ/t</span> move in the complex plane?', sub:'Answer: <b>spirals inward, counterclockwise</b>.',
+  note:'θ = 56.31° + t turns and r = √13/t shrinks ⇒ <b>spirals inward, counterclockwise</b>.', thExtra:'θ increases while r shrinks ⇒ inward spiral.', generic:true},
+ {key:'parab', f:t=>[t,t*t], tmin:0,tmax:5, range:10, cx:0.32,cy:0.82, label:'t + i·t²', ref:null, showT:true,
+  title:'how does <span class="pill out">t + i·t²</span> move in the complex plane?', sub:'Answer: <b>along part of a parabola</b>.',
+  note:'Re = t, Im = t²: this is the (t, t²) graph living inside the complex plane ⇒ <b>a parabola</b>. Neither θ nor r is constant, and there is no rotation.', thExtra:'y/x = t changes ⇒ not radial.', generic:true},
+];
+
+function fmt(x){return Math.abs(x)>=1000?x.toExponential(2):(+x.toFixed(2)).toString();}
+function cplx(x,y){return fmt(x)+(y?(y>0?' + ':' − ')+fmt(Math.abs(y))+'i':'');}
+
+const sel=document.getElementById('fn'), slider=document.getElementById('t'), tval=document.getElementById('tval');
+const cv=document.getElementById('plane'), ctx=cv.getContext('2d');
+let playing=false;
+fns.forEach((F,i)=>{const o=document.createElement('option');o.value=i;o.textContent=(F.primary?'★ ':'   ')+'f(t) = '+F.label+' — '+F.sub.replace(/<[^>]+>/g,'').replace('Answer: ','').split('—')[0].trim();sel.appendChild(o);});
+
+function current(){return fns[+sel.value];}
+
+function setup(){
+  const F=current();
+  slider.min=F.tmin; slider.max=F.tmax; slider.value=Math.min(Math.max(1,F.tmin),F.tmax);
+  document.getElementById('title').innerHTML='As <span class="pill in">t → +∞</span>, '+F.title;
+  document.getElementById('subtitle').innerHTML=F.sub+' Move the slider and watch.';
+  const card=document.getElementById('stepsCard');
+  if(F.generic){card.style.display='none';}
+  else{card.style.display='';document.getElementById('stepsTitle').textContent=F.stepsTitle;
+    document.getElementById('steps').innerHTML=F.steps.map(s=>'<li>'+s+'</li>').join('');
+    document.getElementById('verdict').innerHTML=F.verdict;}
+  playing=false; draw();
+}
+
+function draw(){
+  const F=current(), t=+slider.value;
+  const W=cv.width,H=cv.height, cx=W*F.cx, cy=H*F.cy, range=F.range;
+  const s=Math.min(W*(F.cx<0.4?0.62:0.9),H*(F.cy>0.7?0.75:0.9))/range;
+  ctx.clearRect(0,0,W,H);
+  const step=range/(F.cx<0.4||F.cy>0.7?5:4);
+  ctx.strokeStyle='#e5ebf6'; ctx.lineWidth=1;
+  for(let k=-8;k<=8;k++){const x=cx+k*step*s,y=cy-k*step*s;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  ctx.strokeStyle='#8a96b3'; ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(W,cy);ctx.stroke();ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,H);ctx.stroke();
+  ctx.fillStyle='#5b6784'; ctx.font='13px Segoe UI, sans-serif';
+  ctx.fillText('Re',W-30,cy-8); ctx.fillText('Im',cx+8,14);
+  for(let k=-6;k<=6;k++){if(!k)continue;const px=cx+k*step*s,py=cy-k*step*s;if(px>0&&px<W)ctx.fillText(fmt(k*step),px-8,cy+16);if(py>0&&py<H)ctx.fillText(fmt(k*step)+'i',cx+4,py+4);}
+  // reference overlays
+  ctx.fillStyle='#7b5cd6';
+  if(F.ref==='lineRe1'){ctx.strokeStyle='#c9b8f5';ctx.lineWidth=2;ctx.setLineDash([4,6]);ctx.beginPath();ctx.moveTo(cx+s,0);ctx.lineTo(cx+s,H);ctx.stroke();ctx.setLineDash([]);ctx.fillText('line Re = 1',cx+s+6,H-10);}
+  if(F.ref==='ray23'){ctx.strokeStyle='#c9b8f5';ctx.lineWidth=2;ctx.setLineDash([4,6]);ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+2*range*3*s,cy-3*range*3*s);ctx.stroke();ctx.setLineDash([]);ctx.fillText('ray through 0 and 2 + 3i',cx+8,cy-8);
+    if(3*s<cy){ctx.fillStyle='#f28c28';ctx.beginPath();ctx.arc(cx+2*s,cy-3*s,6,0,7);ctx.fill();ctx.fillText('2 + 3i',cx+2*s+8,cy-3*s-8);}}
+  if(F.ref==='realaxis'){ctx.strokeStyle='#c9b8f5';ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(W,cy);ctx.stroke();ctx.fillText('ray: positive real axis',cx+8,cy-8);}
+  // path
+  ctx.strokeStyle='#9be0dd'; ctx.lineWidth=4; ctx.beginPath();
+  for(let u=F.tmin;u<=t;u+=0.01){const [x,y]=F.f(u);const px=cx+x*s,py=cy-y*s;u===F.tmin?ctx.moveTo(px,py):ctx.lineTo(px,py);}
+  ctx.stroke();
+  const [x,y]=F.f(t); const px=cx+x*s, py=cy-y*s;
+  const r=Math.hypot(x,y), th=Math.atan2(y,x), deg=(th*180/Math.PI).toFixed(2);
+  ctx.setLineDash([6,5]);ctx.strokeStyle='#7b5cd6';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(px,py);ctx.stroke();ctx.setLineDash([]);
+  if(Math.abs(th)>0.01){ctx.strokeStyle='#7b5cd6';ctx.beginPath();ctx.arc(cx,cy,30,0,-th,th>0);ctx.stroke();}
+  ctx.fillStyle='#7b5cd6';ctx.fillText('θ = '+deg+'°',cx+36,cy+22);
+  ctx.fillText('r = '+fmt(r),(cx+px)/2+10,(cy+py)/2+14);
+  ctx.strokeStyle='#f28c28';ctx.setLineDash([2,4]);ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(px,cy);ctx.lineTo(px,py);ctx.stroke();ctx.beginPath();ctx.moveTo(cx,py);ctx.lineTo(px,py);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#f28c28';
+  if(Math.abs(y)>1e-9)ctx.fillText('Re = '+fmt(x),px+6,cy+30);
+  if(Math.abs(x)>1e-9&&Math.abs(y)>1e-9)ctx.fillText('Im = '+fmt(y),cx-70,py-6);
+  if(F.showT){const tx=cx+t*s;ctx.beginPath();ctx.arc(tx,cy,5,0,7);ctx.fill();ctx.fillText('t',tx-3,cy+30);}
+  ctx.fillStyle='#12a5a0';ctx.beginPath();ctx.arc(px,py,9,0,7);ctx.fill();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(px,py,4,0,7);ctx.fill();
+  ctx.fillStyle='#12a5a0';ctx.font='bold 14px Segoe UI, sans-serif';ctx.fillText(F.label+' = '+cplx(x,y),px+14,py-12);
+  // right panel
+  tval.textContent=t.toFixed(2);
+  document.getElementById('eqMain').innerHTML=`<b class="v">t = ${t.toFixed(2)}</b> &nbsp;⇒&nbsp; ${F.label} = <b class="o">${cplx(x,y)}</b>`;
+  document.getElementById('eqRect').innerHTML=`Point in the plane: &nbsp; (Re, Im) = (<b class="o">${fmt(x)}</b>, <b class="o">${fmt(y)}</b>)`;
+  document.getElementById('eqPolar').innerHTML=`Polar form: &nbsp; r = <b class="o">${fmt(r)}</b>, &nbsp; θ = <b class="o">${deg}°</b>`;
+  document.getElementById('fnNote').innerHTML=F.note;
+  document.getElementById('calcXY').innerHTML=F.xy?F.xy(t):`x = Re = <b class="o">${fmt(x)}</b>, &nbsp; y = Im = <b class="o">${fmt(y)}</b>`;
+  let rLine=`r = √(x² + y²) = √(${fmt(x)}² + ${fmt(y)}²) = √(${fmt(x*x)} + ${fmt(y*y)}) = √${fmt(x*x+y*y)} = <b class="o">${fmt(r)}</b>`;
+  if(F.rExtra)rLine+=`<br><span class="note">${F.rExtra(t)}</span>`;
+  document.getElementById('calcR').innerHTML=rLine;
+  let thLine;
+  if(Math.abs(x)<1e-9)thLine=`x = 0 ⇒ point is on the imaginary axis ⇒ θ = <b class="o">${y>0?90:-90}°</b>`;
+  else if(Math.abs(y)<1e-9)thLine=`y = 0 ⇒ point is on the real axis ⇒ θ = <b class="o">${x>0?0:180}°</b>`;
+  else if(x>0)thLine=`θ = arctan(y / x) = arctan(${fmt(y)} / ${fmt(x)}) = arctan(<b class="o">${fmt(y/x)}</b>) = ${fmt(th)} rad = <b class="o">${deg}°</b>`;
+  else{const base=Math.atan(y/x)*180/Math.PI;thLine=`x &lt; 0, so add 180°: θ = arctan(${fmt(y)} / ${fmt(x)}) ${y>=0?'+':'−'} 180° = ${fmt(base)}° ${y>=0?'+':'−'} 180° = <b class="o">${deg}°</b>`;}
+  if(F.thExtra)thLine+=`<br><span class="note">${F.thExtra}</span>`;
+  document.getElementById('calcTh').innerHTML=thLine;
+  const tbl=document.getElementById('tbl');while(tbl.rows.length>1)tbl.deleteRow(1);
+  const samples=[F.tmin,0.5,1,2,3,5,10].filter((v,i,a)=>v>=F.tmin&&v<=F.tmax&&a.indexOf(v)===i);
+  samples.forEach(v=>{const [a,b]=F.f(v);const row=tbl.insertRow();if(Math.abs(v-t)<0.03)row.className='now';
+    row.innerHTML=`<td>${v}</td><td>${cplx(a,b)}</td><td>(${fmt(a)}, ${fmt(b)})</td><td>${Math.abs(a)<1e-9?'—':fmt(b/a)}</td><td>${fmt(Math.hypot(a,b))}</td><td>${(Math.atan2(b,a)*180/Math.PI).toFixed(2)}°</td>`;});
+}
+sel.addEventListener('change',setup);
+slider.addEventListener('input',()=>{playing=false;draw();});
+document.getElementById('reset').onclick=()=>{playing=false;slider.value=Math.min(Math.max(1,current().tmin),current().tmax);draw();};
+document.getElementById('play').onclick=()=>{playing=!playing;if(playing){if(+slider.value>=current().tmax)slider.value=current().tmin;tick();}};
+function tick(){if(!playing)return;const F=current();let v=+slider.value+(F.tmax-F.tmin)/300;if(v>=F.tmax){v=F.tmax;playing=false;}slider.value=v;draw();requestAnimationFrame(tick);}
+setup();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

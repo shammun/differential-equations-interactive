@@ -1,0 +1,2093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>18.03 Recitation 13 — Phase lines, step by step</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#f5f5f5;
+    font-family:"Open Sans","Segoe UI",Helvetica,Arial,sans-serif;color:#444;}
+  #wrap{position:relative;width:100%;height:100vh;height:100dvh;overflow:hidden;}
+  #stage{position:absolute;left:0;top:0;transform-origin:0 0;}
+  #stage.land{width:1180px;height:848px;}
+  #stage.port{width:660px;height:1392px;}
+
+  #bar{position:absolute;left:0;top:0;right:0;height:44px;}
+  #title{position:absolute;left:14px;top:11px;font-weight:700;font-size:17px;color:#4a4a4a;}
+  #explBtn,#helpBtn{position:absolute;top:11px;font-weight:700;font-size:16px;color:#1a9cd8;cursor:pointer;user-select:none;}
+  #helpBtn{right:14px;}
+  .land #explBtn{right:128px;}
+  .port #explBtn{right:112px;font-size:14px;}
+  .port #helpBtn{font-size:14px;}
+  .port #title{font-size:12.5px;top:14px;}
+
+  #help{display:none;position:absolute;left:0;top:44px;right:0;bottom:0;box-sizing:border-box;
+    overflow-y:auto;z-index:6;background:#f5f5f5;padding:4px 18px 22px 14px;font-size:14px;line-height:1.55;color:#333;}
+  #help h3{margin:13px 0 4px;font-size:15px;color:#4a4a4a;}
+  #help p{margin:0 0 8px;max-width:940px;}
+  #help dt{font-weight:700;color:#222;margin-top:9px;}
+  #help dd{margin:0 0 4px 0;max-width:940px;}
+  i{font-family:"Times New Roman",Times,serif;}
+
+  #plotArea{position:absolute;}
+  .land #plotArea{left:18px;top:52px;width:624px;height:624px;}
+  .port #plotArea{left:20px;top:48px;width:620px;height:560px;}
+  canvas{position:absolute;left:0;top:0;display:block;touch-action:none;cursor:crosshair;}
+
+  #under{position:absolute;font-size:13.5px;}
+  .land #under{left:18px;top:682px;width:624px;}
+  .port #under{left:20px;top:616px;width:620px;}
+  #ro{display:flex;gap:14px;flex-wrap:wrap;font-weight:700;color:#555;align-items:center;
+    min-height:22px;font-variant-numeric:tabular-nums;font-size:13px;}
+  #ro .v{font-weight:400;color:#222;display:inline-block;min-width:46px;}
+  #ro .hl{color:#b7950b;}
+  #btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;align-items:center;}
+  button.b{font:700 12.5px "Open Sans","Segoe UI",Arial,sans-serif;color:#555;background:#fff;
+    border:1px solid #aaa;border-radius:3px;padding:3px 9px;cursor:pointer;}
+  button.b:hover{border-color:#1a9cd8;color:#1a9cd8;}
+  button.b.act{background:#1a9cd8;color:#fff;border-color:#1a9cd8;}
+  button.b:focus-visible,.chk:focus-visible{outline:2px solid #1a9cd8;}
+  .chk{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:12.5px;color:#555;cursor:pointer;user-select:none;}
+  .chk .bx{width:12px;height:12px;border:2px solid #444;background:#fff;box-sizing:border-box;}
+  .chk.on .bx{background:#555;border-color:#555;}
+  #legend{margin-left:auto;font-weight:400;font-size:11.5px;color:#666;display:flex;gap:9px;flex-wrap:wrap;}
+  #legend .sw{display:inline-block;width:15px;height:3px;vertical-align:middle;margin-right:4px;border-radius:2px;}
+  #legend .dt{display:inline-block;width:9px;height:9px;border-radius:5px;vertical-align:middle;margin-right:4px;}
+
+  #side{position:absolute;display:flex;flex-direction:column;}
+  .land #side{left:656px;top:48px;width:506px;height:782px;}
+  .port #side{left:20px;top:760px;width:620px;height:612px;}
+  #tabs{display:flex;gap:4px;flex:0 0 auto;flex-wrap:wrap;}
+  .tb{flex:1 1 auto;border:1px solid #c9c9c9;background:#fff;border-radius:4px 4px 0 0;padding:6px 3px;
+    text-align:center;font-weight:700;font-size:11.5px;color:#555;cursor:pointer;white-space:nowrap;}
+  .tb.on{background:#1a9cd8;color:#fff;border-color:#1a9cd8;}
+  #steps{display:flex;gap:4px;margin:6px 0 4px;flex-wrap:wrap;flex:0 0 auto;}
+  .sp{border:1px solid #c9c9c9;background:#fff;border-radius:12px;padding:2px 9px;font-size:11.5px;color:#555;cursor:pointer;}
+  .sp.on{background:#4a4a4a;color:#fff;border-color:#4a4a4a;}
+  .sp.done{border-color:#1a8f1a;color:#1a8f1a;}
+  #content{flex:1 1 auto;overflow-y:auto;background:#fff;border:1px solid #d5d5d5;border-radius:4px;
+    padding:10px 13px 16px;font-size:13.5px;line-height:1.52;color:#333;}
+  #content h2{margin:0 0 6px;font-size:15.5px;color:#4a4a4a;}
+  #content h3{margin:11px 0 3px;font-size:13.5px;color:#4a4a4a;}
+  #content p{margin:0 0 7px;}
+  #content .do{background:#eef7fb;border-left:3px solid #1a9cd8;padding:5px 9px;margin:7px 0;}
+  #content .do b{color:#1a7bb0;}
+  #content .ans{background:#eef9ee;border:1px solid #9cd39c;border-radius:4px;padding:5px 9px;margin:7px 0;}
+  #content .warn{background:#fff5e6;border-left:3px solid #e08a00;padding:5px 9px;margin:7px 0;}
+  #content .try{background:#f7f7f7;border-left:3px solid #999;padding:5px 9px;margin:7px 0;font-size:13px;}
+  #content .ctl{display:flex;align-items:center;gap:8px;margin:5px 0;font-weight:700;color:#555;font-size:12.5px;}
+  #content .ctl input[type=range]{flex:1;min-width:80px;accent-color:#1a9cd8;}
+  #content .ctl .val{font-weight:400;color:#c0392b;min-width:54px;text-align:right;font-variant-numeric:tabular-nums;}
+  #content .row{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0;}
+  #content .eq{font-family:"Times New Roman",Times,serif;font-size:15px;}
+  #content .eqb{font-family:"Times New Roman",Times,serif;font-size:15.5px;text-align:center;margin:7px 0;}
+  #content ol,#content ul{margin:4px 0 7px 19px;padding:0;}
+  #content li{margin:2px 0;}
+  #content table.t{border-collapse:collapse;margin:6px 0;font-size:12.5px;width:100%;}
+  #content table.t td,#content table.t th{border:1px solid #ddd;padding:3px 6px;text-align:left;}
+  #content table.t th{background:#f2f2f2;color:#555;}
+  #content table.t td.n{text-align:right;font-variant-numeric:tabular-nums;}
+  .r{color:#c0392b;font-weight:700;} .g{color:#1a8f1a;font-weight:700;}
+  .bl{color:#1f4e79;font-weight:700;} .o{color:#b7950b;font-weight:700;} .c{color:#0a8ea0;font-weight:700;}
+  .frac{display:inline-flex;flex-direction:column;vertical-align:-0.52em;text-align:center;margin:0 .16em;
+    font-family:"Times New Roman",Times,serif;}
+  .frac span{padding:0 .28em;line-height:1.16;}
+  .frac .nu{border-bottom:1.1px solid currentColor;}
+  .rad{border-top:1.1px solid currentColor;padding:0 .12em;}
+  .quiz{border:1px solid #d5d5d5;border-radius:4px;padding:6px 9px;margin:6px 0;background:#fcfcfc;}
+  .quiz .qa{display:none;margin-top:5px;padding-top:5px;border-top:1px dashed #ccc;color:#1a6b3c;}
+  .quiz.open .qa{display:block;}
+
+  #expl{display:none;position:absolute;box-sizing:border-box;z-index:30;background:#fff;border:1px solid #c9c9c9;
+    border-radius:5px;box-shadow:0 6px 26px rgba(0,0,0,.28);font-size:12.5px;line-height:1.42;color:#333;
+    flex-direction:column;overflow:hidden;resize:both;min-width:280px;min-height:90px;}
+  #expl.open{display:flex;}
+  #expl.min{height:auto!important;min-height:0;resize:none;}
+  #explBar{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:5px 8px;background:#e9edf3;
+    border-bottom:1px solid #d5d5d5;border-radius:5px 5px 0 0;cursor:move;user-select:none;
+    font-weight:700;font-size:12.5px;color:#4a4a4a;touch-action:none;}
+  #expl.min #explBar{border-bottom:none;border-radius:5px;}
+  #explBar .spc{flex:1;}
+  #explBar .ib{width:20px;height:20px;border:1px solid #999;border-radius:3px;background:#fff;text-align:center;
+    line-height:18px;font-size:14px;cursor:pointer;color:#444;}
+  #explBar .ib:hover{background:#1a9cd8;color:#fff;border-color:#1a9cd8;}
+  #explBody{flex:1 1 auto;overflow-y:auto;padding:7px 11px 10px;}
+  #expl.min #explBody{display:none;}
+  #expl h3{margin:8px 0 2px;font-size:12.8px;color:#4a4a4a;} #expl h3:first-child{margin-top:0;}
+  #expl p{margin:0 0 4px;}
+  #expl .eq{font-family:"Times New Roman",Times,serif;font-size:14px;}
+  #expl .box{background:#f3f6fb;border-left:3px solid #1a9cd8;padding:3px 8px;margin:4px 0;}
+  #expl .ok{background:#eef9ee;border-left:3px solid #1a8f1a;padding:3px 8px;margin:4px 0;}
+  #expl .bad{background:#fdeeec;border-left:3px solid #c0392b;padding:3px 8px;margin:4px 0;}
+  #expl table{border-collapse:collapse;margin:4px 0;font-size:12px;font-variant-numeric:tabular-nums;width:100%;}
+  #expl td,#expl th{border-bottom:1px solid #e9e9e9;padding:2px 5px;text-align:right;}
+  #expl td:first-child,#expl th:first-child{text-align:left;}
+  #expl th{color:#666;}
+  #expl .hint{color:#777;font-style:italic;}
+  #expl .pill{display:inline-block;min-width:15px;text-align:center;border-radius:3px;padding:0 5px;font-weight:700;}
+  #expl .pos{background:#e6f4e6;color:#1a8f1a;} #expl .neg{background:#fbe9e7;color:#c0392b;} #expl .zer{background:#eee;color:#555;}
+  #expl tr.cur td{background:#fff5e6;font-weight:700;}
+  .hid{display:none!important;}
+</style>
+</head>
+<body>
+<div id="wrap">
+<div id="stage" class="land">
+
+  <div id="bar">
+    <div id="title">18.03 RECITATION 13 · PHASE LINES · THE HORSESHOE CRAB FARM</div>
+    <div id="explBtn" role="button" tabindex="0">+ explanation</div>
+    <div id="helpBtn" role="button" tabindex="0">+ help</div>
+  </div>
+
+  <div id="help">
+    <h3>What this app is</h3>
+    <p>A complete walk-through of Recitation 13. The left window is a live picture; the right column is a
+    sequence of tabs, each split into small steps. Every step has a blue <b>Do this</b> box telling you exactly
+    which control to touch, and the floating <b>+ explanation</b> panel recomputes every number for the settings
+    you have chosen. Tabs 1–2 build the vocabulary (slope field, isocline, solution curve, critical point, phase
+    line, stability, bifurcation) because the recitation assumes all of it; tabs 3–8 are parts (a) to (f) and the
+    final recommendation.</p>
+
+    <h3>Glossary — every term used in the solutions</h3>
+    <dl>
+      <dt>Autonomous equation</dt>
+      <dd>An equation <i>ẏ</i> = <i>f</i>(<i>y</i>) whose right-hand side contains no <i>t</i>. The rule depends on
+      <i>where</i> you are, never on <i>when</i>. Consequence: the slope field is made of horizontal stripes, and
+      shifting a solution sideways in time gives another solution.</dd>
+      <dt><i>ẏ</i> (y-dot)</dt>
+      <dd>d<i>y</i>/d<i>t</i> — the rate of change of the population in kilocrabs per month. The dot always means
+      "per unit time".</dd>
+      <dt><i>f</i>(<i>y</i>)</dt>
+      <dd>The right-hand side, here −¼ + <i>y</i> − <i>y</i>²/<i>a</i>. It is a formula whose <b>input is y</b> and whose
+      <b>output is the velocity</b>. Its graph (a downward parabola) is the single most useful picture in the problem.</dd>
+      <dt><i>f′</i>(<i>y</i>)</dt>
+      <dd>d<i>f</i>/d<i>y</i> = 1 − 2<i>y</i>/<i>a</i>: the <b>slope of that parabola</b>, differentiated with respect to
+      <i>y</i>, not <i>t</i>. It is <b>not</b> <i>ÿ</i>. (In fact <i>ÿ</i> = <i>f′</i>(<i>y</i>)·<i>f</i>(<i>y</i>), which is
+      zero at every equilibrium and therefore useless for classifying them.)</dd>
+      <dt>Slope field / direction field</dt>
+      <dd>At each point of a grid in the (<i>t</i>, <i>y</i>) plane, draw a short dash whose slope is the number the
+      equation returns there. Nothing is solved; the rule is simply evaluated many times.</dd>
+      <dt>Isocline</dt>
+      <dd>"Same slope": the set of points where the equation returns one fixed value <i>m</i>, i.e. <i>f</i>(<i>y</i>) = <i>m</i>.
+      For an autonomous equation this is one or more <b>horizontal lines</b>, because the condition involves only <i>y</i>.</dd>
+      <dt>Nullcline (<i>m</i> = 0 isocline)</dt>
+      <dd>Where the dashes are flat. For an autonomous equation these horizontal lines are themselves solutions —
+      the equilibria.</dd>
+      <dt>Critical point / equilibrium / constant solution</dt>
+      <dd>A number <i>y</i>* with <i>f</i>(<i>y</i>*) = 0. The constant function <i>y</i>(<i>t</i>) ≡ <i>y</i>* solves the
+      equation. On the graph of <i>f</i> it is a place where the parabola meets the horizontal axis.</dd>
+      <dt>Solution curve / integral curve</dt>
+      <dd>The graph of a function <i>y</i>(<i>t</i>) obeying the rule at every one of its points. Built by starting at an
+      initial condition and repeatedly stepping in the direction the dash points (Euler's method; the app uses the
+      finer Runge–Kutta 4).</dd>
+      <dt>Phase line</dt>
+      <dd>The <i>y</i>-axis alone, carrying a dot at each critical point and an arrow in each gap showing which way
+      solutions travel there (up if <i>f</i> &gt; 0, down if <i>f</i> &lt; 0). It is the graph of <i>f</i> with all the
+      detail thrown away except the signs.</dd>
+      <dt>Stable / unstable / semi-stable</dt>
+      <dd>Stable: arrows on both sides point in (<i>f′</i> &lt; 0), and nearby herds return. Unstable: both arrows point
+      out (<i>f′</i> &gt; 0). Semi-stable: the parabola touches the axis without crossing, so one arrow points in and the
+      other points away (<i>f</i> = <i>f′</i> = 0). Mathlet colours: green, red, cyan.</dd>
+      <dt>Discriminant</dt>
+      <dd>The <i>b</i>² − 4<i>ac</i> under the square root of the quadratic formula. Here it is <i>a</i>² − <i>a</i>;
+      its sign decides whether there are two equilibria, one, or none.</dd>
+      <dt>Bifurcation diagram</dt>
+      <dd>All the phase lines at once: horizontal axis <i>a</i>, vertical axis <i>y</i>, and above each <i>a</i> you see that
+      farm's phase line. The curve drawn is the locus of critical points.</dd>
+      <dt>Saddle-node (fold) bifurcation</dt>
+      <dd>The event at <i>a</i> = 1 where two equilibria collide and annihilate. It happens exactly where the graph of
+      <i>f</i> becomes tangent to the axis, i.e. where <i>f</i> = 0 and <i>f′</i> = 0 hold together.</dd>
+      <dt>Kilocrab</dt>
+      <dd>1000 crabs. The harvest of 250 crabs/month is 0.25 kilocrab/month — that is the −¼ in the equation.</dd>
+    </dl>
+
+    <h3>Controls</h3>
+    <p>Move the pointer over the picture for a live readout. Clicking does something different in each scene:
+    on the parabola it moves the probe, on the (<i>t</i>, <i>y</i>) plane it starts a solution curve there, on the
+    bifurcation diagram it sets <i>a</i>. Buttons under the picture are toggles. The explanation panel can be dragged
+    by its bar, resized from its corner, minimised, closed, or sent to its own tab (which closes the floating panel
+    and keeps updating live).</p>
+  </div>
+
+  <div id="plotArea"><canvas id="cv"></canvas></div>
+
+  <div id="under">
+    <div id="ro"></div>
+    <div id="btns"></div>
+    <div id="legend"></div>
+  </div>
+
+  <div id="side">
+    <div id="tabs"></div>
+    <div id="steps"></div>
+    <div id="content"></div>
+  </div>
+
+  <div id="expl">
+    <div id="explBar"><span>Explanation &amp; interpretation (live)</span><span class="spc"></span>
+      <span class="ib" id="explTab" title="Open in a new tab">&#8599;</span>
+      <span class="ib" id="explMin" title="Minimize">&#8211;</span>
+      <span class="ib" id="explClose" title="Close">&#215;</span></div>
+    <div id="explBody"></div>
+  </div>
+
+</div>
+</div>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+
+/* ==================================================================== */
+/*  MODEL                                                               */
+/* ==================================================================== */
+function f(y,a,h){ return -h + y - y*y/a; }
+function fp(y,a){ return 1 - 2*y/a; }
+function growth(y,a){ return y - y*y/a; }          /* unharvested logistic growth */
+function disc(a,h){ return a*a - 4*h*a; }
+function roots(a,h){
+  var d=disc(a,h); if(d<0) return null;
+  var s=Math.sqrt(d); return {m:(a-s)/2, p:(a+s)/2, s:s, d:d};
+}
+function peakY(a){ return a/2; }
+function peakF(a,h){ return a/4 - h; }
+function rateOf(a,h){ var d=disc(a,h); return d<0?NaN:Math.sqrt(d)/a; }   /* |f'(y±)| */
+
+var S={
+  a:2, h:0.25,
+  y:1.0,                       /* probe on the parabola */
+  sel:{t:0,y:1.6},             /* selected point in the (t,y) plane */
+  scene:'fy',
+  /* fy options */
+  shade:true, arrows:true, showRoots:true, showPeak:false, tangent:false,
+  decomp:false, families:false, probeOn:true,
+  /* ty options */
+  field:true, eqlines:true, phase:true, sols:[], iso:[], m:0.0,
+  five:false, tmax:8,
+  /* euler */
+  eul:{on:false, h:0.5, n:0, y0:0.35},
+  /* build sequence for the phase line */
+  build:5,
+  /* bifurcation */
+  bifStack:false, bifArrows:true,
+  /* animation */
+  walk:{on:false,t:0,playing:false},
+  hover:null
+};
+
+/* ==================================================================== */
+/*  NUMBER FORMATTING                                                   */
+/* ==================================================================== */
+function fmt(v,d){
+  if(v===null||v===undefined||!isFinite(v)) return '—';
+  if(d===undefined) d=3;
+  var s=(Math.abs(v)<5e-13?0:v).toFixed(d);
+  if(/^-0\.?0*$/.test(s)) s=s.slice(1);
+  return s.replace('-','−');
+}
+function sg(v){ return v>0?'+':v<0?'−':'0'; }
+function frac(n,d){ return '<span class="frac"><span class="nu">'+n+'</span><span>'+d+'</span></span>'; }
+function rad(x){ return '<span style="font-family:Times">√</span><span class="rad">'+x+'</span>'; }
+function pill(v){
+  var c=v>1e-12?'pos':v<-1e-12?'neg':'zer';
+  return '<span class="pill '+c+'">'+(v>1e-12?'+':v<-1e-12?'−':'0')+'</span>';
+}
+
+/* ==================================================================== */
+/*  CANVAS PLUMBING                                                     */
+/* ==================================================================== */
+var cv=$('cv'), ctx=cv.getContext('2d');
+var CW=624, CH=624;
+var GREEN='#1a8f1a', RED='#c0392b', CYAN='#0a8ea0', BLUE='#1f4e79',
+    GOLD='#b7950b', GREY='#8a95a0', INK='#333', LINE='#c9c9c9', GRID='#e6e9ec',
+    ORANGE='#e0451c', PURPLE='#7b4bb7';
+
+function sizeCanvas(){
+  var pa=$('plotArea'); CW=pa.offsetWidth; CH=pa.offsetHeight;
+  var d=Math.min(3,(window.devicePixelRatio||1)*Math.max(1,PANEL.scale*1.2));
+  cv.width=Math.round(CW*d); cv.height=Math.round(CH*d);
+  cv.style.width=CW+'px'; cv.style.height=CH+'px';
+  ctx.setTransform(d,0,0,d,0,0);
+}
+
+function AX(px,py,pw,ph,x0,x1,y0,y1){
+  this.px=px; this.py=py; this.pw=pw; this.ph=ph;
+  this.x0=x0; this.x1=x1; this.y0=y0; this.y1=y1;
+}
+AX.prototype.X=function(v){ return this.px + (v-this.x0)/(this.x1-this.x0)*this.pw; };
+AX.prototype.Y=function(v){ return this.py + (this.y1-v)/(this.y1-this.y0)*this.ph; };
+AX.prototype.ix=function(p){ return this.x0 + (p-this.px)/this.pw*(this.x1-this.x0); };
+AX.prototype.iy=function(p){ return this.y1 - (p-this.py)/this.ph*(this.y1-this.y0); };
+AX.prototype.clip=function(){ ctx.save(); ctx.beginPath(); ctx.rect(this.px,this.py,this.pw,this.ph); ctx.clip(); };
+AX.prototype.has=function(px,py){ return px>=this.px&&px<=this.px+this.pw&&py>=this.py&&py<=this.py+this.ph; };
+
+function ticksOf(lo,hi,target){
+  var span=hi-lo, raw=span/target, mag=Math.pow(10,Math.floor(Math.log(raw)/Math.LN10));
+  var n=raw/mag, step=(n<1.5?1:n<3?2:n<7?5:10)*mag, out=[], v=Math.ceil(lo/step-1e-9)*step;
+  for(;v<=hi+1e-9;v+=step) out.push(Math.abs(v)<1e-9?0:v);
+  return {v:out, d:Math.max(0,-Math.floor(Math.log(step)/Math.LN10+1e-9))};
+}
+function drawFrame(ax,xlab,ylab,opt){
+  opt=opt||{};
+  var tx=ticksOf(ax.x0,ax.x1,opt.nx||6), ty=ticksOf(ax.y0,ax.y1,opt.ny||6);
+  ctx.strokeStyle=GRID; ctx.lineWidth=1; ctx.beginPath();
+  tx.v.forEach(function(v){ var X=ax.X(v); ctx.moveTo(X,ax.py); ctx.lineTo(X,ax.py+ax.ph); });
+  ty.v.forEach(function(v){ var Y=ax.Y(v); ctx.moveTo(ax.px,Y); ctx.lineTo(ax.px+ax.pw,Y); });
+  ctx.stroke();
+  ctx.fillStyle='#777'; ctx.font='11px "Open Sans",Arial'; ctx.textAlign='center'; ctx.textBaseline='top';
+  if(!opt.noxlab) tx.v.forEach(function(v){ ctx.fillText(fmt(v,tx.d),ax.X(v),ax.py+ax.ph+5); });
+  ctx.textAlign='right'; ctx.textBaseline='middle';
+  if(!opt.noylab) ty.v.forEach(function(v){ ctx.fillText(fmt(v,ty.d),ax.px-5,ax.Y(v)); });
+  ctx.strokeStyle=LINE; ctx.lineWidth=1; ctx.strokeRect(ax.px,ax.py,ax.pw,ax.ph);
+  ctx.fillStyle='#555'; ctx.font='italic 12.5px "Times New Roman",serif';
+  if(xlab){ ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillText(xlab,ax.px+ax.pw/2,ax.py+ax.ph+21); }
+  if(ylab){ ctx.save(); ctx.translate(ax.px-34,ax.py+ax.ph/2); ctx.rotate(-Math.PI/2);
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(ylab,0,0); ctx.restore(); }
+}
+function headline(s,sub){
+  ctx.fillStyle='#4a4a4a'; ctx.font='700 13.5px "Open Sans",Arial';
+  ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillText(s,CW/2,6);
+  if(sub){ ctx.fillStyle='#888'; ctx.font='11.5px "Open Sans",Arial'; ctx.fillText(sub,CW/2,23); }
+}
+function arrow(x1,y1,x2,y2,col,lw,head){
+  ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=lw||2;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  var an=Math.atan2(y2-y1,x2-x1), s=head||((lw||2)*3.4);
+  ctx.beginPath(); ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-s*Math.cos(an-0.4),y2-s*Math.sin(an-0.4));
+  ctx.lineTo(x2-s*Math.cos(an+0.4),y2-s*Math.sin(an+0.4));
+  ctx.closePath(); ctx.fill();
+}
+function disc2(x,y,r,col,ring){
+  ctx.fillStyle=col; ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fill();
+  if(ring){ ctx.strokeStyle='#fff'; ctx.lineWidth=1.6; ctx.stroke(); }
+}
+function lab(x,y,txt,col,al,ba,size,bold){
+  ctx.fillStyle=col; ctx.font=(bold?'700 ':'')+(size||11.5)+'px "Open Sans",Arial';
+  ctx.textAlign=al||'left'; ctx.textBaseline=ba||'middle'; ctx.fillText(txt,x,y);
+}
+function dash(on){ ctx.setLineDash(on||[]); }
+
+/* ==================================================================== */
+/*  NUMERICS                                                            */
+/* ==================================================================== */
+function rk4(y0,a,h,T,n,back){
+  var st=T/n, ys=[y0], ts=[0], y=y0, s=back?-1:1;
+  for(var i=0;i<n;i++){
+    var k1=f(y,a,h), k2=f(y+s*st*k1/2,a,h), k3=f(y+s*st*k2/2,a,h), k4=f(y+s*st*k3,a,h);
+    y+=s*st*(k1+2*k2+2*k3+k4)/6;
+    if(!isFinite(y)||y<-0.5||y>40){ ts.push(s*(i+1)*st); ys.push(Math.max(-0.5,Math.min(40,y))); break; }
+    ts.push(s*(i+1)*st); ys.push(y);
+  }
+  return {t:ts,y:ys};
+}
+function crashTime(y0,a,h){
+  var r=roots(a,h); if(!r||y0>=r.m) return NaN;
+  var D=r.s, R=(y0-r.p)/(y0-r.m);
+  return (a/D)*Math.log(r.m*R/r.p);
+}
+function exactRatio(t,y0,a,h){ /* closed form, returns y(t) where defined */
+  var r=roots(a,h); if(!r) return NaN;
+  var D=r.s, C=(y0-r.p)/(y0-r.m)*Math.exp(-D*t/a);
+  return (r.p - r.m*C)/(1-C);
+}
+
+/* ==================================================================== */
+/*  SCENES                                                              */
+/* ==================================================================== */
+function yRangeTop(){ return Math.max(2.8, S.a+0.9); }
+
+/* ---------- scene: graph of f(y) ---------- */
+function sceneFY(){
+  var a=S.a,h=S.h,r=roots(a,h);
+  var xlo=-0.4, xhi=Math.max(2.7,a+0.8);
+  var pk=peakF(a,h);
+  var ylo=Math.min(-0.9,-h-0.55), yhi=Math.max(0.42,pk+0.28);
+  var ax=new AX(52,44,CW-76,CH-96,xlo,xhi,ylo,yhi);
+  headline(S.decomp?'Growth curve versus the harvest line'
+                   :'The graph of  ẏ = f(y)   (this single picture answers everything)',
+           'a = '+fmt(a,2)+',  harvest h = '+fmt(h,3)+' kilocrab/month');
+  drawFrame(ax,'y   (kilocrabs)', S.decomp?'rate':'ẏ = f(y)');
+  ax.clip();
+  var Y0=ax.Y(0);
+
+  if(S.decomp){
+    /* growth curve y - y^2/a and the flat harvest line */
+    ctx.strokeStyle=GREEN; ctx.lineWidth=2.4; ctx.beginPath();
+    for(var i=0;i<=400;i++){ var x=xlo+(xhi-xlo)*i/400, X=ax.X(x), Y=ax.Y(growth(x,a)); i?ctx.lineTo(X,Y):ctx.moveTo(X,Y); }
+    ctx.stroke();
+    ctx.strokeStyle=RED; ctx.lineWidth=2.4; dash([7,4]);
+    ctx.beginPath(); ctx.moveTo(ax.px,ax.Y(h)); ctx.lineTo(ax.px+ax.pw,ax.Y(h)); ctx.stroke(); dash();
+    lab(ax.px+8,ax.Y(h)-12,'harvest h = '+fmt(h,3),RED,'left','middle',11.5,true);
+    lab(ax.X(a/2),ax.Y(a/4)-14,'max growth a/4 = '+fmt(a/4,3),GREEN,'center','middle',11.5,true);
+    disc2(ax.X(a/2),ax.Y(a/4),5,GREEN,true);
+    if(r){ disc2(ax.X(r.m),ax.Y(h),6,RED,true); disc2(ax.X(r.p),ax.Y(h),6,GREEN,true);
+      lab(ax.X(r.m),ax.Y(h)+18,'y−',RED,'center','middle',12,true);
+      lab(ax.X(r.p),ax.Y(h)+18,'y+',GREEN,'center','middle',12,true); }
+    ctx.strokeStyle=INK; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(ax.px,Y0); ctx.lineTo(ax.px+ax.pw,Y0); ctx.stroke();
+    ctx.restore();
+    lab(ax.px+8,ax.py+12,'equilibria = where growth meets harvest',GREY,'left','middle',11.5);
+    return ax;
+  }
+
+  if(S.families){
+    var list=[[2.0,BLUE],[1.5,GOLD],[1.0,CYAN],[0.8,RED]];
+    list.forEach(function(p){
+      ctx.strokeStyle=p[1]; ctx.lineWidth=(Math.abs(p[0]-a)<0.02?2.8:1.6); dash(p[0]<1?[6,4]:[]);
+      ctx.beginPath();
+      for(var i=0;i<=400;i++){ var x=xlo+(xhi-xlo)*i/400, X=ax.X(x), Y=ax.Y(f(x,p[0],h)); i?ctx.lineTo(X,Y):ctx.moveTo(X,Y); }
+      ctx.stroke(); dash();
+      var rr=roots(p[0],h);
+      if(rr){ disc2(ax.X(rr.m),Y0,4,p[1]); disc2(ax.X(rr.p),Y0,4,p[1]); }
+      lab(ax.px+ax.pw-8, ax.Y(f(xhi*0.97,p[0],h)), 'a='+p[0], p[1],'right','middle',11,true);
+    });
+    disc2(ax.X(0.5),Y0,7,CYAN,true);
+  }
+
+  /* sign shading */
+  if(S.shade && !S.families){
+    ['pos','neg'].forEach(function(w){
+      ctx.fillStyle = w==='pos'?'rgba(26,143,26,.15)':'rgba(192,57,46,.12)';
+      ctx.beginPath(); ctx.moveTo(ax.X(xlo),Y0);
+      for(var i=0;i<=400;i++){ var x=xlo+(xhi-xlo)*i/400, v=f(x,a,h);
+        var ok = w==='pos'? v>0 : v<0; ctx.lineTo(ax.X(x), ok?ax.Y(v):Y0); }
+      ctx.lineTo(ax.X(xhi),Y0); ctx.closePath(); ctx.fill();
+    });
+  }
+  /* axis */
+  ctx.strokeStyle=INK; ctx.lineWidth=1.1; ctx.beginPath(); ctx.moveTo(ax.px,Y0); ctx.lineTo(ax.px+ax.pw,Y0); ctx.stroke();
+
+  /* main parabola */
+  if(!S.families){
+    ctx.strokeStyle=BLUE; ctx.lineWidth=2.6; ctx.beginPath();
+    for(var i2=0;i2<=500;i2++){ var x2=xlo+(xhi-xlo)*i2/500, X2=ax.X(x2), Y2=ax.Y(f(x2,a,h));
+      i2?ctx.lineTo(X2,Y2):ctx.moveTo(X2,Y2); }
+    ctx.stroke();
+  }
+
+  /* travel arrows on the y-axis */
+  if(S.arrows){
+    var segs = r ? [[(xlo+r.m)/2,-1],[(r.m+r.p)/2,1],[(r.p+xhi)/2,-1]]
+                 : [[xlo+(xhi-xlo)*0.3,-1],[xlo+(xhi-xlo)*0.7,-1]];
+    segs.forEach(function(s){
+      var c=ax.X(s[0]), d2=s[1]*Math.min(44,ax.pw*0.1);
+      arrow(c-d2/2,Y0,c+d2/2,Y0,INK,2.4);
+    });
+  }
+  /* roots */
+  if(S.showRoots){
+    if(r){
+      var same=Math.abs(r.p-r.m)<1e-6;
+      if(same){ disc2(ax.X(r.m),Y0,7,CYAN,true);
+        lab(ax.X(r.m),Y0+20,'semi-stable  y = '+fmt(r.m,4),CYAN,'center','middle',11.5,true); }
+      else{
+        disc2(ax.X(r.m),Y0,6.5,RED,true); disc2(ax.X(r.p),Y0,6.5,GREEN,true);
+        lab(ax.X(r.m),Y0+19,'y− = '+fmt(r.m,4),RED,'center','middle',11.5,true);
+        lab(ax.X(r.m),Y0+32,'unstable',RED,'center','middle',10.5);
+        lab(ax.X(r.p),Y0+19,'y+ = '+fmt(r.p,4),GREEN,'center','middle',11.5,true);
+        lab(ax.X(r.p),Y0+32,'stable',GREEN,'center','middle',10.5);
+      }
+    } else {
+      lab(ax.px+10,ax.py+14,'a < 4h : the parabola never reaches the axis — no equilibria',RED,'left','middle',11.5,true);
+    }
+  }
+  /* peak */
+  if(S.showPeak && !S.families){
+    var PX=ax.X(a/2), PY=ax.Y(pk);
+    ctx.strokeStyle=GOLD; ctx.lineWidth=1.2; dash([4,3]);
+    ctx.beginPath(); ctx.moveTo(PX,Y0); ctx.lineTo(PX,PY); ctx.lineTo(ax.px,PY); ctx.stroke(); dash();
+    disc2(PX,PY,5.5,GOLD,true);
+    lab(PX+8,PY-10,'peak  ( a/2 , a/4 − h ) = ( '+fmt(a/2,2)+' , '+fmt(pk,3)+' )',GOLD,'left','middle',11.5,true);
+    lab(PX,Y0+14,'y = a/2',GOLD,'center','middle',11);
+  }
+  /* probe + tangent */
+  if(S.probeOn && !S.families){
+    var yp=S.y, fv=f(yp,a,h), m=fp(yp,a);
+    if(S.tangent){
+      var run=(xhi-xlo)*0.16;
+      ctx.strokeStyle=GOLD; ctx.lineWidth=2.2; ctx.beginPath();
+      ctx.moveTo(ax.X(yp-run),ax.Y(fv-m*run)); ctx.lineTo(ax.X(yp+run),ax.Y(fv+m*run)); ctx.stroke();
+      ctx.strokeStyle=GOLD; ctx.lineWidth=1.2; dash([4,3]);
+      ctx.beginPath(); ctx.moveTo(ax.X(yp),ax.Y(fv)); ctx.lineTo(ax.X(yp+run),ax.Y(fv));
+      ctx.lineTo(ax.X(yp+run),ax.Y(fv+m*run)); ctx.stroke(); dash();
+      lab(ax.X(yp+run/2),ax.Y(fv)+11,'run '+fmt(run,2),GOLD,'center','middle',10.5);
+      lab(ax.X(yp+run)+5,ax.Y(fv+m*run/2),'rise '+fmt(m*run,3),GOLD,'left','middle',10.5);
+    }
+    ctx.strokeStyle=ORANGE; ctx.lineWidth=1.2; dash([3,3]);
+    ctx.beginPath(); ctx.moveTo(ax.X(yp),ax.Y(fv)); ctx.lineTo(ax.X(yp),Y0); ctx.stroke(); dash();
+    disc2(ax.X(yp),ax.Y(fv),5.5,ORANGE,true);
+    var dd=Math.min(34,ax.pw*0.08)*(fv>=0?1:-1);
+    if(Math.abs(fv)>1e-9) arrow(ax.X(yp)-dd/2,Y0,ax.X(yp)+dd/2,Y0,ORANGE,2.6);
+    lab(ax.X(yp),ax.Y(fv)-12,'f = '+fmt(fv,4),ORANGE,'center','middle',11,true);
+  }
+  ctx.restore();
+  return ax;
+}
+
+/* ---------- scene: link — f(y) rotated | phase line | (t,y) solutions ---------- */
+function sceneLink(){
+  var a=S.a,h=S.h,r=roots(a,h);
+  var ylo=-0.45, yhi=yRangeTop();
+  var top=48, bot=CH-56, H=bot-top;
+  var wA=Math.round((CW-96)*0.30), wP=44, wB=(CW-96)-wA-wP;
+  var xA=62, xP=xA+wA+10, xB=xP+wP+16;
+  var fmin=Math.min(-0.9,-h-0.5), fmax=Math.max(0.45,peakF(a,h)+0.25);
+  var A=new AX(xA,top,wA,H,fmin,fmax,ylo,yhi);        /* f on x, y on y */
+  var P=new AX(xP,top,wP,H,-1,1,ylo,yhi);             /* phase line */
+  var B=new AX(xB,top,wB,H,0,S.tmax,ylo,yhi);         /* t on x, y on y */
+
+  headline('How the three pictures are the same picture',
+           'left: graph of f turned on its side   ·   middle: the phase line   ·   right: solution curves');
+
+  /* ---- left: f(y) with y vertical ---- */
+  drawFrame(A,'ẏ = f(y)','y  (kilocrabs)',{nx:3,ny:6});
+  A.clip();
+  ctx.fillStyle='rgba(26,143,26,.14)';
+  ctx.beginPath();
+  for(var i=0;i<=300;i++){ var yv=ylo+(yhi-ylo)*i/300, v=f(yv,a,h); ctx.lineTo(A.X(v>0?v:0),A.Y(yv)); }
+  for(var i2=300;i2>=0;i2--){ var yv2=ylo+(yhi-ylo)*i2/300; ctx.lineTo(A.X(0),A.Y(yv2)); }
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle='rgba(192,57,46,.11)';
+  ctx.beginPath();
+  for(var i3=0;i3<=300;i3++){ var yv3=ylo+(yhi-ylo)*i3/300, v3=f(yv3,a,h); ctx.lineTo(A.X(v3<0?v3:0),A.Y(yv3)); }
+  for(var i4=300;i4>=0;i4--){ var yv4=ylo+(yhi-ylo)*i4/300; ctx.lineTo(A.X(0),A.Y(yv4)); }
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle=INK; ctx.lineWidth=1; ctx.beginPath();
+  ctx.moveTo(A.X(0),A.py); ctx.lineTo(A.X(0),A.py+A.ph); ctx.stroke();
+  ctx.strokeStyle=BLUE; ctx.lineWidth=2.4; ctx.beginPath();
+  for(var i5=0;i5<=400;i5++){ var yv5=ylo+(yhi-ylo)*i5/400, X=A.X(f(yv5,a,h)), Y=A.Y(yv5);
+    i5?ctx.lineTo(X,Y):ctx.moveTo(X,Y); }
+  ctx.stroke();
+  ctx.restore();
+
+  /* ---- middle: phase line ---- */
+  ctx.strokeStyle=LINE; ctx.lineWidth=1; ctx.strokeRect(P.px,P.py,P.pw,P.ph);
+  var cx=P.px+P.pw/2;
+  ctx.strokeStyle='#bbb'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(cx,P.py+4); ctx.lineTo(cx,P.py+P.ph-4); ctx.stroke();
+  function seg(y1,y2,up){
+    var Y1=P.Y(y1), Y2=P.Y(y2);
+    arrow(cx,up?Y1:Y2,cx,up?Y2:Y1,INK,3,10);
+  }
+  if(r && Math.abs(r.p-r.m)>1e-6){
+    if(S.build>=4){
+      seg(ylo+0.06, r.m-0.10, false);
+      seg(r.m+0.10, r.p-0.10, true);
+      seg(r.p+0.10, yhi-0.06, false);
+    }
+    if(S.build>=2){
+      disc2(cx,P.Y(r.m),7,S.build>=5?RED:'#888',true);
+      disc2(cx,P.Y(r.p),7,S.build>=5?GREEN:'#888',true);
+    }
+  } else if(r){
+    if(S.build>=4){ seg(r.m+0.10,yhi-0.06,false); seg(ylo+0.06,r.m-0.10,false); }
+    if(S.build>=2) disc2(cx,P.Y(r.m),7,S.build>=5?CYAN:'#888',true);
+  } else {
+    if(S.build>=4) seg(ylo+0.06,yhi-0.06,false);
+  }
+  lab(cx,P.py-12,'phase line','#555','center','middle',11,true);
+
+  /* connecting dotted lines */
+  if(r){
+    ctx.strokeStyle='#bbb'; ctx.lineWidth=1; dash([3,3]);
+    [r.m,r.p].forEach(function(v){
+      ctx.beginPath(); ctx.moveTo(A.X(0),A.Y(v)); ctx.lineTo(B.px+B.pw,B.Y(v)); ctx.stroke();
+    });
+    dash();
+  }
+
+  /* ---- right: (t,y) plane ---- */
+  drawFrame(B,'t  (months)','',{nx:5,ny:6,noylab:true});
+  B.clip();
+  if(S.field) drawField(B,a,h);
+  if(r){
+    ctx.lineWidth=2.4; ctx.strokeStyle=GREEN;
+    if(Math.abs(r.p-r.m)>1e-6){
+      ctx.beginPath(); ctx.moveTo(B.px,B.Y(r.p)); ctx.lineTo(B.px+B.pw,B.Y(r.p)); ctx.stroke();
+      ctx.strokeStyle=RED; dash([8,5]);
+      ctx.beginPath(); ctx.moveTo(B.px,B.Y(r.m)); ctx.lineTo(B.px+B.pw,B.Y(r.m)); ctx.stroke(); dash();
+    } else {
+      ctx.strokeStyle=CYAN; ctx.beginPath(); ctx.moveTo(B.px,B.Y(r.m)); ctx.lineTo(B.px+B.pw,B.Y(r.m)); ctx.stroke();
+    }
+  }
+  drawSols(B,a,h);
+  ctx.strokeStyle='#555'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(B.px,B.Y(0)); ctx.lineTo(B.px+B.pw,B.Y(0)); ctx.stroke();
+  ctx.restore();
+  lab(B.px+6,B.py+11,'click here to start a herd','#999','left','middle',10.5);
+  return {A:A,P:P,B:B,kind:'link'};
+}
+
+function drawField(ax,a,h){
+  var nx=13, ny=15, L=Math.min(ax.pw/nx, ax.ph/ny)*0.62;
+  for(var i=0;i<nx;i++) for(var j=0;j<ny;j++){
+    var t=ax.x0+(ax.x1-ax.x0)*(i+0.5)/nx, y=ax.y0+(ax.y1-ax.y0)*(j+0.5)/ny;
+    var m=f(y,a,h);
+    var sx=(ax.pw/(ax.x1-ax.x0)), sy=(ax.ph/(ax.y1-ax.y0));
+    var dx=1, dy=m, n=Math.hypot(dx*sx,dy*sy);
+    var ux=dx*sx/n*L/2, uy=-dy*sy/n*L/2;
+    var X=ax.X(t), Y=ax.Y(y);
+    ctx.strokeStyle= Math.abs(m)<0.015 ? '#2f7d32' : '#a9b4bf';
+    ctx.lineWidth= Math.abs(m)<0.015 ? 1.8 : 1.2;
+    ctx.beginPath(); ctx.moveTo(X-ux,Y-uy); ctx.lineTo(X+ux,Y+uy); ctx.stroke();
+  }
+}
+function drawSols(ax,a,h){
+  S.sols.forEach(function(s){
+    var col=s.col||BLUE;
+    var fwd=rk4(s.y,a,h,ax.x1-s.t,900);
+    ctx.strokeStyle=col; ctx.lineWidth=2; ctx.beginPath();
+    for(var i=0;i<fwd.t.length;i++){ var X=ax.X(s.t+fwd.t[i]), Y=ax.Y(fwd.y[i]); i?ctx.lineTo(X,Y):ctx.moveTo(X,Y); }
+    ctx.stroke();
+    if(s.t>ax.x0+1e-9){
+      var bk=rk4(s.y,a,h,s.t-ax.x0,600,true);
+      ctx.beginPath();
+      for(var j=0;j<bk.t.length;j++){ var X2=ax.X(s.t+bk.t[j]), Y2=ax.Y(bk.y[j]); j?ctx.lineTo(X2,Y2):ctx.moveTo(X2,Y2); }
+      ctx.stroke();
+    }
+    disc2(ax.X(s.t),ax.Y(s.y),4,col,true);
+  });
+}
+
+/* ---------- scene: (t,y) plane, full width ---------- */
+function sceneTY(){
+  var a=S.a,h=S.h,r=roots(a,h);
+  var ax=new AX(54,48,CW-78,CH-100,0,S.tmax,-0.45,yRangeTop());
+  headline('The (t, y) plane: slope field, equilibria and solution curves',
+           'a = '+fmt(a,2)+'   ·   click anywhere to start a herd there');
+  drawFrame(ax,'t   (months)','y   (kilocrabs)');
+  ax.clip();
+  if(S.field) drawField(ax,a,h);
+  /* isoclines */
+  S.iso.forEach(function(m){
+    var hh=h+m, d=a*a-4*hh*a;
+    ctx.strokeStyle=PURPLE; ctx.lineWidth=1.6; dash([6,4]);
+    if(d>=0){
+      var s=Math.sqrt(d), y1=(a-s)/2, y2=(a+s)/2;
+      [y1,y2].forEach(function(yv){
+        ctx.beginPath(); ctx.moveTo(ax.px,ax.Y(yv)); ctx.lineTo(ax.px+ax.pw,ax.Y(yv)); ctx.stroke();
+        /* parallel ticks of slope m */
+        for(var k=1;k<=6;k++){
+          var X=ax.px+ax.pw*k/7, Y=ax.Y(yv);
+          var sx=ax.pw/(ax.x1-ax.x0), sy=ax.ph/(ax.y1-ax.y0);
+          var n=Math.hypot(sx,m*sy), ux=sx/n*13, uy=-m*sy/n*13;
+          ctx.setLineDash([]); ctx.lineWidth=2.1;
+          ctx.beginPath(); ctx.moveTo(X-ux,Y-uy); ctx.lineTo(X+ux,Y+uy); ctx.stroke();
+          ctx.setLineDash([6,4]); ctx.lineWidth=1.6;
+        }
+        lab(ax.px+4,ax.Y(yv)-9,'f = '+fmt(m,2),PURPLE,'left','middle',10.5,true);
+      });
+    }
+    dash();
+  });
+  /* equilibria */
+  if(S.eqlines && r){
+    if(Math.abs(r.p-r.m)>1e-6){
+      ctx.strokeStyle=GREEN; ctx.lineWidth=2.6; ctx.beginPath();
+      ctx.moveTo(ax.px,ax.Y(r.p)); ctx.lineTo(ax.px+ax.pw,ax.Y(r.p)); ctx.stroke();
+      ctx.strokeStyle=RED; dash([8,5]); ctx.beginPath();
+      ctx.moveTo(ax.px,ax.Y(r.m)); ctx.lineTo(ax.px+ax.pw,ax.Y(r.m)); ctx.stroke(); dash();
+      lab(ax.px+ax.pw-6,ax.Y(r.p)-11,'y+ = '+fmt(r.p,4)+'  (stable)',GREEN,'right','middle',11.5,true);
+      lab(ax.px+ax.pw-6,ax.Y(r.m)+12,'y− = '+fmt(r.m,4)+'  (unstable)',RED,'right','middle',11.5,true);
+    } else {
+      ctx.strokeStyle=CYAN; ctx.lineWidth=2.6; ctx.beginPath();
+      ctx.moveTo(ax.px,ax.Y(r.m)); ctx.lineTo(ax.px+ax.pw,ax.Y(r.m)); ctx.stroke();
+      lab(ax.px+ax.pw-6,ax.Y(r.m)-11,'y = '+fmt(r.m,3)+'  (semi-stable)',CYAN,'right','middle',11.5,true);
+    }
+  }
+  /* euler */
+  if(S.eul.on) drawEuler(ax,a,h);
+  drawSols(ax,a,h);
+  ctx.strokeStyle='#555'; ctx.lineWidth=1.1; ctx.beginPath();
+  ctx.moveTo(ax.px,ax.Y(0)); ctx.lineTo(ax.px+ax.pw,ax.Y(0)); ctx.stroke();
+  lab(ax.px+6,ax.Y(0)-9,'y = 0  (extinction)','#777','left','middle',10.5);
+  /* phase line strip on the right edge */
+  if(S.phase){
+    var sx=ax.px+ax.pw+14;
+    ctx.strokeStyle='#bbb'; ctx.lineWidth=1; ctx.beginPath();
+    ctx.moveTo(sx,ax.py+4); ctx.lineTo(sx,ax.py+ax.ph-4); ctx.stroke();
+    function sg2(y1,y2,up){ arrow(sx,up?ax.Y(y1):ax.Y(y2),sx,up?ax.Y(y2):ax.Y(y1),INK,2.6,9); }
+    if(r&&Math.abs(r.p-r.m)>1e-6){
+      sg2(ax.y0+0.05,r.m-0.10,false); sg2(r.m+0.10,r.p-0.10,true); sg2(r.p+0.10,ax.y1-0.05,false);
+      disc2(sx,ax.Y(r.m),6,RED,true); disc2(sx,ax.Y(r.p),6,GREEN,true);
+    } else if(r){ sg2(r.m+0.1,ax.y1-0.05,false); sg2(ax.y0+0.05,r.m-0.1,false); disc2(sx,ax.Y(r.m),6,CYAN,true); }
+    else sg2(ax.y0+0.05,ax.y1-0.05,false);
+  }
+  ctx.restore();
+  return ax;
+}
+function drawEuler(ax,a,h){
+  var st=S.eul.h, y=S.eul.y0, t=0;
+  ctx.strokeStyle='#1a8f1a'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(ax.X(0),ax.Y(y));
+  for(var i=0;i<S.eul.n;i++){
+    var m=f(y,a,h); y+=st*m; t+=st;
+    if(y<-0.5){ y=-0.5; ctx.lineTo(ax.X(t),ax.Y(y)); break; }
+    ctx.lineTo(ax.X(t),ax.Y(y));
+  }
+  ctx.stroke();
+  /* the next dash to be used */
+  var m2=f(y,a,h), sx=ax.pw/(ax.x1-ax.x0), sy=ax.ph/(ax.y1-ax.y0);
+  var n=Math.hypot(sx,m2*sy), ux=sx/n*26, uy=-m2*sy/n*26;
+  ctx.strokeStyle=ORANGE; ctx.lineWidth=2.4;
+  ctx.beginPath(); ctx.moveTo(ax.X(t)-ux*0.15,ax.Y(y)-uy*0.15); ctx.lineTo(ax.X(t)+ux,ax.Y(y)+uy); ctx.stroke();
+  disc2(ax.X(t),ax.Y(y),4.5,'#1a8f1a',true);
+}
+
+/* ---------- scene: bifurcation diagram ---------- */
+function sceneBif(){
+  var h=S.h, ax=new AX(56,48,CW-80,CH-100,0.2,4.2,-0.25,3.6);
+  headline('Bifurcation diagram: every phase line, stacked side by side',
+           'horizontal axis is the farm size a — above each a sits that farm\u2019s phase line');
+  drawFrame(ax,'a   (max unharvested population, kilocrabs)','y   (kilocrabs)');
+  ax.clip();
+  var aC=4*h;
+  ctx.fillStyle='rgba(192,57,46,.07)';
+  ctx.fillRect(ax.px,ax.py,ax.X(aC)-ax.px,ax.ph);
+  /* stacked phase lines */
+  if(S.bifStack){
+    var list=[0.4,0.75,1.4,2.0,2.6,3.2,3.8];
+    list.forEach(function(av){
+      ctx.strokeStyle='rgba(0,0,0,.14)'; ctx.lineWidth=0.8;
+      ctx.beginPath(); ctx.moveTo(ax.X(av),ax.py+4); ctx.lineTo(ax.X(av),ax.py+ax.ph-4); ctx.stroke();
+      var rr=roots(av,h);
+      if(rr){
+        [[rr.m-0.35,-1],[(rr.m+rr.p)/2,1]].concat(rr.p+0.5<3.4?[[rr.p+0.5,-1]]:[]).forEach(function(p){
+          arrow(ax.X(av),ax.Y(p[0]-0.2*p[1]),ax.X(av),ax.Y(p[0]+0.2*p[1]),'rgba(0,0,0,.6)',1.4,6);
+        });
+        disc2(ax.X(av),ax.Y(rr.m),3.5,RED); disc2(ax.X(av),ax.Y(rr.p),3.5,GREEN);
+      } else {
+        [0.6,1.6,2.6].forEach(function(yb){
+          arrow(ax.X(av),ax.Y(yb+0.2),ax.X(av),ax.Y(yb-0.2),'rgba(192,57,46,.75)',1.4,6);
+        });
+      }
+    });
+  }
+  /* branches */
+  ctx.strokeStyle=GREEN; ctx.lineWidth=2.8; ctx.beginPath();
+  for(var i=0;i<=400;i++){ var av2=aC+(4.2-aC)*i/400, rr2=roots(av2,h);
+    var X=ax.X(av2), Y=ax.Y(rr2.p); i?ctx.lineTo(X,Y):ctx.moveTo(X,Y); }
+  ctx.stroke();
+  ctx.strokeStyle=RED; ctx.lineWidth=2.8; dash([9,5]); ctx.beginPath();
+  for(var j=0;j<=400;j++){ var av3=aC+(4.2-aC)*j/400, rr3=roots(av3,h);
+    var X2=ax.X(av3), Y2=ax.Y(rr3.m); j?ctx.lineTo(X2,Y2):ctx.moveTo(X2,Y2); }
+  ctx.stroke(); dash();
+  /* asymptote of the lower branch */
+  ctx.strokeStyle='#999'; ctx.lineWidth=1; dash([2,4]);
+  ctx.beginPath(); ctx.moveTo(ax.px,ax.Y(h)); ctx.lineTo(ax.px+ax.pw,ax.Y(h)); ctx.stroke(); dash();
+  lab(ax.px+ax.pw-6,ax.Y(h)-9,'y− → h = '+fmt(h,3),'#888','right','middle',10.5);
+  /* nose */
+  disc2(ax.X(aC),ax.Y(aC/2),7,CYAN,true);
+  lab(ax.X(aC)+11,ax.Y(aC/2)-13,'the nose  (a, y) = ('+fmt(aC,2)+', '+fmt(aC/2,2)+')',CYAN,'left','middle',11.5,true);
+  lab((ax.px+ax.X(aC))/2,ax.py+34,'a < '+fmt(aC,2),RED,'center','middle',11.5,true);
+  lab((ax.px+ax.X(aC))/2,ax.py+48,'no equilibrium',RED,'center','middle',10.5);
+  lab((ax.px+ax.X(aC))/2,ax.py+61,'every herd crashes',RED,'center','middle',10.5);
+  lab(ax.X(3.0),ax.py+34,'a > '+fmt(aC,2)+': two equilibria','#555','center','middle',11.5,true);
+  lab(ax.X(3.0),ax.py+48,'green stable above, red unstable below','#555','center','middle',10.5);
+  /* current a slice */
+  ctx.strokeStyle=ORANGE; ctx.lineWidth=1.6; dash([5,4]);
+  ctx.beginPath(); ctx.moveTo(ax.X(S.a),ax.py); ctx.lineTo(ax.X(S.a),ax.py+ax.ph); ctx.stroke(); dash();
+  var rC=roots(S.a,h);
+  if(rC){ disc2(ax.X(S.a),ax.Y(rC.m),5.5,RED,true); disc2(ax.X(S.a),ax.Y(rC.p),5.5,GREEN,true); }
+  lab(ax.X(S.a),ax.py+ax.ph-10,'a = '+fmt(S.a,2),ORANGE,'center','middle',11,true);
+  ctx.restore();
+  return ax;
+}
+
+/* ---------- scene: slopes f'(y±) versus a ---------- */
+function sceneSlopes(){
+  var h=S.h, aC=4*h;
+  var ax=new AX(58,48,CW-82,CH-100,0.2,4.2,-1.15,1.15);
+  headline('f ′ at the two equilibria, as the farm size changes',
+           'the two branches are mirror images: f ′(y±) = ∓√(1 − 4h/a)');
+  drawFrame(ax,'a','f ′ at the critical point   (per month)');
+  ax.clip();
+  ctx.strokeStyle=INK; ctx.lineWidth=1; ctx.beginPath();
+  ctx.moveTo(ax.px,ax.Y(0)); ctx.lineTo(ax.px+ax.pw,ax.Y(0)); ctx.stroke();
+  ctx.fillStyle='rgba(192,57,46,.07)'; ctx.fillRect(ax.px,ax.py,ax.X(aC)-ax.px,ax.ph);
+  [[RED,1],[GREEN,-1]].forEach(function(p){
+    ctx.strokeStyle=p[0]; ctx.lineWidth=2.6; ctx.beginPath();
+    for(var i=0;i<=400;i++){ var av=aC+(4.2-aC)*i/400, v=p[1]*Math.sqrt(1-4*h/av);
+      var X=ax.X(av), Y=ax.Y(v); i?ctx.lineTo(X,Y):ctx.moveTo(X,Y); }
+    ctx.stroke();
+  });
+  lab(ax.X(4.0),ax.Y(Math.sqrt(1-4*h/4.0))-13,'f ′(y−) > 0  → unstable',RED,'right','middle',11.5,true);
+  lab(ax.X(4.0),ax.Y(-Math.sqrt(1-4*h/4.0))+13,'f ′(y+) < 0  → stable',GREEN,'right','middle',11.5,true);
+  disc2(ax.X(aC),ax.Y(0),6,CYAN,true);
+  lab(ax.X(aC)+9,ax.Y(0)-14,'both slopes 0 at a = '+fmt(aC,2)+' → semi-stable',CYAN,'left','middle',11,true);
+  if(S.a>=aC){
+    var v2=Math.sqrt(1-4*h/S.a);
+    ctx.strokeStyle=ORANGE; ctx.lineWidth=1.5; dash([5,4]);
+    ctx.beginPath(); ctx.moveTo(ax.X(S.a),ax.py); ctx.lineTo(ax.X(S.a),ax.py+ax.ph); ctx.stroke(); dash();
+    disc2(ax.X(S.a),ax.Y(v2),6,RED,true); disc2(ax.X(S.a),ax.Y(-v2),6,GREEN,true);
+    lab(ax.X(S.a)+8,ax.Y(-v2)-12,'∓'+fmt(v2,4),ORANGE,'left','middle',11,true);
+  }
+  lab(ax.px+8,ax.py+14,'|f ′| is the exponential rate: gap × e^(f ′ t)','#777','left','middle',11);
+  ctx.restore();
+  return ax;
+}
+
+/* ---------- scene: speed of approach ---------- */
+function sceneSlow(){
+  var h=S.h;
+  var ax=new AX(58,48,CW-82,CH-100,0,18,1e-3,1);
+  headline('How fast does the herd settle? a = 2 versus the knife-edge a = 1',
+           'vertical axis: the gap |y − y★|, on a logarithmic scale');
+  /* manual log axis */
+  ctx.strokeStyle=GRID; ctx.lineWidth=1;
+  function LY(v){ var l=Math.log(v)/Math.LN10; return ax.py + (0-l)/(0-(-3))*ax.ph; }
+  ctx.beginPath();
+  [1,0.1,0.01,0.001].forEach(function(v){ var Y=LY(v); ctx.moveTo(ax.px,Y); ctx.lineTo(ax.px+ax.pw,Y); });
+  for(var t=0;t<=18;t+=3){ ctx.moveTo(ax.X(t),ax.py); ctx.lineTo(ax.X(t),ax.py+ax.ph); }
+  ctx.stroke();
+  ctx.fillStyle='#777'; ctx.font='11px "Open Sans",Arial'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  ['1','0.1','0.01','0.001'].forEach(function(s,i){ ctx.fillText(s,ax.px-5,LY(Math.pow(10,-i))); });
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  for(var t2=0;t2<=18;t2+=3) ctx.fillText(t2,ax.X(t2),ax.py+ax.ph+5);
+  ctx.strokeStyle=LINE; ctx.strokeRect(ax.px,ax.py,ax.pw,ax.ph);
+  ctx.fillStyle='#555'; ctx.font='italic 12.5px "Times New Roman",serif';
+  ctx.textAlign='center'; ctx.fillText('t   (months)',ax.px+ax.pw/2,ax.py+ax.ph+21);
+  ctx.save(); ctx.beginPath(); ctx.rect(ax.px,ax.py,ax.pw,ax.ph); ctx.clip();
+  /* a = 2 exponential */
+  var rr=roots(2,h), y0=rr.p+0.5;
+  ctx.strokeStyle=BLUE; ctx.lineWidth=2.4; ctx.beginPath();
+  for(var i=0;i<=400;i++){ var tt=18*i/400, yv=exactRatio(tt,y0,2,h), g=Math.abs(yv-rr.p);
+    g=Math.max(g,1e-4); var X=ax.X(tt), Y=LY(g); i?ctx.lineTo(X,Y):ctx.moveTo(X,Y); }
+  ctx.stroke();
+  /* a = 1 algebraic 1/t */
+  ctx.strokeStyle=CYAN; ctx.lineWidth=2.4; ctx.beginPath();
+  for(var j=0;j<=400;j++){ var t3=18*j/400, u=0.5/(1+0.5*t3); var X2=ax.X(t3), Y2=LY(Math.max(u,1e-4));
+    j?ctx.lineTo(X2,Y2):ctx.moveTo(X2,Y2); }
+  ctx.stroke();
+  ctx.restore();
+  lab(ax.X(6),LY(0.004),'a = 2 : gap × e^(−0.707 t) — a straight line on a log plot',BLUE,'left','middle',11.5,true);
+  lab(ax.X(7.5),LY(0.07),'a = 1 : gap ≈ 1/t — barely moves',CYAN,'left','middle',11.5,true);
+  var tRow=Math.LN2/rateOf(2,h);
+  lab(ax.px+8,ax.py+14,'half-life at a = 2 is '+fmt(tRow,2)+' months; at a = 1 there is no half-life at all','#777','left','middle',11);
+  return ax;
+}
+
+/* ---------- dispatcher ---------- */
+var LASTAX=null;
+function redraw(){
+  ctx.clearRect(0,0,CW,CH);
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,CW,CH);
+  if(S.scene==='fy') LASTAX=sceneFY();
+  else if(S.scene==='link') LASTAX=sceneLink();
+  else if(S.scene==='ty') LASTAX=sceneTY();
+  else if(S.scene==='bif') LASTAX=sceneBif();
+  else if(S.scene==='slopes') LASTAX=sceneSlopes();
+  else if(S.scene==='slow') LASTAX=sceneSlow();
+  setRO();
+  refreshExpl();
+}
+
+/* ==================================================================== */
+/*  READOUT + BUTTON BAR                                                */
+/* ==================================================================== */
+function setRO(){
+  var a=S.a,h=S.h,r=roots(a,h), html='';
+  if(S.scene==='fy'||S.scene==='link'){
+    var y=S.y, fv=f(y,a,h), m=fp(y,a);
+    html='<span>a = <span class="v">'+fmt(a,2)+'</span></span>'+
+         '<span>y = <span class="v">'+fmt(y,3)+'</span></span>'+
+         '<span>ẏ = f(y) = <span class="v" style="color:#c0392b">'+fmt(fv,4)+'</span></span>'+
+         '<span class="hl">f ′(y) = <span class="v" style="color:#b7950b">'+fmt(m,4)+'</span></span>'+
+         '<span>peak = <span class="v">'+fmt(peakF(a,h),4)+'</span></span>';
+  } else if(S.scene==='ty'){
+    html='<span>a = <span class="v">'+fmt(a,2)+'</span></span>'+
+         '<span>t = <span class="v">'+fmt(S.sel.t,2)+'</span></span>'+
+         '<span>y = <span class="v">'+fmt(S.sel.y,3)+'</span></span>'+
+         '<span>ẏ = <span class="v" style="color:#c0392b">'+fmt(f(S.sel.y,a,h),4)+'</span></span>'+
+         '<span>curves: <span class="v">'+S.sols.length+'</span></span>';
+  } else if(S.scene==='bif'){
+    html='<span>a = <span class="v">'+fmt(a,2)+'</span></span>'+
+         '<span>y− = <span class="v" style="color:#c0392b">'+(r?fmt(r.m,4):'none')+'</span></span>'+
+         '<span>y+ = <span class="v" style="color:#1a8f1a">'+(r?fmt(r.p,4):'none')+'</span></span>'+
+         '<span>discriminant a²−4ha = <span class="v">'+fmt(disc(a,h),4)+'</span></span>';
+  } else if(S.scene==='slopes'){
+    html='<span>a = <span class="v">'+fmt(a,2)+'</span></span>'+
+         '<span>√(1 − 4h/a) = <span class="v">'+(a>=4*h?fmt(Math.sqrt(1-4*h/a),4):'—')+'</span></span>'+
+         '<span>half-life = <span class="v">'+(a>4*h?fmt(Math.LN2/rateOf(a,h),3)+' mo':'∞')+'</span></span>';
+  } else {
+    html='<span>a = <span class="v">'+fmt(a,2)+'</span></span><span>harvest h = <span class="v">'+fmt(h,3)+'</span></span>';
+  }
+  $('ro').innerHTML=html;
+  $('legend').innerHTML=legendFor();
+}
+function legendFor(){
+  var L=[];
+  if(S.scene==='fy'||S.scene==='link'||S.scene==='ty'||S.scene==='bif'){
+    L.push('<span><span class="dt" style="background:'+GREEN+'"></span>stable</span>');
+    L.push('<span><span class="dt" style="background:'+RED+'"></span>unstable</span>');
+    L.push('<span><span class="dt" style="background:'+CYAN+'"></span>semi-stable</span>');
+  }
+  if(S.scene==='fy'||S.scene==='link') L.push('<span><span class="sw" style="background:'+BLUE+'"></span>graph of f</span>');
+  if(S.scene==='ty'||S.scene==='link') L.push('<span><span class="sw" style="background:'+BLUE+'"></span>solution curve</span>');
+  if(S.scene==='ty'&&S.iso.length) L.push('<span><span class="sw" style="background:'+PURPLE+'"></span>isocline</span>');
+  if(S.eul.on) L.push('<span><span class="sw" style="background:#1a8f1a"></span>Euler path</span>');
+  return L.join('');
+}
+
+function chk(el,on){ el.classList.toggle('on',!!on); }
+function buildBar(){
+  var b=[];
+  function B(id,txt,act){ return '<button class="b'+(act?' act':'')+'" id="'+id+'">'+txt+'</button>'; }
+  function C(id,txt,on){ return '<label class="chk'+(on?' on':'')+'" id="'+id+'" tabindex="0"><span class="bx"></span>'+txt+'</label>'; }
+  if(S.scene==='fy'){
+    b.push(C('cShade','sign shading',S.shade));
+    b.push(C('cArr','travel arrows',S.arrows));
+    b.push(C('cRoots','critical points',S.showRoots));
+    b.push(C('cPeak','peak',S.showPeak));
+    b.push(C('cTan','tangent at probe',S.tangent));
+    b.push(C('cDec','growth vs harvest',S.decomp));
+    b.push(C('cFam','family of a',S.families));
+  } else if(S.scene==='link'){
+    b.push(C('cField','slope field',S.field));
+    b.push(B('bClr','clear curves'));
+    b.push(B('bFive','the five types',S.five));
+  } else if(S.scene==='ty'){
+    b.push(C('cField','slope field',S.field));
+    b.push(C('cEq','equilibrium lines',S.eqlines));
+    b.push(C('cPh','phase line',S.phase));
+    b.push(B('bFive','the five types',S.five));
+    b.push(B('bClr','clear curves'));
+    b.push(B('bIso0','nullcline f = 0',S.iso.indexOf(0)>=0));
+    b.push(B('bClrIso','clear isoclines'));
+  } else if(S.scene==='bif'){
+    b.push(C('cStack','show stacked phase lines',S.bifStack));
+    b.push(B('bA1','a = '+fmt(4*S.h,2)+' (the nose)'));
+    b.push(B('bA2','a = 2'));
+    b.push(B('bA4','a = 4'));
+  }
+  $('btns').innerHTML=b.join('');
+  function on(id,fn){ var e=$(id); if(e){ e.onclick=fn; e.onkeydown=function(ev){ if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();fn();} }; } }
+  on('cShade',function(){S.shade=!S.shade;buildBar();redraw();});
+  on('cArr',function(){S.arrows=!S.arrows;buildBar();redraw();});
+  on('cRoots',function(){S.showRoots=!S.showRoots;buildBar();redraw();});
+  on('cPeak',function(){S.showPeak=!S.showPeak;buildBar();redraw();});
+  on('cTan',function(){S.tangent=!S.tangent;buildBar();redraw();});
+  on('cDec',function(){S.decomp=!S.decomp;buildBar();redraw();});
+  on('cFam',function(){S.families=!S.families;buildBar();redraw();});
+  on('cField',function(){S.field=!S.field;buildBar();redraw();});
+  on('cEq',function(){S.eqlines=!S.eqlines;buildBar();redraw();});
+  on('cPh',function(){S.phase=!S.phase;buildBar();redraw();});
+  on('bClr',function(){S.sols=[];S.five=false;buildBar();redraw();});
+  on('bFive',function(){ toggleFive(); });
+  on('bIso0',function(){ var i=S.iso.indexOf(0); if(i>=0)S.iso.splice(i,1); else S.iso.push(0); buildBar(); redraw(); });
+  on('bClrIso',function(){S.iso=[];buildBar();redraw();});
+  on('cStack',function(){S.bifStack=!S.bifStack;buildBar();redraw();});
+  on('bA1',function(){S.a=4*S.h;syncA();redraw();});
+  on('bA2',function(){S.a=2;syncA();redraw();});
+  on('bA4',function(){S.a=4;syncA();redraw();});
+}
+function toggleFive(){
+  var r=roots(S.a,S.h);
+  if(S.five){ S.five=false; S.sols=[]; }
+  else{
+    S.five=true; S.sols=[];
+    if(r){
+      S.sols.push({t:0,y:r.p+0.8,col:BLUE});
+      S.sols.push({t:0,y:r.p+0.3,col:BLUE});
+      S.sols.push({t:0,y:(r.m+r.p)/2,col:GOLD});
+      S.sols.push({t:0,y:r.m+0.06,col:GOLD});
+      S.sols.push({t:0,y:r.m-0.04,col:RED});
+      S.sols.push({t:0,y:r.m-0.15,col:RED});
+    } else { S.sols.push({t:0,y:1.6,col:RED}); S.sols.push({t:0,y:0.6,col:RED}); }
+  }
+  buildBar(); redraw();
+}
+function syncA(){
+  var s=$('aSl'); if(s){ s.value=S.a; var v=$('aSlv'); if(v) v.textContent=fmt(S.a,2); }
+  if(S.five){ S.five=false; toggleFive(); }
+  buildBar();
+}
+
+/* ==================================================================== */
+/*  POINTER                                                             */
+/* ==================================================================== */
+function localPt(e){
+  var rct=cv.getBoundingClientRect();
+  return {x:(e.clientX-rct.left)/PANEL.scale, y:(e.clientY-rct.top)/PANEL.scale};
+}
+cv.addEventListener('pointermove',function(e){
+  var p=localPt(e); S.hover=p;
+  if(S.scene==='ty'&&LASTAX&&LASTAX.has&&LASTAX.has(p.x,p.y)){
+    S.sel={t:LASTAX.ix(p.x), y:LASTAX.iy(p.y)}; setRO();
+  } else if(S.scene==='fy'&&LASTAX&&LASTAX.has(p.x,p.y)){
+    /* hover preview only on the readout */
+  }
+});
+cv.addEventListener('pointerdown',function(e){
+  var p=localPt(e);
+  if(S.scene==='fy'&&LASTAX&&LASTAX.has(p.x,p.y)){ S.y=Math.max(-0.35,LASTAX.ix(p.x)); syncY(); redraw(); }
+  else if(S.scene==='ty'&&LASTAX&&LASTAX.has(p.x,p.y)){
+    var t=LASTAX.ix(p.x), y=LASTAX.iy(p.y);
+    var k=-1;
+    S.sols.forEach(function(s,i){ if(Math.abs(LASTAX.X(s.t)-p.x)<9&&Math.abs(LASTAX.Y(s.y)-p.y)<9) k=i; });
+    if(k>=0) S.sols.splice(k,1); else S.sols.push({t:t,y:y,col:BLUE});
+    S.sel={t:t,y:y}; redraw();
+  }
+  else if(S.scene==='link'&&LASTAX&&LASTAX.B&&LASTAX.B.has(p.x,p.y)){
+    S.sols.push({t:LASTAX.B.ix(p.x),y:LASTAX.B.iy(p.y),col:BLUE}); redraw();
+  }
+  else if(S.scene==='link'&&LASTAX&&LASTAX.A&&LASTAX.A.has(p.x,p.y)){
+    S.y=LASTAX.A.iy(p.y); syncY(); redraw();
+  }
+  else if(S.scene==='bif'&&LASTAX&&LASTAX.has(p.x,p.y)){
+    S.a=Math.max(0.3,Math.min(4.2,LASTAX.ix(p.x))); syncA(); redraw();
+  }
+});
+function syncY(){ var s=$('ySl'); if(s){ s.value=S.y; var v=$('ySlv'); if(v) v.textContent=fmt(S.y,3); } }
+
+/* ==================================================================== */
+/*  CONTROL BUILDERS FOR THE CONTENT COLUMN                             */
+/* ==================================================================== */
+var H={
+  sl:function(id,label,min,max,step,val,disp){
+    return '<div class="ctl"><span>'+label+'</span><input type="range" id="'+id+'" min="'+min+'" max="'+max+
+      '" step="'+step+'" value="'+val+'"><span class="val" id="'+id+'v">'+disp+'</span></div>';
+  },
+  a:function(){ return H.sl('aSl','farm size  a',0.3,4.2,0.01,S.a,fmt(S.a,2)); },
+  h:function(){ return H.sl('hSl','harvest  h  (kilocrab/mo)',0.05,0.7,0.005,S.h,fmt(S.h,3)); },
+  y:function(){ return H.sl('ySl','probe  y',-0.3,4.0,0.005,S.y,fmt(S.y,3)); },
+  m:function(){ return H.sl('mSl','isocline value  m',-0.6,0.5,0.01,S.m,fmt(S.m,2)); },
+  build:function(){ return H.sl('bSl','build the phase line: step',1,5,1,S.build,String(S.build)); },
+  btn:function(id,txt,act){ return '<button class="b'+(act?' act':'')+'" id="'+id+'">'+txt+'</button>'; },
+  euler:function(){
+    return '<div class="row">'+H.btn('eulOn',(S.eul.on?'hide':'show')+' Euler steps',S.eul.on)+
+      H.btn('eulStep','take one step')+H.btn('eulAll','run all')+H.btn('eulReset','reset')+'</div>'+
+      H.sl('eulH','step size  h',0.1,1,0.05,S.eul.h,fmt(S.eul.h,2))+
+      H.sl('eulY','start  y₀',0,3,0.01,S.eul.y0,fmt(S.eul.y0,2));
+  }
+};
+function wireControls(){
+  function sl(id,fn,dec){
+    var e=$(id); if(!e) return;
+    e.addEventListener('input',function(){
+      var v=parseFloat(e.value); var d=$(id+'v'); if(d) d.textContent=fmt(v,dec);
+      fn(v);
+    });
+  }
+  sl('aSl',function(v){ S.a=v; if(S.five){S.five=false;toggleFive();} buildBar(); redraw(); },2);
+  sl('hSl',function(v){ S.h=v; buildBar(); redraw(); },3);
+  sl('ySl',function(v){ S.y=v; redraw(); },3);
+  sl('mSl',function(v){ S.m=v; S.iso=[v]; redraw(); },2);
+  sl('bSl',function(v){ S.build=v; redraw(); },0);
+  sl('eulH',function(v){ S.eul.h=v; S.eul.n=0; redraw(); },2);
+  sl('eulY',function(v){ S.eul.y0=v; S.eul.n=0; redraw(); },2);
+  var e;
+  if(e=$('eulOn')) e.onclick=function(){ S.eul.on=!S.eul.on; render(); };
+  if(e=$('eulStep')) e.onclick=function(){ S.eul.on=true; S.eul.n++; redraw(); };
+  if(e=$('eulAll')) e.onclick=function(){ S.eul.on=true; S.eul.n=Math.ceil(S.tmax/S.eul.h); redraw(); };
+  if(e=$('eulReset')) e.onclick=function(){ S.eul.n=0; redraw(); };
+  Array.prototype.forEach.call(document.querySelectorAll('#content .quiz'),function(q){
+    q.onclick=function(){ q.classList.toggle('open'); };
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('#content [data-set]'),function(b){
+    b.onclick=function(){
+      var o=JSON.parse(b.getAttribute('data-set'));
+      if(o.a!==undefined) S.a=o.a;
+      if(o.h!==undefined) S.h=o.h;
+      if(o.y!==undefined) S.y=o.y;
+      if(o.scene) S.scene=o.scene;
+      if(o.build!==undefined) S.build=o.build;
+      if(o.sols){ S.sols=o.sols.map(function(p){return {t:p[0],y:p[1],col:p[2]||BLUE};}); }
+      if(o.clear) S.sols=[];
+      if(o.five){ S.five=false; toggleFive(); }
+      if(o.root){ var r=roots(S.a,S.h); if(r) S.y = o.root==='p'?r.p : o.root==='m'?r.m : S.a/2; }
+      render();
+    };
+  });
+}
+
+/* ==================================================================== */
+/*  CONTENT: TABS AND STEPS                                             */
+/* ==================================================================== */
+function setBtn(o,txt,act){ return '<button class="b'+(act?' act':'')+'" data-set=\''+JSON.stringify(o)+'\'>'+txt+'</button>'; }
+
+var TABS=[
+/* ============================ TAB 1 : BASICS ============================ */
+{ id:'basics', name:'1 · Basics', steps:[
+
+ { title:'the equation',
+   setup:function(){ S.scene='fy'; S.probeOn=true; S.tangent=false; S.showPeak=false; S.decomp=false; S.families=false; },
+   html:function(){ return '<h2>Step 1 · What <i>ẏ</i> = <i>f</i>(<i>y</i>) actually says</h2>'+
+     '<p>The whole recitation is about one equation:</p>'+
+     '<div class="eqb"><i>ẏ</i> = <i>f</i>(<i>y</i>) = −'+frac('1','4')+' + <i>y</i> − '+frac('<i>y</i>²','<i>a</i>')+'</div>'+
+     '<p>Read it as a machine. You feed in <b>where the herd is</b> (a population <i>y</i>, in kilocrabs) and it hands back '+
+     '<b>how fast the herd is changing right now</b> (<i>ẏ</i>, in kilocrabs per month). Nothing else. Feed in 1.0 and it '+
+     'returns '+fmt(f(1,2,0.25),4)+' when <i>a</i> = 2: the herd is growing at that rate at that instant.</p>'+
+     '<p>Two symbols to keep apart, because they cause most of the confusion later:</p>'+
+     '<ul><li><b>The dot</b> in <i>ẏ</i> always means "per unit time": <i>ẏ</i> = d<i>y</i>/d<i>t</i>.</li>'+
+     '<li><b>The name</b> <i>f</i> is a formula in the variable <i>y</i>. You can graph it with <i>y</i> across the bottom, '+
+     'and that is exactly the blue parabola on the left.</li></ul>'+
+     '<p><b>Autonomous.</b> There is no <i>t</i> anywhere on the right-hand side. The rule depends on <i>where</i> you are, '+
+     'never on <i>when</i>. That one fact is what makes phase lines possible at all.</p>'+
+     H.a()+H.y()+
+     '<div class="do"><b>Do this:</b> drag the <b>probe y</b> slider (or click on the picture). The orange dot rides the '+
+     'parabola and the readout under the picture shows the velocity the machine returns. Notice where the output is '+
+     'positive (herd grows), negative (herd shrinks) and zero.</div>'+
+     '<div class="try"><b>Notice:</b> the picture has <i>y</i> on the horizontal axis and <i>ẏ</i> on the vertical. '+
+     'It is <b>not</b> a picture of the population over time. It is a picture of the <i>rule</i>.</div>'; } },
+
+ { title:'slope field',
+   setup:function(){ S.scene='ty'; S.field=true; S.eqlines=false; S.phase=false; S.iso=[]; S.eul.on=false; },
+   html:function(){ return '<h2>Step 2 · The slope field, and how each dash is drawn</h2>'+
+     '<p>Now switch to the <b>(t, y) plane</b>: time across, population up. At a grid point (<i>t</i>, <i>y</i>) the equation '+
+     'says the solution through that point must have slope <i>f</i>(<i>y</i>). So draw a short dash with that slope there. '+
+     'Repeat over a grid. That picture is the <b>slope field</b>.</p>'+
+     '<p><b>The recipe for one dash</b> — this is all there is to it:</p>'+
+     '<ol><li>Pick a point, say <i>y</i> = 1.0.</li>'+
+     '<li>Compute <i>f</i>(1.0) = −0.25 + 1.0 − 1.0/2 = '+fmt(f(1,2,0.25),3)+' (with <i>a</i> = 2).</li>'+
+     '<li>Draw a dash through that point whose rise-over-run is '+fmt(f(1,2,0.25),3)+': go 1 across, '+fmt(f(1,2,0.25),3)+' up.</li></ol>'+
+     '<p><b>Because the equation is autonomous</b>, the dash depends only on the height <i>y</i>. So every dash in a '+
+     'horizontal row is identical, and the field looks like horizontal stripes. This is the visual signature of an '+
+     'autonomous equation, and it is why all the information can be squeezed onto a single vertical line later.</p>'+
+     H.a()+
+     '<div class="do"><b>Do this:</b> toggle <b>slope field</b> under the picture and slide <i>a</i>. Look along any '+
+     'horizontal line: the dashes never change as you move sideways. Look up a vertical line: they tilt up in the '+
+     'middle band and down outside it.</div>'+
+     '<div class="try"><b>Contrast:</b> for a non-autonomous equation like <i>y′</i> = <i>t</i> − <i>y</i> the rows would '+
+     'change as you slide sideways, and none of the phase-line machinery would work.</div>'; } },
+
+ { title:'isoclines',
+   setup:function(){ S.scene='ty'; S.field=true; S.eqlines=false; S.phase=false; S.iso=[S.m]; },
+   html:function(){ return '<h2>Step 3 · Isoclines — and why here they are horizontal lines</h2>'+
+     '<p><b>Iso</b> = same, <b>cline</b> = slope. The isocline for a number <i>m</i> is the set of points where the '+
+     'equation returns slope exactly <i>m</i>:</p>'+
+     '<div class="eqb"><i>f</i>(<i>y</i>) = <i>m</i>,  i.e.  −'+frac('1','4')+' + <i>y</i> − '+frac('<i>y</i>²','<i>a</i>')+' = <i>m</i></div>'+
+     '<p>This is an equation in <i>y</i> alone — <i>t</i> never appears — so its solutions are numbers, and each number '+
+     'gives a <b>horizontal line</b> in the (<i>t</i>, <i>y</i>) plane. Solving it is the same quadratic as before with '+
+     '¼ replaced by ¼ + <i>m</i>, so for most <i>m</i> you get two horizontal lines, one on each side of the peak.</p>'+
+     '<p>Finding an isocline is <b>pure algebra</b>, no calculus and no solving of the differential equation.</p>'+
+     H.a()+H.m()+
+     '<div class="row">'+setBtn({scene:'ty'},'show the picture')+'</div>'+
+     '<div class="do"><b>Do this:</b> drag <b>m</b>. Two purple dashed lines sweep toward each other and merge at the top '+
+     'of the parabola when <i>m</i> reaches the peak value (<i>a</i>−1)/4; above that there is no isocline at all. The '+
+     'thick purple ticks on each line all have the same tilt <i>m</i> — that is the definition.</div>'+
+     '<div class="try"><b>The special one:</b> set <i>m</i> = 0 (or press <b>nullcline f = 0</b> under the picture). Those '+
+     'are the places where the dashes are flat. For an autonomous equation a flat horizontal line <i>is</i> a solution, so '+
+     'the <i>m</i> = 0 isoclines are exactly the <b>equilibria</b>. Every other isocline is just bookkeeping — solution '+
+     'curves cross it, they do not follow it.</div>'; } },
+
+ { title:'solution curves',
+   setup:function(){ S.scene='ty'; S.field=true; S.eqlines=true; S.phase=false; S.iso=[]; S.eul.on=true; },
+   html:function(){ return '<h2>Step 4 · Solution curves: what they are and how they get drawn</h2>'+
+     '<p>A <b>solution curve</b> is the graph of a population history <i>y</i>(<i>t</i>) that obeys the rule at every one '+
+     'of its own points: wherever it is, its steepness equals the number the equation returns there. Equivalently, it is '+
+     'tangent to every dash it passes through — the dashes are road signs and the curve is a car that obeys all of them.</p>'+
+     '<p><b>How to draw one by hand (Euler\u2019s method):</b></p>'+
+     '<ol><li>Start at the initial condition (0, <i>y</i>₀).</li>'+
+     '<li>Ask the equation for the slope there: <i>m</i>₀ = <i>f</i>(<i>y</i>₀).</li>'+
+     '<li>Walk a short step <i>h</i> to the right along that slope, landing at <i>y</i>₀ + <i>h·m</i>₀.</li>'+
+     '<li>Ask again at the new height — a <b>new</b> slope. Walk again. Repeat.</li>'+
+     '<li>Shrink <i>h</i> and the broken line becomes the smooth curve. (The app uses Runge–Kutta 4, a refined version.)</li></ol>'+
+     H.a()+H.euler()+
+     '<div class="do"><b>Do this:</b> press <b>take one step</b> a few times with <i>h</i> = 0.5. Each green segment is one '+
+     '"ask, then walk". The orange dash is the slope about to be used. Then set <i>h</i> = 0.1 and press <b>run all</b>: '+
+     'the green path settles onto the true curve. Click anywhere on the picture to start a blue curve from there.</div>'+
+     '<div class="try"><b>Uniqueness:</b> exactly one solution passes through each point, so curves never cross — and in '+
+     'particular no curve can cross a constant solution. That single sentence is what forces the five types in part (a).</div>'; } },
+
+ { title:'equilibria',
+   setup:function(){ S.scene='fy'; S.showRoots=true; S.shade=true; S.arrows=true; S.probeOn=true; S.tangent=false; },
+   html:function(){ return '<h2>Step 5 · Critical points (equilibria, constant solutions)</h2>'+
+     '<p>A <b>critical point</b> is a number <i>y</i>* where the machine returns zero:</p>'+
+     '<div class="eqb"><i>f</i>(<i>y</i>*) = 0</div>'+
+     '<p>Biologically: the herd grows exactly as fast as you harvest it, so it never changes. Mathematically the constant '+
+     'function <i>y</i>(<i>t</i>) ≡ <i>y</i>* is a genuine solution of the differential equation. Graphically these are '+
+     'the points where the blue parabola <b>meets the horizontal axis</b>.</p>'+
+     '<p>Three cases, decided entirely by how high the parabola sits:</p>'+
+     '<table class="t"><tr><th>picture</th><th>number of equilibria</th></tr>'+
+     '<tr><td>parabola pokes above the axis</td><td>two</td></tr>'+
+     '<tr><td>parabola just touches the axis</td><td>one (a double root)</td></tr>'+
+     '<tr><td>parabola stays below the axis</td><td>none — <i>ẏ</i> &lt; 0 always</td></tr></table>'+
+     H.a()+
+     '<div class="do"><b>Do this:</b> slide <i>a</i> from 4 down to 0.6 and watch the parabola sink. The two dots slide '+
+     'together, touch at <i>a</i> = 1, and vanish. You have just watched the answer to parts (c), (d) and (f) happen.</div>'+
+     '<div class="try"><b>Vocabulary check:</b> "critical point" here has nothing to do with critical points of a graph in '+
+     'calculus. It means "the rate is zero", not "the slope of something is zero".</div>'; } },
+
+ { title:'phase line',
+   setup:function(){ S.scene='link'; S.build=5; S.field=true; S.sols=[]; },
+   html:function(){ return '<h2>Step 6 · The phase line — built in five moves</h2>'+
+     '<p>The phase line is the <i>y</i>-axis on its own, carrying dots at the equilibria and an arrow in each gap. It '+
+     'throws away every number and keeps only the <b>signs</b> of <i>f</i>. Here is the construction; use the slider to '+
+     'do it one move at a time.</p>'+
+     '<ol><li>Draw a vertical <i>y</i>-axis.</li>'+
+     '<li>Mark the critical points — the places where the graph of <i>f</i> meets the axis.</li>'+
+     '<li>In each gap between them, test the sign of <i>f</i> (any one test point will do).</li>'+
+     '<li>Draw an arrow <b>up</b> where <i>f</i> &gt; 0 and <b>down</b> where <i>f</i> &lt; 0.</li>'+
+     '<li>Colour each dot: arrows both pointing in → green (stable); both out → red (unstable); one in one out → cyan '+
+     '(semi-stable).</li></ol>'+
+     H.build()+H.a()+
+     '<div class="do"><b>Do this:</b> step the slider 1 → 5. On the left the graph of <i>f</i> has been turned on its '+
+     'side so that <i>y</i> runs <b>up</b> the page, matching the phase line in the middle and the solution curves on the '+
+     'right. Everything lines up horizontally: where the sideways parabola lies to the <b>right</b> of its vertical axis, '+
+     '<i>f</i> &gt; 0, the phase-line arrow points up, and the solution curves on the right rise. Click in the right panel '+
+     'to add more herds.</div>'+
+     '<div class="try"><b>Why it is allowed:</b> only because the equation is autonomous. The arrow at height <i>y</i> is '+
+     'the same at every time, so one vertical line describes the whole plane.</div>'; } },
+
+ { title:'stability & f ′',
+   setup:function(){ S.scene='fy'; S.tangent=true; S.probeOn=true; S.showRoots=true; },
+   html:function(){ return '<h2>Step 7 · Stability, and what <i>f</i> ′ is (it is not <i>ÿ</i>)</h2>'+
+     '<p>The test quoted in the solutions is: <b>the sign of <i>f</i> ′ at the critical point</b>. Three things to be '+
+     'clear about.</p>'+
+     '<h3>1. Which derivative</h3>'+
+     '<p>The prime is with respect to the function\u2019s own input, which is <i>y</i>:</p>'+
+     '<div class="eqb"><i>f</i> ′(<i>y</i>) = '+frac('d<i>f</i>','d<i>y</i>')+' = 1 − '+frac('2<i>y</i>','<i>a</i>')+'</div>'+
+     '<p>It is the <b>slope of the blue parabola</b>. It is <b>not</b> <i>ÿ</i>. If you did want <i>ÿ</i>, the chain rule '+
+     'gives <i>ÿ</i> = <i>f</i> ′(<i>y</i>)·<i>f</i>(<i>y</i>), which is zero at every equilibrium and therefore tells you '+
+     'nothing — that is exactly why the test uses <i>f</i> ′.</p>'+
+     '<h3>2. Why the sign decides it</h3>'+
+     '<p>If <i>f</i> ′(<i>y</i>*) &lt; 0 the curve is coming <i>down</i> through the axis, so just left of <i>y</i>* the '+
+     'value <i>f</i> is still positive (push right, toward <i>y</i>*) and just right it is negative (push left, toward '+
+     '<i>y</i>* again). Arrows in: <b>stable</b>. A curve going <i>up</i> through the axis reverses both: <b>unstable</b>.</p>'+
+     '<h3>3. What the number means</h3>'+
+     '<p>Put <i>u</i> = <i>y</i> − <i>y</i>* for the gap. Then <i>u̇</i> = <i>f</i>(<i>y</i>* + <i>u</i>) ≈ <i>f</i>(<i>y</i>*) '+
+     '+ <i>f</i> ′(<i>y</i>*)<i>u</i> = <i>f</i> ′(<i>y</i>*)<i>u</i>, so <i>u</i>(<i>t</i>) = <i>u</i>₀<i>e</i><sup><i>f</i> ′<i>t</i></sup>. '+
+     'So <i>f</i> ′ is literally the exponential rate per month at which a small disturbance grows or dies.</p>'+
+     H.a()+H.y()+
+     '<div class="row">'+setBtn({root:'m'},'put the probe on y−')+setBtn({root:'p'},'put the probe on y+')+
+     setBtn({root:'peak'},'put it on the peak a/2')+'</div>'+
+     '<div class="do"><b>Do this:</b> tick <b>tangent at probe</b> under the picture, then use the buttons. At <i>y</i>− the '+
+     'gold tangent tilts up, at <i>y</i>+ it tilts down, and at the peak it is flat. The readout gives the number; the '+
+     'explanation panel turns it into a half-life.</div>'+
+     '<div class="try"><b>Shortcut worth memorising:</b> on a downward parabola the <b>left</b> root always has positive '+
+     'slope and the <b>right</b> root always negative. So the upper equilibrium is stable and the lower one is the '+
+     'threshold — for every value of <i>a</i>, with no case-checking.</div>'; } },
+
+ { title:'semi-stable & bifurcation',
+   setup:function(){ S.scene='bif'; S.bifStack=true; },
+   html:function(){ return '<h2>Step 8 · Semi-stable points and what "bifurcation" means</h2>'+
+     '<p>A <b>semi-stable</b> point is where the parabola <i>touches</i> the axis instead of crossing it. Then <i>f</i> has '+
+     'the same sign on both sides, so one arrow points toward the dot and the other points away. Algebraically a touching '+
+     'point is a <b>double root</b>, which happens exactly when</p>'+
+     '<div class="eqb"><i>f</i>(<i>y</i>) = 0  and  <i>f</i> ′(<i>y</i>) = 0  together</div>'+
+     '<p>A <b>bifurcation</b> is a value of the parameter at which the <i>qualitative</i> picture changes — equilibria '+
+     'appear, vanish or swap stability. Since equilibria can only appear or vanish by colliding, every bifurcation of this '+
+     'kind sits exactly where the graph is tangent to the axis. The <b>bifurcation diagram</b> shows them all at once: '+
+     '<i>a</i> across, <i>y</i> up, and above each <i>a</i> sits that farm\u2019s phase line.</p>'+
+     H.a()+H.h()+
+     '<div class="do"><b>Do this:</b> tick <b>show stacked phase lines</b> under the picture and drag <i>a</i> (or click '+
+     'the diagram). The dashed orange line is the phase line you are currently looking at in the other tabs. Watch the two '+
+     'dots run into each other at the cyan nose and disappear. Then move the harvest <i>h</i>: the whole nose slides, '+
+     'always sitting at <i>a</i> = 4<i>h</i>.</div>'+
+     '<div class="try"><b>Name:</b> two equilibria colliding and annihilating is a <b>saddle-node</b> (or fold) '+
+     'bifurcation. The nose of the curve is the fold.</div>'; } },
+
+ { title:'how they relate',
+   setup:function(){ S.scene='link'; S.build=5; S.field=true; S.five=false; S.sols=[]; toggleFive(); },
+   html:function(){ return '<h2>Step 9 · The four objects, and how they relate</h2>'+
+     '<table class="t"><tr><th>object</th><th>what it is</th><th>how it is drawn</th></tr>'+
+     '<tr><td><b>graph of <i>f</i></b></td><td>the rule itself: height = velocity</td><td>plot −¼ + <i>y</i> − <i>y</i>²/<i>a</i> against <i>y</i></td></tr>'+
+     '<tr><td><b>slope field</b></td><td>the rule copied to every point of the (<i>t</i>,<i>y</i>) plane</td><td>a dash of slope <i>f</i>(<i>y</i>) at each grid point</td></tr>'+
+     '<tr><td><b>phase line</b></td><td>only the signs of <i>f</i></td><td>dots at the zeros, arrow up where <i>f</i> &gt; 0</td></tr>'+
+     '<tr><td><b>solution curves</b></td><td>the answers</td><td>thread a curve tangent to every dash</td></tr></table>'+
+     '<p>The chain of logic runs one way: <b>graph of <i>f</i> → signs → phase line → shape of every solution curve.</b> '+
+     'You never solve anything. Specifically:</p>'+
+     '<ul><li>Parabola above the axis ⇔ arrow up ⇔ solution curves rising in that band.</li>'+
+     '<li>Zero of the parabola ⇔ dot ⇔ a horizontal solution line.</li>'+
+     '<li>Slope of the parabola at a zero ⇔ colour of the dot ⇔ whether neighbours return or flee.</li>'+
+     '<li>Height of the parabola ⇔ how steep the curves are ⇔ how fast it all happens.</li></ul>'+
+     H.a()+
+     '<div class="do"><b>Do this:</b> the picture is showing all three panels sharing one vertical <i>y</i>-axis. Put a '+
+     'finger on a height in the middle panel and slide it up: check that the arrow direction, the side of the vertical '+
+     'axis the sideways parabola sits on, and the direction of the curves on the right always agree. Now change <i>a</i> '+
+     'and watch all three re-draw together.</div>'+
+     '<div class="quiz"><b>Check yourself (tap to reveal).</b> Why can a solution curve never cross the green line?'+
+     '<div class="qa">Because the green line is itself a solution (the constant one), and uniqueness says only one '+
+     'solution passes through any point. Two curves meeting there would violate it. This is the reason part (a) has '+
+     'exactly five types and not more.</div></div>'; } }
+]},
+
+/* ============================ TAB 2 : THE MODEL ============================ */
+{ id:'model', name:'2 · The model', steps:[
+
+ { title:'where the equation comes from',
+   setup:function(){ S.scene='fy'; S.decomp=true; S.probeOn=false; },
+   html:function(){ return '<h2>Setting up · where every term comes from</h2>'+
+     '<p><b>Units first.</b> <i>y</i> is in kilocrabs (thousands of crabs), <i>t</i> in months. The farm wants 250 crabs '+
+     'a month, and</p>'+
+     '<div class="eqb">250 '+frac('crabs','month')+' = 0.25 '+frac('kilocrabs','month')+' = '+frac('1','4')+'</div>'+
+     '<p>That is the whole story of the −¼. It is the harvest, converted into the units of the model.</p>'+
+     '<p><b>The growth term.</b> Unconstrained, crabs reproduce at rate 1 month⁻¹, so growth would be <i>y</i>. Crowding '+
+     'cuts that by the logistic factor (1 − <i>y</i>/<i>a</i>), where <i>a</i> is the population the farm could hold with '+
+     'no harvesting — the carrying capacity. Bigger farm, bigger <i>a</i>. So unharvested growth is</p>'+
+     '<div class="eqb">(1 − <i>y</i>/<i>a</i>)<i>y</i> = <i>y</i> − '+frac('<i>y</i>²','<i>a</i>')+'</div>'+
+     '<p><b>Harvesting is constant</b>, not proportional: the boat takes 250 crabs whether the herd is large or small. '+
+     'That is why the harvest enters as a flat −¼ and not as a term with a <i>y</i> in it — and it is the reason small '+
+     'herds are doomed.</p>'+
+     H.a()+H.h()+
+     '<div class="do"><b>Do this:</b> the picture is showing the two pieces separately — the green logistic growth hump '+
+     'and the flat red harvest line. <b>Equilibria are where they cross.</b> Raise the harvest slider and watch the red '+
+     'line rise until it clears the hump: at that moment the crossings vanish and the herd is doomed at every size.</div>'+
+     '<div class="try"><b>Read off the key fact now:</b> the top of the green hump is at <i>y</i> = <i>a</i>/2 with height '+
+     '<i>a</i>/4. So a harvest is sustainable exactly when <i>h</i> ≤ <i>a</i>/4, i.e. <i>a</i> ≥ 4<i>h</i>. With '+
+     '<i>h</i> = ¼ that says <i>a</i> ≥ 1 — the answer to part (c), obtained before any algebra.</div>'; } },
+
+ { title:'Fact 1 · critical points',
+   setup:function(){ S.scene='fy'; S.decomp=false; S.showRoots=true; S.probeOn=true; S.tangent=false; },
+   html:function(){ var r=roots(S.a,S.h);
+     return '<h2>Fact 1 · the two critical points</h2>'+
+     '<p>Set the machine\u2019s output to zero and solve. The fraction is annoying, so multiply through by −<i>a</i> first:</p>'+
+     '<div class="eqb">−<i>a</i>( −'+frac('1','4')+' + <i>y</i> − '+frac('<i>y</i>²','<i>a</i>')+' ) = 0  ⟹  '+
+     '<i>y</i>² − <i>ay</i> + '+frac('<i>a</i>','4')+' = 0</div>'+
+     '<p>Check each term of that multiplication — it is where people slip:</p>'+
+     '<table class="t"><tr><th>term</th><th>× (−<i>a</i>)</th></tr>'+
+     '<tr><td>−1/4</td><td>+<i>a</i>/4</td></tr><tr><td>+<i>y</i></td><td>−<i>ay</i></td></tr>'+
+     '<tr><td>−<i>y</i>²/<i>a</i></td><td>+<i>y</i>²</td></tr></table>'+
+     '<p>Quadratic formula with <i>b</i> = −<i>a</i>, <i>c</i> = <i>a</i>/4:</p>'+
+     '<div class="eqb"><i>y</i><sub>±</sub> = '+frac('<i>a</i> ± '+rad('<i>a</i>² − <i>a</i>'),'2')+'</div>'+
+     '<p>The quantity under the root, <b>the discriminant</b> <i>a</i>² − <i>a</i> = <i>a</i>(<i>a</i> − 1), is the hinge of '+
+     'the whole problem. Since <i>a</i> &gt; 0 it is non-negative exactly when <b><i>a</i> ≥ 1</b>. Part (c) is already '+
+     'answered.</p>'+
+     H.a()+
+     '<div class="ans">With the current <i>a</i> = '+fmt(S.a,2)+': discriminant = '+fmt(disc(S.a,S.h),4)+
+     (r?', so <b>y− = '+fmt(r.m,4)+'</b> and <b>y+ = '+fmt(r.p,4)+'</b>.':', which is negative — <b>no equilibria at all</b>.')+'</div>'+
+     '<div class="do"><b>Do this:</b> slide <i>a</i> slowly through 1 and watch the two dots collide and vanish exactly as '+
+     'the discriminant changes sign. The explanation panel recomputes the quadratic formula line by line.</div>'; } },
+
+ { title:'Fact 2 · which one is stable',
+   setup:function(){ S.scene='slopes'; },
+   html:function(){ return '<h2>Fact 2 · which root is stable — the ∓ formula</h2>'+
+     '<p>Apply the <i>f</i> ′ test from Basics step 7 to each root. The algebra is four lines and it is worth doing slowly '+
+     'because the sign flip at the end is the punchline.</p>'+
+     '<table class="t"><tr><th>#</th><th>line</th><th>reason</th></tr>'+
+     '<tr><td>1</td><td class="eq"><i>f</i> ′(<i>y</i>) = 1 − 2<i>y</i>/<i>a</i></td><td>differentiate in <i>y</i></td></tr>'+
+     '<tr><td>2</td><td class="eq">2<i>y</i><sub>±</sub>/<i>a</i> = (<i>a</i> ± √(<i>a</i>²−<i>a</i>))/<i>a</i></td><td>the 2 cancels the 2 in <i>y</i><sub>±</sub></td></tr>'+
+     '<tr><td>3</td><td class="eq">= 1 ± √(<i>a</i>²−<i>a</i>)/<i>a</i></td><td>split the fraction</td></tr>'+
+     '<tr><td>4</td><td class="eq"><i>f</i> ′(<i>y</i><sub>±</sub>) = 1 − (1 ± …) = ∓√(<i>a</i>²−<i>a</i>)/<i>a</i></td><td>the 1s cancel — <b>note the sign flip</b></td></tr>'+
+     '<tr><td>5</td><td class="eq">= ∓√(1 − 1/<i>a</i>)</td><td><i>a</i> = √(<i>a</i>²), pull it inside</td></tr></table>'+
+     '<div class="ans"><b><i>f</i> ′(<i>y</i>+) = −√(1 − 1/<i>a</i>) &lt; 0 → stable</b> &nbsp;·&nbsp; '+
+     '<b><i>f</i> ′(<i>y</i>−) = +√(1 − 1/<i>a</i>) &gt; 0 → unstable</b></div>'+
+     '<p>So the upper root is <i>always</i> the good one and the lower root is <i>always</i> the collapse threshold, for '+
+     'every <i>a</i> &gt; 1. At <i>a</i> = 1 both are zero — that is the semi-stable case of part (f).</p>'+
+     H.a()+
+     '<div class="do"><b>Do this:</b> the picture plots those two mirror-image branches against <i>a</i>. Drag <i>a</i>: '+
+     'the orange line marks your farm, the two dots are the two slopes. Notice they approach ∓1 for a huge farm and pinch '+
+     'to 0 at the cyan point.</div>'+
+     '<div class="try"><b>Sanity check without algebra:</b> the parabola opens downward, so its slope is positive on the '+
+     'left and negative on the right. The left root must be unstable, the right root stable. The formula only confirms '+
+     'what the shape already told you.</div>'; } },
+
+ { title:'Fact 3 · the peak',
+   setup:function(){ S.scene='fy'; S.showPeak=true; S.decomp=false; S.showRoots=true; S.probeOn=false; },
+   html:function(){ return '<h2>Fact 3 · the peak of the parabola — the key to everything</h2>'+
+     '<p>The coefficient of <i>y</i>² is −1/<i>a</i> &lt; 0, so the graph is a downward parabola and it has a highest '+
+     'point. Find it by setting the slope to zero:</p>'+
+     '<div class="eqb"><i>f</i> ′(<i>y</i>) = 1 − '+frac('2<i>y</i>','<i>a</i>')+' = 0  ⟹  <i>y</i> = '+frac('<i>a</i>','2')+'</div>'+
+     '<p>Substitute back, carefully — the middle step is where the (<i>a</i>/2)²/<i>a</i> simplifies to <i>a</i>/4:</p>'+
+     '<div class="eqb"><i>f</i>('+frac('<i>a</i>','2')+') = −'+frac('1','4')+' + '+frac('<i>a</i>','2')+' − '+
+     frac('(<i>a</i>/2)²','<i>a</i>')+' = −'+frac('1','4')+' + '+frac('<i>a</i>','2')+' − '+frac('<i>a</i>','4')+
+     ' = '+frac('<i>a</i> − 1','4')+'</div>'+
+     '<p>Why (<i>a</i>/2)²/<i>a</i> = <i>a</i>/4: the square is <i>a</i>²/4, divided by <i>a</i> gives <i>a</i>/4. Then '+
+     '<i>a</i>/2 − <i>a</i>/4 = <i>a</i>/4, and −¼ + <i>a</i>/4 = (<i>a</i> − 1)/4.</p>'+
+     '<p><b>This single number decides everything:</b></p>'+
+     '<table class="t"><tr><th>peak height (<i>a</i>−1)/4</th><th>picture</th><th>consequence</th></tr>'+
+     '<tr><td>&gt; 0  (<i>a</i> &gt; 1)</td><td>pokes above the axis</td><td>two equilibria; a stable herd exists</td></tr>'+
+     '<tr><td>= 0  (<i>a</i> = 1)</td><td>just touches</td><td>one semi-stable point at <i>y</i> = ½</td></tr>'+
+     '<tr><td>&lt; 0  (<i>a</i> &lt; 1)</td><td>entirely below</td><td><i>ẏ</i> &lt; 0 always; the herd always crashes</td></tr></table>'+
+     H.a()+H.h()+
+     '<div class="ans">Right now: peak at <i>y</i> = <i>a</i>/2 = '+fmt(S.a/2,3)+', height '+fmt(peakF(S.a,S.h),4)+
+     ' — '+(peakF(S.a,S.h)>0?'positive, so a stable herd exists.':peakF(S.a,S.h)<0?'negative, so every herd crashes.':'exactly zero: the knife edge.')+'</div>'+
+     '<div class="do"><b>Do this:</b> tick <b>peak</b> under the picture and slide <i>a</i>. The gold dot is the peak; '+
+     'watch its height pass through zero at <i>a</i> = 1 while the two roots merge underneath it.</div>'+
+     '<div class="try"><b>The general statement:</b> the largest sustainable harvest for a farm of size <i>a</i> is the '+
+     'top of the growth hump, <i>a</i>/4. So harvest <i>h</i> works exactly when <i>h</i> ≤ <i>a</i>/4, i.e. '+
+     '<i>a</i> ≥ 4<i>h</i>. Nothing depends on the number 250 — double the harvest and you double the farm. Try it with '+
+     'the harvest slider.</div>'; } }
+]},
+
+/* ============================ TAB 3 : PART (a) ============================ */
+{ id:'pa', name:'3 · (a)', steps:[
+
+ { title:'the roots at a = 2',
+   setup:function(){ S.a=2; S.h=0.25; S.scene='fy'; S.showRoots=true; S.probeOn=true; S.tangent=false; S.showPeak=true; S.decomp=false; S.families=false; },
+   html:function(){ return '<h2>(a) Step 1 · Find the critical points for <i>a</i> = 2</h2>'+
+     '<p>Put <i>a</i> = 2 into the equation:</p>'+
+     '<div class="eqb"><i>ẏ</i> = −'+frac('1','4')+' + <i>y</i> − '+frac('<i>y</i>²','2')+'</div>'+
+     '<p>Multiply by −2 to clear fractions, then by 2 again to clear the half:</p>'+
+     '<div class="eqb"><i>y</i>² − 2<i>y</i> + '+frac('1','2')+' = 0  ⟺  2<i>y</i>² − 4<i>y</i> + 1 = 0</div>'+
+     '<div class="eqb"><i>y</i> = '+frac('4 ± '+rad('16 − 8'),'4')+' = '+frac('4 ± 2'+rad('2'),'4')+' = 1 ± '+frac(rad('2'),'2')+'</div>'+
+     '<p>Line by line: <i>b</i>² − 4<i>ac</i> = 16 − 4·2·1 = 8; √8 = 2√2; then divide the whole thing by 4.</p>'+
+     '<div class="ans"><b><i>y</i>− = 1 − √2/2 ≈ '+fmt(1-Math.SQRT2/2,4)+'</b> (about 293 crabs) &nbsp;·&nbsp; '+
+     '<b><i>y</i>+ = 1 + √2/2 ≈ '+fmt(1+Math.SQRT2/2,4)+'</b> (about 1707 crabs)</div>'+
+     '<div class="row">'+setBtn({a:2},'set a = 2')+setBtn({root:'m'},'probe → y−')+setBtn({root:'p'},'probe → y+')+'</div>'+
+     '<div class="do"><b>Do this:</b> press the buttons and check the readout: at both roots <i>f</i> reads 0.0000. The '+
+     'gold peak sits at (1, 0.25) — the peak height (<i>a</i>−1)/4 equals the harvest itself here, which is the "lots of '+
+     'slack" remark that motivates parts (c) to (f).</div>'; } },
+
+ { title:'sign of ẏ in each interval',
+   setup:function(){ S.a=2; S.scene='fy'; S.shade=true; S.arrows=true; S.probeOn=true; S.showPeak=false; },
+   html:function(){ var a=2,h=0.25,r=roots(a,h),y=S.y;
+     var f1=y-r.m, f2=y-r.p, fv=f(y,a,h);
+     return '<h2>(a) Step 2 · The sign of <i>ẏ</i> in each interval</h2>'+
+     '<p>Knowing the roots lets you factor the right-hand side. Do not forget the leading coefficient −½:</p>'+
+     '<div class="eqb"><i>f</i>(<i>y</i>) = −'+frac('1','2')+'(<i>y</i> − <i>y</i>−)(<i>y</i> − <i>y</i>+)</div>'+
+     '<p>Now you never need to plug numbers into the quadratic again — just track the sign of each bracket.</p>'+
+     '<table class="t"><tr><th>interval</th><th>(<i>y</i> − <i>y</i>−)</th><th>(<i>y</i> − <i>y</i>+)</th><th>product</th><th><i>ẏ</i> = −½ ·product</th></tr>'+
+     '<tr'+(y<r.m?' style="background:#fff5e6"':'')+'><td><i>y</i> &lt; 0.293</td><td>−</td><td>−</td><td>+</td><td class="r">&lt; 0 falling</td></tr>'+
+     '<tr'+(y>=r.m&&y<=r.p?' style="background:#fff5e6"':'')+'><td>0.293 &lt; <i>y</i> &lt; 1.707</td><td>+</td><td>−</td><td>−</td><td class="g">&gt; 0 rising</td></tr>'+
+     '<tr'+(y>r.p?' style="background:#fff5e6"':'')+'><td><i>y</i> &gt; 1.707</td><td>+</td><td>+</td><td>+</td><td class="r">&lt; 0 falling</td></tr></table>'+
+     '<p>The highlighted row is where your probe currently sits. Right now <i>y</i> = '+fmt(y,3)+', so (<i>y</i>−<i>y</i>−) = '+
+     fmt(f1,3)+' ('+sg(f1)+'), (<i>y</i>−<i>y</i>+) = '+fmt(f2,3)+' ('+sg(f2)+'), and <i>ẏ</i> = '+fmt(fv,4)+'.</p>'+
+     H.y()+
+     '<div class="do"><b>Do this:</b> drag the probe across both roots and watch the highlighted row change together with '+
+     'the orange arrow on the picture. The green shading is exactly the middle row, the pink shading the outer two.</div>'+
+     '<div class="try"><b>Stability, for free:</b> arrows point toward 1.707 from both sides (stable) and away from 0.293 '+
+     'on both sides (unstable). No derivative needed — though <i>f</i> ′ gives the same answer: ∓√(1 − ½) = ∓0.7071.</div>'; } },
+
+ { title:'the phase line',
+   setup:function(){ S.a=2; S.scene='link'; S.build=1; S.sols=[]; S.field=true; },
+   html:function(){ return '<h2>(a) Step 3 · Draw the phase line</h2>'+
+     '<p>The phase line is just the <i>y</i>-axis of the picture you already have, drawn vertically, carrying the two '+
+     'critical points and the three arrows.</p>'+
+     H.build()+
+     '<div class="ans"><b>Phase line for <i>a</i> = 2:</b> critical points at <i>y</i>− = 1 − √2/2 ≈ 0.293 '+
+     '(<span class="r">unstable</span>) and <i>y</i>+ = 1 + √2/2 ≈ 1.707 (<span class="g">stable</span>). Direction of '+
+     'travel: <b>downward</b> below <i>y</i>−, <b>upward</b> between them, <b>downward</b> above <i>y</i>+.</div>'+
+     '<div class="do"><b>Do this:</b> step the builder 1 → 5 and watch the middle strip assemble. Compare with the left '+
+     'panel at every step: the dot positions come from where the sideways parabola meets its vertical axis, and each '+
+     'arrow direction comes from which side of that axis the parabola is on.</div>'+
+     '<div class="try"><b>Mnemonic:</b> phase line arrows point <b>up</b> exactly where the sideways parabola bulges to '+
+     'the <b>right</b> (<i>f</i> &gt; 0). Nothing else is involved.</div>'; } },
+
+ { title:'the five types',
+   setup:function(){ S.a=2; S.scene='ty'; S.field=true; S.eqlines=true; S.phase=true; S.tmax=8; S.five=false; toggleFive(); },
+   html:function(){ var r=roots(2,0.25);
+     return '<h2>(a) Step 4 · The five types of solution — and why exactly five</h2>'+
+     '<p>Solutions cannot cross the two constant solutions (uniqueness). So the two horizontal lines cut the plane into '+
+     '<b>three strips</b>, and the lines themselves are two more solutions: 3 + 2 = <b>5</b> types.</p>'+
+     '<table class="t"><tr><th>#</th><th>start</th><th>behaviour</th></tr>'+
+     '<tr><td>1</td><td><i>y</i>₀ &gt; <i>y</i>+</td><td><i>ẏ</i> &lt; 0: decreases, approaching '+fmt(r.p,3)+' from above, never touching it</td></tr>'+
+     '<tr><td>2</td><td><i>y</i>₀ = <i>y</i>+</td><td>the constant solution — the farm\u2019s target operating point</td></tr>'+
+     '<tr><td>3</td><td><i>y</i>− &lt; <i>y</i>₀ &lt; <i>y</i>+</td><td><i>ẏ</i> &gt; 0: increases up to '+fmt(r.p,3)+'; any herd above the threshold recovers on its own</td></tr>'+
+     '<tr><td>4</td><td><i>y</i>₀ = <i>y</i>−</td><td>the constant solution, unstable: a nudge up climbs to <i>y</i>+, a nudge down is fatal</td></tr>'+
+     '<tr><td>5</td><td><i>y</i>₀ &lt; <i>y</i>−</td><td><i>ẏ</i> &lt; 0 and getting worse: reaches <i>y</i> = 0 in <b>finite time</b> — extinction, not a gentle decay</td></tr></table>'+
+     '<div class="row">'+setBtn({five:true},'draw all five')+setBtn({clear:true},'clear')+
+     setBtn({sols:[[0,0.29,'#c0392b'],[0,0.2929,'#1a8f1a']]},'the 3-crab experiment')+'</div>'+
+     '<div class="do"><b>Do this:</b> press <b>the 3-crab experiment</b>. Two herds start three crabs apart, at 0.2900 '+
+     'and 0.2929 kilocrabs. One dies within weeks; the other climbs all the way to 1707. That is what "unstable '+
+     'equilibrium" means in practice. Then click anywhere to add your own starting herd.</div>'+
+     '<div class="try"><b>Why type 5 hits zero in finite time</b> while types 1 and 3 take forever to arrive: near <i>y</i>+ '+
+     'the velocity fades to zero as you approach, so you never quite land. Below <i>y</i>− the velocity gets '+
+     '<i>more</i> negative as <i>y</i> drops, so the fall accelerates into the floor.</div>'; } },
+
+ { title:'how fast',
+   setup:function(){ S.a=2; S.scene='ty'; S.five=false; S.sols=[{t:0,y:0.2,col:RED},{t:0,y:2.5,col:BLUE}]; S.phase=false; },
+   html:function(){ var a=2,h=0.25,r=roots(a,h),rt=rateOf(a,h),tc=crashTime(0.2,a,h);
+     return '<h2>(a) Step 5 · How fast? (the one place solving helps)</h2>'+
+     '<p>The equation is separable, and partial fractions give a closed form. You are not asked for it, but it turns the '+
+     'qualitative picture into months:</p>'+
+     '<div class="eqb">'+frac('<i>y</i> − <i>y</i>+','<i>y</i> − <i>y</i>−')+' = '+frac('<i>y</i>₀ − <i>y</i>+','<i>y</i>₀ − <i>y</i>−')+
+     ' <i>e</i><sup>−Δ<i>t</i>/<i>a</i></sup>,   Δ = <i>y</i>+ − <i>y</i>− = '+rad('<i>a</i>² − <i>a</i>')+'</div>'+
+     '<p>The approach rate is Δ/<i>a</i> = √(1 − 1/<i>a</i>) — which is exactly |<i>f</i> ′(<i>y</i>±)| from Fact 2, as it '+
+     'must be. For <i>a</i> = 2 that is √2/2 ≈ '+fmt(rt,4)+' per month, a half-life of ln2/'+fmt(rt,3)+' ≈ '+
+     fmt(Math.LN2/rt,2)+' months.</p>'+
+     '<p>Crashes are faster. Starting from <i>y</i>₀ = 0.2 (below the threshold '+fmt(r.m,4)+'):</p>'+
+     '<div class="eqb"><i>t</i> = '+frac('<i>a</i>','Δ')+' ln( '+frac('<i>y</i>−','<i>y</i>+')+' · '+
+     frac('<i>y</i>₀ − <i>y</i>+','<i>y</i>₀ − <i>y</i>−')+' ) ≈ '+fmt(tc,4)+' months</div>'+
+     '<div class="ans">A herd that dips even slightly below the threshold is gone within about six weeks; a herd knocked '+
+     'off target above the threshold is back within a couple of months.</div>'+
+     '<div class="do"><b>Do this:</b> the picture shows one herd of each kind. The red one starts at 0.2 and hits zero at '+
+     'about <i>t</i> = '+fmt(tc,2)+' — read it off the horizontal axis. The blue one starts at 2.5 and is visually on '+
+     'target after roughly three half-lives, around '+fmt(3*Math.LN2/rt,1)+' months.</div>'+
+     '<div class="try"><b>Consistency check worth noticing:</b> a quantity derived by solving the equation (Δ/<i>a</i>) '+
+     'equals a quantity derived without solving it (|<i>f</i> ′|). Whenever two routes agree like this, both are probably '+
+     'right.</div>'; } }
+]},
+
+/* ============================ TAB 4 : (b) and (c) ============================ */
+{ id:'pbc', name:'4 · (b) (c)', steps:[
+
+ { title:'(b) the Mathlet',
+   setup:function(){ S.a=2; S.scene='link'; S.build=5; S.field=true; S.sols=[]; toggleFive(); },
+   html:function(){ return '<h2>(b) Checking against the Phase Lines Mathlet</h2>'+
+     '<p><b>Which equation to choose.</b> From the pop-down menu at bottom centre pick the logistic equation with constant '+
+     'harvesting, <span class="eq"><i>ẏ</i> = (1 − <i>y</i>/<i>a</i>)<i>y</i> − ¼</span> — the same equation, written in '+
+     'factored form. Set the slider at lower right to <i>a</i> = 2, tick <b>[Phase Line]</b>, leave <b>[Bifurcation '+
+     'Diagram]</b> unticked for now.</p>'+
+     '<h3>The colour code (the answer to the question asked)</h3>'+
+     '<table class="t"><tr><th>colour</th><th>meaning</th></tr>'+
+     '<tr><td><span class="g">green</span></td><td>stable (attracting) equilibrium</td></tr>'+
+     '<tr><td><span class="r">red</span></td><td>unstable (repelling) equilibrium</td></tr>'+
+     '<tr><td><span class="c">cyan</span></td><td>semi-stable equilibrium (you meet one in part (f))</td></tr>'+
+     '<tr><td>yellow</td><td>the cursor vector and the (<i>t</i>, <i>y</i>, <i>ẏ</i>) readout under the window</td></tr></table>'+
+     '<p>This app uses the same colours, so the two pictures can be compared directly.</p>'+
+     '<h3>Do the images corroborate the computation? Yes, on four counts</h3>'+
+     '<ul><li>A green horizontal line appears at <i>y</i> ≈ 1.71 and a red one at <i>y</i> ≈ 0.29 — matching 1 ± √2/2 to '+
+     'the precision the readout allows.</li>'+
+     '<li>The phase line shows three arrows: down at the top, up in the middle, down at the bottom — exactly the sign '+
+     'table of Step 2.</li>'+
+     '<li>Clicking above the red line gives curves that bend toward the green line from either side; clicking below it '+
+     'gives curves that dive through zero.</li>'+
+     '<li>Selecting the "<i>ẏ</i> as a function of <i>y</i>" view reproduces the parabola, with its zeros marked by one '+
+     'red and one green disk.</li></ul>'+
+     '<div class="do"><b>Do this:</b> compare the middle strip here with the Mathlet\u2019s phase line, and the left panel '+
+     'with its "<i>ẏ</i> versus <i>y</i>" view. Click in the right panel above and below the red line to reproduce the '+
+     'third bullet.</div>'+
+     '<div class="ans"><b>Why the farm looks oversized:</b> the two critical points are far apart at <i>a</i> = 2, and the '+
+     'peak clears the axis by (<i>a</i>−1)/4 = 0.25 — the same size as the entire harvest. There is a lot of slack, which '+
+     'is what motivates parts (c) to (f).</div>'; } },
+
+ { title:'(c) shrinking the farm',
+   setup:function(){ S.scene='fy'; S.families=true; S.showRoots=false; S.probeOn=false; S.showPeak=false; },
+   html:function(){ return '<h2>(c) Step 1 · What you see when you shrink <i>a</i></h2>'+
+     '<p>As you drag the slider down from <i>a</i> = 2, the green and red lines move toward each other. They meet and '+
+     'annihilate at about <i>a</i> = 1; below that no equilibrium lines are drawn at all and every solution curve you '+
+     'click plunges to zero.</p>'+
+     '<p>The picture shows why: shrinking <i>a</i> makes the <i>y</i>²/<i>a</i> term bite harder, so the parabola '+
+     '<b>sinks</b>. The two roots are where it meets the axis, so they close in on each other and then there is nothing '+
+     'left to meet.</p>'+
+     H.a()+
+     '<div class="do"><b>Do this:</b> the picture overlays four farms: <i>a</i> = 2, 1.5, 1 and 0.8. The cyan curve '+
+     '(<i>a</i> = 1) just kisses the axis at the cyan dot; the dashed red one (<i>a</i> = 0.8) misses entirely. Untick '+
+     '<b>family of a</b> under the picture and slide <i>a</i> yourself to watch it happen continuously.</div>'; } },
+
+ { title:'(c) the algebra',
+   setup:function(){ S.a=1; S.scene='fy'; S.families=false; S.showRoots=true; S.showPeak=true; S.probeOn=false; },
+   html:function(){ return '<h2>(c) Step 2 · The smallest workable farm, by computation</h2>'+
+     '<p>Two critical points exist only while the discriminant is non-negative:</p>'+
+     '<div class="eqb"><i>a</i>² − <i>a</i> ≥ 0  ⟺  <i>a</i>(<i>a</i> − 1) ≥ 0  ⟺  <i>a</i> ≥ 1  (since <i>a</i> &gt; 0)</div>'+
+     '<p>Equivalently, by Fact 3 the peak height (<i>a</i> − 1)/4 must reach the axis — the same inequality seen a '+
+     'different way. At the critical value the two roots coincide at the peak:</p>'+
+     '<div class="eqb"><i>y</i> = '+frac('<i>a</i>','2')+' = '+frac('1','2')+'</div>'+
+     '<div class="ans"><b>Minimum farm size: <i>a</i> = 1 kilocrab</b> (unharvested capacity 1000 crabs).<br>'+
+     '<b>Minimum stable population: <i>y</i> = ½ kilocrab = 500 crabs</b> — which is what the Mathlet cursor readout '+
+     'shows when you hover over the merged equilibrium line, roughly (<i>t</i>, <i>y</i>) ≈ (·, 0.50).</div>'+
+     '<div class="row">'+setBtn({a:1},'set a = 1')+setBtn({a:0.8},'set a = 0.8')+setBtn({a:2},'back to a = 2')+'</div>'+
+     '<div class="warn"><b>The warning the algebra makes clear but the eye might miss.</b> At exactly <i>a</i> = 1 the '+
+     'equilibrium is <b>not stable</b> in the usual sense — it is semi-stable (part (f)). The population is attracted to '+
+     '½ only <i>from above</i>; from below it crashes. So <i>a</i> = 1 is a knife-edge: one bad month that dips the herd '+
+     'under 500 crabs is unrecoverable, and even the approach from above is very slow (algebraic like 1/<i>t</i>, not '+
+     'exponential). The honest engineering answer: <b><i>a</i> = 1 is the mathematical minimum, but build comfortably '+
+     'larger.</b></div>'+
+     '<div class="quiz"><b>Check yourself.</b> If the start-up doubled the harvest to 500 crabs/month, what is the '+
+     'minimum farm?<div class="qa">Sustainability needs <i>h</i> ≤ <i>a</i>/4, so <i>a</i> ≥ 4<i>h</i> = 4(0.5) = 2 '+
+     'kilocrabs, with minimum stable population <i>a</i>/2 = 1 kilocrab. Set the harvest slider to 0.5 in the Basics '+
+     'bifurcation step and watch the nose move there.</div></div>'; } }
+]},
+
+/* ============================ TAB 5 : (d) and (e) ============================ */
+{ id:'pde', name:'5 · (d) (e)', steps:[
+
+ { title:'(d) reading the diagram',
+   setup:function(){ S.scene='bif'; S.bifStack=true; S.a=2; },
+   html:function(){ return '<h2>(d) The bifurcation diagram, and how it is built</h2>'+
+     '<p>The diagram stacks up all the phase lines side by side: the horizontal axis is the parameter <i>a</i>, the '+
+     'vertical axis is <i>y</i>, and above each value of <i>a</i> you see that farm\u2019s phase line. The curve traced '+
+     'out is the <b>locus of critical points</b> — join up all the dots.</p>'+
+     '<h3>Reading the three features</h3>'+
+     '<ul><li><b>Two branches for large <i>a</i>.</b> The upper green branch is the stable population. It grows roughly '+
+     'like <i>y</i>+ ≈ <i>a</i> − ¼: the herd sits just below capacity, short by exactly the harvest.</li>'+
+     '<li><b>The lower red branch</b> is the extinction threshold, and it decreases toward <i>y</i>− → ¼ as <i>a</i> → ∞. '+
+     'Easy to interpret: in a very large farm crowding is negligible near small <i>y</i>, so growth is just ≈ <i>y</i>, '+
+     'and the herd breaks even when <i>y</i> equals the harvest rate ¼.</li>'+
+     '<li><b>The merge at (1, ½)</b> — the cyan nose. This is the <b>saddle-node</b> (fold) bifurcation. To the left of '+
+     'it the curve does not exist: no critical points at all, every arrow on every phase line points down, the population '+
+     'crashes no matter how it starts.</li></ul>'+
+     H.a()+H.h()+
+     '<div class="do"><b>Do this:</b> tick <b>show stacked phase lines</b> and drag <i>a</i> (or click the diagram). Each '+
+     'thin vertical line with its arrows <i>is</i> one phase line — the same object you built in part (a). The orange '+
+     'dashed line marks the farm you are studying.</div>'+
+     '<div class="ans"><b>The business reading.</b> The nose is a cliff edge, not a gentle boundary. A farm on the lower '+
+     'branch or near the nose has almost no margin, and shrinking the farm slightly past <i>a</i> = 1 does not reduce the '+
+     'yield gradually — it destroys the herd entirely.</div>'; } },
+
+ { title:'(e) the equation of the curve',
+   setup:function(){ S.scene='bif'; S.bifStack=false; },
+   html:function(){ return '<h2>(e) The relation between <i>a</i> and <i>y</i> on that curve</h2>'+
+     '<p>The curve is the set of pairs (<i>a</i>, <i>y</i>) at which <i>y</i> is a critical point — that is, where the '+
+     'right-hand side vanishes. So the relation is simply <i>f</i>(<i>y</i>) = 0, cleared of fractions. Multiply by −4<i>a</i>:</p>'+
+     '<table class="t"><tr><th>term</th><th>× (−4<i>a</i>)</th></tr>'+
+     '<tr><td>−1/4</td><td>+<i>a</i></td></tr><tr><td>+<i>y</i></td><td>−4<i>ay</i></td></tr>'+
+     '<tr><td>−<i>y</i>²/<i>a</i></td><td>+4<i>y</i>²</td></tr></table>'+
+     '<div class="ans"><b>4<i>y</i>² − 4<i>ay</i> + <i>a</i> = 0</b> &nbsp; (equivalently <i>y</i>² − <i>ay</i> + <i>a</i>/4 = 0)</div>'+
+     '<p>That is the requested "(a function of <i>a</i> and <i>y</i>) = 0".</p>'+
+     '<h3>Two useful rearrangements</h3>'+
+     '<p><b>Solve for <i>y</i></b> and you recover the two branches you can see:</p>'+
+     '<div class="eqb"><i>y</i> = '+frac('<i>a</i> ± '+rad('<i>a</i>² − <i>a</i>'),'2')+'  (green and red curves)</div>'+
+     '<p><b>Solve for <i>a</i></b> instead — cleaner, because the relation is <i>linear</i> in <i>a</i>. Group the '+
+     '<i>a</i> terms: <i>a</i>(1 − 4<i>y</i>) + 4<i>y</i>² = 0, so</p>'+
+     '<div class="eqb"><i>a</i> = '+frac('4<i>y</i>²','4<i>y</i> − 1')+',   <i>y</i> &gt; ¼</div>'+
+     '<p>This confirms the <i>y</i> → ¼ asymptote of the lower branch: as <i>y</i> ↓ ¼ the denominator → 0 and '+
+     '<i>a</i> → ∞.</p>'+
+     '<div class="do"><b>Do this:</b> the grey dotted line on the picture is <i>y</i> = ¼. Watch the red branch flatten '+
+     'toward it as <i>a</i> grows, and move the harvest slider in the Basics tab to see the asymptote sit at '+
+     '<i>y</i> = <i>h</i> in general.</div>'; } },
+
+ { title:'(e) finding the nose',
+   setup:function(){ S.scene='bif'; S.bifStack=false; S.a=1; },
+   html:function(){ return '<h2>(e) Step 2 · The nose by one-variable calculus</h2>'+
+     '<p>Because <i>a</i> = 4<i>y</i>²/(4<i>y</i> − 1) expresses <i>a</i> as an ordinary function of <i>y</i>, the '+
+     'leftmost point of the curve is just a minimum of that function. Quotient rule:</p>'+
+     '<div class="eqb">'+frac('d<i>a</i>','d<i>y</i>')+' = '+frac('8<i>y</i>(4<i>y</i> − 1) − 16<i>y</i>²','(4<i>y</i> − 1)²')+
+     ' = '+frac('8<i>y</i>(2<i>y</i> − 1)','(4<i>y</i> − 1)²')+' = 0</div>'+
+     '<p>Numerator zero gives <i>y</i> = 0 (not in range, since we need <i>y</i> &gt; ¼) or <b><i>y</i> = ½</b>. Then</p>'+
+     '<div class="eqb"><i>a</i> = '+frac('4 · ¼','2 − 1')+' = 1</div>'+
+     '<div class="ans">The leftmost point of the curve is <b>(<i>a</i>, <i>y</i>) = (1, ½)</b> — the same answer as part '+
+     '(c), reached by a completely different route.</div>'+
+     '<p>Working through the numerator algebra once: 8<i>y</i>(4<i>y</i>−1) − 16<i>y</i>² = 32<i>y</i>² − 8<i>y</i> − '+
+     '16<i>y</i>² = 16<i>y</i>² − 8<i>y</i> = 8<i>y</i>(2<i>y</i> − 1).</p>'+
+     '<div class="do"><b>Do this:</b> click the picture just left and just right of the cyan nose. To the right the '+
+     'readout gives two roots; to the left it gives none. The nose is where the vertical slice stops intersecting the '+
+     'curve.</div>'+
+     '<div class="try"><b>Three routes, one answer.</b> Discriminant = 0, peak height = 0, and d<i>a</i>/d<i>y</i> = 0 all '+
+     'give (1, ½). Part (f) adds a fourth.</div>'; } }
+]},
+
+/* ============================ TAB 6 : (f) ============================ */
+{ id:'pf', name:'6 · (f)', steps:[
+
+ { title:'f = f ′ = 0',
+   setup:function(){ S.a=1; S.scene='fy'; S.showRoots=true; S.showPeak=true; S.tangent=true; S.probeOn=true; S.y=0.5; },
+   html:function(){ return '<h2>(f) Locating the semi-stable critical point</h2>'+
+     '<p><b>What makes a point semi-stable.</b> The parabola <i>touches</i> the axis instead of crossing it, so <i>ẏ</i> '+
+     'has the same sign on both sides: solutions are attracted from one side and repelled from the other. Algebraically, '+
+     'touching means a <b>double root</b>, which happens exactly when the function and its derivative vanish together.</p>'+
+     '<div class="eqb"><i>f</i>(<i>y</i>) = 0  and  <i>f</i> ′(<i>y</i>) = 0</div>'+
+     '<p>Solve the easier one first:</p>'+
+     '<div class="eqb"><i>f</i> ′(<i>y</i>) = 1 − '+frac('2<i>y</i>','<i>a</i>')+' = 0  ⟹  <i>y</i> = '+frac('<i>a</i>','2')+'</div>'+
+     '<p>Substitute into the first — this is Fact 3 again:</p>'+
+     '<div class="eqb"><i>f</i>('+frac('<i>a</i>','2')+') = −'+frac('1','4')+' + '+frac('<i>a</i>','2')+' − '+frac('<i>a</i>','4')+
+     ' = '+frac('<i>a</i> − 1','4')+' = 0  ⟹  <i>a</i> = 1, then <i>y</i> = ½</div>'+
+     '<div class="ans">There is exactly <b>one</b> semi-stable critical point in the whole family: '+
+     '<b><i>a</i> = 1, <i>y</i> = ½</b> — a farm of capacity 1000 crabs holding a population of 500.</div>'+
+     '<div class="row">'+setBtn({a:1,y:0.5},'set a = 1, probe at ½')+setBtn({a:2,y:1.7071},'compare with a = 2')+'</div>'+
+     '<div class="do"><b>Do this:</b> with <i>a</i> = 1 and the probe at ½, look at the gold tangent: it is '+
+     '<b>horizontal</b> and it lies <b>on</b> the axis. Both conditions hold at once, which is the definition. Then press '+
+     'the comparison button — at <i>a</i> = 2 the tangent at <i>y</i>+ is tilted, so the root is an ordinary crossing.</div>'; } },
+
+ { title:'confirming semi-stability',
+   setup:function(){ S.a=1; S.scene='ty'; S.eqlines=true; S.phase=true; S.field=true; S.tmax=10; S.five=false; S.sols=[{t:0,y:1.6,col:GREEN},{t:0,y:1.0,col:GREEN},{t:0,y:0.7,col:GREEN},{t:0,y:0.45,col:RED},{t:0,y:0.2,col:RED}]; },
+   html:function(){ return '<h2>(f) Step 2 · Confirming it really is semi-stable</h2>'+
+     '<p>Put <i>a</i> = 1 into the equation and factor:</p>'+
+     '<div class="eqb"><i>ẏ</i> = −'+frac('1','4')+' + <i>y</i> − <i>y</i>² = −( <i>y</i>² − <i>y</i> + '+frac('1','4')+' ) '+
+     '= −( <i>y</i> − ½ )² ≤ 0 for every <i>y</i></div>'+
+     '<p>The right-hand side is a <b>perfect square with a minus sign</b>, so <i>ẏ</i> is never positive. Read off the '+
+     'two sides:</p>'+
+     '<ul><li>Starting <b>above</b> ½: <i>ẏ</i> &lt; 0, the population falls toward ½ — <b>attracting from above</b>.</li>'+
+     '<li>Starting <b>below</b> ½: <i>ẏ</i> &lt; 0 still, so the population falls <i>away</i> from ½ and crashes — '+
+     '<b>repelling from below</b>.</li></ul>'+
+     '<p>Attracting on one side and repelling on the other is precisely semi-stability, and it is why the Mathlet paints '+
+     'this point cyan rather than green or red.</p>'+
+     '<div class="row">'+setBtn({a:1},'a = 1 (semi-stable)')+setBtn({a:0.8},'a = 0.8 (all crash)')+'</div>'+
+     '<div class="do"><b>Do this:</b> the green curves start above ½ and creep down to it; the red ones start below and '+
+     'fall away. Every arrow on the phase-line strip at the right points down — including the ones on both sides of the '+
+     'cyan dot. Then press <i>a</i> = 0.8: the parabola never reaches the axis, there is no dot at all, and every herd '+
+     'dies regardless of its starting size.</div>'+
+     '<div class="try"><b>Recognising the pattern:</b> whenever the right-hand side factors as ±(something)², you have a '+
+     'semi-stable point at the root of that something.</div>'; } },
+
+ { title:'why it is so slow',
+   setup:function(){ S.scene='slow'; },
+   html:function(){ return '<h2>(f) Step 3 · Why the approach at <i>a</i> = 1 is unusually slow</h2>'+
+     '<p>Because <i>f</i> ′(½) = 0, the linearised decay rate is <b>zero</b> and convergence is no longer exponential. '+
+     'The linear term of the Taylor expansion has vanished, so the quadratic term takes over. Separate the resulting '+
+     'equation with <i>u</i> = <i>y</i> − ½:</p>'+
+     '<div class="eqb"><i>u̇</i> = −<i>u</i>²  ⟹  <i>u</i>(<i>t</i>) = '+frac('<i>u</i>₀','1 + <i>u</i>₀<i>t</i>')+
+     '  ⟹  <i>y</i>(<i>t</i>) − ½ ~ '+frac('1','<i>t</i>')+'</div>'+
+     '<p>Compare the two decays honestly: <i>e</i><sup>−0.707<i>t</i></sup> loses a factor of 10 every 3.3 months, while '+
+     '1/<i>t</i> needs ten times as long for each factor of 10. Starting 0.5 kilocrabs above target it takes about '+
+     '<b>18 months</b> to get within 50 crabs of equilibrium at <i>a</i> = 1, versus a couple of months at <i>a</i> = 2.</p>'+
+     '<div class="do"><b>Do this:</b> the picture plots the gap |<i>y</i> − <i>y</i>★| on a logarithmic vertical axis. '+
+     'Exponential decay is a <b>straight line</b> on such a plot; the cyan <i>a</i> = 1 curve bends and flattens, which is '+
+     'the visual signature of an algebraic 1/<i>t</i> decay. Read across at 0.05 (50 crabs) to compare the times.</div>'+
+     '<h3>All four routes agree — the consistency check</h3>'+
+     '<table class="t"><tr><th>route</th><th>result</th></tr>'+
+     '<tr><td>(c) discriminant <i>a</i>² − <i>a</i> ≥ 0</td><td>threshold at <i>a</i> = 1, merged root <i>y</i> = <i>a</i>/2 = ½</td></tr>'+
+     '<tr><td>(c′) peak height (<i>a</i>−1)/4 = 0</td><td><i>a</i> = 1, peak at <i>y</i> = <i>a</i>/2 = ½</td></tr>'+
+     '<tr><td>(d)/(e) nose of <i>a</i> = 4<i>y</i>²/(4<i>y</i>−1)</td><td>minimised at <i>y</i> = ½, giving <i>a</i> = 1</td></tr>'+
+     '<tr><td>(f) <i>f</i> = <i>f</i> ′ = 0 simultaneously</td><td><i>a</i> = 1, <i>y</i> = ½</td></tr>'+
+     '<tr><td>Mathlet</td><td>cyan dot at <i>y</i> ≈ 0.50 when the slider reads <i>a</i> ≈ 1</td></tr></table>'; } }
+]},
+
+/* ============================ TAB 7 : SUMMARY ============================ */
+{ id:'sum', name:'7 · Summary', steps:[
+
+ { title:'answers (a)–(f)',
+   setup:function(){ S.a=2; S.scene='link'; S.build=5; S.five=false; toggleFive(); },
+   html:function(){ var r=roots(2,0.25);
+     return '<h2>All six answers on one screen</h2>'+
+     '<table class="t"><tr><th>part</th><th>answer</th></tr>'+
+     '<tr><td><b>(a)</b></td><td><i>y</i>− = 1 − √2/2 ≈ '+fmt(r.m,4)+' (unstable), <i>y</i>+ = 1 + √2/2 ≈ '+fmt(r.p,4)+
+     ' (stable). Arrows: down, up, down. Five solution types: decay to <i>y</i>+; constant <i>y</i>+; growth to '+
+     '<i>y</i>+; constant <i>y</i>−; finite-time crash.</td></tr>'+
+     '<tr><td><b>(b)</b></td><td>Green = stable, red = unstable, cyan = semi-stable. The Mathlet\u2019s green line at '+
+     '<i>y</i> ≈ 1.71 and red line at <i>y</i> ≈ 0.29 confirm the computation.</td></tr>'+
+     '<tr><td><b>(c)</b></td><td>Minimum <i>a</i> = 1 (capacity 1000 crabs); minimum stable population <i>y</i> = ½ '+
+     '(500 crabs).</td></tr>'+
+     '<tr><td><b>(d)</b></td><td>Two branches merging in a saddle-node at the nose; nothing to the left of it, where the '+
+     'population always crashes.</td></tr>'+
+     '<tr><td><b>(e)</b></td><td>4<i>y</i>² − 4<i>ay</i> + <i>a</i> = 0, equivalently <i>a</i> = 4<i>y</i>²/(4<i>y</i> − 1).</td></tr>'+
+     '<tr><td><b>(f)</b></td><td>Semi-stable point at (<i>a</i>, <i>y</i>) = (1, ½); there <i>ẏ</i> = −(<i>y</i> − ½)² ≤ 0, '+
+     'attracting from above and repelling from below.</td></tr></table>'+
+     '<div class="ans"><b>What to tell the start-up.</b> The arithmetic minimum is a farm with capacity <i>a</i> = 1 '+
+     'kilocrab, sustaining exactly 500 crabs. <b>Do not build that farm.</b> At <i>a</i> = 1 the equilibrium is '+
+     'semi-stable: zero margin below it, recovery from above takes years rather than months, and one bad month ends the '+
+     'business.<br><br>Because the maximum sustainable harvest is <i>a</i>/4, a farm of capacity <i>a</i> supports up to '+
+     '250<i>a</i> crabs per month. Building at <i>a</i> = 2 costs twice the land but buys a stable herd of ≈ 1707, a '+
+     'crash threshold of ≈ 293, recovery with a half-life under a month, and headroom to harvest up to 500 crabs per '+
+     'month — double the target — if demand grows.</div>'; } },
+
+ { title:'the general method',
+   setup:function(){ S.scene='fy'; S.showRoots=true; S.showPeak=true; S.tangent=true; S.probeOn=true; },
+   html:function(){ return '<h2>The general lesson — the recipe to carry away</h2>'+
+     '<p>For any autonomous equation <i>ẏ</i> = <i>f</i>(<i>y</i>) you <b>never have to solve anything</b> to answer '+
+     'questions like these:</p>'+
+     '<ol><li><b>Sketch <i>f</i>.</b> Its zeros are the equilibria.</li>'+
+     '<li><b>Read the signs of <i>f</i></b> between the zeros: that gives the direction of travel in each band.</li>'+
+     '<li><b>Read the sign of <i>f</i> ′</b> at each zero: negative → stable, positive → unstable, zero → look closer '+
+     '(semi-stable or a degenerate case).</li>'+
+     '<li><b>If a parameter moves the graph up or down</b>, equilibria appear and disappear in pairs exactly where the '+
+     'graph becomes tangent to the axis — which is why <i>f</i> = <i>f</i> ′ = 0 locates every bifurcation of this '+
+     'kind.</li>'+
+     '<li><b>If you want times as well as shapes</b>, |<i>f</i> ′| at a stable equilibrium is the exponential rate, so '+
+     'ln2/|<i>f</i> ′| is the half-life. If <i>f</i> ′ = 0 there, the approach is algebraic and much slower.</li></ol>'+
+     H.a()+H.h()+
+     '<div class="do"><b>Do this:</b> use the two sliders as a sandbox. Any (<i>a</i>, <i>h</i>) pair is a different '+
+     'business plan; the five steps above answer it in seconds. Try <i>h</i> = 0.5 with <i>a</i> = 2 (exactly the knife '+
+     'edge again, since 4<i>h</i> = 2).</div>'+
+     '<div class="quiz"><b>Check yourself 1.</b> A different farm has <i>ẏ</i> = <i>y</i>(2 − <i>y</i>) − 1. Where are its '+
+     'equilibria and what kind are they?<div class="qa">Expand: <i>ẏ</i> = −(<i>y</i>² − 2<i>y</i> + 1) = '+
+     '−(<i>y</i> − 1)². One double root at <i>y</i> = 1, and <i>ẏ</i> ≤ 0 everywhere — semi-stable, attracting from '+
+     'above, repelling from below. Same structure as part (f).</div></div>'+
+     '<div class="quiz"><b>Check yourself 2.</b> Why is <i>ÿ</i> useless as a stability test?<div class="qa">Because '+
+     '<i>ÿ</i> = <i>f</i> ′(<i>y</i>)·<i>f</i>(<i>y</i>) by the chain rule, and <i>f</i>(<i>y</i>*) = 0 at every '+
+     'equilibrium — so <i>ÿ</i> = 0 at all of them, stable or not. The informative factor is <i>f</i> ′ alone.</div></div>'+
+     '<div class="quiz"><b>Check yourself 3.</b> On the bifurcation diagram, why does the upper branch look like a '+
+     'straight line of slope 1 for large <i>a</i>?<div class="qa">Because <i>y</i>+ = (<i>a</i> + √(<i>a</i>²−<i>a</i>))/2 '+
+     '≈ (<i>a</i> + <i>a</i>(1 − 1/(2<i>a</i>)))/2 = <i>a</i> − ¼. The herd sits one harvest below capacity.</div></div>'; } }
+]}
+];
+
+/* ==================================================================== */
+/*  NAVIGATION                                                          */
+/* ==================================================================== */
+var curTab=0, curStep=0, visited={};
+function render(){
+  $('tabs').innerHTML=TABS.map(function(t,i){
+    return '<div class="tb'+(i===curTab?' on':'')+'" data-i="'+i+'">'+t.name+'</div>';
+  }).join('');
+  Array.prototype.forEach.call($('tabs').children,function(e){
+    e.onclick=function(){ curTab=+e.getAttribute('data-i'); curStep=0; enterStep(); };
+  });
+  var st=TABS[curTab].steps;
+  $('steps').innerHTML=st.map(function(s,i){
+    var k=curTab+'.'+i;
+    return '<div class="sp'+(i===curStep?' on':(visited[k]?' done':''))+'" data-i="'+i+'">'+(i+1)+' · '+s.title+'</div>';
+  }).join('');
+  Array.prototype.forEach.call($('steps').children,function(e){
+    e.onclick=function(){ curStep=+e.getAttribute('data-i'); enterStep(); };
+  });
+  var step=st[curStep];
+  var nav='<div class="row" style="margin-top:12px;justify-content:space-between">'+
+    (curStep>0||curTab>0?'<button class="b" id="prevB">◀ previous</button>':'<span></span>')+
+    (curStep<st.length-1||curTab<TABS.length-1?'<button class="b" id="nextB">next ▶</button>':'<span></span>')+'</div>';
+  $('content').innerHTML=step.html()+nav;
+  $('content').scrollTop=0;
+  var p=$('prevB'), n=$('nextB');
+  if(p) p.onclick=function(){ if(curStep>0) curStep--; else { curTab--; curStep=TABS[curTab].steps.length-1; } enterStep(); };
+  if(n) n.onclick=function(){ if(curStep<TABS[curTab].steps.length-1) curStep++; else { curTab++; curStep=0; } enterStep(); };
+  wireControls();
+  buildBar();
+  redraw();
+}
+function enterStep(){
+  visited[curTab+'.'+curStep]=true;
+  var s=TABS[curTab].steps[curStep];
+  if(s.setup) s.setup();
+  render();
+}
+
+/* ==================================================================== */
+/*  LIVE EXPLANATION PANEL                                              */
+/* ==================================================================== */
+function explain(){
+  var a=S.a,h=S.h,r=roots(a,h),y=S.y,fv=f(y,a,h),m=fp(y,a),pk=peakF(a,h),H2='';
+  H2+='<h3>Current settings</h3>'+
+    '<table><tr><th>quantity</th><th>value</th></tr>'+
+    '<tr><td>farm size a</td><td>'+fmt(a,3)+'</td></tr>'+
+    '<tr><td>harvest h</td><td>'+fmt(h,4)+' kilocrab/mo ('+fmt(h*1000,0)+' crabs)</td></tr>'+
+    '<tr><td>discriminant a² − 4ha</td><td>'+fmt(disc(a,h),4)+'</td></tr>'+
+    '<tr><td>peak of f: y = a/2</td><td>'+fmt(a/2,4)+'</td></tr>'+
+    '<tr><td>peak height a/4 − h</td><td>'+fmt(pk,4)+'</td></tr></table>';
+
+  /* --- equilibria block --- */
+  H2+='<h3>Equilibria, computed now</h3>';
+  if(!r){
+    H2+='<div class="bad">a² − 4ha = '+fmt(disc(a,h),4)+' &lt; 0, so the square root is imaginary: <b>no equilibria</b>. '+
+      'The parabola lies entirely below the axis, ẏ &lt; 0 everywhere, and every herd reaches zero in finite time.</div>';
+  } else if(Math.abs(r.p-r.m)<1e-7){
+    H2+='<div class="box">Double root: the parabola is tangent to the axis at <b>y = a/2 = '+fmt(r.m,4)+'</b>. '+
+      'f = f ′ = 0 together, so this is the <b>semi-stable</b> point — attracting from above, repelling from below.</div>';
+  } else {
+    H2+='<p class="eq">y<sub>±</sub> = ( a ± √(a² − 4ha) ) / 2 = ( '+fmt(a,3)+' ± '+fmt(r.s,4)+' ) / 2</p>'+
+      '<table><tr><th></th><th>y</th><th>f ′(y)</th><th>type</th></tr>'+
+      '<tr><td>lower</td><td>'+fmt(r.m,4)+'</td><td>'+fmt(fp(r.m,a),4)+'</td><td style="color:#c0392b">unstable</td></tr>'+
+      '<tr><td>upper</td><td>'+fmt(r.p,4)+'</td><td>'+fmt(fp(r.p,a),4)+'</td><td style="color:#1a8f1a">stable</td></tr></table>'+
+      '<p class="hint">Check: ∓√(1 − 4h/a) = ∓'+fmt(Math.sqrt(1-4*h/a),4)+' — matches the column above.</p>'+
+      '<div class="ok">Recovery half-life near y+ : ln2 / '+fmt(rateOf(a,h),4)+' = <b>'+fmt(Math.LN2/rateOf(a,h),3)+
+      ' months</b>. In crabs: the stable herd is '+fmt(r.p*1000,0)+', the crash threshold '+fmt(r.m*1000,0)+'.</div>';
+  }
+
+  /* --- probe block --- */
+  if(S.scene==='fy'||S.scene==='link'){
+    H2+='<h3>At the probe  y = '+fmt(y,4)+'</h3>'+
+      '<p class="eq">f(y) = −'+fmt(h,3)+' + '+fmt(y,4)+' − ('+fmt(y,4)+')²/'+fmt(a,3)+' = <b>'+fmt(fv,5)+'</b> '+pill(fv)+'</p>'+
+      '<p class="eq">f ′(y) = 1 − 2('+fmt(y,4)+')/'+fmt(a,3)+' = <b>'+fmt(m,5)+'</b> '+pill(m)+'</p>'+
+      '<p>'+(Math.abs(fv)<1e-6
+        ? 'This is an equilibrium. '+(m<-1e-9?'f ′ &lt; 0 → the graph comes down through the axis → <b>stable</b>.'
+          : m>1e-9?'f ′ &gt; 0 → the graph goes up through the axis → <b>unstable</b>.'
+          : 'f ′ = 0 too → tangent to the axis → <b>semi-stable</b>.')
+        : (fv>0?'ẏ &gt; 0, so a herd of this size is <b>growing</b> at '+fmt(fv*1000,1)+' crabs per month.'
+               :'ẏ &lt; 0, so a herd of this size is <b>shrinking</b> at '+fmt(-fv*1000,1)+' crabs per month.'))+'</p>'+
+      '<p class="hint">ÿ here would be f ′·f = '+fmt(m*fv,5)+'. At any equilibrium that product is 0, which is why ÿ '+
+      'cannot classify equilibria and f ′ can.</p>';
+  }
+
+  /* --- scene-specific --- */
+  if(S.scene==='ty'||S.scene==='link'){
+    H2+='<h3>The (t, y) picture</h3>';
+    var sy=S.sel.y, sf=f(sy,a,h);
+    H2+='<p>Cursor at t = '+fmt(S.sel.t,2)+', y = '+fmt(sy,3)+'. The dash there has slope f(y) = '+fmt(sf,4)+' '+pill(sf)+
+      ' — go 1 month across and '+fmt(sf,3)+' kilocrabs up.</p>';
+    if(r&&Math.abs(r.p-r.m)>1e-7){
+      H2+='<p>Bands: below '+fmt(r.m,3)+' all curves fall to extinction; between '+fmt(r.m,3)+' and '+fmt(r.p,3)+
+        ' they rise to '+fmt(r.p,3)+'; above '+fmt(r.p,3)+' they fall back to it.</p>';
+      if(sy<r.m) H2+='<div class="bad">This herd is below the threshold: extinction at about t = '+
+        fmt(crashTime(sy,a,h),2)+' months from its start.</div>';
+      else H2+='<div class="ok">This herd recovers to '+fmt(r.p,4)+' ('+fmt(r.p*1000,0)+' crabs).</div>';
+    }
+    if(S.eul.on){
+      var yy=S.eul.y0, rows='';
+      for(var i=0;i<Math.min(S.eul.n,6);i++){
+        var mm=f(yy,a,h);
+        rows+='<tr'+(i===S.eul.n-1?' class="cur"':'')+'><td>'+i+'</td><td>'+fmt(i*S.eul.h,2)+'</td><td>'+fmt(yy,4)+
+          '</td><td>'+fmt(mm,4)+'</td><td>'+fmt(yy+S.eul.h*mm,4)+'</td></tr>';
+        yy+=S.eul.h*mm;
+      }
+      H2+='<h3>Euler steps (h = '+fmt(S.eul.h,2)+')</h3><table><tr><th>n</th><th>t</th><th>y</th><th>f(y)</th>'+
+        '<th>y + h f</th></tr>'+rows+'</table><p class="hint">Each row: ask for the slope, then walk.</p>';
+    }
+    if(S.iso.length){
+      H2+='<h3>Isocline f(y) = '+fmt(S.iso[0],3)+'</h3>';
+      var hh=h+S.iso[0], dd=a*a-4*hh*a;
+      if(dd>=0){ var ss=Math.sqrt(dd);
+        H2+='<p>Solve −h + y − y²/a = m, i.e. y² − ay + a(h+m) = 0 → y = '+fmt((a-ss)/2,4)+' and '+fmt((a+ss)/2,4)+
+          '. Two horizontal lines; every dash on them has tilt '+fmt(S.iso[0],3)+'.</p>';
+      } else H2+='<p>No solution: '+fmt(S.iso[0],3)+' is above the peak '+fmt(pk,4)+', so no point has that slope.</p>';
+    }
+  }
+  if(S.scene==='bif'){
+    H2+='<h3>Reading the diagram at a = '+fmt(a,3)+'</h3>';
+    H2+='<p>The nose sits at a = 4h = '+fmt(4*h,3)+', y = 2h = '+fmt(2*h,3)+'.</p>';
+    if(r&&Math.abs(r.p-r.m)>1e-7){
+      H2+='<p>Vertical slice at this a meets the curve twice, at '+fmt(r.m,4)+' and '+fmt(r.p,4)+
+        '. Large-a approximations: y+ ≈ a − h = '+fmt(a-h,4)+' (actual '+fmt(r.p,4)+'), y− ≈ h = '+fmt(h,4)+
+        ' (actual '+fmt(r.m,4)+').</p>';
+    } else H2+='<div class="bad">This slice misses the curve entirely — no equilibria, the herd always crashes.</div>';
+  }
+  if(S.scene==='slopes'){
+    H2+='<h3>The ∓ formula at a = '+fmt(a,3)+'</h3>';
+    if(a>=4*h){
+      var v=Math.sqrt(1-4*h/a);
+      H2+='<table><tr><td>4h/a</td><td>'+fmt(4*h/a,4)+'</td></tr><tr><td>1 − 4h/a</td><td>'+fmt(1-4*h/a,4)+
+        '</td></tr><tr><td>√(1 − 4h/a)</td><td>'+fmt(v,4)+'</td></tr>'+
+        '<tr><td>f ′(y−)</td><td style="color:#c0392b">+'+fmt(v,4)+'</td></tr>'+
+        '<tr><td>f ′(y+)</td><td style="color:#1a8f1a">−'+fmt(v,4)+'</td></tr>'+
+        '<tr><td>direct 1 − 2y+/a</td><td>'+fmt(fp(r.p,a),4)+'</td></tr></table>'+
+        '<p class="hint">The last two rows agree — the tidy formula and brute force give the same number.</p>';
+    } else H2+='<div class="bad">a &lt; 4h: no roots, so there is nothing to differentiate at.</div>';
+  }
+  if(S.scene==='slow'){
+    H2+='<h3>Two kinds of decay</h3><table><tr><th>farm</th><th>gap law</th><th>time to reach 0.05</th></tr>'+
+      '<tr><td>a = 2</td><td>0.5·e^(−0.7071 t)</td><td>'+fmt(Math.log(0.5/0.05)/0.7071,2)+' months</td></tr>'+
+      '<tr><td>a = 1</td><td>0.5/(1 + 0.5 t)</td><td>'+fmt((0.5/0.05-1)/0.5,1)+' months</td></tr></table>'+
+      '<p class="hint">Same starting gap of 0.5 kilocrabs. The knife-edge farm needs about twenty times as long.</p>';
+  }
+  H2+='<h3>Where this sits in the solution</h3><p class="hint">'+TABS[curTab].name+' · step '+(curStep+1)+' — '+
+    TABS[curTab].steps[curStep].title+'</p>';
+  return H2;
+}
+
+/* ==================================================================== */
+/*  PANEL / STAGE PLUMBING                                              */
+/* ==================================================================== */
+var wrap=$('wrap'), stage=$('stage'), expl=$('expl'), explBtn=$('explBtn');
+var PANEL={open:false,min:false,dragged:false,x:26,y:58,scale:1,w:470,h:520};
+var STAGE_W=1180, STAGE_H=848;
+function placePanel(){
+  if(!PANEL.dragged){ PANEL.x=26; PANEL.y=58; }
+  expl.style.left=PANEL.x+'px'; expl.style.top=PANEL.y+'px';
+  if(!expl.style.width){ expl.style.width=PANEL.w+'px'; expl.style.height=PANEL.h+'px'; }
+}
+function fit(){
+  var vw=window.innerWidth, vh=window.innerHeight, portrait=vw<vh*0.95;
+  stage.className=portrait?'port':'land';
+  STAGE_W=portrait?660:1180; STAGE_H=portrait?1392:848;
+  var s=Math.min(vw/STAGE_W, vh/STAGE_H);
+  PANEL.scale=s; PANEL.w=portrait?560:470; PANEL.h=portrait?540:520;
+  stage.style.transform='scale('+s+')';
+  stage.style.left=Math.max(0,(vw-STAGE_W*s)/2)+'px';
+  stage.style.top=Math.max(0,(vh-STAGE_H*s)/2)+'px';
+  wrap.style.height='100vh';
+  expl.style.width=''; expl.style.height=''; placePanel();
+  sizeCanvas(); redraw();
+}
+function refreshExpl(){ if(PANEL.open&&!PANEL.min) $('explBody').innerHTML=explain(); pushExpl(); }
+function setPanel(open){
+  PANEL.open=open; expl.classList.toggle('open',open);
+  explBtn.textContent=(open?'− ':'+ ')+'explanation'; placePanel(); refreshExpl();
+}
+var explWin=null;
+function pushExpl(){
+  if(!explWin||explWin.closed) return;
+  try{ var el=explWin.document.getElementById('b'); if(el) el.innerHTML=explain(); }catch(e){ explWin=null; }
+}
+function openExplTab(){
+  if(explWin&&!explWin.closed){ explWin.focus(); pushExpl(); setPanel(false); return; }
+  explWin=window.open('','_blank');
+  if(!explWin){ alert('The browser blocked the new tab — please allow pop-ups for this page.'); return; }
+  var css='html,body{margin:0;height:100%;background:#fff;font-family:"Open Sans","Segoe UI",Helvetica,Arial,sans-serif;'+
+    'color:#333;overflow:hidden}#hd{height:36px;box-sizing:border-box;padding:8px 14px;background:#e9edf3;'+
+    'border-bottom:1px solid #d5d5d5;font-weight:700;font-size:14px;color:#4a4a4a}#hd span{font-weight:400;color:#777;'+
+    'font-size:12px;margin-left:10px}#w{height:calc(100% - 36px);overflow:auto}#b{box-sizing:border-box;padding:12px 16px;'+
+    'max-width:820px;font-size:14px;line-height:1.5}h3{margin:10px 0 3px;font-size:15px;color:#4a4a4a}h3:first-child'+
+    '{margin-top:0}p{margin:0 0 5px}.eq{font-family:"Times New Roman",Times,serif;font-size:15.5px}table'+
+    '{border-collapse:collapse;margin:5px 0;font-size:13px;width:100%}td,th{border-bottom:1px solid #e5e5e5;padding:3px 7px;'+
+    'text-align:right}td:first-child,th:first-child{text-align:left}th{color:#666}.box{background:#f3f6fb;'+
+    'border-left:3px solid #1a9cd8;padding:4px 9px;margin:5px 0}.ok{background:#eef9ee;border-left:3px solid #1a8f1a;'+
+    'padding:4px 9px;margin:5px 0}.bad{background:#fdeeec;border-left:3px solid #c0392b;padding:4px 9px;margin:5px 0}'+
+    '.hint{color:#777;font-style:italic}.pill{display:inline-block;min-width:15px;text-align:center;border-radius:3px;'+
+    'padding:0 5px;font-weight:700}.pos{background:#e6f4e6;color:#1a8f1a}.neg{background:#fbe9e7;color:#c0392b}'+
+    '.zer{background:#eee;color:#555}tr.cur td{background:#fff5e6;font-weight:700}';
+  explWin.document.write('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'+
+    '<meta name="viewport" content="width=device-width, initial-scale=1"><title>Explanation — Recitation 13</title>'+
+    '<style>'+css+'</style></head><body><div id="hd">Recitation 13 — live explanation'+
+    '<span>follows every slider and click in the main tab</span></div><div id="w"><div id="b"></div></div></body></html>');
+  explWin.document.close(); pushExpl(); setPanel(false);
+}
+$('explTab').addEventListener('click',function(e){ e.stopPropagation(); openExplTab(); });
+explBtn.addEventListener('click',function(){ setPanel(!PANEL.open); });
+explBtn.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); setPanel(!PANEL.open); } });
+$('explClose').addEventListener('click',function(e){ e.stopPropagation(); setPanel(false); });
+$('explMin').addEventListener('click',function(e){
+  e.stopPropagation(); PANEL.min=!PANEL.min; expl.classList.toggle('min',PANEL.min);
+  $('explMin').innerHTML=PANEL.min?'&#9633;':'&#8211;'; $('explMin').title=PANEL.min?'Restore':'Minimize'; refreshExpl();
+});
+(function(){
+  var bar=$('explBar'), d=null;
+  bar.addEventListener('pointerdown',function(e){
+    if(e.target.classList.contains('ib')) return;
+    d={x0:e.clientX,y0:e.clientY,px:PANEL.x,py:PANEL.y}; bar.setPointerCapture(e.pointerId);
+  });
+  bar.addEventListener('pointermove',function(e){
+    if(!d) return;
+    PANEL.x=Math.max(-100,Math.min(STAGE_W-90,d.px+(e.clientX-d.x0)/PANEL.scale));
+    PANEL.y=Math.max(0,Math.min(STAGE_H-30,d.py+(e.clientY-d.y0)/PANEL.scale));
+    PANEL.dragged=true; expl.style.left=PANEL.x+'px'; expl.style.top=PANEL.y+'px';
+  });
+  var up=function(){ d=null; };
+  bar.addEventListener('pointerup',up); bar.addEventListener('pointercancel',up);
+})();
+var helpOpen=false;
+function toggleHelp(){
+  helpOpen=!helpOpen; $('help').style.display=helpOpen?'block':'none';
+  $('helpBtn').textContent=(helpOpen?'− ':'+ ')+'help';
+}
+$('helpBtn').addEventListener('click',toggleHelp);
+$('helpBtn').addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggleHelp(); } });
+
+window.addEventListener('resize',fit);
+fit(); enterStep(); setPanel(false);
+})();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

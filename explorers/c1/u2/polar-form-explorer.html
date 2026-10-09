@@ -1,0 +1,2123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polar Form &amp; Trigonometry Explorer — Step by Step</title>
+<style>
+  :root{
+    --bg:#EDF1FA;            /* blue-tinted background */
+    --card:#FFFFFF;
+    --ink:#232946;
+    --ink-soft:#5A6484;
+    --orange:#E8842C;        /* inputs: x and y legs */
+    --orange-soft:#FDF0E2;
+    --teal:#0E9488;          /* outputs: r, polar form */
+    --teal-soft:#E2F4F2;
+    --purple:#7C6CE0;        /* actions, angle */
+    --purple-soft:#EEEBFC;
+    --shadow:0 10px 30px rgba(124,108,224,.16);
+    --shadow-sm:0 4px 14px rgba(124,108,224,.12);
+    --radius:16px;
+    --math:Georgia, "Times New Roman", serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height:1.5;
+    height:100dvh; overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+  .wrap{
+    flex:1; min-height:0; width:100%; max-width:1500px; margin:0 auto;
+    padding:10px 22px 14px; display:flex; flex-direction:column;
+  }
+
+  /* ---------- compact full-width header ---------- */
+  header{flex:0 0 auto; padding:2px 0 8px}
+  .headrow{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap}
+  .eyebrow{
+    display:inline-block;background:var(--purple-soft);color:var(--purple);
+    font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+    padding:3px 10px;border-radius:999px;white-space:nowrap;
+  }
+  h1{font-family:var(--math);font-weight:600;font-size:clamp(1.15rem,2.2vw,1.5rem);margin:0;line-height:1.2}
+  h1 .m{font-style:italic}
+  header p{
+    width:100%;max-width:none;         /* full width of the page */
+    color:var(--ink-soft);margin:6px 0 0;font-size:.88rem;line-height:1.45;
+  }
+
+  /* ---------- math typography ---------- */
+  .m{font-family:var(--math);font-style:italic}
+  .mr{font-family:var(--math);font-style:normal}
+  sup,sub{font-size:.72em}
+  .frac{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle;line-height:1.1;margin:0 2px}
+  .frac>span:first-child{border-bottom:1.4px solid currentColor;padding:0 4px}
+  .frac>span:last-child{padding:0 4px}
+  .eq{
+    font-family:var(--math);font-size:1.06rem;background:var(--bg);
+    border-radius:10px;padding:8px 14px;margin:8px 0;overflow-x:auto;white-space:nowrap;
+  }
+  .tag-x{color:var(--orange);font-weight:600}
+  .tag-r{color:var(--teal);font-weight:600}
+  .tag-t{color:var(--purple);font-weight:600}
+
+  /* ---------- main tabs ---------- */
+  .maintabs{flex:0 0 auto; display:flex; gap:10px; margin:2px 0 10px}
+  .maintab{
+    font-size:.95rem;font-weight:700;
+    background:var(--card);color:var(--ink-soft);border:2px solid transparent;
+    border-radius:12px;padding:9px 22px;cursor:pointer;box-shadow:var(--shadow-sm);
+    transition:border-color .12s ease,color .12s ease;
+  }
+  .maintab.active{border-color:var(--purple);color:var(--purple);background:var(--purple-soft)}
+  .maintab:focus-visible{outline:3px solid var(--purple);outline-offset:2px}
+
+  .pane{flex:1; min-height:0}
+  .pane.hidden{display:none!important}
+
+  /* ---------- recipe pane (scrolls internally if needed) ---------- */
+  #pane-recipe{overflow-y:auto; padding:2px 2px 10px}
+  .idea-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;align-items:start}
+  @media(max-width:880px){.idea-grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 22px}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .chip{display:inline-flex;align-items:center;gap:8px;font-size:.85rem;font-weight:600;
+        padding:5px 12px;border-radius:999px}
+  .chip .dot{width:10px;height:10px;border-radius:3px}
+  .chip.orange{background:var(--orange-soft);color:#B05F12}.chip.orange .dot{background:var(--orange)}
+  .chip.teal{background:var(--teal-soft);color:#0B6E66}.chip.teal .dot{background:var(--teal)}
+  .chip.purple{background:var(--purple-soft);color:#5B4BC4}.chip.purple .dot{background:var(--purple)}
+
+  .recipe{counter-reset:step;display:grid;gap:12px;margin-top:6px}
+  .recipe .step{display:flex;gap:14px;align-items:flex-start}
+  .recipe .step::before{
+    counter-increment:step;content:counter(step);
+    flex:0 0 30px;height:30px;border-radius:9px;background:var(--purple-soft);color:var(--purple);
+    display:flex;align-items:center;justify-content:center;font-weight:700;
+  }
+  .recipe b{color:var(--ink)}
+  .recipe p{margin:2px 0 0;color:var(--ink-soft);font-size:.93rem}
+
+  .warn{
+    background:var(--orange-soft);border-left:4px solid var(--orange);
+    border-radius:10px;padding:12px 16px;margin-top:14px;font-size:.93rem;
+  }
+  .warn b{color:#B05F12}
+
+  /* ---------- lab pane ---------- */
+  #pane-lab{display:flex;flex-direction:column;min-height:0}
+  .tabs{flex:0 0 auto;display:flex;flex-wrap:wrap;gap:9px;margin:0 0 10px}
+  .tab{
+    font-family:var(--math);font-size:1rem;
+    background:var(--card);color:var(--ink);border:2px solid transparent;
+    border-radius:12px;padding:7px 16px;cursor:pointer;box-shadow:var(--shadow-sm);
+    transition:transform .12s ease, border-color .12s ease;
+  }
+  .tab:hover{transform:translateY(-1px)}
+  .tab.active{border-color:var(--purple);color:var(--purple);font-weight:600}
+  .tab:focus-visible{outline:3px solid var(--purple);outline-offset:2px}
+
+  .lab{flex:1;min-height:0;display:flex;gap:18px;align-items:stretch}
+
+  .plane-card{flex:0 0 auto;display:flex;flex-direction:column;padding:14px;height:100%}
+  canvas{display:block;border-radius:12px;touch-action:none;margin:auto 0}
+  .plane-foot{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;
+              padding:8px 4px 0;font-size:.78rem;color:var(--ink-soft);gap:5px;min-height:56px}
+  /* toggle sits on its own reserved line below the caption; visibility (not display)
+     keeps its space allocated even when hidden, so the card size never jumps */
+  .angle-toggle{visibility:hidden;display:inline-flex;gap:8px}
+  .angle-toggle.show{visibility:visible}
+
+  /* ---------- cos θ explorer ---------- */
+  #pane-cos{display:flex;flex-direction:column;min-height:0}
+  .preset{
+    font-family:var(--math);font-size:.92rem;background:#fff;color:var(--ink);
+    border:1.5px solid #E5E9F5;border-radius:10px;padding:5px 12px;cursor:pointer;
+    transition:border-color .12s ease;
+  }
+  .preset:hover{border-color:var(--purple)}
+  .preset.active{background:var(--purple);border-color:var(--purple);color:#fff;font-weight:600}
+  .preset .star{color:var(--orange);font-style:normal;font-size:.8em}
+  .preset.active .star{color:#FFD9B8}
+  .preset:focus-visible{outline:3px solid var(--purple);outline-offset:2px}
+  .slider-row{display:flex;align-items:center;gap:10px;font-size:.85rem;color:var(--ink-soft);width:100%}
+  .slider-row input[type=range]{flex:1;accent-color:var(--purple)}
+  .angle-toggle button{
+    font-size:.78rem;font-weight:600;border:1.5px solid var(--purple);color:var(--purple);
+    background:#fff;border-radius:999px;padding:3px 11px;cursor:pointer;font-family:var(--math);
+  }
+  .angle-toggle button.on{background:var(--purple);color:#fff}
+
+  /* derivation panel: fixed height = figure card, internal scroll */
+  .derive{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;overflow:hidden}
+  .derive h3{font-family:var(--math);font-weight:600;font-size:1.15rem;margin:0 0 2px;flex:0 0 auto}
+  .derive .goal{font-size:.85rem;color:var(--ink-soft);margin:0 0 10px;flex:0 0 auto}
+  .controls{flex:0 0 auto;display:flex;gap:10px;flex-wrap:wrap;
+            padding-bottom:10px;margin-bottom:10px;border-bottom:1.5px solid #E5E9F5}
+  .btn{
+    border:none;border-radius:12px;padding:9px 18px;font-size:.9rem;font-weight:700;
+    cursor:pointer;transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:focus-visible{outline:3px solid var(--purple);outline-offset:2px}
+  .btn-next{background:var(--purple);color:#fff;box-shadow:0 6px 16px rgba(124,108,224,.35)}
+  .btn-next:hover{transform:translateY(-1px)}
+  .btn-next:disabled{background:#C6C0EE;box-shadow:none;cursor:default;transform:none}
+  .btn-ghost{background:transparent;color:var(--purple);border:1.5px solid var(--purple)}
+
+  .dsteps{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:12px;
+          padding-right:6px;scroll-behavior:smooth}
+  .dsteps::-webkit-scrollbar{width:8px}
+  .dsteps::-webkit-scrollbar-thumb{background:#D4D9EC;border-radius:8px}
+  .dstep{
+    border:1.5px solid #E5E9F5;border-radius:12px;padding:12px 15px;background:#fff;
+    opacity:0;transform:translateY(8px);transition:opacity .4s ease, transform .4s ease;
+    display:none;flex:0 0 auto;
+  }
+  .dstep.revealed{display:block;opacity:1;transform:none}
+  .dstep .dhead{display:flex;align-items:center;gap:10px;font-weight:700;margin-bottom:4px}
+  .dstep .badge{
+    flex:0 0 26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:.85rem;
+  }
+  .dstep p{margin:6px 0;color:var(--ink-soft);font-size:.92rem}
+  .b1 .badge{background:var(--orange)} .b2 .badge{background:var(--teal)}
+  .b3 .badge{background:var(--purple)} .b4 .badge{background:var(--teal)}
+  .b5 .badge{background:var(--ink)}
+  .dstep.check{background:var(--teal-soft);border-color:var(--teal)}
+
+  /* explore readout */
+  .readout{display:grid;gap:10px}
+  .readout .row{
+    display:flex;justify-content:space-between;align-items:baseline;gap:14px;
+    border:1.5px solid #E5E9F5;border-radius:12px;padding:9px 15px;font-family:var(--math);font-size:1.02rem;
+  }
+  .readout .row span:first-child{font-size:.75rem;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  .row.orange span:first-child{color:var(--orange)}
+  .row.teal span:first-child{color:var(--teal)}
+  .row.purple span:first-child{color:var(--purple)}
+  .polar-out{background:var(--teal-soft);border-color:var(--teal)!important}
+  .hint{font-size:.83rem;color:var(--ink-soft);margin-top:12px}
+
+  /* ---------- many main tabs ---------- */
+  .maintabs{flex-wrap:wrap;gap:7px}
+  .maintab{font-size:.8rem;padding:7px 13px;border-radius:10px}
+
+  /* ---------- generic trig panes ---------- */
+  .trigpane{display:flex;flex-direction:column;min-height:0}
+
+  /* fingerprint card: domain / range / period / amplitude */
+  .fingerprint{border:1.5px solid #E5E9F5;border-radius:12px;background:#fff;padding:12px 15px;flex:0 0 auto}
+  .fingerprint .fphead{display:flex;align-items:center;gap:10px;font-weight:700;margin-bottom:2px}
+  .fingerprint .fphead .badge{flex:0 0 26px;height:26px;border-radius:8px;display:flex;align-items:center;
+    justify-content:center;color:#fff;font-size:.85rem;background:var(--ink)}
+  .fp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+  @media(max-width:1150px){.fp-grid{grid-template-columns:1fr}}
+  .fp-item{background:var(--bg);border-radius:10px;padding:8px 12px;font-size:.85rem;color:var(--ink-soft)}
+  .fp-item b{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px}
+  .fp-item .fpval{font-family:var(--math);font-size:1rem;color:var(--ink);display:block;margin-bottom:3px}
+  details.dr{border:1.5px dashed #D4D9EC;border-radius:12px;padding:10px 15px;background:#FBFCFF;flex:0 0 auto}
+  details.dr summary{cursor:pointer;font-weight:700;font-size:.88rem;color:var(--purple)}
+  details.dr p{margin:8px 0 4px;font-size:.88rem;color:var(--ink-soft)}
+  details.dr b{color:var(--ink)}
+
+  /* colored function chips (checkboxes) */
+  .fnchips{display:flex;flex-wrap:wrap;gap:7px}
+  .fnchip{
+    font-family:var(--math);font-size:.95rem;background:#fff;border:2px solid #E5E9F5;
+    border-radius:999px;padding:5px 14px;cursor:pointer;transition:border-color .12s,opacity .12s;
+    display:inline-flex;align-items:center;gap:7px;color:var(--ink);
+  }
+  .fnchip .cdot{width:10px;height:10px;border-radius:50%}
+  .fnchip.sel{border-color:currentColor;font-weight:700}
+  .fnchip.disabled{opacity:.35;cursor:not-allowed}
+  .fnchip:focus-visible{outline:3px solid var(--purple);outline-offset:2px}
+
+  /* transform-pane option grid */
+  .optgroups{display:flex;flex-direction:column;gap:8px}
+  .optgroup .og-title{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink-soft);margin:2px 0 4px}
+  .optgrid{display:flex;flex-wrap:wrap;gap:6px}
+  .opt{
+    font-family:var(--math);font-size:.9rem;background:#fff;border:1.5px solid #E5E9F5;color:var(--ink);
+    border-radius:10px;padding:4px 11px;cursor:pointer;transition:border-color .12s,opacity .12s;
+  }
+  .opt.sel{border-width:2px;font-weight:700}
+  .opt.disabled{opacity:.35;cursor:not-allowed}
+  .opt:focus-visible{outline:3px solid var(--purple);outline-offset:2px}
+
+  /* live value table (definitions pane) */
+  .valtable{display:grid;gap:6px}
+  .valtable .vrow{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+    border:1.5px solid #E5E9F5;border-radius:10px;padding:6px 13px;font-family:var(--math);font-size:.98rem}
+  .valtable .vrow .vname{display:inline-flex;align-items:center;gap:8px;font-weight:600}
+  .valtable .vrow .vname .cdot{width:9px;height:9px;border-radius:3px}
+  .valtable .vrow .vhow{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-size:.72rem;color:var(--ink-soft)}
+
+  /* conversion readout (radians pane) */
+  .convgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  @media(max-width:1150px){.convgrid{grid-template-columns:1fr}}
+  .convbox{border:1.5px solid #E5E9F5;border-radius:12px;padding:9px 13px;background:#fff}
+  .convbox .clab{font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft)}
+  .convbox .cval{font-family:var(--math);font-size:1.15rem;color:var(--ink)}
+  .convbox.hl{background:var(--purple-soft);border-color:var(--purple)}
+  .convbox.hl .cval{color:var(--purple);font-weight:600}
+
+
+  /* ---------- narrow screens: allow normal scrolling ---------- */
+  @media(max-width:940px){
+    body{height:auto;overflow:auto}
+    .lab{flex-direction:column;align-items:stretch}
+    .plane-card{height:auto}
+    .derive{height:auto;max-height:70vh}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none!important;animation:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="headrow">
+    <span class="eyebrow">Complex numbers · Polar form</span>
+    <h1>From <span class="m">x + iy</span> to <span class="m">re<sup>iθ</sup></span></h1>
+  </div>
+  <p>A complex number is a <b>point</b> in the plane. You can name that point two ways:
+     by walking along the axes (<span class="tag-x">x right, y up</span>), or by aiming and shooting
+     (<span class="tag-t">turn by angle θ</span>, then <span class="tag-r">go distance r</span>).
+     Polar form is just the second way of naming the <em>same</em> point. Below we convert the four
+     numbers from the figure — <span class="m">−i</span>,&nbsp; <span class="m">1 + i</span>,&nbsp;
+     <span class="m">1 − i</span>,&nbsp; <span class="m">−1 + i√3</span> — one honest step at a time.</p>
+</header>
+
+<div class="maintabs" role="tablist" id="maintabs"></div>
+
+<!-- ============ PANE 1: THE RECIPE ============ -->
+<div class="pane" id="pane-recipe">
+  <p style="color:var(--ink-soft);margin:0 0 12px;font-size:.92rem">
+    <b style="color:var(--ink)">The recipe (works for every complex number).</b>
+    Everything on this page is these four moves, repeated with different numbers.</p>
+
+  <div class="idea-grid">
+    <div class="card">
+      <div class="recipe">
+        <div class="step"><div>
+          <b>Read off <span class="tag-x">x</span> and <span class="tag-x">y</span>.</b>
+          <p>Write the number as <span class="m">z = x + iy</span>. The real part <span class="m">x</span> is the horizontal step; the coefficient of <span class="m">i</span> is the vertical step <span class="m">y</span>. Plot the point.</p>
+        </div></div>
+        <div class="step"><div>
+          <b>Find the distance <span class="tag-r">r</span> — Pythagoras.</b>
+          <p>The legs <span class="m">x</span> and <span class="m">y</span> form a right triangle whose hypotenuse runs from the origin to the point, so</p>
+          <div class="eq"><span class="tag-r"><span class="m">r</span></span> <span class="mr">= |z| = √(</span><span class="m">x</span><span class="mr">² + </span><span class="m">y</span><span class="mr">²)</span></div>
+        </div></div>
+        <div class="step"><div>
+          <b>Find the angle <span class="tag-t">θ</span> — trig, plus a look at the picture.</b>
+          <p>In that same triangle, <span class="m">tan θ = y/x</span>. Take the arctangent to get a <em>candidate</em> angle, then check which quadrant the point actually sits in and correct if needed (see the warning below).</p>
+        </div></div>
+        <div class="step"><div>
+          <b>Assemble, then check.</b>
+          <p>Since <span class="m">x = r cos θ</span> and <span class="m">y = r sin θ</span>:</p>
+          <div class="eq"><span class="m">z</span> <span class="mr">= </span><span class="tag-r"><span class="m">r</span></span><span class="mr">(cos </span><span class="tag-t"><span class="m">θ</span></span> <span class="mr">+ </span><span class="m">i</span> <span class="mr">sin </span><span class="tag-t"><span class="m">θ</span></span><span class="mr">) = </span><span class="tag-r"><span class="m">r</span></span><span class="m">e</span><sup class="m">iθ</sup></div>
+          <p>Multiplying back out must return exactly <span class="m">x + iy</span> — if it doesn't, the angle is wrong.</p>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="warn" style="margin-top:0">
+        <b>The one place people slip: arctan is quadrant-blind.</b><br>
+        A calculator's <span class="m">tan⁻¹</span> only answers between <span class="m">−π/2</span> and <span class="m">π/2</span>
+        (quadrants I and IV). If your point is in quadrant II or III, the raw arctan points at the
+        <em>wrong</em> spot — add or subtract <span class="m">π</span> to land on the true direction.
+        You'll see this bite (and get fixed) in the <span class="m">−1 + i√3</span> example.
+      </div>
+      <p style="color:var(--ink-soft);font-size:.92rem;margin-top:14px">
+        Two useful angle facts before we start:
+      </p>
+      <p style="color:var(--ink-soft);font-size:.92rem">
+        <b style="color:var(--ink)">① Angles are directions, so they repeat every full turn.</b>
+        <span class="m">θ</span> and <span class="m">θ + 2π</span> point the same way —
+        that's why <span class="m">3π/2</span> (270° counterclockwise) and <span class="m">−π/2</span>
+        (90° clockwise) describe the identical direction "straight down".
+      </p>
+      <p style="color:var(--ink-soft);font-size:.92rem">
+        <b style="color:var(--ink)">② Below the real axis, angles come out negative</b> (or, if you
+        prefer, bigger than π). Reflecting a point across the real axis — taking the conjugate
+        <span class="m">z̄</span>, exactly as in Fig&nbsp;1 — keeps <span class="m">r</span> and flips the
+        sign of <span class="m">θ</span>. Watch <span class="m">1 + i</span> vs <span class="m">1 − i</span>.
+      </p>
+      <p style="color:var(--ink-soft);font-size:.92rem;margin-bottom:0">
+        Handy exact values (they appear constantly):
+        <span class="m">cos π/4 = sin π/4 = <span class="frac"><span>√2</span><span>2</span></span></span>,&nbsp;
+        <span class="m">cos π/3 = <span class="frac"><span>1</span><span>2</span></span></span>,&nbsp;
+        <span class="m">sin π/3 = <span class="frac"><span>√3</span><span>2</span></span></span>.
+      </p>
+      <p style="color:var(--ink-soft);font-size:.92rem;margin-top:12px;margin-bottom:0">
+        Ready? Open the <b style="color:var(--purple)">Interactive lab</b> tab above and step through each number.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PANE 2: THE LAB ============ -->
+<div class="pane hidden" id="pane-lab">
+  <div class="tabs" id="tabs" role="tablist"></div>
+
+  <div class="lab" id="lab">
+    <div class="card plane-card">
+      <canvas id="plane" aria-label="Interactive complex plane"></canvas>
+      <div class="plane-foot">
+        <span id="planeCaption">Axes: real (x) →, imaginary (y) ↑.</span>
+        <span class="angle-toggle" id="angleToggle">
+          <button id="btnLong" class="on">3π/2 (long ↺)</button>
+          <button id="btnShort">−π/2 (short ↻)</button>
+        </span>
+      </div>
+    </div>
+
+    <div class="card derive" id="rightPanel">
+      <!-- filled by JS -->
+    </div>
+  </div>
+</div>
+
+
+</div>
+
+<script>
+"use strict";
+
+/* ================= palette ================= */
+const C = {
+  ink:"#232946", inkSoft:"#8A93B0", grid:"#DCE3F3", axis:"#9AA5C4",
+  orange:"#E8842C", teal:"#0E9488", purple:"#7C6CE0",
+  tealSoft:"rgba(14,148,136,.10)", purpleSoft:"rgba(124,108,224,.14)"
+};
+const PI = Math.PI;
+
+/* ================= the four numbers ================= */
+const NUMBERS = [
+  {
+    id:"neg_i", label:"−i", x:0, y:-1, r:1, rTxt:"1",
+    theta: 3*PI/2, altTheta: -PI/2, thetaTxt:"3π/2", altThetaTxt:"−π/2",
+    polarCanvas:"e^(i·3π/2)",
+    goal:"target from the figure:  −i = i sin(3π/2)",
+    steps:[
+      {t:"Read off x and y", cls:"b1", h:`
+        <p>Write it in the standard shape <span class="m">x + iy</span>:</p>
+        <div class="eq"><span class="m">−i</span> <span class="mr">= </span><span class="tag-x"><span class="m">0</span></span> <span class="mr">+ (</span><span class="tag-x"><span class="m">−1</span></span><span class="mr">)</span><span class="m">i</span>&nbsp;&nbsp;<span class="mr">⇒</span>&nbsp;&nbsp;<span class="tag-x"><span class="m">x = 0</span></span><span class="mr">, </span><span class="tag-x"><span class="m">y = −1</span></span></div>
+        <p>No horizontal step at all, one step straight down: the point sits <b>on the negative imaginary axis</b>, one unit below the origin. Keep that picture — it will hand us the angle for free.</p>`},
+      {t:"Distance r (Pythagoras)", cls:"b2", h:`
+        <div class="eq"><span class="tag-r"><span class="m">r</span></span> <span class="mr">= √(0² + (−1)²) = √1 = </span><span class="tag-r"><span class="m">1</span></span></div>
+        <p>The point is exactly on the unit circle — the arrow has length 1.</p>`},
+      {t:"Angle θ (the picture decides)", cls:"b3", h:`
+        <p>Trying the formula: <span class="m">tan θ = y/x = −1/0</span> — division by zero, so the formula is silent here. But the picture isn't: the arrow points <b>straight down</b>.</p>
+        <p>Straight down is a quarter turn clockwise, <span class="tag-t"><span class="m">θ = −π/2</span></span> — or equivalently three quarters of a turn counterclockwise, <span class="tag-t"><span class="m">θ = 3π/2</span></span>. Same direction, because angles repeat every <span class="m">2π</span>:</p>
+        <div class="eq"><span class="m">3π/2 = −π/2 + 2π</span></div>
+        <p>The figure uses <span class="m">3π/2</span>, so we will too. <b>Use the toggle under the plane</b> to watch both sweeps land on the same arrow.</p>`},
+      {t:"Assemble the polar form", cls:"b4", h:`
+        <div class="eq"><span class="m">−i</span> <span class="mr">= </span><span class="tag-r"><span class="m">1</span></span><span class="mr">·(cos </span><span class="tag-t"><span class="m">3π/2</span></span> <span class="mr">+ </span><span class="m">i</span><span class="mr"> sin </span><span class="tag-t"><span class="m">3π/2</span></span><span class="mr">) = </span><span class="m">e</span><sup class="m">i·3π/2</sup></div>
+        <p>Now the small twist that explains the figure's compact answer: <span class="m">cos(3π/2) = 0</span>, so the cosine term vanishes and only the sine survives:</p>
+        <div class="eq"><span class="m">−i = i sin(3π/2)</span></div>
+        <p>That's <em>exactly</em> the line printed in the solution — it's the full polar form with its zero cosine term dropped.</p>`},
+      {t:"Check by expanding back", cls:"b5 check", h:`
+        <div class="eq"><span class="mr">cos(3π/2) = 0,&nbsp;&nbsp; sin(3π/2) = −1&nbsp;&nbsp;⇒&nbsp;&nbsp;</span><span class="m">1·(0 + i·(−1)) = −i</span> <span class="mr">✓</span></div>
+        <p>We recover the original number, so <span class="m">r</span> and <span class="m">θ</span> are right.</p>`}
+    ]
+  },
+  {
+    id:"one_plus_i", label:"1 + i", x:1, y:1, r:Math.SQRT2, rTxt:"√2",
+    theta: PI/4, thetaTxt:"π/4",
+    polarCanvas:"√2·e^(iπ/4)",
+    goal:"target from the figure:  1 + i = √2(cos(π/4) + i sin(π/4))",
+    steps:[
+      {t:"Read off x and y", cls:"b1", h:`
+        <div class="eq"><span class="m">1 + i</span> <span class="mr">= </span><span class="tag-x"><span class="m">1</span></span> <span class="mr">+ </span><span class="tag-x"><span class="m">1</span></span><span class="m">·i</span>&nbsp;&nbsp;<span class="mr">⇒</span>&nbsp;&nbsp;<span class="tag-x"><span class="m">x = 1, y = 1</span></span></div>
+        <p>One step right, one step up — the point sits in <b>quadrant I</b>, on the diagonal. Equal legs means the triangle is a 45° right triangle; expect a 45° angle before doing any trig.</p>`},
+      {t:"Distance r (Pythagoras)", cls:"b2", h:`
+        <div class="eq"><span class="tag-r"><span class="m">r</span></span> <span class="mr">= √(1² + 1²) = √2 ≈ 1.414</span></div>
+        <p>The classic diagonal of a unit square.</p>`},
+      {t:"Angle θ", cls:"b3", h:`
+        <div class="eq"><span class="m">tan θ = y/x = 1/1 = 1</span>&nbsp;&nbsp;<span class="mr">⇒</span>&nbsp;&nbsp;<span class="tag-t"><span class="m">θ = tan⁻¹(1) = π/4</span></span> <span class="mr">(45°)</span></div>
+        <p>The point is in quadrant I, which is exactly where arctan lives — so <b>no quadrant correction needed</b>; the calculator answer is already the true angle.</p>`},
+      {t:"Assemble the polar form", cls:"b4", h:`
+        <div class="eq"><span class="m">1 + i</span> <span class="mr">= </span><span class="tag-r"><span class="m">√2</span></span><span class="mr">(cos </span><span class="tag-t"><span class="m">π/4</span></span> <span class="mr">+ </span><span class="m">i</span><span class="mr"> sin </span><span class="tag-t"><span class="m">π/4</span></span><span class="mr">) = </span><span class="tag-r"><span class="m">√2</span></span><span class="m">·e</span><sup class="m">iπ/4</sup></div>
+        <p>Precisely the figure's answer.</p>`},
+      {t:"Check by expanding back", cls:"b5 check", h:`
+        <div class="eq"><span class="mr">√2·cos(π/4) = √2·</span><span class="frac"><span class="m">√2</span><span class="m">2</span></span> <span class="mr">= 1,&nbsp;&nbsp; √2·sin(π/4) = 1&nbsp;&nbsp;⇒&nbsp;&nbsp;</span><span class="m">1 + i</span> <span class="mr">✓</span></div>
+        <p>The lengths <span class="m">r cos θ</span> and <span class="m">r sin θ</span> reproduce the legs 1 and 1 exactly.</p>`}
+    ]
+  },
+  {
+    id:"one_minus_i", label:"1 − i", x:1, y:-1, r:Math.SQRT2, rTxt:"√2",
+    theta: -PI/4, thetaTxt:"−π/4",
+    polarCanvas:"√2·e^(−iπ/4)",
+    goal:"target from the figure:  1 − i = √2(cos(−π/4) + i sin(−π/4))",
+    steps:[
+      {t:"Read off x and y", cls:"b1", h:`
+        <div class="eq"><span class="m">1 − i</span> <span class="mr">= </span><span class="tag-x"><span class="m">1</span></span> <span class="mr">+ (</span><span class="tag-x"><span class="m">−1</span></span><span class="mr">)</span><span class="m">i</span>&nbsp;&nbsp;<span class="mr">⇒</span>&nbsp;&nbsp;<span class="tag-x"><span class="m">x = 1, y = −1</span></span></div>
+        <p>One step right, one step <em>down</em> — <b>quadrant IV</b>. Notice this is the mirror image of <span class="m">1 + i</span> across the real axis: it's the conjugate <span class="m">z̄</span>, exactly the situation drawn in Fig&nbsp;1.</p>`},
+      {t:"Distance r (Pythagoras)", cls:"b2", h:`
+        <div class="eq"><span class="tag-r"><span class="m">r</span></span> <span class="mr">= √(1² + (−1)²) = √(1+1) = √2</span></div>
+        <p>Squaring kills the minus sign, so the mirror image has the <b>same length</b> as <span class="m">1 + i</span>. Reflection never changes distance from the origin.</p>`},
+      {t:"Angle θ", cls:"b3", h:`
+        <div class="eq"><span class="m">tan θ = −1/1 = −1</span>&nbsp;&nbsp;<span class="mr">⇒</span>&nbsp;&nbsp;<span class="tag-t"><span class="m">θ = tan⁻¹(−1) = −π/4</span></span> <span class="mr">(45° clockwise)</span></div>
+        <p>Quadrant IV is the other place arctan answers correctly, so again no correction. The negative sign simply means: <b>sweep 45° below the real axis</b> instead of above it. (If you dislike negative angles, <span class="m">−π/4 + 2π = 7π/4</span> names the same direction.)</p>
+        <p>Compare with <span class="m">1 + i</span>: same <span class="m">r</span>, angle flipped in sign. That is the general rule <span class="m">z̄ = re<sup>−iθ</sup></span> from Fig&nbsp;1, seen in the flesh.</p>`},
+      {t:"Assemble the polar form", cls:"b4", h:`
+        <div class="eq"><span class="m">1 − i</span> <span class="mr">= </span><span class="tag-r"><span class="m">√2</span></span><span class="mr">(cos(</span><span class="tag-t"><span class="m">−π/4</span></span><span class="mr">) + </span><span class="m">i</span><span class="mr"> sin(</span><span class="tag-t"><span class="m">−π/4</span></span><span class="mr">)) = </span><span class="tag-r"><span class="m">√2</span></span><span class="m">·e</span><sup class="m">−iπ/4</sup></div>`},
+      {t:"Check by expanding back", cls:"b5 check", h:`
+        <div class="eq"><span class="mr">cos(−π/4) = </span><span class="frac"><span class="m">√2</span><span class="m">2</span></span><span class="mr">,&nbsp; sin(−π/4) = −</span><span class="frac"><span class="m">√2</span><span class="m">2</span></span>&nbsp;&nbsp;<span class="mr">⇒&nbsp; √2·</span><span class="frac"><span class="m">√2</span><span class="m">2</span></span><span class="mr"> = 1,&nbsp; √2·(−</span><span class="frac"><span class="m">√2</span><span class="m">2</span></span><span class="mr">) = −1&nbsp;⇒&nbsp;</span><span class="m">1 − i</span> <span class="mr">✓</span></div>
+        <p>Cosine is even (unchanged), sine is odd (sign flips) — which is the whole mechanism behind conjugation flipping θ.</p>`}
+    ]
+  },
+  {
+    id:"minus1_i_sqrt3", label:"−1 + i√3", x:-1, y:Math.sqrt(3), r:2, rTxt:"2",
+    theta: 2*PI/3, thetaTxt:"2π/3",
+    polarCanvas:"2·e^(i·2π/3)",
+    goal:"target from the figure:  −1 + i√3 = 2(cos(2π/3) + i sin(2π/3))",
+    steps:[
+      {t:"Read off x and y", cls:"b1", h:`
+        <div class="eq"><span class="m">−1 + i√3</span> <span class="mr">= </span><span class="tag-x"><span class="m">−1</span></span> <span class="mr">+ </span><span class="tag-x"><span class="m">√3</span></span><span class="m">·i</span>&nbsp;&nbsp;<span class="mr">⇒</span>&nbsp;&nbsp;<span class="tag-x"><span class="m">x = −1, y = √3 ≈ 1.732</span></span></div>
+        <p>One step <em>left</em>, then about 1.73 up — the point lands in <b>quadrant II</b>. Remember the warning from the recipe: quadrant II is where a blind arctan will lie to us. Keep an eye out at step 3.</p>`},
+      {t:"Distance r (Pythagoras)", cls:"b2", h:`
+        <div class="eq"><span class="tag-r"><span class="m">r</span></span> <span class="mr">= √((−1)² + (√3)²) = √(1 + 3) = √4 = </span><span class="tag-r"><span class="m">2</span></span></div>
+        <p>A pleasantly whole number: the point lies on the circle of radius 2.</p>`},
+      {t:"Angle θ — where the quadrant fix happens", cls:"b3", h:`
+        <p>Naive first attempt:</p>
+        <div class="eq"><span class="m">tan θ = y/x = √3/(−1) = −√3</span>&nbsp;&nbsp;<span class="mr">⇒</span>&nbsp;&nbsp;<span class="m">tan⁻¹(−√3) = −π/3</span> <span class="mr">✗</span></div>
+        <p>But <span class="m">−π/3</span> points down-and-right into quadrant IV, while our point is up-and-left in quadrant II. The calculator only knows the <em>ratio</em> −√3; it can't tell (−1, √3) apart from (1, −√3). <b>We must correct by adding π</b> (a half turn, which lands in the correct opposite quadrant):</p>
+        <div class="eq"><span class="tag-t"><span class="m">θ = −π/3 + π = 2π/3</span></span> <span class="mr">(120°)</span></div>
+        <p>Sanity-check against the picture: the reference angle to the <em>negative</em> x-axis is <span class="m">tan⁻¹(√3/1) = π/3</span>, so measuring from the positive x-axis: <span class="m">π − π/3 = 2π/3</span>. Both roads agree. ✓</p>`},
+      {t:"Assemble the polar form", cls:"b4", h:`
+        <div class="eq"><span class="m">−1 + i√3</span> <span class="mr">= </span><span class="tag-r"><span class="m">2</span></span><span class="mr">(cos </span><span class="tag-t"><span class="m">2π/3</span></span> <span class="mr">+ </span><span class="m">i</span><span class="mr"> sin </span><span class="tag-t"><span class="m">2π/3</span></span><span class="mr">) = </span><span class="tag-r"><span class="m">2</span></span><span class="m">·e</span><sup class="m">i·2π/3</sup></div>`},
+      {t:"Check by expanding back", cls:"b5 check", h:`
+        <div class="eq"><span class="mr">cos(2π/3) = −</span><span class="frac"><span class="m">1</span><span class="m">2</span></span><span class="mr">,&nbsp; sin(2π/3) = </span><span class="frac"><span class="m">√3</span><span class="m">2</span></span>&nbsp;&nbsp;<span class="mr">⇒&nbsp; 2·(−</span><span class="frac"><span class="m">1</span><span class="m">2</span></span><span class="mr">) = −1,&nbsp; 2·</span><span class="frac"><span class="m">√3</span><span class="m">2</span></span><span class="mr"> = √3&nbsp;⇒&nbsp;</span><span class="m">−1 + i√3</span> <span class="mr">✓</span></div>
+        <p>Had we (wrongly) kept θ = −π/3 we would have gotten <span class="m">2(cos(−π/3) + i sin(−π/3)) = 1 − i√3</span> — the wrong point. The final check is what catches quadrant mistakes.</p>`}
+    ]
+  }
+];
+
+/* ================= state ================= */
+let current = 0;
+let revealed = 0;
+let arcProg = 0;
+let arcAnim = null;
+let useAlt = false;
+let explorePoint = {x:1.2, y:0.9};
+let dragging = false;
+
+/* ================= canvas setup ================= */
+const canvas = document.getElementById("plane");
+const ctx = canvas.getContext("2d");
+const RANGE = 2.5;
+let W=0, H=0, cx=0, cy=0, scale=1;
+
+function resize(){
+  const labPane = document.getElementById("pane-lab");
+  if(labPane.classList.contains("hidden")) return;
+  const lab = document.getElementById("lab");
+  const narrow = window.innerWidth < 940;
+  let size;
+  if(narrow){
+    size = Math.max(280, lab.clientWidth - 28);
+  } else {
+    const footH = document.querySelector(".plane-foot").offsetHeight || 30;
+    const availH = lab.clientHeight - 28 - footH - 4;   // card padding + footer
+    const availW = lab.clientWidth * 0.52 - 46;
+    size = Math.max(280, Math.min(availW, availH));
+  }
+  const dpr = window.devicePixelRatio || 1;
+  canvas.style.width = size + "px";
+  canvas.style.height = size + "px";
+  /* lock the left card's width to the canvas (+14px padding each side):
+     the right explanation column then keeps a constant width on every step */
+  canvas.parentElement.style.width = narrow ? "" : (size + 28) + "px";
+  canvas.width = size * dpr;
+  canvas.height = size * dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  W = H = size; cx = W/2; cy = H/2;
+  scale = (W/2 - 22) / RANGE;
+  draw();
+}
+window.addEventListener("resize", ()=>{ resize(); resizeTrigPanes(); });
+
+const X = x => cx + x*scale;
+const Y = y => cy - y*scale;
+
+/* ================= drawing helpers ================= */
+function line(x1,y1,x2,y2,color,width,dash){
+  ctx.save();
+  ctx.strokeStyle=color; ctx.lineWidth=width;
+  if(dash) ctx.setLineDash(dash);
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.restore();
+}
+function arrowHead(x,y,angleCanvas,color,size=9){
+  ctx.save();
+  ctx.translate(x,y); ctx.rotate(angleCanvas);
+  ctx.fillStyle=color;
+  ctx.beginPath();
+  ctx.moveTo(0,0); ctx.lineTo(-size,-size*0.45); ctx.lineTo(-size,size*0.45);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+function label(text,x,y,color,opts={}){
+  ctx.save();
+  ctx.font = (opts.bold?"600 ":"") + (opts.size||14) + "px Georgia, 'Times New Roman', serif";
+  ctx.textAlign = opts.align||"center";
+  ctx.textBaseline = opts.base||"middle";
+  if(opts.halo!==false){
+    ctx.lineWidth=4; ctx.strokeStyle="rgba(255,255,255,.92)"; ctx.strokeText(text,x,y);
+  }
+  ctx.fillStyle=color; ctx.fillText(text,x,y);
+  ctx.restore();
+}
+
+function drawPlane(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle="#FBFCFF"; ctx.fillRect(0,0,W,H);
+  for(let g=-2; g<=2; g++){
+    if(g===0) continue;
+    line(X(g),0,X(g),H,C.grid,1);
+    line(0,Y(g),W,Y(g),C.grid,1);
+  }
+  ctx.save();
+  ctx.strokeStyle=C.grid; ctx.lineWidth=1.4; ctx.setLineDash([4,5]);
+  ctx.beginPath(); ctx.arc(cx,cy,1*scale,0,2*PI); ctx.stroke();
+  ctx.setLineDash([2,7]);
+  ctx.beginPath(); ctx.arc(cx,cy,2*scale,0,2*PI); ctx.stroke();
+  ctx.restore();
+  line(0,cy,W,cy,C.axis,1.7);
+  line(cx,0,cx,H,C.axis,1.7);
+  arrowHead(W-2,cy,0,C.axis);
+  arrowHead(cx,2,-PI/2,C.axis);
+  label("Re", W-16, cy+16, C.inkSoft,{size:13});
+  label("Im", cx+16, 12, C.inkSoft,{size:13});
+  for(let g=-2; g<=2; g++){
+    if(g===0) continue;
+    label(String(g), X(g), cy+14, C.inkSoft,{size:12});
+    label(g+"i", cx-14, Y(g), C.inkSoft,{size:12});
+  }
+}
+
+function drawLegs(x,y,xTxt,yTxt){
+  const px=X(x), py=Y(y);
+  if(Math.abs(x)>1e-9){
+    line(X(0),Y(0),px,Y(0),C.orange,2.5,[7,5]);
+    label("x = "+xTxt, (X(0)+px)/2, Y(0)+(y>=0?18:-18), C.orange,{bold:true});
+  }
+  if(Math.abs(y)>1e-9){
+    line(px,Y(0),px,py,C.orange,2.5,[7,5]);
+    label("y = "+yTxt, px+(x>=0?30:-30), (Y(0)+py)/2, C.orange,{bold:true});
+  }
+  if(Math.abs(x)>1e-9 && Math.abs(y)>1e-9){
+    const s=9, sx=x>=0?-1:1, sy=y>=0?1:-1;
+    ctx.strokeStyle=C.orange; ctx.lineWidth=1.4;
+    ctx.strokeRect(px+(sx<0?0:-s), Y(0)+(sy<0?0:-s), s, s);
+  }
+}
+
+function drawPoint(x,y,name){
+  const px=X(x), py=Y(y);
+  ctx.fillStyle=C.ink;
+  ctx.beginPath(); ctx.arc(px,py,5.5,0,2*PI); ctx.fill();
+  ctx.strokeStyle="#fff"; ctx.lineWidth=2; ctx.stroke();
+  if(name){
+    const dx = x>=0? 14 : -14, dy = y>=0? -14 : 14;
+    label(name, px+dx, py+dy, C.ink, {bold:true, size:16, align: x>=0?"left":"right"});
+  }
+}
+
+function drawVector(x,y,rTxt){
+  const px=X(x), py=Y(y);
+  line(X(0),Y(0),px,py,C.teal,3.2);
+  const angC = Math.atan2(py-Y(0), px-X(0));
+  arrowHead(px,py,angC,C.teal,11);
+  const mx=(X(0)+px)/2, my=(Y(0)+py)/2;
+  const nx=-Math.sin(angC), ny=Math.cos(angC);
+  label("r = "+rTxt, mx+nx*16, my+ny*16, C.teal,{bold:true,size:15});
+}
+
+function drawAngle(theta, prog, thetaTxt){
+  const rad = Math.min(46, 0.55*scale);
+  const end = theta*prog;
+  const N = Math.max(8, Math.ceil(Math.abs(end)/0.05));
+  ctx.save();
+  ctx.fillStyle=C.purpleSoft;
+  ctx.beginPath(); ctx.moveTo(cx,cy);
+  for(let k=0;k<=N;k++){
+    const a = end*k/N;
+    ctx.lineTo(cx+rad*Math.cos(a), cy-rad*Math.sin(a));
+  }
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle=C.purple; ctx.lineWidth=2.6;
+  ctx.beginPath();
+  for(let k=0;k<=N;k++){
+    const a = end*k/N;
+    const px=cx+rad*Math.cos(a), py=cy-rad*Math.sin(a);
+    k? ctx.lineTo(px,py) : ctx.moveTo(px,py);
+  }
+  ctx.stroke();
+  ctx.restore();
+  if(Math.abs(end)>0.15){
+    const tang = -end + (theta>=0? -PI/2 : PI/2);
+    arrowHead(cx+rad*Math.cos(end), cy-rad*Math.sin(end), tang, C.purple, 8);
+  }
+  if(prog>0.35){
+    const mid = end/2;
+    const lr = rad+26;
+    label("θ = "+thetaTxt, cx+lr*Math.cos(mid), cy-lr*Math.sin(mid), C.purple,{bold:true,size:15});
+  }
+}
+
+function drawPolarBadge(x,y,txt){
+  const px=X(x), py=Y(y);
+  ctx.save();
+  ctx.font="600 14px Georgia, serif";
+  const w = ctx.measureText(txt).width + 20;
+  const bx = Math.min(Math.max(px - w/2, 8), W-w-8);
+  const by = y>=0 ? Math.max(py-52, 8) : Math.min(py+30, H-34);
+  ctx.fillStyle="#fff";
+  ctx.strokeStyle=C.teal; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.roundRect(bx, by, w, 26, 8); ctx.fill(); ctx.stroke();
+  ctx.fillStyle=C.teal; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText(txt, bx+w/2, by+13);
+  ctx.restore();
+}
+
+/* ================= main draw ================= */
+function draw(){
+  if(!W) return;
+  drawPlane();
+  if(current === -1){ drawExplore(); return; }
+  const n = NUMBERS[current];
+  const theta = (n.altTheta!==undefined && useAlt) ? n.altTheta : n.theta;
+  const thetaTxt = (n.altTheta!==undefined && useAlt) ? n.altThetaTxt : n.thetaTxt;
+
+  if(revealed>=3) drawAngle(theta, arcProg, thetaTxt);
+  if(revealed>=1) drawLegs(n.x, n.y, fmtNum(n.x), fmtNum(n.y));
+  if(revealed>=2) drawVector(n.x, n.y, n.rTxt);
+  if(revealed>=1) drawPoint(n.x, n.y, n.label);
+  if(revealed>=4) drawPolarBadge(n.x, n.y, n.polarCanvas);
+  if(revealed===0){
+    label("Press \u201CNext step\u201D to begin \u2192", cx, 26, C.inkSoft, {size:14});
+  }
+}
+function fmtNum(v){
+  if(Math.abs(v-Math.round(v))<1e-9) return String(Math.round(v));
+  if(Math.abs(v-Math.sqrt(3))<1e-9) return "√3";
+  if(Math.abs(v+Math.sqrt(3))<1e-9) return "−√3";
+  return v.toFixed(2);
+}
+
+/* ================= arc animation ================= */
+function animateArc(){
+  if(arcAnim) cancelAnimationFrame(arcAnim);
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(reduce){ arcProg=1; draw(); return; }
+  arcProg=0;
+  const t0 = performance.now(), DUR=900;
+  const tick = t=>{
+    arcProg = Math.min(1,(t-t0)/DUR);
+    arcProg = 1-Math.pow(1-arcProg,3);
+    draw();
+    if(arcProg<1) arcAnim=requestAnimationFrame(tick);
+  };
+  arcAnim=requestAnimationFrame(tick);
+}
+
+/* ================= right panel ================= */
+const rightPanel = document.getElementById("rightPanel");
+const angleToggle = document.getElementById("angleToggle");
+
+function buildDerivePanel(){
+  const n = NUMBERS[current];
+  let html = `<h3>Deriving the polar form of <span class="m">${n.label}</span></h3>
+              <p class="goal">${n.goal}</p>
+              <div class="controls">
+                <button class="btn btn-next" id="btnNext">Next step</button>
+                <button class="btn btn-ghost" id="btnReset">Restart</button>
+              </div>
+              <div class="dsteps" id="dsteps">`;
+  n.steps.forEach((s,i)=>{
+    html += `<div class="dstep ${s.cls}" id="ds${i}">
+               <div class="dhead"><span class="badge">${i+1}</span>${s.t}</div>${s.h}
+             </div>`;
+  });
+  html += `</div>`;
+  rightPanel.innerHTML = html;
+  document.getElementById("btnNext").addEventListener("click", nextStep);
+  document.getElementById("btnReset").addEventListener("click", ()=>{
+    revealed=0; arcProg=0; syncSteps(); draw();
+    const box=document.getElementById("dsteps"); if(box) box.scrollTop=0;
+  });
+  syncSteps();
+}
+
+function syncSteps(){
+  const n = NUMBERS[current];
+  n.steps.forEach((s,i)=>{
+    const el = document.getElementById("ds"+i);
+    if(!el) return;
+    if(i<revealed){ el.classList.add("revealed"); }
+    else el.classList.remove("revealed");
+  });
+  const btn = document.getElementById("btnNext");
+  if(btn){
+    if(revealed>=n.steps.length){ btn.disabled=true; btn.textContent="Done ✓ — pick another number"; }
+    else { btn.disabled=false; btn.textContent = revealed===0 ? `Next step (1/${n.steps.length})` : `Next step (${revealed+1}/${n.steps.length})`; }
+  }
+  angleToggle.classList.toggle("show", current===0 && revealed>=3);
+}
+
+function nextStep(){
+  const n = NUMBERS[current];
+  if(revealed>=n.steps.length) return;
+  revealed++;
+  syncSteps();
+  if(revealed===3) animateArc(); else draw();
+  /* scroll the fixed-height step box so the newest step is visible;
+     older steps stay reachable by scrolling back up */
+  const box = document.getElementById("dsteps");
+  if(box) requestAnimationFrame(()=>{ box.scrollTop = box.scrollHeight; });
+}
+
+/* ================= explore panel ================= */
+function buildExplorePanel(){
+  rightPanel.innerHTML = `
+    <h3>Explore: build your own polar form</h3>
+    <p class="goal">Drag the point anywhere on the plane. The same recipe runs live.</p>
+    <div class="dsteps" id="dsteps">
+      <div class="readout">
+        <div class="row orange"><span>Step 1 · legs</span><span id="roXY"></span></div>
+        <div class="row teal"><span>Step 2 · r = √(x²+y²)</span><span id="roR"></span></div>
+        <div class="row purple"><span>Step 3 · θ = atan2(y, x)</span><span id="roT"></span></div>
+        <div class="row teal polar-out"><span>Step 4 · polar form</span><span id="roP"></span></div>
+      </div>
+      <p class="hint">Watch how θ jumps past ±π/2 when you cross into quadrants II and III — that jump is exactly the
+      "quadrant correction" that a bare arctan misses. <b>atan2(y, x)</b> is the arctangent that looks at the signs of
+      x and y separately, so it always returns the true angle in (−π, π]. Angles snap-display as fractions of π
+      when you're close to a nice one.</p>
+    </div>`;
+  updateReadout();
+}
+
+function niceTheta(theta){
+  for(const d of [1,2,3,4,6,12]){
+    const num = theta*d/PI;
+    if(Math.abs(num-Math.round(num))<0.02){
+      let nn = Math.round(num);
+      if(nn===0) return "0";
+      const sign = nn<0? "−" : "";
+      nn = Math.abs(nn);
+      const g = (a,b)=> b? g(b,a%b): a;
+      const gg = g(nn,d), p=nn/gg, q=d/gg;
+      const pTxt = p===1? "π" : p+"π";
+      return sign + (q===1? pTxt : pTxt+"/"+q);
+    }
+  }
+  return theta.toFixed(2)+" rad";
+}
+function updateReadout(){
+  if(current!==-1) return;
+  const {x,y}=explorePoint;
+  const r=Math.hypot(x,y), th=Math.atan2(y,x);
+  const deg=(th*180/PI).toFixed(1);
+  const el=id=>document.getElementById(id);
+  if(!el("roXY")) return;
+  el("roXY").textContent = `x = ${x.toFixed(2)},  y = ${y.toFixed(2)}`;
+  el("roR").textContent  = `r = ${r.toFixed(3)}`;
+  el("roT").textContent  = `θ = ${niceTheta(th)}  (${deg}°)`;
+  el("roP").textContent  = `${r.toFixed(2)}·e^(i·${niceTheta(th)})`;
+}
+
+function drawExplore(){
+  const {x,y}=explorePoint;
+  const th=Math.atan2(y,x), r=Math.hypot(x,y);
+  drawAngle(th, 1, niceTheta(th));
+  drawLegs(x,y,x.toFixed(2),y.toFixed(2));
+  drawVector(x,y,r.toFixed(2));
+  drawPoint(x,y,"z");
+  updateReadout();
+}
+
+canvas.addEventListener("pointerdown", e=>{
+  if(current!==-1) return;
+  dragging=true; canvas.setPointerCapture(e.pointerId); movePoint(e);
+});
+canvas.addEventListener("pointermove", e=>{ if(dragging) movePoint(e); });
+canvas.addEventListener("pointerup", ()=>{ dragging=false; });
+function movePoint(e){
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  let x=(mx-cx)/scale, y=(cy-my)/scale;
+  x=Math.max(-RANGE+0.1,Math.min(RANGE-0.1,x));
+  y=Math.max(-RANGE+0.1,Math.min(RANGE-0.1,y));
+  const snap=v=>{ const s=Math.round(v*4)/4; return Math.abs(v-s)<0.06? s: v; };
+  explorePoint={x:snap(x),y:snap(y)};
+  draw();
+}
+
+/* ================= number tabs ================= */
+const tabsEl=document.getElementById("tabs");
+function buildTabs(){
+  NUMBERS.forEach((n,i)=>{
+    const b=document.createElement("button");
+    b.className="tab"; b.textContent=n.label; b.setAttribute("role","tab");
+    b.addEventListener("click",()=>selectTab(i));
+    tabsEl.appendChild(b);
+  });
+  const e=document.createElement("button");
+  e.className="tab"; e.textContent="✦ Explore (drag me)"; e.setAttribute("role","tab");
+  e.addEventListener("click",()=>selectTab(-1));
+  tabsEl.appendChild(e);
+}
+function selectTab(i){
+  current=i; revealed=0; arcProg=0; useAlt=false;
+  [...tabsEl.children].forEach((b,k)=>{
+    const idx = k<NUMBERS.length? k : -1;
+    b.classList.toggle("active", idx===i);
+  });
+  document.getElementById("btnLong").classList.add("on");
+  document.getElementById("btnShort").classList.remove("on");
+  document.getElementById("planeCaption").textContent =
+    i===-1 ? "Drag the black point. Light snap to quarter-unit grid."
+           : "Axes: real (x) →, imaginary (y) ↑. Faint circles: r = 1, r = 2.";
+  if(i===-1) buildExplorePanel(); else buildDerivePanel();
+  angleToggle.classList.toggle("show", false);
+  draw();
+}
+
+/* −i angle toggle */
+document.getElementById("btnLong").addEventListener("click",()=>{
+  useAlt=false;
+  document.getElementById("btnLong").classList.add("on");
+  document.getElementById("btnShort").classList.remove("on");
+  animateArc();
+});
+document.getElementById("btnShort").addEventListener("click",()=>{
+  useAlt=true;
+  document.getElementById("btnShort").classList.add("on");
+  document.getElementById("btnLong").classList.remove("on");
+  animateArc();
+});
+
+/* ══════════════════════════════════════════════════════════════════
+   TRIG SECTION — shared helpers, six single-function explorers,
+   definitions pane, radians pane, compare pane, build-a-wave pane
+   ══════════════════════════════════════════════════════════════════ */
+
+const EPS = 1e-9, UNDEF_EPS = 5e-3;
+const wrapEl = document.querySelector(".wrap");
+
+/* extra colors so all six functions are distinguishable */
+C.brick = "#B5443B";  /* cot */
+C.blue  = "#2B7BD3";  /* sec */
+C.olive = "#7A9C2E";  /* csc */
+
+/* ---------- exact-value helpers ---------- */
+const EXACTS = [
+  [0,"0"],[0.5,"1/2"],[Math.SQRT2/2,"√2/2"],[Math.sqrt(3)/2,"√3/2"],[1,"1"],
+  [Math.sqrt(3)/3,"√3/3"],[Math.sqrt(3),"√3"],[2,"2"],[2*Math.sqrt(3)/3,"2√3/3"],[Math.SQRT2,"√2"]
+];
+function exactVal(v){
+  for(const [n,s] of EXACTS)
+    if(Math.abs(Math.abs(v)-n)<1e-6) return (v<-1e-6 ? "−" : "")+s;
+  return null;
+}
+function fmtVal(v){
+  if(v===null || !isFinite(v)) return "undefined";
+  const e = exactVal(v);
+  if(e) return e;
+  const s = Math.abs(v)<0.0005 ? "0" : v.toFixed(3).replace(/^-/,"−");
+  return s;
+}
+function quarterText(t){
+  const q=t/(PI/2);
+  if(Math.abs(q-Math.round(q))>0.02) return null;
+  const n=Math.round(q);
+  if(n===0) return "no turn at all — stay at the starting point (1, 0)";
+  const abs=Math.abs(n), dir=n>0?"counterclockwise ↺":"clockwise ↻";
+  return abs+" quarter-turn"+(abs>1?"s":"")+" "+dir;
+}
+function whereText(t){
+  const qt=quarterText(t);
+  if(qt) return "That means walking <b>"+qt+"</b> around the circle.";
+  const a=((t%(2*PI))+2*PI)%(2*PI);
+  const quad=a<PI/2?"quadrant I (x > 0, y > 0)":a<PI?"quadrant II (x < 0, y > 0)":
+             a<3*PI/2?"quadrant III (x < 0, y < 0)":"quadrant IV (x > 0, y < 0)";
+  return "The arrow lands in <b>"+quad+"</b>.";
+}
+
+/* ---------- canvas mini-lib (any context) ---------- */
+function gline(g,x1,y1,x2,y2,color,w,dash){
+  g.save();g.strokeStyle=color;g.lineWidth=w;
+  if(dash)g.setLineDash(dash);
+  g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();g.restore();
+}
+function glabel(g,text,x,y,color,o={}){
+  g.save();
+  g.font=(o.bold?"600 ":"")+(o.size||13)+"px Georgia, 'Times New Roman', serif";
+  g.textAlign=o.align||"center";g.textBaseline=o.base||"middle";
+  g.lineWidth=4;g.strokeStyle="rgba(255,255,255,.92)";g.strokeText(text,x,y);
+  g.fillStyle=color;g.fillText(text,x,y);g.restore();
+}
+function gdot(g,x,y,r,fill){
+  g.save();g.fillStyle=fill;g.beginPath();g.arc(x,y,r,0,2*PI);g.fill();
+  g.strokeStyle="#fff";g.lineWidth=1.5;g.stroke();g.restore();
+}
+
+/* ---------- the six functions ---------- */
+const TRIG = {
+  cos:{sym:"cos θ", color:C.orange, period:2*PI, bounded:true,
+       calc:t=>Math.cos(t), undef:()=>false,
+       geoShort:"the x-coordinate of the landing point",
+       waveAsym:[], onXAxis:true},
+  sin:{sym:"sin θ", color:C.teal, period:2*PI, bounded:true,
+       calc:t=>Math.sin(t), undef:()=>false,
+       geoShort:"the y-coordinate of the landing point",
+       waveAsym:[]},
+  tan:{sym:"tan θ", color:C.purple, period:PI, bounded:false,
+       calc:t=>Math.sin(t)/Math.cos(t), undef:t=>Math.abs(Math.cos(t))<UNDEF_EPS,
+       geoShort:"the length of the tangent segment on the line x = 1 (also: the slope of the arrow, sin θ / cos θ)",
+       waveAsym:[-3*PI/2,-PI/2,PI/2,3*PI/2]},
+  cot:{sym:"cot θ", color:C.brick, period:PI, bounded:false,
+       calc:t=>Math.cos(t)/Math.sin(t), undef:t=>Math.abs(Math.sin(t))<UNDEF_EPS,
+       geoShort:"the length of the tangent segment on the line y = 1 (also: cos θ / sin θ)",
+       waveAsym:[-2*PI,-PI,0,PI,2*PI]},
+  sec:{sym:"sec θ", color:C.blue, period:2*PI, bounded:false,
+       calc:t=>1/Math.cos(t), undef:t=>Math.abs(Math.cos(t))<UNDEF_EPS,
+       geoShort:"the distance from the origin along the arrow's line out to x = 1 (the reciprocal 1 / cos θ)",
+       waveAsym:[-3*PI/2,-PI/2,PI/2,3*PI/2]},
+  csc:{sym:"csc θ", color:C.olive, period:2*PI, bounded:false,
+       calc:t=>1/Math.sin(t), undef:t=>Math.abs(Math.sin(t))<UNDEF_EPS,
+       geoShort:"the distance from the origin along the arrow's line out to y = 1 (the reciprocal 1 / sin θ)",
+       waveAsym:[-2*PI,-PI,0,PI,2*PI]}
+};
+
+/* fingerprint text: domain / range / period / amplitude + the WHY for each */
+const FINGER = {
+  cos:{
+    dom:["all real θ&nbsp; (ℝ)","Any angle is a legal rotation — nothing gets divided, so nothing can break. Every θ you feed in produces an answer."],
+    rng:["[−1, 1]","cos θ is the x-coordinate of a point glued to a radius-1 circle, so it can never stick out past ±1 — and as the arrow sweeps around, it visits every value in between."],
+    per:["2π","One full turn brings the arrow back to the same spot, so the x-coordinate repeats: cos(θ + 2π) = cos θ. No smaller shift works — check the wave."],
+    amp:["1","Amplitude = (max − min)/2 = (1 − (−1))/2 = 1: the wave swings 1 unit above and 1 unit below its centre line."]},
+  sin:{
+    dom:["all real θ&nbsp; (ℝ)","Same as cosine: every rotation lands somewhere, and that somewhere always has a y-coordinate. No divisions, no forbidden inputs."],
+    rng:["[−1, 1]","sin θ is the y-coordinate of a point on a radius-1 circle: trapped between −1 (bottom of the circle) and +1 (top), hitting everything in between."],
+    per:["2π","A full turn returns the arrow to the same point, so the y-coordinate repeats: sin(θ + 2π) = sin θ."],
+    amp:["1","(max − min)/2 = (1 − (−1))/2 = 1 — identical swing to cosine, just shifted a quarter-turn."]},
+  tan:{
+    dom:["θ ≠ π/2 + kπ&nbsp; (k any integer)","tan θ = sin θ / cos θ. To find the forbidden inputs, ask: where is the denominator zero? cos θ = 0 exactly when the arrow points straight up or down — θ = ±π/2, ±3π/2, … Remove those angles; everything else is allowed."],
+    rng:["all real numbers&nbsp; (ℝ)","The tangent segment can be any length: near an asymptote it shoots off toward ±∞, at θ = 0 it is 0, and it passes continuously through every value in between. Nothing is out of reach."],
+    per:["π&nbsp; (half a turn!)","Half a turn later the arrow points at the antipodal point (−x, −y). Both coordinates flip sign, so the ratio y/x is unchanged: tan(θ + π) = tan θ. That's why tan repeats twice as fast as sin and cos."],
+    amp:["none","Amplitude needs a max and a min. tan θ is unbounded — the wave runs off to ±∞ at every asymptote — so amplitude is simply not defined for it."]},
+  cot:{
+    dom:["θ ≠ kπ&nbsp; (k any integer)","cot θ = cos θ / sin θ, so it breaks where sin θ = 0: the arrow lying flat along the x-axis, θ = 0, ±π, ±2π, … Those are the vertical asymptotes of the wave."],
+    rng:["all real numbers&nbsp; (ℝ)","Like tan, the cot segment on the line y = 1 can have any length, positive or negative — the outputs sweep through every real number once per period."],
+    per:["π","Same antipode trick as tan: at θ + π both cos and sin flip sign, so their ratio is untouched: cot(θ + π) = cot θ."],
+    amp:["none","Unbounded in both directions, so there is no maximum or minimum, hence no amplitude."]},
+  sec:{
+    dom:["θ ≠ π/2 + kπ","sec θ = 1 / cos θ: forbidden exactly where cos θ = 0, i.e. where the arrow is vertical. Same excluded angles as tan — same asymptotes on the wave."],
+    rng:["(−∞, −1] ∪ [1, ∞)&nbsp; i.e. |sec θ| ≥ 1","cos θ lives inside [−1, 1], so its reciprocal must have magnitude ≥ 1 (flipping a fraction ≤ 1 gives a number ≥ 1). The band between −1 and 1 is a forbidden zone the wave never enters — look at the gap in the graph."],
+    per:["2π","sec inherits its rhythm straight from cos: cos repeats every 2π, so 1/cos does too. (π does NOT work: cos(θ+π) = −cos θ flips the sign.)"],
+    amp:["none","No max, no min — each branch runs off to ±∞ — so amplitude is undefined."]},
+  csc:{
+    dom:["θ ≠ kπ","csc θ = 1 / sin θ: forbidden where sin θ = 0, i.e. the arrow flat on the x-axis at θ = 0, ±π, ±2π, …"],
+    rng:["(−∞, −1] ∪ [1, ∞)&nbsp; i.e. |csc θ| ≥ 1","sin θ is trapped in [−1, 1], so its reciprocal has magnitude at least 1. Values strictly between −1 and 1 are never produced."],
+    per:["2π","Inherited from sin: sin repeats every full turn, so its reciprocal does as well."],
+    amp:["none","Unbounded — no amplitude."]}
+};
+
+const DR_EXPLAINER = `
+<details class="dr">
+  <summary>What do “domain”, “range”, “period” &amp; “amplitude” actually mean?</summary>
+  <p><b>Domain = the allowed inputs.</b> Think of a function as a machine: you feed in an angle θ, it spits out a number.
+     The domain is the list of every θ the machine can digest without breaking.
+     For trig functions the <em>only</em> way to break the machine is dividing by zero —
+     so the recipe is: write the function as a fraction, find where the bottom is 0, and throw those angles out.
+     If there's no fraction (sin, cos), nothing can break and <em>every</em> θ is allowed.</p>
+  <p><b>Range = the possible outputs.</b> Not what you put in, but what can come out.
+     You read it off the geometry: a <em>coordinate</em> of a point on a radius-1 circle is trapped in [−1, 1];
+     a <em>ratio</em> of coordinates (tan, cot) can be anything at all;
+     a <em>reciprocal</em> of something in [−1, 1] (sec, csc) must have size at least 1.</p>
+  <p><b>Period = how far you slide θ before the picture repeats.</b> A full turn (2π) always brings the arrow
+     back to the same point, so every trig function repeats at least every 2π.
+     tan and cot are special: half a turn (π) already repeats them, because the opposite point (−x, −y)
+     gives the same <em>ratio</em>.</p>
+  <p><b>Amplitude = half the vertical span of the wave:</b> (max − min) / 2.
+     It only makes sense when a max and min exist — so sin and cos have amplitude 1,
+     while tan, cot, sec, csc (which run off to ±∞) have <em>no</em> amplitude.</p>
+</details>`;
+
+/* preset angles shared by every trig pane */
+const TPRESETS = [
+  {txt:"0",v:0},{txt:"π/6",v:PI/6},{txt:"π/4",v:PI/4},{txt:"π/3",v:PI/3},
+  {txt:"π/2",v:PI/2},{txt:"2π/3",v:2*PI/3},{txt:"π",v:PI},{txt:"3π/2",v:3*PI/2},
+  {txt:"2π",v:2*PI},{txt:"−π/4",v:-PI/4},{txt:"−π/2",v:-PI/2}
+];
+
+/* registry of resizable trig panes */
+const TP = {};                 /* key -> pane state object */
+let activePane = "recipe";
+function resizeTrigPanes(){ const p=TP[activePane]; if(p && p.resize) p.resize(); }
+
+/* ---------- shared canvas scaffolding for a circle+wave pane ---------- */
+function makeCanvasPane(key, caption, rightHTML){
+  const pane=document.createElement("div");
+  pane.className="pane trigpane hidden"; pane.id="pane-"+key;
+  pane.innerHTML=`
+    <div class="lab" id="lab-${key}">
+      <div class="card plane-card" id="pcard-${key}">
+        <canvas id="cv-${key}" aria-label="interactive figure"></canvas>
+        <div class="plane-foot"><span>${caption}</span></div>
+      </div>
+      <div class="card derive">${rightHTML}</div>
+    </div>`;
+  wrapEl.appendChild(pane);
+  return pane;
+}
+
+/* size a canvas: fraction = width fraction of lab; ratio = h/w on narrow screens */
+function sizeCanvas(st, wideFrac, aspectNarrow){
+  const pane=document.getElementById("pane-"+st.key);
+  if(!pane || pane.classList.contains("hidden")) return false;
+  const lab=document.getElementById("lab-"+st.key);
+  const cvs=st.cvs, narrow=window.innerWidth<940;
+  const foot=pane.querySelector(".plane-foot");
+  let w,h;
+  if(narrow){ w=Math.max(280,lab.clientWidth-28); h=Math.round(w*aspectNarrow); }
+  else{
+    const footH=foot?foot.offsetHeight:40;
+    h=Math.max(360,lab.clientHeight-28-footH-4);
+    w=Math.max(300,Math.min(lab.clientWidth*wideFrac-46,Math.round(h*st.wOverH)));
+  }
+  const dpr=window.devicePixelRatio||1;
+  cvs.style.width=w+"px";cvs.style.height=h+"px";
+  document.getElementById("pcard-"+st.key).style.width=narrow?"":(w+28)+"px";
+  cvs.width=w*dpr;cvs.height=h*dpr;
+  st.g.setTransform(dpr,0,0,dpr,0,0);
+  st.W=w;st.H=h;
+  return true;
+}
+
+/* ---------- unit-circle drawing (top part), parameterized ---------- */
+function drawCircleBase(g,ccx,ccy,CR,opts={}){
+  gline(g,ccx-CR-30,ccy,ccx+CR+30,ccy,C.axis,1.4);
+  gline(g,ccx,ccy-CR-24,ccx,ccy+CR+24,C.axis,1.4);
+  g.save();g.strokeStyle=C.grid;g.lineWidth=1.6;
+  g.beginPath();g.arc(ccx,ccy,CR,0,2*PI);g.stroke();g.restore();
+  if(!opts.noRadiusLabel) glabel(g,"radius 1",ccx+CR*0.72,ccy-CR*0.80,C.inkSoft,{size:11});
+  const card=[[1,0,"(1, 0)","right"],[0,1,"(0, 1)","top"],[-1,0,"(−1, 0)","left"],[0,-1,"(0, −1)","bottom"]];
+  card.forEach(pt=>{
+    const px=ccx+pt[0]*CR, py=ccy-pt[1]*CR;
+    g.fillStyle=C.inkSoft;g.beginPath();g.arc(px,py,3,0,2*PI);g.fill();
+    let lx=px,ly=py,al="center";
+    if(pt[3]==="right"){lx+=8;al="left"} if(pt[3]==="left"){lx-=8;al="right"}
+    if(pt[3]==="top"){ly-=12} if(pt[3]==="bottom"){ly+=13}
+    glabel(g,pt[2],lx,ly,C.inkSoft,{size:11,align:al});
+  });
+}
+function drawAngleSweep(g,ccx,ccy,CR,t){
+  const ar=CR*0.34;
+  const N=Math.max(8,Math.ceil(Math.abs(t)/0.05));
+  g.save();g.fillStyle=C.purpleSoft;g.beginPath();g.moveTo(ccx,ccy);
+  for(let k=0;k<=N;k++){const a=t*k/N;g.lineTo(ccx+ar*Math.cos(a),ccy-ar*Math.sin(a));}
+  g.closePath();g.fill();
+  g.strokeStyle=C.purple;g.lineWidth=2.2;g.beginPath();
+  for(let k=0;k<=N;k++){const a=t*k/N;const qx=ccx+ar*Math.cos(a),qy=ccy-ar*Math.sin(a);k?g.lineTo(qx,qy):g.moveTo(qx,qy);}
+  g.stroke();g.restore();
+  if(Math.abs(t)>0.2)
+    glabel(g,"θ",ccx+(ar+13)*Math.cos(t/2),ccy-(ar+13)*Math.sin(t/2),C.purple,{bold:true,size:14});
+}
+function drawArrowToPoint(g,ccx,ccy,CR,t){
+  const px=ccx+Math.cos(t)*CR, py=ccy-Math.sin(t)*CR;
+  gline(g,ccx,ccy,px,py,C.ink,2.4);
+  gdot(g,px,py,5,C.ink);
+  return {px,py};
+}
+
+/* draw one function's geometric segment on the circle; returns nothing */
+function drawFnGeo(g,key,t,ccx,ccy,CR,opts={}){
+  const ct=Math.cos(t), st=Math.sin(t);
+  const f=TRIG[key], undef=f.undef(t);
+  const lite=opts.lite;                 /* compact labels for the multi-function views */
+  const px=ccx+ct*CR, py=ccy-st*CR;
+  const vLim=(ccy-14)/CR, hLim=(ccx-14)/CR;   /* clip limits in unit lengths */
+
+  if(key==="cos"){
+    if(Math.abs(ct)>0.02) gline(g,px,py,px,ccy,C.orange,1.6,[5,4]);
+    gline(g,ccx,ccy,px,ccy,C.orange,4.5);
+    if(!lite) glabel(g,"cos θ = "+fmtVal(ct),ccx+ct*CR/2,ccy+(st>=0?16:-16),C.orange,{bold:true,size:13});
+    else glabel(g,"cos",ccx+ct*CR/2,ccy+(st>=0?14:-14),C.orange,{bold:true,size:11});
+  }
+  else if(key==="sin"){
+    if(Math.abs(st)>0.02) gline(g,px,py,ccx,py,C.teal,1.6,[5,4]);
+    gline(g,ccx,ccy,ccx,ccy-st*CR,C.teal,4.5);
+    if(!lite) glabel(g,"sin θ = "+fmtVal(st),ccx+(ct>=0?-26:26),ccy-st*CR/2,C.teal,{bold:true,size:13});
+    else glabel(g,"sin",ccx+(ct>=0?-18:18),ccy-st*CR/2,C.teal,{bold:true,size:11});
+  }
+  else if(key==="tan"||key==="sec"){
+    /* tangent line x = 1 */
+    gline(g,ccx+CR,ccy-CR-20,ccx+CR,ccy+CR+20,"#C9CFE4",1.4,[6,5]);
+    if(!lite) glabel(g,"x = 1",ccx+CR+4,ccy-CR-14,C.inkSoft,{size:10.5,align:"left"});
+    if(undef){
+      glabel(g,key+" θ undefined (arrow is vertical — its line never crosses x = 1)",
+             ccx,ccy+CR+34,TRIG[key].color,{bold:true,size:12});
+      return;
+    }
+    const tv=st/ct;                       /* true tan value */
+    const clip=Math.abs(tv)>vLim;
+    const ty=clip?Math.sign(tv)*vLim:tv;  /* drawn (possibly clipped) */
+    const qx=ccx+CR, qy=ccy-ty*CR;
+    /* the through-line from the origin out to Q (dashed if backwards extension) */
+    gline(g,ccx,ccy,qx,qy, key==="sec"?C.blue:"#B9B0EE", key==="sec"?4:1.6, ct<0?[5,5]:null);
+    if(key==="tan"){
+      gline(g,qx,ccy,qx,qy,C.purple,4.5);
+      gdot(g,qx,qy,4,C.purple);
+      const txt=lite?"tan":("tan θ = "+fmtVal(tv)+(clip?" (continues off-screen)":""));
+      const fits=qx+8+txt.length*6.6 < (opts.W||1e9);
+      glabel(g,txt,fits?qx+8:qx-8,ccy-ty*CR/2,C.purple,{bold:true,size:lite?11:13,align:fits?"left":"right"});
+    } else {
+      gdot(g,qx,qy,4,C.blue);
+      const mx=(ccx+qx)/2, my=(ccy+qy)/2;
+      const txt=lite?"sec":("sec θ = "+fmtVal(1/ct)+(clip?" (continues off-screen)":"")+(ct<0?"  (backward ⇒ negative)":""));
+      glabel(g,txt,mx,my-12,C.blue,{bold:true,size:lite?11:13});
+    }
+  }
+  else if(key==="cot"||key==="csc"){
+    /* tangent line y = 1 */
+    gline(g,ccx-CR-24,ccy-CR,ccx+CR+24,ccy-CR,"#C9CFE4",1.4,[6,5]);
+    if(!lite) glabel(g,"y = 1",ccx-CR-4,ccy-CR-10,C.inkSoft,{size:10.5,align:"right"});
+    if(undef){
+      glabel(g,key+" θ undefined (arrow is horizontal — its line never crosses y = 1)",
+             ccx,ccy+CR+34,TRIG[key].color,{bold:true,size:12});
+      return;
+    }
+    const cv=ct/st;
+    const clip=Math.abs(cv)>hLim;
+    const cxu=clip?Math.sign(cv)*hLim:cv;
+    const qx=ccx+cxu*CR, qy=ccy-CR;
+    gline(g,ccx,ccy,qx,qy, key==="csc"?C.olive:"#D8A29E", key==="csc"?4:1.6, st<0?[5,5]:null);
+    if(key==="cot"){
+      gline(g,ccx,qy,qx,qy,C.brick,4.5);
+      gdot(g,qx,qy,4,C.brick);
+      const txt=lite?"cot":("cot θ = "+fmtVal(cv)+(clip?" (continues off-screen)":""));
+      glabel(g,txt,ccx+cxu*CR/2,qy-13,C.brick,{bold:true,size:lite?11:13});
+    } else {
+      gdot(g,qx,qy,4,C.olive);
+      const mx=(ccx+qx)/2, my=(ccy+qy)/2;
+      const txt=lite?"csc":("csc θ = "+fmtVal(1/st)+(clip?" (continues off-screen)":"")+(st<0?"  (backward ⇒ negative)":""));
+      glabel(g,txt,mx+10,my+12,C.olive,{bold:true,size:lite?11:13,align:"left"});
+    }
+  }
+}
+
+/* ---------- wave plot (bottom part), one or many functions ---------- */
+function drawWaves(g,fns,t,area,opts={}){
+  const {x0,x1e,yTop,yH}=area;
+  const ym=yTop+yH/2;
+  const VMAX=opts.vmax||1;               /* value mapped to full half-height */
+  const A=yH/2-20;
+  const xm=v=>x0+(v+2*PI)/(4*PI)*(x1e-x0);
+  const yv=v=>ym-(v/VMAX)*A;
+  gline(g,x0-8,ym,x1e,ym,C.axis,1.2);
+  gline(g,xm(0),yTop+4,xm(0),yTop+yH-6,C.axis,1.2);
+  /* ±1 reference lines when scale exceeds 1 */
+  if(VMAX>1.01){
+    gline(g,x0,yv(1),x1e,yv(1),"#E0E5F2",1,[3,5]);
+    gline(g,x0,yv(-1),x1e,yv(-1),"#E0E5F2",1,[3,5]);
+  }
+  glabel(g,"1",xm(0)-9,yv(1),C.inkSoft,{size:11,align:"right"});
+  glabel(g,"−1",xm(0)-9,yv(-1),C.inkSoft,{size:11,align:"right"});
+  [[-2*PI,"−2π"],[-3*PI/2,""],[-PI,"−π"],[-PI/2,"−π/2"],[PI/2,"π/2"],[PI,"π"],[3*PI/2,"3π/2"],[2*PI,"2π"]].forEach(tk=>{
+    gline(g,xm(tk[0]),ym-3,xm(tk[0]),ym+3,C.axis,1.2);
+    if(tk[1]) glabel(g,tk[1],xm(tk[0]),ym+13,C.inkSoft,{size:10.5});
+  });
+  /* asymptotes */
+  const asymDrawn=new Set();
+  fns.forEach(f=>{
+    (f.waveAsym||[]).forEach(a=>{
+      const k=Math.round(a*100);
+      if(asymDrawn.has(k))return; asymDrawn.add(k);
+      gline(g,xm(a),yTop+4,xm(a),yTop+yH-6,"rgba(200,80,80,.45)",1.2,[3,4]);
+    });
+  });
+  /* curves */
+  const M=opts.samples||520;
+  fns.forEach(f=>{
+    g.save();g.strokeStyle=f.color;g.lineWidth=2;g.beginPath();
+    let pen=false, prev=null;
+    for(let k=0;k<=M;k++){
+      const v=-2*PI+4*PI*k/M;
+      let val=f.calc(v);
+      const bad=!isFinite(val)||Math.abs(val)>VMAX*1.35||(prev!==null&&Math.abs(val-prev)>VMAX*2.2);
+      if(bad){pen=false;prev=null;continue;}
+      const gx=xm(v),gy=yv(val);
+      if(pen)g.lineTo(gx,gy); else {g.moveTo(gx,gy);pen=true;}
+      prev=val;
+    }
+    g.stroke();g.restore();
+  });
+  /* marker(s) at current θ */
+  if(t!==null&&t!==undefined){
+    const tc=Math.max(-2*PI,Math.min(2*PI,t));
+    fns.forEach(f=>{
+      const val=f.calc(tc);
+      if(f.undefFn&&f.undefFn(tc)){ glabel(g,"undef.",xm(tc),yTop+12,f.color,{size:10.5,bold:true}); return; }
+      if(!isFinite(val)||Math.abs(val)>VMAX*1.15) return;
+      const mx=xm(tc),my=yv(val);
+      gline(g,mx,ym,mx,my,f.color,1.1,[3,4]);
+      gdot(g,mx,my,4.5,f.color);
+      if(!opts.noMarkerLabel) glabel(g,fmtVal(val),mx,my+(val>=0?-13:13),f.color,{bold:true,size:12});
+    });
+  }
+}
+
+/* ══════════════ generic single-function explorer pane ══════════════ */
+function fingerprintHTML(key){
+  const f=TRIG[key], fp=FINGER[key];
+  return `
+  <div class="fingerprint">
+    <div class="fphead"><span class="badge" style="background:${f.color}">✦</span>
+      Function fingerprint — <span class="m" style="margin-left:2px">${f.sym}</span></div>
+    <div class="fp-grid">
+      <div class="fp-item"><b style="color:${f.color}">Domain (allowed inputs)</b>
+        <span class="fpval">${fp.dom[0]}</span>${fp.dom[1]}</div>
+      <div class="fp-item"><b style="color:${f.color}">Range (possible outputs)</b>
+        <span class="fpval">${fp.rng[0]}</span>${fp.rng[1]}</div>
+      <div class="fp-item"><b style="color:${f.color}">Period</b>
+        <span class="fpval">${fp.per[0]}</span>${fp.per[1]}</div>
+      <div class="fp-item"><b style="color:${f.color}">Amplitude</b>
+        <span class="fpval">${fp.amp[0]}</span>${fp.amp[1]}</div>
+    </div>
+  </div>`;
+}
+
+function makeFnPane(key){
+  const f=TRIG[key];
+  const captions={
+    cos:`Top: rotate by θ — <b style="color:${C.orange}">cos θ is the x-coordinate</b> of the landing point. Bottom: that x-coordinate recorded as θ grows — the cosine wave.`,
+    sin:`Top: rotate by θ — <b style="color:${C.teal}">sin θ is the y-coordinate</b> of the landing point. Bottom: that y-coordinate recorded as θ grows — the sine wave.`,
+    tan:`Top: extend the arrow's line until it crosses the vertical tangent line x = 1 — <b style="color:${C.purple}">tan θ is the height of the crossing</b>. Bottom: that height as θ grows. Red dashes = asymptotes (arrow vertical ⇒ no crossing).`,
+    cot:`Top: extend the arrow's line until it crosses the horizontal tangent line y = 1 — <b style="color:${C.brick}">cot θ is the x-position of the crossing</b>. Bottom: that value as θ grows. Red dashes = asymptotes (arrow horizontal ⇒ no crossing).`,
+    sec:`Top: <b style="color:${C.blue}">sec θ is the distance from the origin</b> along the arrow's line out to x = 1 (negative when you must walk backwards). Bottom: that distance as θ grows — note the forbidden band between −1 and 1.`,
+    csc:`Top: <b style="color:${C.olive}">csc θ is the distance from the origin</b> along the arrow's line out to y = 1 (negative when backwards). Bottom: that distance as θ grows — again a forbidden band between −1 and 1.`
+  };
+  const goals={
+    cos:"definition: rotate by θ on the radius-1 circle — cos θ is the x-coordinate of where you land.",
+    sin:"definition: rotate by θ on the radius-1 circle — sin θ is the y-coordinate of where you land.",
+    tan:"definition: tan θ = sin θ / cos θ — the slope of the arrow. Geometrically: the signed length of the tangent segment at (1, 0).",
+    cot:"definition: cot θ = cos θ / sin θ = 1 / tan θ. Geometrically: the signed length of the tangent segment at (0, 1).",
+    sec:"definition: sec θ = 1 / cos θ. Geometrically: the signed distance from the origin, along the arrow's line, out to the vertical line x = 1.",
+    csc:"definition: csc θ = 1 / sin θ. Geometrically: the signed distance from the origin, along the arrow's line, out to the horizontal line y = 1."
+  };
+  const right=`
+    <h3>How <span class="m">${f.sym}</span> is computed</h3>
+    <p class="goal">${goals[key]}</p>
+    <div class="controls" style="flex-direction:column;align-items:stretch;gap:8px">
+      <div style="display:flex;flex-wrap:wrap;gap:7px" id="presets-${key}"></div>
+      <div class="slider-row">
+        <span class="m">θ</span>
+        <input type="range" id="slider-${key}" min="-360" max="360" step="5" value="60" aria-label="angle theta in degrees">
+        <span id="sval-${key}" style="min-width:52px;text-align:right">60°</span>
+      </div>
+    </div>
+    <div class="dsteps">
+      <div id="calc-${key}"></div>
+      ${fingerprintHTML(key)}
+      ${DR_EXPLAINER}
+    </div>`;
+  makeCanvasPane(key,captions[key],right);
+
+  const st={key, theta:PI/3, shown:PI/3, animId:null,
+            cvs:document.getElementById("cv-"+key)};
+  st.g=st.cvs.getContext("2d");
+  st.wOverH=0.82;
+  TP[key]=st;
+
+  st.resize=function(){
+    if(!sizeCanvas(st,0.52,1.3)) return;
+    st.circH=Math.round(st.H*0.60);
+    st.ccx=st.W/2; st.ccy=st.circH/2+6;
+    st.CR=Math.min(st.W,st.circH)/2-46;
+    if(!f.bounded) st.CR*=0.74;   /* leave room for the tangent segments */
+    st.draw();
+  };
+  st.draw=function(){
+    if(!st.W) return;
+    const g=st.g,t=st.shown;
+    g.clearRect(0,0,st.W,st.H);
+    g.fillStyle="#FBFCFF";g.fillRect(0,0,st.W,st.H);
+    drawCircleBase(g,st.ccx,st.ccy,st.CR);
+    drawAngleSweep(g,st.ccx,st.ccy,st.CR,t);
+    drawFnGeo(g,key,t,st.ccx,st.ccy,st.CR,{W:st.W});
+    drawArrowToPoint(g,st.ccx,st.ccy,st.CR,t);
+    const area={x0:48,x1e:st.W-14,yTop:st.circH+6,yH:st.H-st.circH-14};
+    glabel(g,f.sym,area.x0-4,area.yTop+8,f.color,{size:11,align:"left",bold:true});
+    drawWaves(g,[{calc:f.calc,color:f.color,waveAsym:f.waveAsym,undefFn:f.undef}],
+              t,area,{vmax:f.bounded?1:3.2});
+  };
+  st.rebuild=function(){
+    const t=st.theta, box=document.getElementById("calc-"+key);
+    const deg=Math.round(t*180/PI*10)/10;
+    const ct=Math.cos(t), stv=Math.sin(t);
+    const cTxt=fmtVal(ct), sTxt=fmtVal(stv);
+    const undef=f.undef(t);
+    const val=undef?null:f.calc(t);
+    let html=`
+    <div class="dstep b3 revealed">
+      <div class="dhead"><span class="badge">1</span>Rotate by θ</div>
+      <div class="eq"><span class="tag-t"><span class="m">θ = ${niceTheta(t)}</span></span> <span class="mr">(= ${deg}°)</span></div>
+      <p>${whereText(t)}</p>
+    </div>
+    <div class="dstep b1 revealed">
+      <div class="dhead"><span class="badge">2</span>Where do we land?</div>
+      <div class="eq"><span class="mr">landing point = (cos θ, sin θ) = (</span><span class="m">${cTxt}</span><span class="mr">, </span><span class="m">${sTxt}</span><span class="mr">)</span></div>
+      <p>Everything below is built from these two coordinates.</p>
+    </div>`;
+    const step3={
+      cos:()=>`<div class="eq"><span class="mr">cos θ = x-coordinate = </span><span class="m" style="color:${f.color}">${cTxt}</span></div>
+        <p>The thick <b style="color:${C.orange}">orange segment on the x-axis</b> is this value: the horizontal shadow of the length-1 arrow.</p>`,
+      sin:()=>`<div class="eq"><span class="mr">sin θ = y-coordinate = </span><span class="m" style="color:${f.color}">${sTxt}</span></div>
+        <p>The thick <b style="color:${C.teal}">teal segment on the y-axis</b> is this value: the vertical shadow of the length-1 arrow.</p>`,
+      tan:()=>undef
+        ? `<div class="eq"><span class="mr">tan θ = sin θ / cos θ = ${sTxt} / 0 — </span><span class="m" style="color:${f.color}">undefined</span></div>
+           <p>The arrow points straight ${stv>0?"up":"down"}, so cos θ = 0 and the division breaks. Geometrically: a vertical line through the origin is <em>parallel</em> to the line x = 1 — they never cross, so there is no tangent segment to measure. On the wave this shows up as a <b>vertical asymptote</b>.</p>`
+        : `<div class="eq"><span class="mr">tan θ = </span><span class="frac"><span class="m">sin θ</span><span class="m">cos θ</span></span><span class="mr"> = </span><span class="frac"><span class="m">${sTxt}</span><span class="m">${cTxt}</span></span><span class="mr"> = </span><span class="m" style="color:${f.color}">${fmtVal(val)}</span></div>
+           <p>Two ways to see the same number: it is the <b>slope</b> of the arrow (rise ÷ run), and it is the height of the <b style="color:${C.purple}">purple segment</b> where the arrow's line crosses the tangent line x = 1. ${ct<0?"Since cos θ < 0 the line crosses x = 1 <em>behind</em> the origin (dashed part) — the slope is what it is regardless.":""}</p>`,
+      cot:()=>undef
+        ? `<div class="eq"><span class="mr">cot θ = cos θ / sin θ = ${cTxt} / 0 — </span><span class="m" style="color:${f.color}">undefined</span></div>
+           <p>The arrow lies flat on the x-axis, so sin θ = 0 and the division breaks. A horizontal line through the origin is parallel to y = 1 — no crossing, no segment. Vertical asymptote on the wave.</p>`
+        : `<div class="eq"><span class="mr">cot θ = </span><span class="frac"><span class="m">cos θ</span><span class="m">sin θ</span></span><span class="mr"> = </span><span class="frac"><span class="m">${cTxt}</span><span class="m">${sTxt}</span></span><span class="mr"> = </span><span class="m" style="color:${f.color}">${fmtVal(val)}</span></div>
+           <p>The reciprocal of the slope ("run ÷ rise"), and the x-position of the <b style="color:${C.brick}">brick-red segment</b> where the arrow's line crosses the horizontal tangent line y = 1. Also: cot θ = 1 / tan θ whenever both exist.</p>`,
+      sec:()=>undef
+        ? `<div class="eq"><span class="mr">sec θ = 1 / cos θ = 1 / 0 — </span><span class="m" style="color:${f.color}">undefined</span></div>
+           <p>cos θ = 0 here, and 1/0 has no value. Geometrically the arrow's line is parallel to x = 1, so the "distance out to x = 1" doesn't exist. Vertical asymptote.</p>`
+        : `<div class="eq"><span class="mr">sec θ = </span><span class="frac"><span class="m">1</span><span class="m">cos θ</span></span><span class="mr"> = </span><span class="frac"><span class="m">1</span><span class="m">${cTxt}</span></span><span class="mr"> = </span><span class="m" style="color:${f.color}">${fmtVal(val)}</span></div>
+           <p>Since |cos θ| ≤ 1, flipping it always gives |sec θ| ≥ 1 — check: |${fmtVal(val)}| ≥ 1 ✓. It is the length of the <b style="color:${C.blue}">blue segment</b> from the origin to where the arrow's line meets x = 1${ct<0?", counted <b>negative</b> because you must walk backwards along the arrow to reach it":""}.</p>`,
+      csc:()=>undef
+        ? `<div class="eq"><span class="mr">csc θ = 1 / sin θ = 1 / 0 — </span><span class="m" style="color:${f.color}">undefined</span></div>
+           <p>sin θ = 0 here (arrow flat on the x-axis), and 1/0 has no value. The arrow's line is parallel to y = 1 — no crossing. Vertical asymptote.</p>`
+        : `<div class="eq"><span class="mr">csc θ = </span><span class="frac"><span class="m">1</span><span class="m">sin θ</span></span><span class="mr"> = </span><span class="frac"><span class="m">1</span><span class="m">${sTxt}</span></span><span class="mr"> = </span><span class="m" style="color:${f.color}">${fmtVal(val)}</span></div>
+           <p>Since |sin θ| ≤ 1, its reciprocal always has |csc θ| ≥ 1 — check: |${fmtVal(val)}| ≥ 1 ✓. It is the length of the <b style="color:${C.olive}">olive segment</b> from the origin out to y = 1${stv<0?", counted <b>negative</b> because it lies backwards along the arrow":""}.</p>`
+    };
+    html+=`<div class="dstep b2 revealed">
+      <div class="dhead"><span class="badge" style="background:${f.color}">3</span>Compute ${f.sym}</div>
+      ${step3[key]()}
+    </div>
+    <div class="dstep b5 revealed">
+      <div class="dhead"><span class="badge">4</span>Read the wave</div>
+      <p>The <b style="color:${f.color}">${key} curve</b> under the circle is this value recorded for every θ from −2π to 2π; the dot marks the current angle. ${f.bounded
+        ? "It repeats every <span class=\"m\">"+(key==="cos"||key==="sin"?"2π":"")+"</span> (one full turn) and stays inside the band [−1, 1] — see the fingerprint card below."
+        : "The red dashed verticals are the <b>asymptotes</b>: angles thrown out of the domain, where the curve escapes to ±∞. Between consecutive asymptotes you see one full copy of the pattern — that spacing is the period. Details in the fingerprint card below."}</p>
+    </div>`;
+    box.innerHTML=html;
+  };
+  st.set=function(v,animate){
+    st.theta=v;
+    const sl=document.getElementById("slider-"+key), sv=document.getElementById("sval-"+key);
+    if(sl)sl.value=Math.round(v*180/PI);
+    if(sv)sv.textContent=Math.round(v*180/PI)+"°";
+    const row=document.getElementById("presets-"+key);
+    if(row)[...row.children].forEach(b=>b.classList.toggle("active",Math.abs(parseFloat(b.dataset.v)-v)<1e-6));
+    st.rebuild();
+    if(st.animId)cancelAnimationFrame(st.animId);
+    const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(!animate||reduce){st.shown=v;st.draw();return;}
+    const t0=performance.now(),DUR=900,from=st.shown;
+    const tick=tt=>{
+      let p=Math.min(1,(tt-t0)/DUR); p=1-Math.pow(1-p,3);
+      st.shown=from+(v-from)*p; st.draw();
+      if(p<1)st.animId=requestAnimationFrame(tick);
+    };
+    st.animId=requestAnimationFrame(tick);
+  };
+  /* wire controls */
+  const row=document.getElementById("presets-"+key);
+  TPRESETS.forEach(p=>{
+    const b=document.createElement("button");
+    b.className="preset"; b.dataset.v=p.v; b.textContent=p.txt;
+    b.addEventListener("click",()=>st.set(p.v,true));
+    row.appendChild(b);
+  });
+  document.getElementById("slider-"+key).addEventListener("input",e=>{
+    st.set(parseInt(e.target.value,10)*PI/180,false);
+  });
+  st.set(PI/3,false);
+}
+/* ══════════════ definitions pane: the unit circle & all six ══════════════ */
+function makeDefsPane(){
+  const key="defs";
+  const caption=`One picture, six numbers. The black arrow has length 1. Its shadows give <b style="color:${C.orange}">cos</b> and <b style="color:${C.teal}">sin</b>; extending its line to the tangent lines x = 1 and y = 1 gives <b style="color:${C.purple}">tan</b>, <b style="color:${C.blue}">sec</b>, <b style="color:${C.brick}">cot</b>, <b style="color:${C.olive}">csc</b>. Drag the slider and watch all six move together.`;
+  const right=`
+    <h3>Where the six functions come from</h3>
+    <p class="goal">formula → picture: every trig function is a length you can point at in this one figure.</p>
+    <div class="controls" style="flex-direction:column;align-items:stretch;gap:8px">
+      <div style="display:flex;flex-wrap:wrap;gap:7px" id="presets-defs"></div>
+      <div class="slider-row">
+        <span class="m">θ</span>
+        <input type="range" id="slider-defs" min="-360" max="360" step="5" value="50" aria-label="angle theta in degrees">
+        <span id="sval-defs" style="min-width:52px;text-align:right">50°</span>
+      </div>
+    </div>
+    <div class="dsteps">
+      <div class="dstep b1 revealed">
+        <div class="dhead"><span class="badge">1</span>Start from any right triangle (SOH·CAH·TOA)</div>
+        <p>For an angle θ inside a right triangle, the three classic ratios are defined by which two sides you compare:</p>
+        <div class="eq"><span class="m">sin θ = </span><span class="frac"><span class="mr">opposite</span><span class="mr">hypotenuse</span></span><span class="mr">,&nbsp;&nbsp;</span><span class="m">cos θ = </span><span class="frac"><span class="mr">adjacent</span><span class="mr">hypotenuse</span></span><span class="mr">,&nbsp;&nbsp;</span><span class="m">tan θ = </span><span class="frac"><span class="mr">opposite</span><span class="mr">adjacent</span></span></div>
+        <p>These are ratios, so they don't care how big the triangle is — only the angle matters. That freedom lets us pick the most convenient triangle of all…</p>
+      </div>
+      <div class="dstep b2 revealed">
+        <div class="dhead"><span class="badge">2</span>…the one with hypotenuse = 1: the unit circle</div>
+        <p>Put the triangle inside a circle of radius 1: the hypotenuse is the arrow from the origin to a point on the circle. Now "÷ hypotenuse" is "÷ 1" and the formulas collapse to bare coordinates:</p>
+        <div class="eq"><span class="m">cos θ = </span><span class="mr">adjacent ÷ 1 = </span><b class="m" style="color:${C.orange}">x-coordinate</b><span class="mr">,&nbsp;&nbsp;</span><span class="m">sin θ = </span><span class="mr">opposite ÷ 1 = </span><b class="m" style="color:${C.teal}">y-coordinate</b></div>
+        <p>So the landing point of the arrow is exactly <span class="m">(cos θ, sin θ)</span>. This upgrade also frees θ from the triangle: angles beyond 90°, negative angles, multiple turns — all fine, the arrow just keeps rotating.</p>
+      </div>
+      <div class="dstep b2 revealed">
+        <div class="dhead"><span class="badge">3</span>The master move: stretch the arrow until a coordinate becomes 1</div>
+        <p>cos and sin came for free — they <em>are</em> the coordinates. The other four are <em>ratios</em> of them, and a ratio is a division — so how can a division be a length you point at? The trick: the arrow's <em>line</em> continues past the circle, and every point on that line is just a stretched copy of the tip,</p>
+        <div class="eq"><span class="m">( t · cos θ ,&nbsp; t · sin θ )</span><span class="mr">&nbsp;&nbsp;— stretch factor t</span></div>
+        <p>Concrete check with θ = 30°, tip (0.866, 0.5): stretch by t = 2 and you're at (1.732, 1); by t = 3 and you're at (2.598, 1.5). The <em>ratio</em> of the two coordinates never changes — that is exactly what "same direction" means.</p>
+        <p>Now the drawing rule for any ratio: <b>slide along the line until the coordinate you want to divide by becomes exactly 1.</b> Then the other coordinate arrives pre-divided. Forcing y to become 1 (solve t·sin θ = 1, so t = 1/sin θ) turns the x-position into cos θ ÷ sin θ. Forcing x to become 1 turns the y-position into sin θ ÷ cos θ. The geometry performs the division for you.</p>
+        <p>This is the entire justification for using the tangent lines x = 1 and y = 1 in this figure — and it's the same reason the circle has radius 1: at distance exactly 1, values can be read straight off with no clean-up division afterwards. (A line like y = 5 would work too, but you'd land at (5·cot θ, 5) and then have to divide by 5 by hand. Height 1 is the choice that makes the picture self-reading.)</p>
+      </div>
+      <div class="dstep b3 revealed">
+        <div class="dhead"><span class="badge" style="background:${C.purple}">4</span>tan θ — a slope, and a tangent segment</div>
+        <div class="eq"><span class="m">tan θ = </span><span class="frac"><span class="m">opposite</span><span class="m">adjacent</span></span><span class="mr"> = </span><span class="frac"><span class="m">sin θ</span><span class="m">cos θ</span></span><span class="mr"> = </span><span class="mr">slope of the arrow</span></div>
+        <p>Apply the master move with <b>x forced to 1</b>: solve <span class="m">t · cos θ = 1</span>, so <span class="m">t = 1/cos θ</span>, and the landing point is <span class="m">(1, sin θ/cos θ) = (1, tan θ)</span>. The vertical line x = 1 <em>touches</em> (Latin <i>tangens</i>) the circle at (1, 0), and the purple segment from (1, 0) up to the landing point therefore has height exactly <b style="color:${C.purple}">tan θ</b>.</p>
+        <p>Worked number, θ = 60°: tip (0.5, 0.866). Force x to 1: <span class="m">t · 0.5 = 1 ⟹ t = 2</span>, landing at (1, 1.732) — and indeed tan 60° = 0.866 ÷ 0.5 = 1.732 = √3. The same fact without algebra: the small triangle (legs cos θ, sin θ, hypotenuse 1) and the big triangle out to x = 1 share the angle θ, so they are similar and <span class="m">h / 1 = sin θ / cos θ</span>.</p>
+      </div>
+      <div class="dstep b4 revealed">
+        <div class="dhead"><span class="badge" style="background:${C.blue}">5</span>sec θ — the cutting line</div>
+        <div class="eq"><span class="m">sec θ = </span><span class="frac"><span class="m">1</span><span class="m">cos θ</span></span></div>
+        <p>No new construction needed — sec θ is the <b>stretch factor itself</b>. To reach x = 1 we stretched the length-1 arrow by t = 1/cos θ, so the stretched arrow (origin to the crossing point) has length exactly 1/cos θ = <b style="color:${C.blue}">sec θ</b>. In the θ = 60° example: t = 2, and sec 60° = 1 ÷ 0.5 = 2 ✓. The name is Latin <i>secans</i>, "cutting", because this line cuts through the circle. Bonus: Pythagoras on the right triangle with legs 1 and tan θ and hypotenuse sec θ hands you the identity <span class="m">1 + tan²θ = sec²θ</span> for free.</p>
+      </div>
+      <div class="dstep b5 revealed">
+        <div class="dhead"><span class="badge" style="background:${C.brick}">6</span>cot θ and csc θ — the same story, turned 90°</div>
+        <div class="eq"><span class="m">cot θ = </span><span class="frac"><span class="m">cos θ</span><span class="m">sin θ</span></span><span class="mr">,&nbsp;&nbsp;&nbsp;</span><span class="m">csc θ = </span><span class="frac"><span class="m">1</span><span class="m">sin θ</span></span></div>
+        <p>Run the identical master move against the <em>horizontal</em> tangent line y = 1 — this time <b>force y to be 1</b>: solve <span class="m">t · sin θ = 1</span>, so <span class="m">t = 1/sin θ = </span><b style="color:${C.olive}">csc θ</b> (once again the stretch factor is the length of the stretched arrow), and the landing point is <span class="m">(cos θ/sin θ, 1) = (cot θ, 1)</span>. So the brick-red segment along y = 1, from (0, 1) to the landing point, has length exactly <b style="color:${C.brick}">cot θ</b>.</p>
+        <p>Worked number, θ = 30°: tip (0.866, 0.5). Force y to 1: <span class="m">t · 0.5 = 1 ⟹ t = 2</span>, landing at (1.732, 1). Check: cot 30° = 0.866 ÷ 0.5 = 1.732 = √3 and csc 30° = 1 ÷ 0.5 = 2 ✓. "Co-" simply means "of the complementary angle": cot θ = tan(π/2 − θ), csc θ = sec(π/2 − θ), cos θ = sin(π/2 − θ) — the y = 1 picture is literally the x = 1 picture for the complementary angle, viewed with the axes swapped.</p>
+      </div>
+      <div class="dstep b5 revealed check">
+        <div class="dhead"><span class="badge">7</span>All six, right now</div>
+        <div class="valtable" id="defsVals"></div>
+        <p class="hint" style="margin-top:8px">Exact surd values appear for the "nice" angles (multiples of π/6 and π/4); otherwise decimals.</p>
+      </div>
+    </div>`;
+  makeCanvasPane(key,caption,right);
+  const st={key,theta:50*PI/180,shown:50*PI/180,animId:null,cvs:document.getElementById("cv-defs")};
+  st.g=st.cvs.getContext("2d"); st.wOverH=1.0;
+  TP[key]=st;
+  st.resize=function(){
+    if(!sizeCanvas(st,0.5,1.05)) return;
+    st.ccx=st.W/2; st.ccy=st.H/2+8;
+    st.CR=Math.min(st.W,st.H)/2-72;
+    st.draw();
+  };
+  st.draw=function(){
+    if(!st.W)return;
+    const g=st.g,t=st.shown;
+    g.clearRect(0,0,st.W,st.H);
+    g.fillStyle="#FBFCFF";g.fillRect(0,0,st.W,st.H);
+    drawCircleBase(g,st.ccx,st.ccy,st.CR);
+    drawAngleSweep(g,st.ccx,st.ccy,st.CR,t);
+    ["cos","sin","tan","sec","cot","csc"].forEach(k=>drawFnGeo(g,k,t,st.ccx,st.ccy,st.CR,{lite:true}));
+    drawArrowToPoint(g,st.ccx,st.ccy,st.CR,t);
+  };
+  st.rebuild=function(){
+    const t=st.theta, box=document.getElementById("defsVals");
+    const rows=[["cos","x-coordinate"],["sin","y-coordinate"],["tan","sin ÷ cos"],
+                ["cot","cos ÷ sin"],["sec","1 ÷ cos"],["csc","1 ÷ sin"]];
+    box.innerHTML=rows.map(([k,how])=>{
+      const f=TRIG[k];
+      const v=f.undef(t)?"undefined":fmtVal(f.calc(t));
+      return `<div class="vrow"><span class="vname" style="color:${f.color}"><span class="cdot" style="background:${f.color}"></span>${f.sym}</span><span class="vhow">${how}</span><span class="m">${v}</span></div>`;
+    }).join("");
+  };
+  st.set=function(v,animate){
+    st.theta=v;
+    const sl=document.getElementById("slider-defs"),sv=document.getElementById("sval-defs");
+    if(sl)sl.value=Math.round(v*180/PI);
+    if(sv)sv.textContent=Math.round(v*180/PI)+"°";
+    const row=document.getElementById("presets-defs");
+    if(row)[...row.children].forEach(b=>b.classList.toggle("active",Math.abs(parseFloat(b.dataset.v)-v)<1e-6));
+    st.rebuild();
+    if(st.animId)cancelAnimationFrame(st.animId);
+    const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(!animate||reduce){st.shown=v;st.draw();return;}
+    const t0=performance.now(),DUR=900,from=st.shown;
+    const tick=tt=>{let p=Math.min(1,(tt-t0)/DUR);p=1-Math.pow(1-p,3);
+      st.shown=from+(v-from)*p;st.draw();
+      if(p<1)st.animId=requestAnimationFrame(tick);};
+    st.animId=requestAnimationFrame(tick);
+  };
+  const row=document.getElementById("presets-defs");
+  TPRESETS.forEach(p=>{
+    const b=document.createElement("button");
+    b.className="preset";b.dataset.v=p.v;b.textContent=p.txt;
+    b.addEventListener("click",()=>st.set(p.v,true));
+    row.appendChild(b);
+  });
+  document.getElementById("slider-defs").addEventListener("input",e=>st.set(parseInt(e.target.value,10)*PI/180,false));
+  st.set(50*PI/180,false);
+}
+
+/* ══════════════ radians ↔ degrees pane ══════════════ */
+function makeRadPane(){
+  const key="rad";
+  const caption=`The circle has radius r. The <b style="color:${C.orange}">orange arc</b> is the angle θ; the small ticks cut it into pieces each exactly <b>one radius long</b> — count them and you've measured θ in radians. The straight orange radius is shown for comparison: bend it onto the rim and it covers exactly one tick.`;
+  const right=`
+    <h3>Degrees, radians, and where π fits in</h3>
+    <p class="goal">Three names for the same rotation — plus why sin(π/2) and sin(90°) mean the same thing.</p>
+    <div class="controls" style="flex-direction:column;align-items:stretch;gap:8px">
+      <div style="display:flex;flex-wrap:wrap;gap:7px" id="presets-rad"></div>
+      <div class="slider-row">
+        <span class="m">θ</span>
+        <input type="range" id="slider-rad" min="0" max="360" step="1" value="57" aria-label="angle in degrees">
+        <span id="sval-rad" style="min-width:52px;text-align:right">57°</span>
+      </div>
+    </div>
+    <div class="dsteps">
+      <div class="dstep b1 revealed">
+        <div class="dhead"><span class="badge">✎</span>The same angle, four ways</div>
+        <div class="convgrid" id="radConv"></div>
+      </div>
+      <div class="dstep b1 revealed">
+        <div class="dhead"><span class="badge">1</span>A degree is a human convention</div>
+        <p>A <b>degree</b> is defined as 1/360 of a full turn. Why 360? Ancient Babylonian bookkeeping (nice round number, divides evenly by 2, 3, 4, 5, 6, …). Nothing about circles forces 360 — Martians might use 400.</p>
+      </div>
+      <div class="dstep b2 revealed">
+        <div class="dhead"><span class="badge">2</span>A radian is the circle's own unit</div>
+        <p>A <b>radian</b> is the angle you get when the <em>arc</em> you sweep out is exactly as long as the <em>radius</em>. No arbitrary number involved — the circle itself defines it:</p>
+        <div class="eq"><span class="m">θ (in radians) = </span><span class="frac"><span class="mr">arc length</span><span class="mr">radius</span></span></div>
+        <p>The whole rim has length <span class="m">2πr</span> (that's the definition of π!), so a full turn is <span class="m">2πr / r = 2π</span> radians ≈ 6.28 radians. Watch the figure: about 6¼ radius-lengths wrap around the circle.</p>
+      </div>
+      <div class="dstep b3 revealed">
+        <div class="dhead"><span class="badge">3</span>The conversion — one equation to remember</div>
+        <div class="eq"><span class="m">180° = π radians</span></div>
+        <p>(Half a turn: half of 360° on the left, half of 2π on the right.) Everything else follows by scaling:</p>
+        <div class="eq"><span class="mr">degrees → radians: multiply by </span><span class="frac"><span class="m">π</span><span class="m">180</span></span><span class="mr">&nbsp;&nbsp;·&nbsp;&nbsp;radians → degrees: multiply by </span><span class="frac"><span class="m">180</span><span class="m">π</span></span></div>
+        <p>Worked example: <span class="m">60° = 60 · π/180 = π/3 ≈ 1.047 rad</span>. And backwards: <span class="m">3π/2 = 3π/2 · 180/π = 270°</span>.</p>
+      </div>
+      <div class="dstep b4 revealed">
+        <div class="dhead"><span class="badge">4</span>So what is "π" doing inside sin( )?</div>
+        <p><b>π is just a number</b>, 3.14159… When you write <span class="m">sin(π/2)</span>, the input is the <em>number</em> 1.5708…, understood as an angle in radians — which is a quarter turn — so <span class="m">sin(π/2) = sin(90°) = 1</span>. The trig function doesn't care which unit you used to <em>describe</em> the angle, any more than your height changes between feet and metres. What matters is the rotation itself.</p>
+        <p>Angles like π/6, π/4, π/3, π/2 show up constantly not because π is magic but because nice fractions <em>of a turn</em> (a twelfth, an eighth, a sixth, a quarter) are nice fractions of 2π.</p>
+      </div>
+      <div class="dstep b5 revealed check">
+        <div class="dhead"><span class="badge">!</span>Two practical warnings</div>
+        <p><b>① Calculator mode.</b> sin(90) is 1 in degree mode but 0.894 in radian mode (90 radians ≈ 14.3 full turns!). If a trig answer looks insane, check the mode first.</p>
+        <p><b>② Mathematics defaults to radians.</b> Unless a ° sign is written, assume radians. Calculus <em>requires</em> them: the clean rules (sin θ ≈ θ for small θ, derivative of sin = cos) are true only when θ is in radians — that's the deep reason mathematicians prefer the circle's own unit.</p>
+        <div class="eq" style="margin-top:8px"><span class="mr">Landmarks:&nbsp; 30° = π/6&nbsp; · 45° = π/4&nbsp; · 60° = π/3&nbsp; · 90° = π/2&nbsp; · 180° = π&nbsp; · 270° = 3π/2&nbsp; · 360° = 2π</span></div>
+      </div>
+    </div>`;
+  makeCanvasPane(key,caption,right);
+  const st={key,theta:1,shown:1,animId:null,cvs:document.getElementById("cv-rad")};
+  st.g=st.cvs.getContext("2d"); st.wOverH=1.0;
+  TP[key]=st;
+  st.resize=function(){
+    if(!sizeCanvas(st,0.5,1.05)) return;
+    st.ccx=st.W/2; st.ccy=st.H/2+8;
+    st.CR=Math.min(st.W,st.H)/2-64;
+    st.draw();
+  };
+  st.draw=function(){
+    if(!st.W)return;
+    const g=st.g,t=st.shown,R=st.CR,cx=st.ccx,cy=st.ccy;
+    g.clearRect(0,0,st.W,st.H);
+    g.fillStyle="#FBFCFF";g.fillRect(0,0,st.W,st.H);
+    gline(g,cx-R-26,cy,cx+R+26,cy,C.axis,1.4);
+    gline(g,cx,cy-R-22,cx,cy+R+22,C.axis,1.4);
+    g.save();g.strokeStyle=C.grid;g.lineWidth=1.6;
+    g.beginPath();g.arc(cx,cy,R,0,2*PI);g.stroke();g.restore();
+    /* swept arc, thick orange */
+    g.save();g.strokeStyle=C.orange;g.lineWidth=5;g.lineCap="round";
+    g.beginPath();
+    const N=Math.max(8,Math.ceil(Math.abs(t)/0.03));
+    for(let k=0;k<=N;k++){const a=t*k/N;const qx=cx+R*Math.cos(a),qy=cy-R*Math.sin(a);k?g.lineTo(qx,qy):g.moveTo(qx,qy);}
+    g.stroke();g.restore();
+    /* radian ticks along the arc: at 1,2,3,... radians */
+    for(let n=1;n<=Math.floor(t+1e-9);n++){
+      const a=n;
+      const x1=cx+(R-9)*Math.cos(a),y1=cy-(R-9)*Math.sin(a);
+      const x2=cx+(R+9)*Math.cos(a),y2=cy-(R+9)*Math.sin(a);
+      gline(g,x1,y1,x2,y2,C.ink,2.2);
+      glabel(g,String(n),cx+(R+22)*Math.cos(a),cy-(R+22)*Math.sin(a),C.ink,{size:12,bold:true});
+    }
+    /* angle sweep shading (small) */
+    drawAngleSweep(g,cx,cy,R,t);
+    /* the two radii bounding the angle */
+    gline(g,cx,cy,cx+R,cy,C.orange,3);
+    glabel(g,"r (one radius)",cx+R*0.5,cy+14,C.orange,{size:11.5,bold:true});
+    const px=cx+R*Math.cos(t),py=cy-R*Math.sin(t);
+    gline(g,cx,cy,px,py,C.ink,2.4);
+    gdot(g,px,py,5,C.ink);
+    /* readout on canvas */
+    const rd=(t).toFixed(2);
+    glabel(g,"arc = "+rd+" radius-length"+(Math.abs(t-1)<0.005?"":"s")+"  ⇒  θ = "+rd+" rad",
+           cx,cy+R+40,C.orange,{bold:true,size:13});
+  };
+  st.rebuild=function(){
+    const t=st.theta, box=document.getElementById("radConv");
+    const deg=t*180/PI;
+    const piForm=niceTheta(t);
+    const isPi=!piForm.includes("rad");
+    box.innerHTML=`
+      <div class="convbox"><span class="clab">degrees</span><span class="cval">${(Math.round(deg*10)/10)}°</span></div>
+      <div class="convbox hl"><span class="clab">radians (π-form)</span><span class="cval">${isPi?piForm:"—"}</span></div>
+      <div class="convbox"><span class="clab">radians (decimal)</span><span class="cval">${t.toFixed(4)}</span></div>
+      <div class="convbox"><span class="clab">fraction of a full turn</span><span class="cval">${(t/(2*PI)).toFixed(3)}</span></div>`;
+  };
+  st.set=function(v,animate){
+    st.theta=v;
+    const sl=document.getElementById("slider-rad"),sv=document.getElementById("sval-rad");
+    if(sl)sl.value=Math.round(v*180/PI);
+    if(sv)sv.textContent=Math.round(v*180/PI)+"°";
+    const row=document.getElementById("presets-rad");
+    if(row)[...row.children].forEach(b=>b.classList.toggle("active",Math.abs(parseFloat(b.dataset.v)-v)<1e-6));
+    st.rebuild();
+    if(st.animId)cancelAnimationFrame(st.animId);
+    const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(!animate||reduce){st.shown=v;st.draw();return;}
+    const t0=performance.now(),DUR=900,from=st.shown;
+    const tick=tt=>{let p=Math.min(1,(tt-t0)/DUR);p=1-Math.pow(1-p,3);
+      st.shown=from+(v-from)*p;st.draw();
+      if(p<1)st.animId=requestAnimationFrame(tick);};
+    st.animId=requestAnimationFrame(tick);
+  };
+  const radPresets=[{txt:"1 rad",v:1},{txt:"30° = π/6",v:PI/6},{txt:"45° = π/4",v:PI/4},
+    {txt:"60° = π/3",v:PI/3},{txt:"90° = π/2",v:PI/2},{txt:"180° = π",v:PI},
+    {txt:"270° = 3π/2",v:3*PI/2},{txt:"360° = 2π",v:2*PI-1e-6}];
+  const row=document.getElementById("presets-rad");
+  radPresets.forEach(p=>{
+    const b=document.createElement("button");
+    b.className="preset";b.dataset.v=p.v;b.textContent=p.txt;
+    b.addEventListener("click",()=>st.set(p.v,true));
+    row.appendChild(b);
+  });
+  document.getElementById("slider-rad").addEventListener("input",e=>st.set(parseInt(e.target.value,10)*PI/180,false));
+  st.set(1,false);
+}
+/* ══════════════ compare pane: pick 1–6 functions + a θ ══════════════ */
+function makeComparePane(){
+  const key="cmp";
+  const caption=`Top: the unit circle with the geometric segment of <em>every selected function</em> drawn at the current θ. Bottom: the selected waves overlaid on one axis (values clipped at ±3.2; faint dashed lines mark ±1; red dashes mark asymptotes). The dots track the current θ on each curve.`;
+  const right=`
+    <h3>Compare the functions</h3>
+    <p class="goal">Choose any of the six functions (from one to all six) and an angle θ — the circle and the waves update together.</p>
+    <div class="controls" style="flex-direction:column;align-items:stretch;gap:9px">
+      <div class="fnchips" id="cmpChips"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px" id="presets-cmp"></div>
+      <div class="slider-row">
+        <span class="m">θ</span>
+        <input type="range" id="slider-cmp" min="-360" max="360" step="5" value="60" aria-label="angle theta in degrees">
+        <span id="sval-cmp" style="min-width:52px;text-align:right">60°</span>
+      </div>
+    </div>
+    <div class="dsteps" id="cmpText"></div>`;
+  makeCanvasPane(key,caption,right);
+  const st={key,theta:PI/3,shown:PI/3,animId:null,sel:["sin","cos"],
+            cvs:document.getElementById("cv-cmp")};
+  st.g=st.cvs.getContext("2d"); st.wOverH=0.82;
+  TP[key]=st;
+
+  st.resize=function(){
+    if(!sizeCanvas(st,0.52,1.3)) return;
+    st.circH=Math.round(st.H*0.58);
+    st.ccx=st.W/2; st.ccy=st.circH/2+6;
+    st.CR=Math.min(st.W,st.circH)/2-48;
+    st.draw();
+  };
+  st.draw=function(){
+    if(!st.W)return;
+    const g=st.g,t=st.shown;
+    g.clearRect(0,0,st.W,st.H);
+    g.fillStyle="#FBFCFF";g.fillRect(0,0,st.W,st.H);
+    const CRe = st.sel.some(k=>!TRIG[k].bounded) ? st.CR*0.76 : st.CR;
+    drawCircleBase(g,st.ccx,st.ccy,CRe);
+    drawAngleSweep(g,st.ccx,st.ccy,CRe,t);
+    st.sel.forEach(k=>drawFnGeo(g,k,t,st.ccx,st.ccy,CRe,{lite:true,W:st.W}));
+    drawArrowToPoint(g,st.ccx,st.ccy,CRe,t);
+    const area={x0:48,x1e:st.W-14,yTop:st.circH+6,yH:st.H-st.circH-14};
+    /* legend */
+    let lx=area.x0+34;
+    st.sel.forEach(k=>{
+      glabel(g,TRIG[k].sym,lx,area.yTop+9,TRIG[k].color,{size:11.5,bold:true,align:"left"});
+      lx+=52;
+    });
+    drawWaves(g,st.sel.map(k=>({calc:TRIG[k].calc,color:TRIG[k].color,waveAsym:TRIG[k].waveAsym,undefFn:TRIG[k].undef})),
+              t,area,{vmax:3.2,noMarkerLabel:st.sel.length>2});
+  };
+  const seeing={
+    cos:`the thick <b style="color:${C.orange}">orange segment on the x-axis</b> — the horizontal shadow of the arrow`,
+    sin:`the thick <b style="color:${C.teal}">teal segment on the y-axis</b> — the vertical shadow of the arrow`,
+    tan:`the <b style="color:${C.purple}">purple segment on the line x = 1</b> — how high the arrow's line crosses the vertical tangent line (equivalently, the arrow's slope)`,
+    cot:`the <b style="color:${C.brick}">brick-red segment on the line y = 1</b> — where the arrow's line crosses the horizontal tangent line`,
+    sec:`the <b style="color:${C.blue}">blue segment from the origin out to x = 1</b> — how far you travel along the arrow's line to reach that vertical tangent line (negative if backwards)`,
+    csc:`the <b style="color:${C.olive}">olive segment from the origin out to y = 1</b> — the travel distance to the horizontal tangent line (negative if backwards)`
+  };
+  st.rebuild=function(){
+    const t=st.theta, box=document.getElementById("cmpText");
+    let html=`<div class="dstep b1 revealed">
+      <div class="dhead"><span class="badge">θ</span>Current angle</div>
+      <div class="eq"><span class="tag-t"><span class="m">θ = ${niceTheta(t)}</span></span> <span class="mr">(= ${Math.round(t*180/PI)}°)</span></div>
+      <p>${whereText(t)} Landing point: <span class="m">(${fmtVal(Math.cos(t))}, ${fmtVal(Math.sin(t))})</span>. In the plot area you're seeing one geometric segment per selected function on the circle, and below it each function's value traced out for every θ from −2π to 2π — the same colors in both places.</p>
+    </div>`;
+    st.sel.forEach(k=>{
+      const f=TRIG[k], undef=f.undef(t);
+      const v=undef?"undefined":fmtVal(f.calc(t));
+      html+=`<div class="dstep revealed" style="border-color:${f.color}">
+        <div class="dhead"><span class="badge" style="background:${f.color};font-size:.6rem">${k}</span><span class="m">${f.sym} = ${v}</span></div>
+        <p><b>On the circle:</b> ${seeing[k]}.</p>
+        <p><b>On the wave:</b> the <b style="color:${f.color}">${k}-colored curve</b> is that segment's value recorded for every angle; the dot is where θ = ${niceTheta(t)} sits on it. ${undef?"Right now the value is <b>undefined</b> — θ sits exactly on an asymptote (red dashed line), so the curve has a gap and no dot is drawn.":""} ${!undef&&!f.bounded?"Note it may run past the visible window: the plot clips at ±3.2.":""}</p>
+      </div>`;
+    });
+    if(st.sel.length>1){
+      html+=`<div class="dstep b5 revealed check">
+        <div class="dhead"><span class="badge">⇄</span>Things to notice together</div>
+        <p>sin and cos are the same wave shifted a quarter-turn (π/2); tan and cot repeat twice as fast (period π); sec blows up exactly where cos crosses zero, and csc where sin crosses zero — every asymptote of a reciprocal sits on a zero of its partner.</p>
+      </div>`;
+    }
+    box.innerHTML=html;
+  };
+  st.set=function(v,animate){
+    st.theta=v;
+    const sl=document.getElementById("slider-cmp"),sv=document.getElementById("sval-cmp");
+    if(sl)sl.value=Math.round(v*180/PI);
+    if(sv)sv.textContent=Math.round(v*180/PI)+"°";
+    const row=document.getElementById("presets-cmp");
+    if(row)[...row.children].forEach(b=>b.classList.toggle("active",Math.abs(parseFloat(b.dataset.v)-v)<1e-6));
+    st.rebuild();
+    if(st.animId)cancelAnimationFrame(st.animId);
+    const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(!animate||reduce){st.shown=v;st.draw();return;}
+    const t0=performance.now(),DUR=900,from=st.shown;
+    const tick=tt=>{let p=Math.min(1,(tt-t0)/DUR);p=1-Math.pow(1-p,3);
+      st.shown=from+(v-from)*p;st.draw();
+      if(p<1)st.animId=requestAnimationFrame(tick);};
+    st.animId=requestAnimationFrame(tick);
+  };
+  /* chips */
+  const chipBox=document.getElementById("cmpChips");
+  function refreshChips(){
+    [...chipBox.children].forEach(ch=>{
+      const k=ch.dataset.k, on=st.sel.includes(k);
+      ch.classList.toggle("sel",on);
+      ch.classList.toggle("disabled",false);
+    });
+  }
+  Object.keys(TRIG).forEach(k=>{
+    const b=document.createElement("button");
+    b.className="fnchip";b.dataset.k=k;b.style.color=TRIG[k].color;
+    b.innerHTML=`<span class="cdot" style="background:${TRIG[k].color}"></span>${TRIG[k].sym}`;
+    b.addEventListener("click",()=>{
+      const i=st.sel.indexOf(k);
+      if(i>=0){ if(st.sel.length>1) st.sel.splice(i,1); }
+      else st.sel.push(k);
+      refreshChips(); st.rebuild(); st.draw();
+    });
+    chipBox.appendChild(b);
+  });
+  refreshChips();
+  const row=document.getElementById("presets-cmp");
+  TPRESETS.forEach(p=>{
+    const b=document.createElement("button");
+    b.className="preset";b.dataset.v=p.v;b.textContent=p.txt;
+    b.addEventListener("click",()=>st.set(p.v,true));
+    row.appendChild(b);
+  });
+  document.getElementById("slider-cmp").addEventListener("input",e=>st.set(parseInt(e.target.value,10)*PI/180,false));
+  st.set(PI/3,false);
+}
+
+/* ══════════════ build-a-wave pane: transformed functions ══════════════ */
+/* every option is a·base(b·x); label & explanation generated from (a, b, base) */
+const WAVE_OPTS=[
+  {base:"sin",a:1,b:1},{base:"sin",a:1,b:-1},{base:"sin",a:2,b:1},{base:"sin",a:2,b:-1},
+  {base:"sin",a:0.5,b:1},{base:"sin",a:1,b:2},{base:"sin",a:1,b:1/2},{base:"sin",a:3,b:1},
+  {base:"cos",a:1,b:1},{base:"cos",a:1,b:-1},{base:"cos",a:-1,b:1},{base:"cos",a:2,b:1},
+  {base:"cos",a:1,b:3},{base:"cos",a:1,b:1/3},{base:"cos",a:0.5,b:2},
+  {base:"tan",a:1,b:1},{base:"tan",a:1,b:-1},{base:"tan",a:1,b:2},{base:"tan",a:1,b:1/2},{base:"tan",a:2,b:1}
+];
+function numTxt(v){
+  const map={0.5:"½","0.3333":"⅓"};
+  if(Math.abs(v-1/3)<1e-6)return"⅓";
+  if(Math.abs(v-0.5)<1e-6)return"½";
+  return String(Math.round(v*100)/100).replace("-","−");
+}
+function optLabel(o){
+  const A=Math.abs(o.a), aTxt=(o.a<0?"−":"")+(A===1?"":numTxt(A));
+  let inner;
+  const B=Math.abs(o.b);
+  if(B===1) inner=(o.b<0?"−x":"x");
+  else if(B<1) inner=(o.b<0?"−":"")+"x/"+Math.round(1/B);
+  else inner=numTxt(B)+(o.b<0?"·(−x)":"x");
+  if(o.b<0&&B!==1) inner="−"+numTxt(B)+"x";
+  return aTxt+o.base+"("+inner+")";
+}
+function optCalc(o){ const f=TRIG[o.base].calc; return x=>o.a*f(o.b*x); }
+function optExplain(o){
+  const f=TRIG[o.base];
+  const A=Math.abs(o.a), B=Math.abs(o.b);
+  const basePeriod=f.period, newPeriod=basePeriod/B;
+  const bits=[];
+  bits.push(`<b>Start from ${o.base}(x)</b> (${o.base==="tan"?"period π, unbounded":"period 2π, swings between −1 and 1"}).`);
+  if(B!==1){
+    bits.push(`<b>${o.base}(${B<1?"x/"+Math.round(1/B):numTxt(B)+"x"}):</b> the ${B>1?numTxt(B)+"× faster input <em>squeezes</em> the wave horizontally":"slower input <em>stretches</em> the wave horizontally"} — the period becomes ${basePeriod===PI?"π":"2π"} ÷ ${numTxt(B)} = <span class="m">${niceTheta(newPeriod)}</span>. (The number multiplying x changes how fast you spin, so it changes the period, never the height.)`);
+  }
+  if(o.b<0){
+    bits.push(`<b>The minus sign inside</b> replaces x by −x: the graph is <em>mirrored across the y-axis</em>. ${o.base==="cos"
+      ? "But cosine is an <b>even</b> function — its graph is already symmetric about the y-axis — so cos(−x) = cos(x): the mirror changes nothing!"
+      : `Because ${o.base} is an <b>odd</b> function, mirroring left-right equals flipping upside-down: ${o.base}(−x) = −${o.base}(x).`}`);
+  }
+  if(A!==1){
+    bits.push(`<b>The ${numTxt(A)} in front</b> multiplies every output: the wave is stretched vertically ${A>1?numTxt(A)+"×":"to half height"} — ${o.base==="tan"?"the curve climbs "+numTxt(A)+"× as steeply (still unbounded, so still no amplitude)":"the amplitude becomes "+numTxt(A)+" and the range becomes [−"+numTxt(A)+", "+numTxt(A)+"]"}. (A number <em>outside</em> the function scales height; it never touches the period.)`);
+  }
+  if(o.a<0){
+    bits.push(`<b>The minus sign in front</b> flips every output: the graph is mirrored across the <em>x-axis</em> (upside-down).`);
+  }
+  if(A===1&&o.a>0&&B===1&&o.b>0) bits.push(`No transformation at all — this is the reference wave to compare the others against.`);
+  const per=o.base==="tan"?`period ${niceTheta(PI/B)}`:`period ${niceTheta(2*PI/B)}, amplitude ${o.base==="tan"?"—":numTxt(A)}`;
+  bits.push(`<b>Summary:</b> ${per}.`);
+  return bits.join(" ");
+}
+const WAVE_COLORS=[C.orange,C.teal,C.purple,C.brick];
+
+function makeWavePane(){
+  const key="wav";
+  const caption=`Pick up to four functions of the form <span class="m">a·f(b·x)</span> and compare their graphs on one axis. The rules to discover: the number <b>outside</b> scales the height (amplitude / x-axis flip); the number <b>inside</b> scales the speed (period / y-axis flip). Values clipped at ±3.4; faint dashed lines mark ±1.`;
+  const right=`
+    <h3>Build-a-wave: stretch, squeeze &amp; flip</h3>
+    <p class="goal">Every choice is a·f(b·x). Select up to 4 (try sin x next to sin(−x), or cos x next to cos(x/3)) and read below what each transformation did.</p>
+    <div class="controls" style="flex-direction:column;align-items:stretch;gap:8px">
+      <div class="optgroups" id="wavOpts"></div>
+    </div>
+    <div class="dsteps" id="wavText"></div>`;
+  makeCanvasPane(key,caption,right);
+  const st={key,sel:[0,1],cvs:document.getElementById("cv-wav")}; /* indexes into WAVE_OPTS */
+  st.g=st.cvs.getContext("2d"); st.wOverH=1.5;
+  TP[key]=st;
+  st.resize=function(){
+    if(!sizeCanvas(st,0.55,0.85)) return;
+    st.draw();
+  };
+  st.draw=function(){
+    if(!st.W)return;
+    const g=st.g;
+    g.clearRect(0,0,st.W,st.H);
+    g.fillStyle="#FBFCFF";g.fillRect(0,0,st.W,st.H);
+    const area={x0:48,x1e:st.W-14,yTop:8,yH:st.H-20};
+    /* legend along the top */
+    let lx=area.x0+6;
+    st.sel.forEach((oi,slot)=>{
+      const o=WAVE_OPTS[oi];
+      glabel(g,optLabel(o),lx,area.yTop+10,WAVE_COLORS[slot],{size:12.5,bold:true,align:"left"});
+      lx+=Math.max(86,optLabel(o).length*8+22);
+    });
+    const fns=st.sel.map((oi,slot)=>{
+      const o=WAVE_OPTS[oi];
+      const asym=o.base==="tan"
+        ? (()=>{const out=[];const step=PI/Math.abs(o.b);
+            for(let a=Math.ceil((-2*PI-PI/(2*Math.abs(o.b)))/step)*step+PI/(2*Math.abs(o.b));a<=2*PI+1e-9;a+=step)
+              if(a>=-2*PI-1e-9)out.push(a);
+            return out;})()
+        : [];
+      return {calc:optCalc(o),color:WAVE_COLORS[slot],waveAsym:asym};
+    });
+    drawWaves(g,fns,null,area,{vmax:3.4,samples:760});
+  };
+  st.rebuild=function(){
+    const box=document.getElementById("wavText");
+    let html="";
+    st.sel.forEach((oi,slot)=>{
+      const o=WAVE_OPTS[oi];
+      html+=`<div class="dstep revealed" style="border-color:${WAVE_COLORS[slot]}">
+        <div class="dhead"><span class="badge" style="background:${WAVE_COLORS[slot]}">${slot+1}</span><span class="m">${optLabel(o)}</span></div>
+        <p>${optExplain(o)}</p>
+      </div>`;
+    });
+    html+=`<div class="dstep b5 revealed check">
+      <div class="dhead"><span class="badge">✎</span>The general rule</div>
+      <div class="eq"><span class="m">y = a · f(b·x)</span></div>
+      <p><b>a (outside):</b> vertical. |a| = amplitude for sin &amp; cos (range [−|a|, |a|]); a &lt; 0 flips the graph upside-down. <b>b (inside):</b> horizontal. Period = (base period) ÷ |b|, so big |b| = fast &amp; squeezed, small |b| = slow &amp; stretched; b &lt; 0 mirrors across the y-axis. For odd functions (sin, tan) that mirror equals an upside-down flip; for the even cosine it does nothing.</p>
+    </div>`;
+    box.innerHTML=html;
+  };
+  /* option buttons, grouped by base */
+  const groups={sin:[],cos:[],tan:[]};
+  WAVE_OPTS.forEach((o,i)=>groups[o.base].push(i));
+  const gbox=document.getElementById("wavOpts");
+  function refreshOpts(){
+    gbox.querySelectorAll(".opt").forEach(b=>{
+      const i=+b.dataset.i, slot=st.sel.indexOf(i);
+      b.classList.toggle("sel",slot>=0);
+      b.style.borderColor = slot>=0 ? WAVE_COLORS[slot] : "";
+      b.style.color = slot>=0 ? WAVE_COLORS[slot] : "";
+      b.classList.toggle("disabled",slot<0&&st.sel.length>=4);
+    });
+  }
+  Object.keys(groups).forEach(base=>{
+    const div=document.createElement("div");div.className="optgroup";
+    div.innerHTML=`<div class="og-title">${base} family</div>`;
+    const grid=document.createElement("div");grid.className="optgrid";
+    groups[base].forEach(i=>{
+      const b=document.createElement("button");
+      b.className="opt";b.dataset.i=i;b.textContent=optLabel(WAVE_OPTS[i]);
+      b.addEventListener("click",()=>{
+        const s=st.sel.indexOf(i);
+        if(s>=0){ if(st.sel.length>1) st.sel.splice(s,1); }
+        else if(st.sel.length<4) st.sel.push(i);
+        refreshOpts(); st.rebuild(); st.draw();
+      });
+      grid.appendChild(b);
+    });
+    div.appendChild(grid);gbox.appendChild(div);
+  });
+  refreshOpts(); st.rebuild();
+}
+
+/* ══════════════ main tabs & boot ══════════════ */
+const MAINTABS=[
+  ["recipe","1 · The recipe"],["lab","2 · Interactive lab"],
+  ["defs","3 · Unit circle: the six functions"],["rad","4 · Degrees ↔ radians"],
+  ["cos","5 · cos θ"],["sin","6 · sin θ"],["tan","7 · tan θ"],
+  ["cot","8 · cot θ"],["sec","9 · sec θ"],["csc","10 · csc θ"],
+  ["cmp","11 · Compare"],["wav","12 · Build-a-wave"]
+];
+function buildMainTabs(){
+  const bar=document.getElementById("maintabs");
+  bar.innerHTML="";
+  MAINTABS.forEach(([k,txt])=>{
+    const b=document.createElement("button");
+    b.className="maintab"+(k==="recipe"?" active":"");
+    b.dataset.pane=k;b.setAttribute("role","tab");b.textContent=txt;
+    b.addEventListener("click",()=>showPane(k));
+    bar.appendChild(b);
+  });
+}
+function showPane(which){
+  activePane=which;
+  document.querySelectorAll(".pane").forEach(p=>{
+    p.classList.toggle("hidden", p.id!=="pane-"+which);
+  });
+  document.querySelectorAll("#maintabs .maintab").forEach(b=>{
+    b.classList.toggle("active", b.dataset.pane===which);
+  });
+  if(which==="lab") requestAnimationFrame(resize);
+  else if(TP[which]) requestAnimationFrame(()=>TP[which].resize());
+}
+
+/* roundRect fallback */
+if(window.CanvasRenderingContext2D && !CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+    this.moveTo(x+r,y); this.arcTo(x+w,y,x+w,y+h,r); this.arcTo(x+w,y+h,x,y+h,r);
+    this.arcTo(x,y+h,x,y,r); this.arcTo(x,y,x+w,y,r); this.closePath(); return this;
+  };
+}
+
+/* ================= boot ================= */
+buildTabs();
+selectTab(0);
+makeDefsPane();
+makeRadPane();
+["cos","sin","tan","cot","sec","csc"].forEach(makeFnPane);
+makeComparePane();
+makeWavePane();
+buildMainTabs();
+showPane("recipe");
+
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

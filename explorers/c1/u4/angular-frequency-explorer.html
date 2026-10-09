@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Angular frequency ω: how many oscillations fit in 2π seconds</title>
+<style>
+:root{
+  --bg:#e8eefb; --card:#ffffff; --ink:#1f2440; --mut:#5d6488;
+  --in:#ef8420; --in-text:#c1600a; --in-soft:#fff3e6;
+  --out:#0f9c95; --out-soft:#e6f6f5;
+  --act:#6b4fd8; --act-soft:#efebfd; --ref:#9ea4c0; --line:#e3e8f5;
+  --shadow:0 6px 22px rgba(107,79,216,.13), 0 1px 3px rgba(107,79,216,.08);
+  --sans:"Segoe UI Variable","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --math:"Cambria Math","STIX Two Math",Cambria,Georgia,"Times New Roman",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--sans);color:var(--ink);background:var(--bg);font-size:14px;
+  height:100vh;height:100dvh;width:100vw;overflow:hidden;display:flex;flex-direction:column}
+.m{font-family:var(--math);font-style:italic;font-size:1.07em;white-space:nowrap}
+header{flex:none;display:flex;align-items:center;gap:6px 20px;padding:10px 14px 0;flex-wrap:wrap}
+header h1{margin:0;font-size:18px;font-weight:650;letter-spacing:-.01em}
+header p{margin:0;color:var(--mut);font-size:13px}
+nav{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+nav button{font:inherit;font-size:13px;border:0;background:rgba(255,255,255,.6);color:var(--ink);
+  padding:6px 14px;border-radius:999px;cursor:pointer}
+nav button:hover{background:#fff}
+nav button[aria-selected="true"]{background:var(--act);color:#fff;box-shadow:0 4px 14px rgba(107,79,216,.35)}
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.7fr) minmax(300px,1fr);gap:10px;padding:10px 14px 12px}
+.col{display:flex;flex-direction:column;gap:10px;min-height:0;min-width:0}
+.top{flex:1.15 1 0;display:flex;gap:10px;min-height:0}
+.top .fig:first-child{flex:1.55 1 0}
+.top .fig:last-child{flex:1 1 0}
+.graph{flex:1 1 0}
+.card{background:var(--card);border-radius:14px;box-shadow:var(--shadow)}
+.fig{display:flex;flex-direction:column;padding:8px 10px;min-height:0;min-width:0}
+.figtitle{flex:none;font-size:12.5px;color:var(--mut);line-height:1.35;margin:0 2px 4px;
+  display:flex;justify-content:space-between;gap:2px 12px;flex-wrap:wrap}
+.figtitle b{color:var(--ink);font-weight:600}
+.figtitle .count b{color:var(--in-text)}
+.legend{white-space:nowrap}
+.sw{display:inline-block;width:16px;height:3px;border-radius:2px;vertical-align:middle;margin:0 4px 0 10px}
+.sw.in{background:var(--in)} .sw.out{background:var(--out)}
+.sw.ref{background:repeating-linear-gradient(90deg,var(--ref) 0 4px,transparent 4px 7px)}
+.cv{flex:1 1 0;position:relative;min-height:0}
+.cv canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.aux{flex:0 0 31%}
+.calc,.notes{padding:10px 14px;overflow:auto;min-height:0;font-size:13px;line-height:1.5}
+.calc{flex:1.6 1 0}
+.notes{flex:1 1 0}
+
+.controls{flex:none;padding:8px 12px;display:flex;flex-direction:column;gap:6px}
+.row{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap}
+.lbl{font-size:12.5px;color:var(--mut)}
+.row input[type=range]{flex:1 1 140px;min-width:110px;accent-color:var(--act)}
+#w{accent-color:var(--in)}
+output{font-variant-numeric:tabular-nums;font-size:13px}
+.wlab{font-family:var(--math);font-style:italic;font-size:18px;color:var(--in-text);font-weight:600}
+.wout{min-width:88px;color:var(--in-text);font-weight:600}
+.presets{display:flex;gap:4px;flex-wrap:wrap}
+.presets button{font:inherit;font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid #f4c79c;
+  background:var(--in-soft);color:#8f4705;cursor:pointer}
+.presets button.on{background:var(--in);color:#fff;border-color:var(--in)}
+.btn{font:inherit;font-size:13px;border:0;border-radius:9px;padding:6px 12px;cursor:pointer;background:var(--act);color:#fff;min-width:64px}
+.btn.soft{background:var(--act-soft);color:var(--act)}
+.chk{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--mut);cursor:pointer}
+.chk input{accent-color:var(--act);margin:0}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--act);outline-offset:2px}
+
+.calc h3,.notes h3{font-size:13px;margin:12px 0 4px;color:var(--act);font-weight:650}
+.calc h3:first-child,.notes h3:first-child{margin-top:0}
+.ln{padding:3px 0;border-bottom:1px dashed var(--line)}
+.why{color:var(--mut);font-size:12px}
+.calc b{font-variant-numeric:tabular-nums}
+b.in{color:var(--in-text)} b.out{color:var(--out)}
+.result{margin:7px 0 2px;padding:6px 10px;background:var(--in-soft);border-radius:10px;border-left:3px solid var(--in)}
+.result.o{background:var(--out-soft);border-left-color:var(--out)}
+.refln{color:var(--mut)}
+.notes p{margin:0 0 8px;max-width:72ch}
+.interp{background:var(--out-soft);border-left:3px solid var(--out);padding:7px 10px;border-radius:10px;margin-bottom:8px}
+table{border-collapse:collapse;font-size:12.5px;margin:2px 0 10px}
+th,td{padding:3px 10px 3px 0;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--mut);font-weight:600}
+tr.cur td{background:var(--in-soft);font-weight:600}
+
+/* floating explainer window */
+.help-btn{background:var(--act);box-shadow:0 4px 14px rgba(107,79,216,.3)}
+.help-btn[aria-expanded="true"]{background:#fff;color:var(--act);box-shadow:inset 0 0 0 1.5px var(--act)}
+.float{position:fixed;z-index:50;background:#fff;border-radius:14px;display:flex;flex-direction:column;
+  overflow:hidden;border:1px solid #d9d2f7;
+  box-shadow:0 18px 50px rgba(107,79,216,.35),0 2px 8px rgba(31,36,64,.12)}
+.float-head{flex:none;display:flex;align-items:center;gap:10px;padding:7px 8px 7px 14px;background:var(--act);color:#fff;
+  cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.float-head:active{cursor:grabbing}
+.float-head .ttl{font-weight:600;font-size:13.5px}
+.float-head .hint{font-size:11.5px;opacity:.75}
+.float-x{margin-left:auto;flex:none;background:rgba(255,255,255,.2);border:0;color:#fff;width:30px;height:30px;
+  border-radius:8px;font-size:19px;line-height:1;cursor:pointer}
+.float-x:hover{background:rgba(255,255,255,.34)}
+.float-body{flex:1;min-height:0;overflow:auto;padding:10px 16px 22px;font-size:13px;line-height:1.55}
+.float-body h3{font-size:13px;margin:14px 0 4px;color:var(--act);font-weight:650}
+.float-body p{margin:0 0 8px;max-width:72ch}
+.float-body table{width:100%}
+.float-body td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.float-body tr.done td{background:var(--in-soft)}
+.float-body tr.end td{background:var(--act-soft);font-weight:600}
+.float-body .calcline{font-family:var(--math);font-size:15px;background:#f6f8fe;border-radius:10px;padding:8px 12px;margin:4px 0 8px;line-height:1.7}
+.ruler{position:relative;height:140px;margin:2px 0 6px}
+.ruler canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.cap{font-size:12px;color:var(--mut);margin:0}
+.float-grip{position:absolute;right:0;bottom:0;width:28px;height:28px;cursor:nwse-resize;touch-action:none;z-index:2}
+.float-grip::after{content:"";position:absolute;right:2px;bottom:2px;width:18px;height:18px;
+  background:repeating-linear-gradient(135deg,transparent 0 4px,rgba(107,79,216,.6) 4px 6px);
+  clip-path:polygon(100% 0,100% 100%,0 100%)}
+
+@media (max-width:860px){
+  body{height:auto;overflow:auto;width:auto;display:block}
+  header{padding:10px 10px 0}
+  nav{margin-left:0}
+  main{display:flex;flex-direction:column;padding:8px 10px 10px}
+  .col{display:contents}
+  .top{order:1;flex:none;flex-direction:column}
+  .top .fig:first-child,.top .fig:last-child{flex:none}
+  body.mode-wheel .top{flex-direction:row;gap:8px}
+  body.mode-wheel .top .fig:first-child,body.mode-wheel .top .fig:last-child{flex:1 1 0;padding:8px 6px}
+  .controls{gap:4px;padding:6px 10px}
+  .graph{order:2;flex:none}
+  .aux{order:3;flex:none}
+  .calc{order:4;flex:none;overflow:visible}
+  .notes{order:5;flex:none;overflow:visible}
+  .controls{order:6;position:sticky;bottom:0;z-index:10;box-shadow:0 -6px 24px rgba(107,79,216,.25)}
+  .top .cv{flex:none;height:210px}
+  .graph .cv{flex:none;height:230px}
+  .aux .cv{flex:none;height:220px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Angular frequency ω</h1>
+    <p><span class="m">cos(ωt)</span> makes ω complete oscillations in every 2π seconds of clock time</p>
+  </div>
+  <button class="btn help-btn" id="helpBtn" aria-expanded="false" aria-controls="helpPanel">Explain 2π seconds and rad/s</button>
+  <nav role="tablist" aria-label="Physical system">
+    <button role="tab" data-mode="wheel" aria-selected="true">Rotating wheel</button>
+    <button role="tab" data-mode="spring" aria-selected="false">Spring–mass–dashpot</button>
+    <button role="tab" data-mode="heat" aria-selected="false">Temperature: y′ + ky = kq<sub>e</sub></button>
+  </nav>
+</header>
+
+<main>
+  <section class="col">
+    <div class="top">
+      <div class="card fig"><div class="figtitle" id="sysTitle"></div><div class="cv"><canvas id="cSys" role="img" aria-label="Animation of the physical system"></canvas></div></div>
+      <div class="card fig"><div class="figtitle" id="dialTitle"></div><div class="cv"><canvas id="cDial" role="img" aria-label="Rotating pointer view"></canvas></div></div>
+    </div>
+    <div class="card fig graph"><div class="figtitle" id="graphTitle"></div><div class="cv"><canvas id="cGraph" role="img" aria-label="Signals over the time window from 0 to 2 pi seconds"></canvas></div></div>
+
+    <div class="card controls">
+      <div class="row">
+        <label for="w" class="wlab">ω</label>
+        <input type="range" id="w" min="0.25" max="6" step="0.05" value="3">
+        <output id="wOut" class="wout" for="w">3.00 rad/s</output>
+        <div class="presets" id="presets" aria-label="Preset values of ω"></div>
+      </div>
+      <div class="row" data-show="spring" hidden>
+        <label for="kS" class="lbl">stiffness k</label>
+        <input type="range" id="kS" min="0.25" max="16" step="0.05" value="4">
+        <output id="kSOut" for="kS"></output>
+        <label for="b" class="lbl">damping b</label>
+        <input type="range" id="b" min="0.2" max="3" step="0.05" value="0.6">
+        <output id="bOut" for="b"></output>
+      </div>
+      <div class="row" data-show="heat" hidden>
+        <label for="kH" class="lbl">wall leak rate k</label>
+        <input type="range" id="kH" min="0.2" max="6" step="0.05" value="1">
+        <output id="kHOut" for="kH"></output>
+      </div>
+      <div class="row">
+        <button class="btn" id="play">Pause</button>
+        <button class="btn soft" id="restart">Restart</button>
+        <label for="tScrub" class="lbl">time t</label>
+        <input type="range" id="tScrub" min="0" max="6.283185" step="0.001" value="0">
+        <output id="tOut" for="tScrub" style="min-width:64px"></output>
+        <label for="speed" class="lbl">playback</label>
+        <input type="range" id="speed" min="0.1" max="2" step="0.05" value="0.6" style="flex:0 1 90px;min-width:70px">
+        <output id="speedOut" for="speed" style="min-width:36px"></output>
+        <label class="chk"><input type="checkbox" id="ref" checked> ω = 1 reference</label>
+        <label class="chk" data-show="spring heat" hidden><input type="checkbox" id="rest"> start from rest</label>
+      </div>
+    </div>
+  </section>
+
+  <section class="col">
+    <div class="card fig aux"><div class="figtitle" id="auxTitle"></div><div class="cv"><canvas id="cAux" role="img" aria-label="Supporting graph"></canvas></div></div>
+    <div class="card calc" id="calc" aria-live="off"></div>
+    <div class="card notes" id="notes"></div>
+  </section>
+</main>
+
+<div id="helpPanel" class="float" role="dialog" aria-labelledby="helpTtl" hidden>
+  <div class="float-head" id="helpHead" tabindex="0" aria-label="Explainer window. Drag, or use arrow keys to move and Shift plus arrow keys to resize.">
+    <span class="ttl" id="helpTtl">What “2π seconds” and “ω rad/s” mean</span>
+    <span class="hint">drag to move, corner to resize</span>
+    <button class="float-x" id="helpClose" aria-label="Close explainer">×</button>
+  </div>
+  <div class="float-body">
+    <p class="cap" id="rulerCap"></p>
+    <div class="ruler"><canvas id="cRuler" role="img" aria-label="Clock time ruler compared with angle ruler"></canvas></div>
+    <div id="helpText"></div>
+  </div>
+  <div class="float-grip" id="helpGrip" aria-hidden="true"></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const TAU = 2*Math.PI, PI = Math.PI;
+const REFW = '#838aa8';
+const COL = {in:'#ef8420', inText:'#c1600a', out:'#0f9c95', act:'#6b4fd8', ref:'#9ea4c0',
+             ink:'#1f2440', mut:'#5d6488', grid:'#e6ebf7', axis:'#aeb6d3'};
+const SANS = '"Segoe UI Variable","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif';
+const MATH = '"Cambria Math","STIX Two Math",Cambria,Georgia,"Times New Roman",serif';
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- state ---------------- */
+const S = {mode:'wheel', w:3, kS:4, b:0.6, kH:1, t:0, playing:!reduceMotion, speed:0.6,
+           ref:true, rest:false, hold:0};
+const N = 1200;                           // samples across one 2π window
+const D = {inp:new Float64Array(N+1), out:new Float64Array(N+1), outMax:1};
+let dirty = true;
+
+/* ---------------- helpers ---------------- */
+const $ = id => document.getElementById(id);
+const helpEl = document.getElementById('helpPanel');
+function F(x, d=2){
+  if(!isFinite(x)) return '—';
+  const s = Math.abs(x).toFixed(d);
+  return (x < 0 && parseFloat(s) !== 0 ? '−' : '') + s;
+}
+function piMult(v){                      // v = multiple of π
+  const r = Math.round(v);
+  if (Math.abs(v - r) < 1e-6) return r === 0 ? '0' : (r === 1 ? 'π' : r + 'π');
+  return F(v) + 'π';
+}
+function parts(w){ const n = Math.floor(w + 1e-9); let fr = w - n; if (fr < 1e-6) fr = 0; return {n, fr}; }
+function countText(w){
+  const {n, fr} = parts(w);
+  let s = `${n} complete oscillation${n === 1 ? '' : 's'}`;
+  if (fr > 0) s += ` + ${F(fr)} of the next`;
+  return s;
+}
+function line(ctx,x1,y1,x2,y2){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+function dot(ctx,x,y,r,fill,stroke){
+  ctx.beginPath(); ctx.arc(x,y,r,0,TAU);
+  if(fill){ ctx.fillStyle = fill; ctx.fill(); }
+  if(stroke){ ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); }
+}
+function rrect(ctx,x,y,w,h,r){
+  r = Math.max(0, Math.min(r, w/2, h/2));
+  ctx.beginPath(); ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+function text(ctx, s, x, y, o={}){
+  const {color=COL.ink, size=12, align='left', base='alphabetic', weight=400, math=false, halo=false} = o;
+  ctx.font = `${math ? 'italic ' : ''}${weight} ${size}px ${math ? MATH : SANS}`;
+  ctx.textAlign = align; ctx.textBaseline = base;
+  if (halo){ ctx.lineWidth = 3.5; ctx.strokeStyle = 'rgba(255,255,255,.92)'; ctx.lineJoin = 'round'; ctx.strokeText(s,x,y); }
+  ctx.fillStyle = color; ctx.fillText(s,x,y);
+}
+function niceTicks(m){
+  const steps = [0.5,1,2,5,10,20]; const s = steps.find(v => m/v <= 3.2) || 50;
+  const out = []; for (let v = -Math.floor(m/s)*s; v <= m + 1e-9; v += s) out.push(+v.toFixed(6));
+  return out;
+}
+function posTicks(m){
+  const steps = [0.25,0.5,1,2,5,10,20]; const s = steps.find(v => m/v <= 4) || 50;
+  const out = []; for (let v = 0; v <= m + 1e-9; v += s) out.push(+v.toFixed(6));
+  return out;
+}
+function tickLabel(v){ return Math.abs(v) < 1e-9 ? '0' : (Number.isInteger(v) ? F(v,0) : F(v, v*4 % 2 ? 2 : 1)); }
+function tempRGB(v){               // v in [-1,1] -> blue ... pale ... red
+  v = Math.max(-1, Math.min(1, v));
+  const c0 = [64,121,222], c1 = [238,238,244], c2 = [226,84,58];
+  const [a,b,f] = v < 0 ? [c1,c0,-v] : [c1,c2,v];
+  return a.map((x,i) => Math.round(x + (b[i]-x)*f));
+}
+function mix(c, d, f){ return c.map((x,i) => Math.round(x + (d[i]-x)*f)); }
+function rgb(c){ return `rgb(${c[0]},${c[1]},${c[2]})`; }
+
+/* ---------------- physics ---------------- */
+function springSS(){
+  const m = 1, k = S.kS, b = S.b, w = S.w;
+  const re = k - m*w*w, im = b*w;
+  return {A:k/Math.hypot(re,im), phi:Math.atan2(im,re), w0:Math.sqrt(k/m), zeta:b/(2*Math.sqrt(k*m)), re, im};
+}
+function heatSS(){ const k = S.kH, w = S.w; return {A:k/Math.hypot(k,w), phi:Math.atan2(w,k)}; }
+function respAt(w){
+  if (S.mode === 'spring'){ const k = S.kS, b = S.b, re = k - w*w, im = b*w; return [k/Math.hypot(re,im), Math.atan2(im,re)]; }
+  const k = S.kH; return [k/Math.hypot(k,w), Math.atan2(w,k)];
+}
+function recompute(){
+  const w = S.w, h = TAU/N;
+  for (let i = 0; i <= N; i++) D.inp[i] = Math.cos(w*i*h);
+  if (S.mode === 'spring'){
+    const {A, phi} = springSS();
+    if (!S.rest){
+      for (let i = 0; i <= N; i++) D.out[i] = A*Math.cos(w*i*h - phi);
+    } else {                                   // RK4 from x(0)=0, x'(0)=0
+      const k = S.kS, b = S.b, sub = 4, hh = h/sub;
+      const acc = (t,x,v) => k*Math.cos(w*t) - b*v - k*x;
+      let x = 0, v = 0; D.out[0] = 0;
+      for (let i = 0; i < N; i++){
+        for (let s = 0; s < sub; s++){
+          const t = i*h + s*hh;
+          const k1x = v,              k1v = acc(t, x, v);
+          const k2x = v + .5*hh*k1v,  k2v = acc(t+hh/2, x+.5*hh*k1x, v+.5*hh*k1v);
+          const k3x = v + .5*hh*k2v,  k3v = acc(t+hh/2, x+.5*hh*k2x, v+.5*hh*k2v);
+          const k4x = v + hh*k3v,     k4v = acc(t+hh,   x+hh*k3x,    v+hh*k3v);
+          x += hh/6*(k1x + 2*k2x + 2*k3x + k4x);
+          v += hh/6*(k1v + 2*k2v + 2*k3v + k4v);
+        }
+        D.out[i+1] = x;
+      }
+    }
+  } else if (S.mode === 'heat'){
+    const {A, phi} = heatSS(), k = S.kH;
+    for (let i = 0; i <= N; i++){
+      const t = i*h;
+      D.out[i] = A*Math.cos(w*t - phi) - (S.rest ? A*Math.cos(phi)*Math.exp(-k*t) : 0);
+    }
+  } else D.out.fill(0);
+  let mx = 0; for (let i = 0; i <= N; i++) mx = Math.max(mx, Math.abs(D.out[i]));
+  D.outMax = S.mode === 'wheel' ? 1 : Math.max(mx, 1e-6);
+}
+function outAt(t){
+  const u = Math.min(Math.max(t/TAU*N, 0), N);
+  const i = Math.min(Math.floor(u), N-1), f = u - i;
+  return D.out[i]*(1-f) + D.out[i+1]*f;
+}
+
+/* ---------------- canvases ---------------- */
+const cv = {};
+[['sys','cSys'],['dial','cDial'],['graph','cGraph'],['aux','cAux'],['ruler','cRuler']].forEach(([k,id]) => {
+  const c = $(id); cv[k] = {c, ctx:c.getContext('2d'), w:0, h:0};
+});
+function sizeOne(o){
+  const r = o.c.parentElement.getBoundingClientRect();
+  const dpr = Math.min(2.5, window.devicePixelRatio || 1);
+  o.w = Math.max(1, r.width); o.h = Math.max(1, r.height);
+  o.c.width = Math.round(o.w*dpr); o.c.height = Math.round(o.h*dpr);
+  o.ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+const ro = new ResizeObserver(() => { for (const k in cv) sizeOne(cv[k]); dirty = true; });
+for (const k in cv) ro.observe(cv[k].c.parentElement);
+
+/* tally of turns: one circle per turn that fits in the 2π window */
+function tally(ctx, x, y, total, done, color){
+  const nb = Math.max(1, Math.ceil(total - 1e-9)), r = 6.5, gap = 17;
+  const step = nb > 12 ? gap*12/nb : gap;
+  for (let i = 0; i < nb; i++){
+    const cx = x + r + i*step, cap = Math.min(1, total - i), prog = Math.max(0, Math.min(cap, done - i));
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(93,100,136,.35)'; ctx.setLineDash([2,2]);
+    ctx.beginPath(); ctx.arc(cx, y, r, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle = color;
+    ctx.beginPath(); ctx.arc(cx, y, r, -PI/2, -PI/2 + cap*TAU); ctx.stroke();
+    if (prog > 0){
+      ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(cx, y);
+      ctx.arc(cx, y, r, -PI/2, -PI/2 + prog*TAU); ctx.closePath(); ctx.fill();
+    }
+  }
+  text(ctx, `${F(done)} of ${F(total)} turns`, x + 2*r + (nb-1)*step + 8, y, {base:'middle', size:11.5, color:COL.mut});
+}
+
+/* ---------------- wheel drawings ---------------- */
+function drawWheel(o, theta, color, total, arg){
+  const {ctx, w:W, h:H} = o; ctx.clearRect(0,0,W,H);
+  const top = 44, railGap = 24;
+  const R = Math.max(18, Math.min(W*0.3, (H - top - railGap - 36)/2));
+  const cx = W/2, cy = top + R, railY = cy + R + railGap;
+  ctx.setLineDash([4,4]); ctx.strokeStyle = COL.grid; ctx.lineWidth = 1;
+  line(ctx, cx-R-14, cy, cx+R+14, cy); ctx.setLineDash([]);
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,TAU); ctx.fillStyle = '#f5f7fe'; ctx.fill();
+  ctx.lineWidth = 4; ctx.strokeStyle = COL.ink; ctx.stroke();
+  ctx.strokeStyle = '#cdd2e6'; ctx.lineWidth = 2;
+  for (let i = 0; i < 6; i++){ const a = theta + i*PI/3; line(ctx, cx, cy, cx + R*Math.cos(a), cy - R*Math.sin(a)); }
+  // angle arc: θ mod 2π, drawn counter-clockwise from the +x direction
+  const am = ((theta % TAU) + TAU) % TAU;
+  ctx.strokeStyle = COL.act; ctx.lineWidth = 2.5;
+  if (am > 1e-3){ ctx.beginPath(); ctx.arc(cx, cy, R*0.34, 0, -am, true); ctx.stroke(); }
+  text(ctx, 'θ = 0', cx + R + 6, cy - 4, {size:10.5, color:COL.mut});
+  dot(ctx, cx, cy, 5, COL.ink);
+  const px = cx + R*Math.cos(theta), py = cy - R*Math.sin(theta);
+  ctx.setLineDash([3,4]); ctx.strokeStyle = color; ctx.lineWidth = 1.5; line(ctx, px, py, px, railY); ctx.setLineDash([]);
+  ctx.strokeStyle = color; ctx.lineWidth = 3; line(ctx, cx, cy, px, py);
+  dot(ctx, px, py, 7.5, color, '#fff');
+  // rail + shadow slider
+  ctx.strokeStyle = COL.axis; ctx.lineWidth = 2; line(ctx, cx-R, railY, cx+R, railY);
+  [[-1,'−1'],[0,'0'],[1,'+1']].forEach(([v,s]) => {
+    ctx.strokeStyle = COL.axis; ctx.lineWidth = 1.5; line(ctx, cx+v*R, railY-5, cx+v*R, railY+5);
+    text(ctx, s, cx+v*R, railY-8, {align:'center', size:10.5, color:COL.mut});
+  });
+  rrect(ctx, px-11, railY-7, 22, 14, 5); ctx.fillStyle = color; ctx.fill();
+  const fs = W < 260 ? 10.5 : 12.5;
+  text(ctx, `shadow x = cos(${arg}) = ${F(Math.cos(theta))}`, cx, railY + 24,
+       {align:'center', size:fs, color: color === REFW ? COL.mut : COL.inText, weight:600});
+  tally(ctx, 8, 14, total, theta/TAU, color);
+  text(ctx, `θ = ${arg} = ${F(theta)} rad`, W - 8, 34, {align:'right', size:W < 260 ? 10.5 : 12, color:COL.act, halo:true});
+}
+
+function drawAngle(o){
+  const {ctx, w:W, h:H} = o; ctx.clearRect(0,0,W,H);
+  const L = 40, R = 58, T = 10, B = 30, pw = W-L-R, ph = H-T-B;
+  if (pw < 30 || ph < 30) return;
+  const w = S.w, t = S.t, top = TAU*Math.max(w,1)*1.08;
+  const X = s => L + s/TAU*pw, Y = v => T + ph - v/top*ph;
+  const nLines = Math.floor(top/TAU + 1e-9), stepL = nLines > 8 ? Math.ceil(nLines/8) : 1;
+  for (let n = 1; n <= nLines; n += stepL){
+    const yy = Y(n*TAU);
+    ctx.strokeStyle = COL.grid; ctx.lineWidth = 1; line(ctx, L, yy, L+pw, yy);
+    text(ctx, piMult(2*n), L-5, yy, {align:'right', base:'middle', size:12, color:COL.mut, math:true});
+    text(ctx, `${n} turn${n > 1 ? 's' : ''}`, L+pw+6, yy, {base:'middle', size:11, color:COL.mut});
+  }
+  ctx.strokeStyle = COL.axis; ctx.lineWidth = 1.5; line(ctx, L, T, L, T+ph); line(ctx, L, T+ph, L+pw, T+ph);
+  ['0','π/2','π','3π/2','2π'].forEach((s,k) => text(ctx, s, X(k*PI/2), T+ph+15, {align:'center', size:12, math:true, color:COL.ink}));
+  text(ctx, 't (s)', L+pw+16, T+ph+15, {size:11, color:COL.mut});
+  if (S.ref){
+    ctx.setLineDash([5,5]); ctx.strokeStyle = COL.ref; ctx.lineWidth = 1.6;
+    line(ctx, X(0), Y(0), X(TAU), Y(TAU)); ctx.setLineDash([]);
+    text(ctx, 'ω = 1', X(TAU*0.3), Y(TAU*0.3) - 8, {size:11, color:COL.mut, halo:true});
+  }
+  ctx.strokeStyle = 'rgba(239,132,32,.3)'; ctx.lineWidth = 2; line(ctx, X(0), Y(0), X(TAU), Y(w*TAU));
+  ctx.strokeStyle = COL.in; ctx.lineWidth = 3; line(ctx, X(0), Y(0), X(t), Y(w*t));
+  const nFull = Math.floor(w + 1e-9);
+  for (let n = 1; n <= nFull; n++){
+    const tc = n*TAU/w, xx = X(tc), yy = Y(n*TAU);
+    ctx.setLineDash([2,3]); ctx.strokeStyle = 'rgba(239,132,32,.7)'; ctx.lineWidth = 1; line(ctx, xx, yy, xx, T+ph); ctx.setLineDash([]);
+    dot(ctx, xx, yy, 3.5, t >= tc - 1e-9 ? COL.in : '#fff', COL.in);
+    if (n === 1 || pw/w > 34) text(ctx, n === 1 ? 'T' : `${n}T`, xx + 3, T+ph-5, {size:11, color:COL.inText, math:true, halo:true});
+  }
+  const cur = w*t;
+  ctx.setLineDash([2,3]); ctx.strokeStyle = COL.act; ctx.lineWidth = 1; line(ctx, L, Y(cur), X(t), Y(cur)); ctx.setLineDash([]);
+  dot(ctx, X(t), Y(cur), 5, COL.act, '#fff');
+  text(ctx, `slope of orange line = ω = ${F(w)} rad/s`, L+8, T+12, {size:11.5, color:COL.inText, halo:true, weight:600});
+  text(ctx, `at t = 2π: θ = ${piMult(2*w)} = ${F(w)} turns`, L+8, T+27, {size:11.5, color:COL.ink, halo:true});
+}
+
+/* ---------------- spring–mass–dashpot ---------------- */
+function zigzag(ctx, x1, x2, y, amp, n){
+  const lead = Math.min(8, (x2-x1)/5), a = x1 + lead, b = x2 - lead, seg = (b - a)/(2*n);
+  ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(a, y);
+  for (let i = 0; i < 2*n; i++) ctx.lineTo(a + seg*(i + .5), y + (i % 2 ? amp : -amp));
+  ctx.lineTo(b, y); ctx.lineTo(x2, y); ctx.stroke();
+}
+function hatchRect(ctx, x, y, w, h){
+  ctx.fillStyle = '#e3e7f4'; ctx.fillRect(x, y, w, h);
+  ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+  ctx.strokeStyle = '#b8bfd8'; ctx.lineWidth = 1;
+  for (let k = -h; k < w + h; k += 6) line(ctx, x + k, y + h, x + k + h, y);
+  ctx.restore();
+}
+function drawSpring(o){
+  const {ctx, w:W, h:H} = o; ctx.clearRect(0,0,W,H);
+  const u = Math.cos(S.w*S.t), x = outAt(S.t), Amax = Math.max(1, D.outMax);
+  const mw = Math.max(34, Math.min(64, W*0.12)), mh = Math.max(28, Math.min(64, H*0.32));
+  const wallL = 12, wallR = W - 12, xp0 = W*0.19, xm0 = W*0.58;
+  const e0 = xm0 + mw/2, G = wallR - e0;
+  const sc = Math.max(1, Math.min(0.3*G/Amax, (xm0 - xp0 - mw/2 - 30)/(1 + Amax), W*0.1));
+  const cy = H*0.5, gy = cy + mh/2;
+  hatchRect(ctx, 0, gy, W, 8);
+  ctx.strokeStyle = COL.axis; ctx.lineWidth = 2; line(ctx, 0, gy, W, gy);
+  hatchRect(ctx, 0, cy - mh*1.1, wallL, gy - (cy - mh*1.1));
+  hatchRect(ctx, wallR, cy - mh*1.1, 12, gy - (cy - mh*1.1));
+  ctx.setLineDash([3,3]); ctx.strokeStyle = '#c3c9e0'; ctx.lineWidth = 1;
+  line(ctx, xp0, cy - mh*0.95, xp0, gy); line(ctx, xm0, cy - mh*0.95, xm0, gy); ctx.setLineDash([]);
+  text(ctx, 'rest', xp0, gy + 20, {align:'center', size:10.5, color:COL.mut});
+  text(ctx, 'rest', xm0, gy + 20, {align:'center', size:10.5, color:COL.mut});
+  // plunger (input)
+  const xp = xp0 + u*sc;
+  ctx.strokeStyle = '#9aa1bd'; ctx.lineWidth = 4; line(ctx, wallL, cy, xp, cy);
+  rrect(ctx, xp-4, cy - mh*0.42, 8, mh*0.84, 3); ctx.fillStyle = COL.in; ctx.fill();
+  // spring
+  const xm = xm0 + x*sc, mL = xm - mw/2, mR = xm + mw/2;
+  ctx.strokeStyle = COL.ink; ctx.lineWidth = 2; zigzag(ctx, xp + 4, mL, cy, mh*0.2, 8);
+  // dashpot
+  const cyl0 = e0 + 0.35*G, ch = mh*0.22;
+  ctx.fillStyle = '#eef1fa'; ctx.fillRect(cyl0, cy - ch, wallR - cyl0, 2*ch);
+  ctx.strokeStyle = COL.ink; ctx.lineWidth = 2; ctx.beginPath();
+  ctx.moveTo(cyl0, cy - ch); ctx.lineTo(wallR, cy - ch); ctx.moveTo(cyl0, cy + ch); ctx.lineTo(wallR, cy + ch); ctx.stroke();
+  const head = mR + 0.65*G;
+  line(ctx, mR, cy, head, cy); ctx.lineWidth = 4; line(ctx, head, cy - ch + 3, head, cy + ch - 3);
+  // mass (output)
+  rrect(ctx, mL, cy - mh/2, mw, mh, 7); ctx.fillStyle = COL.out; ctx.fill();
+  text(ctx, 'm', xm, cy + 1, {align:'center', base:'middle', size:17, math:true, color:'#fff', weight:600});
+  text(ctx, `u = cos ωt = ${F(u)}`, xp, cy - mh*0.42 - 9, {align:'center', size:12, color:COL.inText, weight:600, halo:true});
+  text(ctx, `x = ${F(x)}`, xm, cy - mh/2 - 9, {align:'center', size:12, color:COL.out, weight:600, halo:true});
+  text(ctx, 'spring k', (xp + mL)/2, cy + mh*0.2 + 16, {align:'center', size:10.5, color:COL.mut});
+  text(ctx, 'dashpot b', (mR + wallR)/2, cy + ch + 14, {align:'center', size:10.5, color:COL.mut});
+  text(ctx, `ω₀ = √(k/m) = ${F(Math.sqrt(S.kS))} rad/s    driving ω = ${F(S.w)} rad/s`, 8, 14, {size:11.5, color:COL.ink});
+  text(ctx, `1 unit of motion = ${F(sc,0)} px`, W - 8, H - 6, {align:'right', size:10, color:COL.mut});
+}
+
+/* ---------------- temperature (house) ---------------- */
+function thermo(ctx, x, top, bot, v, frame){
+  const w = 12, br = 9, ty = bot - br*2;
+  rrect(ctx, x - w/2, top, w, ty - top + br, 6); ctx.fillStyle = '#fff'; ctx.fill();
+  ctx.strokeStyle = frame; ctx.lineWidth = 2; ctx.stroke();
+  const lvl = top + 6 + (1 - (Math.max(-1.1, Math.min(1.1, v)) + 1)/2)*(ty - top - 12);
+  ctx.fillStyle = rgb(tempRGB(v)); ctx.fillRect(x - w/2 + 3, lvl, w - 6, ty - lvl + br);
+  dot(ctx, x, bot - br, br, rgb(tempRGB(v)), frame);
+  const mid = top + 6 + (ty - top - 12)/2;
+  ctx.strokeStyle = frame; ctx.lineWidth = 1.5; line(ctx, x + w/2, mid, x + w/2 + 5, mid);
+}
+function drawHeat(o){
+  const {ctx, w:W, h:H} = o; ctx.clearRect(0,0,W,H);
+  const th = S.w*S.t, q = Math.cos(th), y = outAt(S.t);
+  ctx.fillStyle = rgb(mix(tempRGB(q), [255,255,255], 0.55)); ctx.fillRect(0, 0, W, H);
+  const cx = W/2, cyO = H*0.5;
+  const Rs = Math.max(24, Math.min(W/2 - 58, H*0.44));
+  const hw = Math.min(W*0.26, Rs*1.05), hh = Math.min(H*0.26, Rs*0.62);
+  const hb = cyO + hh/2, hx = cx - hw/2, hy = hb - hh;
+  ctx.setLineDash([3,5]); ctx.strokeStyle = 'rgba(31,36,64,.28)'; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.arc(cx, cyO, Rs, 0, TAU); ctx.stroke();
+  ctx.setLineDash([6,4]); ctx.strokeStyle = 'rgba(31,36,64,.4)'; line(ctx, cx - Rs - 8, cyO, cx + Rs + 8, cyO); ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(138,172,118,.88)'; ctx.fillRect(0, hb, W, H - hb);
+  const wt = Math.max(3, Math.min(16, 14/Math.sqrt(S.kH)));
+  ctx.fillStyle = '#8a90ad'; ctx.fillRect(hx, hy, hw, hh);
+  ctx.fillStyle = rgb(mix(tempRGB(y), [255,255,255], 0.25)); ctx.fillRect(hx + wt, hy + wt, hw - 2*wt, hh - wt);
+  ctx.beginPath(); ctx.moveTo(hx - 10, hy); ctx.lineTo(cx, hy - hh*0.5); ctx.lineTo(hx + hw + 10, hy); ctx.closePath();
+  ctx.fillStyle = '#5d6488'; ctx.fill();
+  text(ctx, `inside y = ${F(y)}`, cx, hy + hh*0.62, {align:'center', base:'middle', size:12, color:'#0b6f6a', weight:700, halo:true});
+  text(ctx, `wall leak k = ${F(S.kH)}`, cx, hb + 15, {align:'center', size:11, color:COL.ink, halo:true});
+  // sun / moon: height above the dashed line = cos(ωt) = outside temperature
+  const sx = cx + Rs*Math.sin(th), sy = cyO - Rs*Math.cos(th);
+  ctx.strokeStyle = COL.in; ctx.lineWidth = 2; line(ctx, sx, sy, sx, cyO); dot(ctx, sx, cyO, 3, COL.in);
+  if (q >= 0){
+    ctx.strokeStyle = '#f5a524'; ctx.lineWidth = 2;
+    for (let i = 0; i < 8; i++){ const a = i*PI/4 + th; line(ctx, sx + 13*Math.cos(a), sy + 13*Math.sin(a), sx + 18*Math.cos(a), sy + 18*Math.sin(a)); }
+    dot(ctx, sx, sy, 10, '#ffbf2e', '#f08a24');
+  } else {
+    dot(ctx, sx, sy, 10, '#f2f4fb', '#7d84a3');
+    dot(ctx, sx - 3, sy - 2, 2.2, '#c9cee2'); dot(ctx, sx + 3, sy + 3, 1.6, '#c9cee2');
+  }
+  text(ctx, `sun height = cos ωt = ${F(q)}`, 8, 14, {size:11.5, color:COL.inText, weight:600, halo:true});
+  thermo(ctx, 22, 26, H - 24, q, COL.in);
+  thermo(ctx, W - 22, 26, H - 24, y, COL.out);
+  text(ctx, `out ${F(q)}`, 6, H - 7, {size:11, color:COL.ink, weight:600, halo:true});
+  text(ctx, `in ${F(y)}`, W - 6, H - 7, {align:'right', size:11, color:COL.ink, weight:600, halo:true});
+}
+
+/* ---------------- rotating pointers (phasors) ---------------- */
+function drawPhasor(o){
+  const {ctx, w:W, h:H} = o; ctx.clearRect(0,0,W,H);
+  const {A, phi} = S.mode === 'spring' ? springSS() : heatSS();
+  const cx = W/2, cy = 30 + (H - 30 - 26)/2;
+  const R = Math.max(18, Math.min(W/2 - 18, (H - 30 - 26)/2 - 4));
+  const sc = R/Math.max(1, A), th = S.w*S.t;
+  ctx.strokeStyle = COL.axis; ctx.lineWidth = 1.5; line(ctx, cx - R - 12, cy, cx + R + 12, cy);
+  ctx.strokeStyle = COL.grid; ctx.lineWidth = 1; line(ctx, cx, cy - R - 8, cx, cy + R + 8);
+  ctx.setLineDash([3,4]); ctx.lineWidth = 1.2;
+  ctx.strokeStyle = 'rgba(239,132,32,.5)'; ctx.beginPath(); ctx.arc(cx, cy, sc, 0, TAU); ctx.stroke();
+  ctx.strokeStyle = 'rgba(15,156,149,.5)'; ctx.beginPath(); ctx.arc(cx, cy, Math.max(1, A*sc), 0, TAU); ctx.stroke();
+  ctx.setLineDash([]);
+  const ix = cx + sc*Math.cos(th), iy = cy - sc*Math.sin(th);
+  const ox = cx + A*sc*Math.cos(th - phi), oy = cy - A*sc*Math.sin(th - phi);
+  const ra = Math.max(12, Math.min(sc, A*sc)*0.45);
+  ctx.strokeStyle = COL.act; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, ra, -th, -th + phi, false); ctx.stroke();
+  const mA = th - phi/2;
+  text(ctx, 'φ', cx + (ra + 9)*Math.cos(mA), cy - (ra + 9)*Math.sin(mA), {align:'center', base:'middle', size:14, math:true, color:COL.act, halo:true});
+  ctx.setLineDash([2,3]); ctx.lineWidth = 1.2;
+  ctx.strokeStyle = COL.in; line(ctx, ix, iy, ix, cy);
+  ctx.strokeStyle = COL.out; line(ctx, ox, oy, ox, cy); ctx.setLineDash([]);
+  ctx.lineWidth = 3.5; ctx.strokeStyle = COL.in; line(ctx, cx, cy, ix, iy);
+  ctx.strokeStyle = COL.out; line(ctx, cx, cy, ox, oy);
+  dot(ctx, ix, iy, 5, COL.in, '#fff'); dot(ctx, ox, oy, 5, COL.out, '#fff');
+  dot(ctx, ix, cy, 4, COL.in); dot(ctx, ox, cy, 4, COL.out);
+  dot(ctx, cx, cy, 3, COL.ink);
+  tally(ctx, 8, 14, S.w, th/TAU, COL.in);
+  text(ctx, `angle ωt = ${F(th)} rad`, 8, H - 8, {size:11.5, color:COL.inText, weight:600});
+  text(ctx, `lag φ = ${F(phi*180/PI,0)}°`, W - 8, H - 8, {align:'right', size:11.5, color:COL.act, weight:600});
+}
+
+/* ---------------- response curves ---------------- */
+function drawResp(o){
+  const {ctx, w:W, h:H} = o; ctx.clearRect(0,0,W,H);
+  const L = 42, R = 12, T = 8, B = 26, gap = 20, pw = W - L - R, tot = H - T - B - gap;
+  if (pw < 30 || tot < 40) return;
+  const h1 = tot*0.58, h2 = tot - h1, y1 = T, y2 = T + h1 + gap, wm = 6.3;
+  const X = v => L + v/wm*pw;
+  const M = 260, G = [], P = []; let gmax = 1;
+  for (let i = 0; i <= M; i++){ const [a,p] = respAt(i/M*wm); G.push(a); P.push(p); gmax = Math.max(gmax, a); }
+  gmax *= 1.12;
+  const pmax = S.mode === 'spring' ? PI : PI/2;
+  const Yg = v => y1 + h1 - v/gmax*h1, Yp = v => y2 + v/pmax*h2;
+  posTicks(gmax).forEach(v => {
+    ctx.strokeStyle = COL.grid; ctx.lineWidth = 1; line(ctx, L, Yg(v), L+pw, Yg(v));
+    text(ctx, tickLabel(v), L-5, Yg(v), {align:'right', base:'middle', size:10.5, color:COL.mut});
+  });
+  (S.mode === 'spring' ? [0,90,180] : [0,45,90]).forEach(d => {
+    const yy = Yp(d*PI/180); ctx.strokeStyle = COL.grid; ctx.lineWidth = 1; line(ctx, L, yy, L+pw, yy);
+    text(ctx, d + '°', L-5, yy, {align:'right', base:'middle', size:10.5, color:COL.mut});
+  });
+  ctx.setLineDash([4,4]); ctx.strokeStyle = COL.ref; ctx.lineWidth = 1; line(ctx, L, Yg(1), L+pw, Yg(1)); ctx.setLineDash([]);
+  ctx.strokeStyle = COL.axis; ctx.lineWidth = 1.5;
+  line(ctx, L, y1, L, y1+h1); line(ctx, L, y1+h1, L+pw, y1+h1);
+  line(ctx, L, y2, L, y2+h2); line(ctx, L, y2+h2, L+pw, y2+h2);
+  text(ctx, 'gain A = output size ÷ input size', L+pw-4, y1+10, {align:'right', size:11, color:COL.mut, halo:true});
+  text(ctx, 'lag φ', L+pw-4, y2+12, {align:'right', size:11, color:COL.mut, halo:true});
+  // special frequency
+  const sp = S.mode === 'spring' ? Math.sqrt(S.kS) : S.kH;
+  if (sp <= wm){
+    ctx.setLineDash([4,4]); ctx.strokeStyle = COL.act; ctx.lineWidth = 1.2;
+    line(ctx, X(sp), y1, X(sp), y2+h2); ctx.setLineDash([]);
+    text(ctx, S.mode === 'spring' ? `ω₀ = ${F(sp)}` : `ω = k = ${F(sp)}`, X(sp) + 4, y1 + h1 + 14,
+         {size:11, color:COL.act, halo:true, align: X(sp) > L + pw - 70 ? 'right' : 'left'});
+  }
+  ctx.strokeStyle = COL.out; ctx.lineWidth = 2.2;
+  ctx.beginPath(); G.forEach((a,i) => { const xx = X(i/M*wm), yy = Yg(a); i ? ctx.lineTo(xx,yy) : ctx.moveTo(xx,yy); }); ctx.stroke();
+  ctx.beginPath(); P.forEach((p,i) => { const xx = X(i/M*wm), yy = Yp(p); i ? ctx.lineTo(xx,yy) : ctx.moveTo(xx,yy); }); ctx.stroke();
+  const [A, phi] = respAt(S.w), xw = X(S.w), right = xw > L + pw*0.7;
+  ctx.strokeStyle = COL.in; ctx.lineWidth = 2; line(ctx, xw, y1, xw, y2+h2);
+  dot(ctx, xw, Yg(A), 5, COL.out, '#fff'); dot(ctx, xw, Yp(phi), 5, COL.out, '#fff');
+  text(ctx, `A = ${F(A)}`, xw + (right ? -8 : 8), Yg(A) - 8, {align: right ? 'right' : 'left', size:12, weight:700, color:COL.out, halo:true});
+  text(ctx, `φ = ${F(phi*180/PI,0)}°`, xw + (right ? -8 : 8), Yp(phi) + (phi > pmax*0.7 ? -8 : 14), {align: right ? 'right' : 'left', size:12, weight:700, color:COL.out, halo:true});
+  for (let v = 0; v <= 6; v++) text(ctx, String(v), X(v), y2+h2+14, {align:'center', size:10.5, color:COL.mut});
+  text(ctx, 'ω (rad/s)', L+pw, y2+h2+14, {align:'right', size:10.5, color:COL.mut, halo:true});
+}
+
+/* ---------------- the 2π window graph ---------------- */
+function plotArr(ctx, X, Y, arr, t){
+  const upto = Math.min(N, Math.floor(t/TAU*N));
+  ctx.beginPath();
+  for (let i = 0; i <= upto; i++){ const x = X(i*TAU/N), y = Y(arr[i]); i ? ctx.lineTo(x,y) : ctx.moveTo(x,y); }
+  if (t > 0 && upto < N){ const u = t/TAU*N, f = u - upto; ctx.lineTo(X(t), Y(arr[upto]*(1-f) + arr[upto+1]*f)); }
+  ctx.stroke();
+}
+function drawGraph(o){
+  const {ctx, w:W, h:H} = o; ctx.clearRect(0,0,W,H);
+  const L = 60, R = 14, T = 20, B = 40, pw = W-L-R, ph = H-T-B;
+  if (pw < 40 || ph < 30) return;
+  const w = S.w, Tp = TAU/w, t = S.t;
+  const ymax = Math.max(1, D.outMax)*1.12;
+  const X = s => L + s/TAU*pw, Y = v => T + ph/2 - v/ymax*(ph/2);
+  // cycle bands: one band per complete oscillation of cos(ωt)
+  const nb = Math.ceil(w - 1e-9);
+  text(ctx, 'cycle', L-8, T-6, {align:'right', size:10.5, color:COL.mut});
+  for (let n = 0; n < nb; n++){
+    const a = n*Tp, b = Math.min((n+1)*Tp, TAU), full = (n+1)*Tp <= TAU + 1e-9, xa = X(a), xb = X(b);
+    ctx.fillStyle = n % 2 ? 'rgba(239,132,32,.05)' : 'rgba(239,132,32,.10)'; ctx.fillRect(xa, T, xb-xa, ph);
+    if (!full){
+      ctx.save(); ctx.beginPath(); ctx.rect(xa, T, xb-xa, ph); ctx.clip();
+      ctx.strokeStyle = 'rgba(93,100,136,.16)'; ctx.lineWidth = 1;
+      for (let k = -ph; k < xb - xa + ph; k += 8) line(ctx, xa + k, T + ph, xa + k + ph, T);
+      ctx.restore();
+    }
+    const fillTo = Math.min(b, t);
+    if (fillTo > a){ ctx.fillStyle = n % 2 ? 'rgba(239,132,32,.16)' : 'rgba(239,132,32,.25)'; ctx.fillRect(xa, T, X(fillTo) - xa, ph); }
+    if (full){ ctx.setLineDash([3,3]); ctx.strokeStyle = 'rgba(239,132,32,.6)'; ctx.lineWidth = 1; line(ctx, xb, T, xb, T+ph); ctx.setLineDash([]); }
+    if (xb - xa > 14){
+      const done = t >= b - 1e-9;
+      const lab = full ? String(n+1) : '+' + F(w - n);
+      text(ctx, lab, (xa+xb)/2, T-6, {align:'center', size: full ? 13 : 11, weight: done ? 700 : 500,
+           color: done ? COL.inText : 'rgba(93,100,136,.75)'});
+    }
+  }
+  // y grid
+  niceTicks(ymax).forEach(v => {
+    ctx.strokeStyle = v === 0 ? COL.axis : COL.grid; ctx.lineWidth = v === 0 ? 1.5 : 1;
+    line(ctx, L, Y(v), L+pw, Y(v));
+    text(ctx, tickLabel(v), L-6, Y(v), {align:'right', base:'middle', size:10.5, color:COL.mut});
+  });
+  ctx.strokeStyle = COL.axis; ctx.lineWidth = 1.5; line(ctx, L, T, L, T+ph);
+  // x labels: clock time t and the angle ωt at the same instants
+  text(ctx, 't (s)', L-8, T+ph+15, {align:'right', size:11, color:COL.ink});
+  text(ctx, 'ωt (rad)', L-8, T+ph+31, {align:'right', size:11, color:COL.inText});
+  ['0','π/2','π','3π/2','2π'].forEach((s,k) => {
+    const xx = X(k*PI/2);
+    ctx.strokeStyle = COL.axis; ctx.lineWidth = 1; line(ctx, xx, T+ph, xx, T+ph+4);
+    text(ctx, s, xx, T+ph+15, {align:'center', size:12.5, math:true, color:COL.ink});
+    text(ctx, piMult(w*k/2), xx, T+ph+31, {align:'center', size:12, math:true, color:COL.inText});
+  });
+  ctx.strokeStyle = COL.act; ctx.lineWidth = 2.5; line(ctx, X(TAU), T-2, X(TAU), T+ph);
+  // reference ω = 1
+  if (S.ref){
+    ctx.setLineDash([5,5]); ctx.strokeStyle = COL.ref; ctx.lineWidth = 1.6; ctx.beginPath();
+    for (let i = 0; i <= 200; i++){ const s = i/200*TAU, xx = X(s), yy = Y(Math.cos(s)); i ? ctx.lineTo(xx,yy) : ctx.moveTo(xx,yy); }
+    ctx.stroke(); ctx.setLineDash([]);
+    text(ctx, 'ω = 1: one cycle', X(PI) + 6, Y(-1) - 6, {size:11, color:COL.mut, halo:true});
+  }
+  // curves: faint full window, bold up to now
+  const hasOut = S.mode !== 'wheel';
+  ctx.lineWidth = 1.6; ctx.strokeStyle = 'rgba(239,132,32,.35)'; plotArr(ctx, X, Y, D.inp, TAU);
+  if (hasOut){ ctx.strokeStyle = 'rgba(15,156,149,.3)'; plotArr(ctx, X, Y, D.out, TAU); }
+  ctx.lineWidth = 2.8; ctx.strokeStyle = COL.in; plotArr(ctx, X, Y, D.inp, t);
+  if (hasOut){ ctx.strokeStyle = COL.out; plotArr(ctx, X, Y, D.out, t); }
+  ctx.strokeStyle = COL.act; ctx.lineWidth = 1.5; line(ctx, X(t), T, X(t), T+ph);
+  dot(ctx, X(t), Y(Math.cos(w*t)), 5, COL.in, '#fff');
+  if (hasOut) dot(ctx, X(t), Y(outAt(t)), 5, COL.out, '#fff');
+  // end-of-window summary
+  if (S.hold > 0){
+    const lines = ['The clock reached t = 2π s.',
+                   `Angle ωt = ${F(w)} × 2π = ${piMult(2*w)} rad = ${F(w)} turns`,
+                   `So: ${countText(w)}`];
+    ctx.font = `600 13px ${SANS}`;
+    const bw = Math.min(pw - 10, Math.max(...lines.map(s => ctx.measureText(s).width)) + 30), bh = 76;
+    const bx = L + (pw - bw)/2, by = T + (ph - bh)/2;
+    ctx.save(); ctx.shadowColor = 'rgba(107,79,216,.3)'; ctx.shadowBlur = 18;
+    rrect(ctx, bx, by, bw, bh, 12); ctx.fillStyle = 'rgba(255,255,255,.96)'; ctx.fill(); ctx.restore();
+    ctx.strokeStyle = COL.act; ctx.lineWidth = 1.5; rrect(ctx, bx, by, bw, bh, 12); ctx.stroke();
+    text(ctx, lines[0], bx + bw/2, by + 22, {align:'center', size:13, weight:600, color:COL.act});
+    text(ctx, lines[1], bx + bw/2, by + 42, {align:'center', size:13, color:COL.ink});
+    text(ctx, lines[2], bx + bw/2, by + 62, {align:'center', size:13, weight:700, color:COL.inText});
+  }
+}
+
+/* ---------------- explainer: two rulers ---------------- */
+function drawRuler(o){
+  const {ctx, w:W, h:H} = o; ctx.clearRect(0,0,W,H);
+  const L = 78, R = 22, pw = W - L - R; if (pw < 80 || H < 60) return;
+  const w = S.w, t = S.t, Tp = TAU/w, X = s => L + s/TAU*pw;
+  const y1 = 30, y2 = 96, bh = 14;
+  text(ctx, 'clock t', L-8, y1+bh/2, {align:'right', base:'middle', size:12, weight:600, color:COL.ink});
+  text(ctx, 'angle ωt', L-8, y2+bh/2, {align:'right', base:'middle', size:12, weight:600, color:COL.inText});
+  // clock ruler
+  rrect(ctx, L, y1, pw, bh, 4); ctx.fillStyle = '#eef1fa'; ctx.fill();
+  if (t > 0){ rrect(ctx, L, y1, X(t) - L, bh, 4); ctx.fillStyle = 'rgba(107,79,216,.28)'; ctx.fill(); }
+  const secGap = pw/6.283;
+  for (let s = 0; s <= 6; s++){
+    const xx = X(s);
+    ctx.strokeStyle = COL.ink; ctx.lineWidth = 1.2; line(ctx, xx, y1-4, xx, y1+bh);
+    text(ctx, `${s} s`, xx, y1-8, {align:'center', size:11, color:COL.ink});
+    if (s > 0){
+      ctx.setLineDash([2,3]); ctx.strokeStyle = 'rgba(193,96,10,.55)'; ctx.lineWidth = 1; line(ctx, xx, y1+bh, xx, y2); ctx.setLineDash([]);
+      if (secGap > 46 || s % 2 === 0) text(ctx, `${F(w*s, w*s >= 10 ? 1 : 2)} rad`, xx, y2-7, {align:'center', size:10.5, color:COL.inText, halo:true});
+    }
+  }
+  ctx.strokeStyle = COL.act; ctx.lineWidth = 2.5; line(ctx, X(TAU), y1-6, X(TAU), y2+bh+4);
+  text(ctx, 'end: 2π s = 6.283 s', X(TAU), y1+bh+13, {align:'right', size:11, weight:600, color:COL.act, halo:true});
+  // angle ruler, one coloured segment per full turn (6.283 rad)
+  rrect(ctx, L, y2, pw, bh, 4); ctx.fillStyle = '#f6f7fb'; ctx.fill();
+  const nb = Math.ceil(w - 1e-9), turnGap = pw/w;
+  for (let n = 0; n < nb; n++){
+    const a = X(n*Tp), b = X(Math.min((n+1)*Tp, TAU)), full = (n+1)*Tp <= TAU + 1e-9;
+    ctx.fillStyle = n % 2 ? 'rgba(239,132,32,.14)' : 'rgba(239,132,32,.26)'; ctx.fillRect(a, y2, b - a, bh);
+    const pb = Math.min(b, X(t)); if (pb > a){ ctx.fillStyle = COL.in; ctx.globalAlpha = n % 2 ? .6 : .85; ctx.fillRect(a, y2, pb - a, bh); ctx.globalAlpha = 1; }
+    if (full){
+      ctx.strokeStyle = COL.inText; ctx.lineWidth = 1.5; line(ctx, b, y2-3, b, y2+bh+4);
+      const al = b > W - R - 16 ? 'right' : 'center';
+      text(ctx, turnGap > 48 ? `turn ${n+1}` : String(n+1), al === 'right' ? W - 2 : b, y2+bh+15, {align:al, size:11, weight:600, color:COL.inText});
+      if (turnGap > 48) text(ctx, piMult(2*(n+1)), al === 'right' ? W - 2 : b, y2+bh+28, {align:al, size:11.5, math:true, color:COL.mut});
+    } else {
+      text(ctx, `+${F(w - n)} turn`, (a+b)/2, y2+bh+15, {align:'center', size:10.5, color:COL.mut});
+    }
+  }
+  // now-cursor through both rulers
+  ctx.strokeStyle = COL.act; ctx.lineWidth = 1.5; line(ctx, X(t), y1-2, X(t), y2+bh+2);
+  dot(ctx, X(t), y1+bh/2, 4.5, COL.act, '#fff'); dot(ctx, X(t), y2+bh/2, 4.5, COL.in, '#fff');
+}
+function helpHTML(){
+  const w = S.w, T = TAU/w, f = w/TAU, tot = w*TAU;
+  const rows = [];
+  for (let s = 1; s <= 6; s++) rows.push({t:s, kind:'sec'});
+  for (let n = 1; n*T <= TAU + 1e-9; n++) rows.push({t:n*T, kind:'done', n});
+  rows.push({t:TAU, kind:'end'});
+  rows.sort((a,b) => a.t - b.t);
+  const merged = [];
+  for (const r of rows){
+    const prev = merged[merged.length-1];
+    if (prev && Math.abs(prev.t - r.t) < 1e-6){ if (r.kind !== 'sec'){ prev.kind = prev.kind === 'sec' ? r.kind : prev.kind + ' ' + r.kind; if (r.n) prev.n = r.n; } }
+    else merged.push({...r});
+  }
+  const trs = merged.map(r => {
+    const tt = r.kind === 'sec' ? `${r.t}` : F(r.t, 3);
+    const ang = w*r.t, turns = ang/TAU;
+    const notes = [];
+    if (r.kind.includes('done')) notes.push(`oscillation ${r.n} complete (t = ${r.n === 1 ? '' : r.n}T)`);
+    if (r.kind.includes('end')) notes.push('t = 2π s: window ends');
+    const cls = r.kind.includes('end') ? 'end' : (r.kind.includes('done') ? 'done' : '');
+    return `<tr class="${cls}"><td class="num">${tt} s</td><td class="num">${F(w)} × ${tt} = ${F(ang,3)} rad${r.kind.includes('done') ? ` = ${piMult(2*r.n)}` : ''}</td><td class="num">${F(turns,2)}</td><td>${notes.join('; ')}</td></tr>`;
+  }).join('');
+  const {n, fr} = parts(w);
+  return `<div class="result">Right now: ${M('t')} = <b data-live="t"></b> s → angle ${M('ωt')} = ${F(w)} × <span data-live="t"></span> = <b data-live="th"></b> rad → <b data-live="turns"></b> turns</div>
+  <h3>Two different 6.283s</h3>
+  <p><b>6.283 radians</b> (2π rad) is an <em>angle</em>: one full turn, the size of one oscillation.</p>
+  <p><b>6.283 seconds</b> (2π s) is a stretch of <em>clock time</em>: the window the board chooses to count in.</p>
+  <p>Same number, two different things, like 6.283 metres versus 6.283 seconds. In the rulers above, the top one is seconds and the bottom one is radians.</p>
+  <h3>What ω = ${F(w)} rad/s means</h3>
+  <p>The angle inside ${M('cos(ωt)')} grows by <b>${F(w)} radians every second</b>. One turn is 6.283 rad, so that is ${F(w)} ÷ 6.283 = <b>${F(f,3)} of a turn per second</b>. Follow the angle second by second; the highlighted rows are the moments a full turn (one oscillation) is completed:</p>
+  <table><tr><th>clock t</th><th>angle ωt</th><th>turns</th><th></th></tr>${trs}</table>
+  <h3>Why the count in 2π seconds equals ω</h3>
+  <div class="calcline">${F(w)} rad/s × 6.283 s = ${F(tot,2)} rad<br>${F(tot,2)} rad ÷ 6.283 rad per turn = ${F(w)} turns</div>
+  <p>The 6.283 of time multiplies the speed, and the 6.283 of angle per turn divides it back out. They cancel, leaving just ω: ${countText(w)} in 2π s.</p>
+  <h3>A runner on a track</h3>
+  <p>Picture a circular track 6.283 m around, and a runner going ${F(w)} m/s.</p>
+  <p>How far per second? ${F(w)} m, just like ω = ${F(w)} rad/s.<br>How many laps in 6.283 seconds? ${F(w)} m/s × 6.283 s = ${F(tot,2)} m, which is ${F(w)} laps.</p>
+  <p>Laps come out equal to speed only because the time window was chosen to match the lap length. That is all the board is doing when it says “# complete oscillations in 2π”.</p>
+  <h3>The same speed, three ways</h3>
+  <table>
+    <tr><td>${M('ω')} = ${F(w)} rad/s</td><td>angle swept per second</td></tr>
+    <tr><td>${M('f = ω/2π')} = ${F(f,3)} Hz</td><td>oscillations per second</td></tr>
+    <tr><td>${F(w)} per 2π s</td><td>the board’s version: ${F(f,3)} × 6.283 = ${F(w)}</td></tr>
+  </table>
+  <h3>Where to see it in the app</h3>
+  <p>On the bottom graph, the black label row is clock time and the orange row under it is the angle ωt at the same moments. The orange row runs ω times faster than the black one, which is exactly what ω = ${F(w)} rad/s says. Change ω with the slider and every number here updates.</p>`;
+}
+
+function draw(){
+  if (S.mode === 'wheel'){
+    drawWheel(cv.sys, S.w*S.t, COL.in, S.w, 'ωt');
+    drawWheel(cv.dial, S.t, REFW, 1, 't');
+    drawAngle(cv.aux);
+  } else {
+    (S.mode === 'spring' ? drawSpring : drawHeat)(cv.sys);
+    drawPhasor(cv.dial);
+    drawResp(cv.aux);
+  }
+  drawGraph(cv.graph);
+  if (!helpEl.hidden) drawRuler(cv.ruler);
+}
+
+/* ---------------- text panels ---------------- */
+const M = s => `<span class="m">${s}</span>`;
+const TITLES = {
+  wheel:{
+    sys:`<span><b>A wheel spinning at ω rad/s.</b> The peg’s shadow on the rail sits at ${M('x = cos ωt')}.</span>`,
+    dial:`<span><b>Reference wheel, ω = 1.</b> Exactly one turn per 2π s.</span>`,
+    aux:`<span><b>The angle θ = ωt keeps growing.</b> Every 2π of angle is one turn.</span>`},
+  spring:{
+    sys:`<span><b>${M('m x″ + b x′ + k x = k cos ωt')}</b>, m = 1. Orange plunger is the input, teal mass the output.</span>`,
+    dial:`<span><b>Rotating pointers (steady state).</b> Their shadows on the axis are the plunger and mass positions.</span>`,
+    aux:`<span><b>How the mass responds at every ω.</b> Orange line marks your ω.</span>`},
+  heat:{
+    sys:`<span><b>${M('y′ + k y = k q<sub>e</sub>(t)')}, ${M('q<sub>e</sub> = cos ωt')}.</b> The sun’s height is the outside temperature.</span>`,
+    dial:`<span><b>Rotating pointers (steady state).</b> Outside at angle ωt, inside lagging by φ.</span>`,
+    aux:`<span><b>How the inside responds at every ω.</b> Orange line marks your ω.</span>`}
+};
+function graphTitle(){
+  const lg = S.mode === 'wheel' ? `<i class="sw in"></i>cos ωt`
+           : S.mode === 'spring' ? `<i class="sw in"></i>plunger cos ωt<i class="sw out"></i>mass x(t)`
+           : `<i class="sw in"></i>outside q<sub>e</sub><i class="sw out"></i>inside y(t)`;
+  return `<span class="count"><b>0 to 2π seconds:</b> ω = ${F(S.w)} fits <b>${countText(S.w)}</b></span>
+          <span class="legend">${lg}${S.ref ? '<i class="sw ref"></i>ω = 1' : ''}</span>`;
+}
+function calcHTML(){
+  const w = S.w, T = TAU/w, f = w/TAU;
+  let h = `<h3>From ω to period, frequency and count</h3>
+  <div class="ln">${M('ω')} = <b class="in">${F(w)}</b> rad/s <span class="why">angle swept per second</span></div>
+  <div class="ln">${M('T = 2π / ω')} = 6.2832 / ${F(w)} = <b>${F(T,3)} s</b> <span class="why">time for one oscillation (band width)</span></div>
+  <div class="ln">${M('f = ω / 2π')} = ${F(w)} / 6.2832 = <b>${F(f,3)} Hz</b> <span class="why">oscillations per second</span></div>
+  <div class="ln">${M('count in 2π s = 2π / T')} = 6.2832 / ${F(T,3)} = <b class="in">${F(w)}</b></div>
+  <div class="result">In 2π seconds: <b>${countText(w)}</b>. The count is ω itself, because ${M('2π / T = 2π ÷ (2π/ω) = ω')}.</div>
+  <h3>Right now</h3>
+  <div class="ln">${M('t')} = <b data-live="t"></b> s</div>
+  <div class="ln">${M('θ = ωt')} = ${F(w)} × <span data-live="t"></span> = <b data-live="th"></b> rad <span class="why" data-live="deg"></span></div>
+  <div class="ln">${M('turns = θ / 2π')} = <b data-live="turns"></b> <span class="why" data-live="done"></span></div>
+  <div class="ln">${M('cos(ωt)')} = cos(<span data-live="th"></span>) = <b class="in" data-live="cos"></b></div>
+  <div class="ln refln">ω = 1 reference: ${M('θ = t')} = <span data-live="t"></span> rad → <span data-live="refturns"></span> turns</div>`;
+  if (S.mode === 'spring'){
+    const {A, phi, w0, zeta, re, im} = springSS(), k = S.kS, b = S.b;
+    h += `<h3>Response of the mass (steady state)</h3>
+    <div class="ln">${M('ω₀ = √(k/m)')} = √(${F(k)}/1) = <b>${F(w0)}</b> rad/s <span class="why">natural angular frequency</span></div>
+    <div class="ln">${M('ω / ω₀')} = ${F(w)} / ${F(w0)} = <b>${F(w/w0)}</b></div>
+    <div class="ln">${M('ζ = b / (2√(km))')} = ${F(b)} / (2 × ${F(w0)}) = ${F(zeta,3)} <span class="why">damping ratio</span></div>
+    <div class="ln">${M('k − mω²')} = ${F(k)} − ${F(w*w)} = ${F(re)}, &nbsp;${M('bω')} = ${F(b)} × ${F(w)} = ${F(im)}</div>
+    <div class="ln">${M('A = k / √((k − mω²)² + (bω)²)')} = ${F(k)} / √(${F(re*re)} + ${F(im*im)}) = <b class="out">${F(A,3)}</b></div>
+    <div class="ln">${M('φ = atan2(bω, k − mω²)')} = ${F(phi,3)} rad = <b class="out">${F(phi*180/PI,1)}°</b></div>
+    <div class="ln">${M('time lag = φ / ω')} = ${F(phi/w,3)} s <span class="why">= ${F(phi/TAU)} of a cycle</span></div>
+    <div class="ln">${M('x<sub>p</sub>(t) = A cos(ωt − φ)')} = ${F(A,3)} cos(<span data-live="th"></span> − ${F(phi,3)}) = <b class="out" data-live="xss"></b></div>`;
+    if (S.rest){
+      h += `<div class="ln">from rest, numerically: ${M('x(t)')} = <b class="out" data-live="x"></b></div>
+      <div class="ln">transient size ∝ ${M('e<sup>−bt/2m</sup>')} = ${M(`e<sup>−${F(b/2)}t</sup>`)} = <span data-live="decS"></span>${zeta < 1 ? `; it wiggles at ${M('ω<sub>d</sub> = ω₀√(1 − ζ²)')} = ${F(w0*Math.sqrt(1-zeta*zeta))}` : ''}</div>`;
+    }
+    h += `<div class="result o">Once settled, the mass also makes <b>${countText(w)}</b> in 2π s: it moves at the plunger’s ω, not at ω₀.</div>`;
+  } else if (S.mode === 'heat'){
+    const {A, phi} = heatSS(), k = S.kH;
+    h += `<h3>Inside temperature (steady state)</h3>
+    <div class="ln">${M('ω / k')} = ${F(w)} / ${F(k)} = <b>${F(w/k)}</b> <span class="why">weather speed compared with leak speed</span></div>
+    <div class="ln">${M('A = k / √(k² + ω²)')} = ${F(k)} / √(${F(k*k)} + ${F(w*w)}) = <b class="out">${F(A,3)}</b></div>
+    <div class="ln">${M('φ = arctan(ω / k)')} = arctan(${F(w/k)}) = ${F(phi,3)} rad = <b class="out">${F(phi*180/PI,1)}°</b></div>
+    <div class="ln">${M('time lag = φ / ω')} = ${F(phi/w,3)} s <span class="why">= ${F(phi/TAU)} of a cycle</span></div>
+    <div class="ln">${M('y<sub>p</sub>(t) = A cos(ωt − φ)')} = ${F(A,3)} cos(<span data-live="th"></span> − ${F(phi,3)}) = <b class="out" data-live="yss"></b></div>`;
+    if (S.rest){
+      h += `<div class="ln">from ${M('y(0) = 0')}: ${M('y = y<sub>p</sub> − A cos φ · e<sup>−kt</sup>')} = <b class="out" data-live="y"></b> <span class="why">(${M('e<sup>−kt</sup>')} = <span data-live="decH"></span>)</span></div>`;
+    }
+    h += `<div class="result o">Once settled, the inside also runs through <b>${countText(w)}</b> in 2π s, smaller by A and later by φ.</div>`;
+  }
+  return h;
+}
+function notesHTML(){
+  const w = S.w, {n, fr} = parts(w), T = TAU/w;
+  if (S.mode === 'wheel'){
+    let interp;
+    if (w < 1 - 1e-9) interp = `ω = ${F(w)} is slower than the reference wheel. In 2π s this wheel manages only ${F(w)} of a turn. One full oscillation needs ${M('T = 2π/ω')} = ${F(T)} s, longer than the whole window.`;
+    else if (fr === 0) interp = `ω = ${F(w)} is a whole number, so the wheel makes exactly ${n} turn${n > 1 ? 's' : ''} in 2π s. At t = 2π the angle is ${piMult(2*w)}, a whole number of turns, so the peg is back where it started: cos(${piMult(2*w)}) = 1.`;
+    else interp = `ω = ${F(w)} gives ${n} full turn${n > 1 ? 's' : ''} plus ${F(fr)} of another. At t = 2π the angle is ${piMult(2*w)}, not a whole number of turns, so the peg stops part-way round: cos(${piMult(2*w)}) = ${F(Math.cos(TAU*w))}. Look for the hatched partial band.`;
+    const rows = [0.5,1,2,3].map(v => `<tr${Math.abs(v-w) < 1e-6 ? ' class="cur"' : ''}><td>${v}</td><td>${piMult(2*v)}</td><td>${v}</td></tr>`).join('');
+    const yours = [0.5,1,2,3].some(v => Math.abs(v-w) < 1e-6) ? '' : `<tr class="cur"><td>${F(w)} (yours)</td><td>${piMult(2*w)}</td><td>${F(w)}</td></tr>`;
+    return `<h3>What you’re looking at</h3>
+    <p>The wheel turns at a steady ω radians per second. The orange peg casts a shadow straight down onto the rail, and the shadow’s position is ${M('x = cos(ωt)')}. One full turn of the wheel is one complete back-and-forth of the shadow: one oscillation.</p>
+    <h3>The 2π puzzle</h3>
+    <p>You’re right that cosine repeats once every 2π, but that 2π is 2π of <em>angle</em>, the thing inside the cos. The board’s “in 2π” means 2π of <em>clock time</em>.</p>
+    <p>Inside ${M('cos(ωt)')} the angle is ${M('ωt')}, not ${M('t')}. As the clock runs from 0 to 2π s, the angle runs from 0 to ${M('ω · 2π')}. Each 2π of angle is one turn, so the wheel completes ω turns. Only when ω = 1 are angle and time the same number, which is why “once in 2π” feels universal. That case is the grey reference wheel.</p>
+    <table><tr><th>ω</th><th>angle at t = 2π</th><th>oscillations in 2π s</th></tr>${rows}${yours}</table>
+    <p>The bottom graph shows this directly: its first label row is clock time, the orange row under it is the angle ωt at the same moment.</p>
+    <h3>Right now</h3>
+    <div class="interp">${interp}</div>
+    <h3>Why “angular”?</h3>
+    <p>ω is the spin rate of the pointer whose shadow is the oscillation, in radians per second. Ordinary frequency f counts whole cycles per second, and one cycle is 2π radians, so ${M('ω = 2πf')}. Any oscillation ${M('A cos(ωt − φ)')}, whether a spring, a voltage or a temperature, can be pictured as the shadow of such a pointer. The other two tabs put that pointer next to each system.</p>
+    <h3>ω in the wild</h3>
+    <table><tr><th>system</th><th>f</th><th>ω = 2πf (rad/s)</th></tr>
+    <tr><td>Earth’s spin</td><td>1 per 23.93 h</td><td>7.29 × 10⁻⁵</td></tr>
+    <tr><td>1 m pendulum</td><td>0.50 Hz</td><td>3.13</td></tr>
+    <tr><td>US mains voltage</td><td>60 Hz</td><td>377</td></tr>
+    <tr><td>Musical note A4</td><td>440 Hz</td><td>2765</td></tr></table>
+    <p>In each case the ω number is also how many oscillations happen in 2π ≈ 6.28 s: 377 for the mains, only 0.0000729 of a day for Earth.</p>`;
+  }
+  if (S.mode === 'spring'){
+    const {A, phi, w0} = springSS(), r = w/w0, deg = F(phi*180/PI,0);
+    let interp;
+    if (r < 0.6) interp = `ω/ω₀ = ${F(r)}, below resonance. The plunger moves slowly compared with the spring’s natural rhythm, so the mass keeps up with it: A = ${F(A)} and it trails by only ${deg}°.`;
+    else if (r <= 1.35) interp = `ω/ω₀ = ${F(r)}, near resonance. Each push arrives just as the mass is already heading that way, so the motion builds up: A = ${F(A)}, meaning the mass swings ${F(A,1)} times as far as the plunger. The lag is ${deg}°, close to a quarter cycle (90°). Lower b makes this peak taller.`;
+    else interp = `ω/ω₀ = ${F(r)}, above resonance. The plunger reverses before the mass can respond, so the mass barely moves (A = ${F(A)}) and swings nearly opposite to the plunger (lag ${deg}°, heading toward 180°).`;
+    return `<h3>What you’re looking at</h3>
+    <p>The orange plunger on the left is shaken as ${M('u = cos ωt')}. That is the input on the right side of ${M('m x″ + b x′ + k x = k cos ωt')}. It pushes the teal mass through the spring, and the dashpot on the right resists motion. The mass position ${M('x(t)')} is the output.</p>
+    <h3>Counting oscillations</h3>
+    <p>The plunger always makes ω oscillations in 2π s, because its motion is ${M('cos ωt')}. Watch the shaded bands: in steady state the mass crosses the same bands with the same number of wiggles. The system is driven at the input’s ω. Its own natural rate ${M('ω₀ = √(k/m)')} does not change the count. It changes how big the response is (A) and how late it arrives (φ).</p>
+    <h3>Right now</h3>
+    <div class="interp">${interp} In steady state the mass makes ${countText(w)} in 2π s, the same count as the plunger.</div>
+    <h3>Things to try</h3>
+    <p>Slide ω slowly from 0.5 to 6 and watch the gain curve: mass follows in step below ω₀, swings hugely near ω₀, and nearly stops above it. Then move k to shift the peak, since ω₀ = √k here.</p>
+    <p>Tick “start from rest”. The early part of the run mixes in the system’s own wobble near ω₀ (the transient). It fades like ${M('e<sup>−bt/2m</sup>')}, and what remains moves at the plunger’s ω.</p>`;
+  }
+  const {A, phi} = heatSS(), k = S.kH, r = w/k, deg = F(phi*180/PI,0);
+  let interp;
+  if (r < 0.5) interp = `ω/k = ${F(r)}: the weather changes slowly compared with how fast the walls leak heat, so the inside follows the outside closely. A = ${F(A)}, lag ${deg}° (${F(phi/w)} s).`;
+  else if (r <= 2) interp = `ω/k = ${F(r)}: the two rates are comparable. The inside swings ${F(A*100,0)}% as much as the outside and peaks ${F(phi/w)} s later (lag ${deg}°).`;
+  else interp = `ω/k = ${F(r)}: the weather changes fast compared with the leak rate, so the walls smooth it out. A = ${F(A)}, close to k/ω = ${F(k/w)}, and the lag of ${deg}° is near a quarter cycle (90°).`;
+  return `<h3>What you’re looking at</h3>
+  <p>This is the board’s equation ${M('y′ + k y = k q<sub>e</sub>(t)')} with ${M('q<sub>e</sub> = cos ωt')}. Here ${M('q<sub>e</sub>')} is the outside temperature measured from its average, ${M('y')} is the inside temperature, and ${M('k')} is how fast heat leaks through the walls. Thin walls in the picture mean large k.</p>
+  <p>The sun circles the house once per “day”, and its height above the dashed line is exactly ${M('cos ωt')}. So one day is one turn of the sun and one oscillation of the outside temperature. Below the line it becomes the moon: colder than average.</p>
+  <h3>Counting oscillations</h3>
+  <p>ω is the number of days that fit into 2π units of time. With ω = 3, a day lasts ${M('T = 2π/3')} ≈ 2.09 units, and 3 days fit in 2π. Real weather would use hours or days as the unit, and the maths is identical: ω is then radians per that unit. Once settled, the inside runs through the same number of cycles as the outside, just smaller (A) and later (φ).</p>
+  <h3>Right now</h3>
+  <div class="interp">${interp} The inside still makes ${countText(w)} in 2π s, the same count as the outside.</div>
+  <h3>Things to try</h3>
+  <p>Make ω small and the inside tracks the outside. Make ω large and the walls filter the swings away. The corner where A = 0.707 and φ = 45° sits at ω = k, marked by the purple dashed line; move k and watch it shift.</p>`;
+}
+let liveEls = [];
+function rebuildPanels(){
+  const t = TITLES[S.mode];
+  $('sysTitle').innerHTML = t.sys; $('dialTitle').innerHTML = t.dial; $('auxTitle').innerHTML = t.aux;
+  $('graphTitle').innerHTML = graphTitle();
+  $('calc').innerHTML = calcHTML();
+  $('notes').innerHTML = notesHTML();
+  $('helpText').innerHTML = helpHTML();
+  $('rulerCap').innerHTML = `Two rulers of the same length. Each second on the clock adds ω = ${F(S.w)} rad of angle, and every 6.283 rad of angle is one full turn (one oscillation).`;
+  liveEls = Array.from(document.querySelectorAll('[data-live]'));
+}
+function updateLive(){
+  const w = S.w, t = S.t, th = w*t;
+  const vals = {t:F(t,3), th:F(th,3), deg:`(${F(th*180/PI,1)}°)`, turns:F(th/TAU,3),
+    done:`→ ${Math.floor(th/TAU + 1e-9)} completed so far`, cos:F(Math.cos(th),3), refturns:F(t/TAU,3)};
+  if (S.mode === 'spring'){ const {A,phi} = springSS(); vals.xss = F(A*Math.cos(th-phi),3); vals.x = F(outAt(t),3); vals.decS = F(Math.exp(-S.b*t/2),3); }
+  if (S.mode === 'heat'){ const {A,phi} = heatSS(); vals.yss = F(A*Math.cos(th-phi),3); vals.y = F(outAt(t),3); vals.decH = F(Math.exp(-S.kH*t),3); }
+  for (const el of liveEls){ const v = vals[el.dataset.live]; if (v !== undefined && el.textContent !== v) el.textContent = v; }
+  if (!scrubbing) tS.value = t;
+  $('tOut').textContent = `${F(t,2)} s`;
+}
+
+/* ---------------- controls ---------------- */
+const wS = $('w'), tS = $('tScrub'), playB = $('play');
+let scrubbing = false;
+const PRESETS = [0.5, 1, 1.5, 2, 2.5, 3, 4, 6];
+$('presets').innerHTML = PRESETS.map(v => `<button type="button" data-w="${v}">${v}</button>`).join('');
+function syncPresets(){ document.querySelectorAll('#presets button').forEach(b => b.classList.toggle('on', Math.abs(+b.dataset.w - S.w) < 1e-6)); }
+function onParams(){
+  $('wOut').textContent = `${F(S.w)} rad/s`;
+  $('kSOut').textContent = `${F(S.kS)} (ω₀ = ${F(Math.sqrt(S.kS))})`;
+  $('bOut').textContent = F(S.b);
+  $('kHOut').textContent = F(S.kH);
+  $('speedOut').textContent = `${F(S.speed,2)}×`;
+  syncPresets(); recompute(); rebuildPanels(); dirty = true;
+}
+wS.addEventListener('input', () => { S.w = +wS.value; onParams(); });
+$('presets').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.w = +b.dataset.w; wS.value = S.w; onParams();
+});
+$('kS').addEventListener('input', e => { S.kS = +e.target.value; onParams(); });
+$('b').addEventListener('input', e => { S.b = +e.target.value; onParams(); });
+$('kH').addEventListener('input', e => { S.kH = +e.target.value; onParams(); });
+$('speed').addEventListener('input', e => { S.speed = +e.target.value; onParams(); });
+$('ref').addEventListener('change', e => { S.ref = e.target.checked; onParams(); });
+$('rest').addEventListener('change', e => { S.rest = e.target.checked; S.t = 0; S.hold = 0; onParams(); });
+function setPlaying(p){ S.playing = p; playB.textContent = p ? 'Pause' : 'Play'; dirty = true; }
+playB.addEventListener('click', () => { if (!S.playing && S.t >= TAU - 1e-6){ S.t = 0; } S.hold = 0; setPlaying(!S.playing); });
+$('restart').addEventListener('click', () => { S.t = 0; S.hold = 0; setPlaying(true); });
+tS.max = TAU;
+tS.addEventListener('input', () => { scrubbing = true; S.t = +tS.value; S.hold = 0; setPlaying(false); });
+tS.addEventListener('change', () => { scrubbing = false; });
+tS.addEventListener('pointerup', () => { scrubbing = false; });
+function setMode(m){
+  S.mode = m;
+  document.body.className = 'mode-' + m;
+  document.querySelectorAll('nav button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === m)));
+  document.querySelectorAll('[data-show]').forEach(el => { el.hidden = !el.dataset.show.split(' ').includes(m); });
+  S.t = 0; S.hold = 0; onParams();
+}
+document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+/* ---------------- loop ---------------- */
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(0.05, (now - last)/1000); last = now;
+  if (S.playing){
+    if (S.hold > 0){ S.hold -= dt; if (S.hold <= 0){ S.hold = 0; S.t = 0; } }
+    else { S.t += dt*S.speed; if (S.t >= TAU){ S.t = TAU; S.hold = 2.2; } }
+    dirty = true;
+  }
+  if (dirty){ draw(); updateLive(); dirty = false; }
+  requestAnimationFrame(frame);
+}
+setPlaying(S.playing);
+/* ---------------- floating explainer: open, close, drag, resize ---------------- */
+const helpBtn = $('helpBtn'), helpHead = $('helpHead'), helpGrip = $('helpGrip');
+const P = {x:0, y:0, w:560, h:560}; let helpPlaced = false, dragS = null, sizeS = null;
+function applyPanel(){
+  const vw = window.innerWidth, vh = window.innerHeight;
+  P.w = Math.max(Math.min(280, vw - 8), Math.min(P.w, vw - 8));
+  P.h = Math.max(Math.min(200, vh - 8), Math.min(P.h, vh - 8));
+  P.x = Math.min(Math.max(P.x, 60 - P.w), vw - 60);
+  P.y = Math.min(Math.max(P.y, 0), vh - 44);
+  Object.assign(helpEl.style, {left:P.x + 'px', top:P.y + 'px', width:P.w + 'px', height:P.h + 'px'});
+}
+function openHelp(){
+  if (!helpPlaced){
+    const vw = window.innerWidth, vh = window.innerHeight;
+    if (vw < 860){ P.x = 8; P.y = 8; P.w = vw - 16; P.h = Math.round(vh*0.62); }
+    else { P.w = Math.min(580, vw - 40); P.h = Math.min(620, vh - 80); P.x = vw - P.w - 24; P.y = 64; }
+    helpPlaced = true;
+  }
+  helpEl.hidden = false; applyPanel();
+  helpBtn.setAttribute('aria-expanded', 'true');
+  $('helpClose').focus(); dirty = true;
+}
+function closeHelp(){
+  helpEl.hidden = true; helpBtn.setAttribute('aria-expanded', 'false'); helpBtn.focus();
+}
+helpBtn.addEventListener('click', () => helpEl.hidden ? openHelp() : closeHelp());
+$('helpClose').addEventListener('click', closeHelp);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !helpEl.hidden) closeHelp(); });
+helpHead.addEventListener('pointerdown', e => {
+  if (e.target.closest('button')) return;
+  dragS = {sx:e.clientX, sy:e.clientY, x:P.x, y:P.y};
+  helpHead.setPointerCapture(e.pointerId); e.preventDefault();
+});
+helpHead.addEventListener('pointermove', e => { if (!dragS) return; P.x = dragS.x + e.clientX - dragS.sx; P.y = dragS.y + e.clientY - dragS.sy; applyPanel(); });
+['pointerup','pointercancel'].forEach(ev => helpHead.addEventListener(ev, () => { dragS = null; }));
+helpGrip.addEventListener('pointerdown', e => {
+  sizeS = {sx:e.clientX, sy:e.clientY, w:P.w, h:P.h};
+  helpGrip.setPointerCapture(e.pointerId); e.preventDefault();
+});
+helpGrip.addEventListener('pointermove', e => { if (!sizeS) return; P.w = sizeS.w + e.clientX - sizeS.sx; P.h = sizeS.h + e.clientY - sizeS.sy; applyPanel(); });
+['pointerup','pointercancel'].forEach(ev => helpGrip.addEventListener(ev, () => { sizeS = null; }));
+helpHead.addEventListener('keydown', e => {
+  const d = {ArrowLeft:[-16,0], ArrowRight:[16,0], ArrowUp:[0,-16], ArrowDown:[0,16]}[e.key];
+  if (!d) return; e.preventDefault();
+  if (e.shiftKey){ P.w += d[0]; P.h += d[1]; } else { P.x += d[0]; P.y += d[1]; }
+  applyPanel();
+});
+window.addEventListener('resize', () => { if (!helpEl.hidden) applyPanel(); });
+
+setMode('wheel');
+for (const k in cv) sizeOne(cv[k]);
+requestAnimationFrame(frame);
+})();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

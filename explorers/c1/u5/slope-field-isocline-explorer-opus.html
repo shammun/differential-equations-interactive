@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slope fields, isoclines and solution curves — from scratch</title>
+<style>
+:root{
+  --bg:#eef1f6; --card:#ffffff; --ink:#1b2230; --mut:#5f6879; --line:#e4e8f0;
+  --act:#3b5bdb; --act-soft:#e9edfb;
+  --iso:#c2306a; --iso-soft:#fbe9f0; --iso-text:#9e2455;
+  --sol:#1d6fa5; --sol-soft:#e6f1fa; --sol-text:#155a87;
+  --eul:#e0900b; --eul-soft:#fff4dd; --eul-text:#a86500;
+  --up:#1f9d55; --dn:#d6423a;
+  --shadow:0 6px 22px rgba(59,91,219,.12), 0 1px 3px rgba(27,34,48,.08);
+  --sans:"Segoe UI Variable","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --math:"Cambria Math","STIX Two Math",Cambria,Georgia,"Times New Roman",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--sans);color:var(--ink);background:var(--bg);font-size:14px;
+  height:100vh;height:100dvh;width:100vw;overflow:hidden;display:flex;flex-direction:column}
+.m{font-family:var(--math);font-style:italic;font-size:1.07em;white-space:nowrap}
+.m sup,.m sub{font-style:normal;font-size:.72em}
+.m .n{font-style:normal}
+header{flex:none;display:flex;align-items:center;gap:6px 14px;padding:9px 14px 0;flex-wrap:wrap}
+header h1{margin:0;font-size:17px;font-weight:650;letter-spacing:-.01em}
+header p{margin:1px 0 0;color:var(--mut);font-size:12.5px}
+.eqpick{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mut)}
+.eqpick select{font:inherit;font-size:13px;padding:4px 8px;border-radius:9px;border:1px solid #cdd5e6;background:#fff;color:var(--ink)}
+.eqpick select:disabled{opacity:.55}
+nav{width:100%;display:flex;gap:6px;flex-wrap:wrap;padding-top:2px}
+nav button{font:inherit;font-size:12.5px;border:0;background:rgba(255,255,255,.72);color:var(--ink);
+  padding:6px 12px;border-radius:999px;cursor:pointer}
+nav button:hover{background:#fff}
+nav button[aria-selected="true"]{background:var(--act);color:#fff;box-shadow:0 4px 14px rgba(59,91,219,.35)}
+nav button.prob[aria-selected="true"]{background:var(--iso);box-shadow:0 4px 14px rgba(194,48,106,.35)}
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.45fr) minmax(320px,1fr);gap:10px;padding:8px 14px 12px}
+.col{display:flex;flex-direction:column;gap:9px;min-height:0;min-width:0}
+.card{background:var(--card);border-radius:14px;box-shadow:var(--shadow)}
+.fig{flex:1 1 0;display:flex;flex-direction:column;padding:7px 10px;min-height:0;min-width:0}
+.figtitle{flex:none;font-size:12px;color:var(--mut);line-height:1.35;margin:0 2px 3px;display:flex;justify-content:space-between;gap:2px 12px;flex-wrap:wrap}
+.figtitle b{color:var(--ink);font-weight:600}
+.sw{display:inline-block;width:15px;height:3px;border-radius:2px;vertical-align:middle;margin:0 4px 0 9px}
+.sw.f{background:#8a93a6}.sw.i{background:var(--iso)}.sw.s{background:var(--sol)}.sw.e{background:var(--eul)}
+.cv{flex:1 1 0;position:relative;min-height:0;cursor:crosshair}
+.cv canvas{position:absolute;inset:0;width:100%;height:100%;display:block;border-radius:10px}
+.controls{flex:none;padding:7px 12px;display:flex;flex-direction:column;gap:5px}
+.row{display:flex;align-items:center;gap:5px 10px;flex-wrap:wrap}
+.lbl{font-size:12.5px;color:var(--mut)}
+.row input[type=range]{flex:1 1 110px;min-width:90px;accent-color:var(--act)}
+#mS{accent-color:var(--iso)} #hS{accent-color:var(--eul)}
+output{font-variant-numeric:tabular-nums;font-size:13px;min-width:50px}
+.btn{font:inherit;font-size:12.5px;border:0;border-radius:9px;padding:6px 11px;cursor:pointer;background:var(--act);color:#fff}
+.btn.ghost{background:var(--act-soft);color:var(--act)}
+.pills{display:flex;gap:4px;flex-wrap:wrap}
+.pills button{font:inherit;font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid #c9d2f4;background:var(--act-soft);color:var(--act);cursor:pointer}
+.pills button.on{background:var(--act);color:#fff;border-color:var(--act)}
+.pills.iso button{border-color:#f0bdd2;background:var(--iso-soft);color:var(--iso-text)}
+.pills.iso button.on{background:var(--iso);color:#fff;border-color:var(--iso)}
+.chk{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--mut);cursor:pointer;white-space:nowrap}
+.chk input{accent-color:var(--act);margin:0}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--act);outline-offset:2px}
+.calc,.notes{padding:10px 14px;overflow:auto;min-height:0;font-size:13px;line-height:1.5}
+.calc{flex:1.25 1 0}
+.notes{flex:1 1 0}
+.calc h3,.notes h3,.float-body h3{font-size:12.5px;margin:11px 0 4px;color:var(--act);font-weight:650}
+.calc h3:first-child,.notes h3:first-child{margin-top:0}
+.ln{padding:3px 0;border-bottom:1px dashed var(--line);font-variant-numeric:tabular-nums}
+.why{color:var(--mut);font-size:12px}
+.step{display:flex;gap:8px;padding:3px 0}
+.step .k{flex:none;width:19px;height:19px;border-radius:50%;background:var(--act-soft);color:var(--act);
+  font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.box{background:#f5f7fd;border-radius:10px;padding:7px 11px;margin:4px 0 8px;line-height:1.65}
+.box.i{background:var(--iso-soft)} .box.s{background:var(--sol-soft)} .box.e{background:var(--eul-soft)}
+.verdict{margin:7px 0 2px;padding:7px 10px;border-radius:10px;border-left:3px solid var(--act);background:var(--act-soft);font-weight:600}
+.verdict.s{background:var(--sol-soft);border-left-color:var(--sol)}
+.verdict.i{background:var(--iso-soft);border-left-color:var(--iso)}
+.verdict.ok{background:#e3f6ea;border-left-color:#1f9d55}
+table{border-collapse:collapse;font-size:12.5px;margin:2px 0 8px;width:100%}
+th,td{padding:3px 7px 3px 0;text-align:left;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th{color:var(--mut);font-weight:600}
+tr.cur td{background:var(--eul-soft);font-weight:600}
+.pill{display:inline-block;padding:0 7px;border-radius:999px;font-weight:600;font-size:12px}
+.pill.pos{background:#e3f6ea;color:#177a42} .pill.neg{background:#fde7e5;color:#a8302a} .pill.zero{background:#eef0f5;color:#5f6879}
+b.i{color:var(--iso-text)} b.s{color:var(--sol-text)} b.e{color:var(--eul-text)} b.up{color:var(--up)} b.dn{color:var(--dn)}
+.notes p,.float-body p{margin:0 0 8px;max-width:72ch}
+.try{background:var(--eul-soft);border-left:3px solid var(--eul);padding:7px 10px;border-radius:10px;margin:6px 0}
+.def{border-left:3px solid var(--act);padding:2px 0 2px 10px;margin:6px 0}
+.def b{color:var(--act)}
+ol,ul{margin:4px 0 8px;padding-left:20px}
+li{margin:2px 0}
+.ansrow{display:flex;gap:6px;align-items:baseline;padding:4px 0;border-bottom:1px dashed var(--line)}
+.tick{color:#177a42;font-weight:700}
+/* floating explainer */
+.help-btn{background:var(--act);box-shadow:0 4px 14px rgba(59,91,219,.3)}
+.help-btn[aria-expanded="true"]{background:#fff;color:var(--act);box-shadow:inset 0 0 0 1.5px var(--act)}
+.float{position:fixed;z-index:50;background:#fff;border-radius:14px;display:flex;flex-direction:column;overflow:hidden;border:1px solid #cfd8f7;
+  box-shadow:0 18px 50px rgba(59,91,219,.32),0 2px 8px rgba(27,34,48,.12)}
+.float-head{flex:none;display:flex;align-items:center;gap:8px;padding:7px 8px 7px 14px;background:var(--act);color:#fff;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.float-head:active{cursor:grabbing}
+.float-head .ttl{font-weight:600;font-size:13.5px}
+.float-head .hint{font-size:11.5px;opacity:.75}
+.float-head button{flex:none;background:rgba(255,255,255,.2);border:0;color:#fff;height:30px;border-radius:8px;cursor:pointer;font:inherit;font-size:12.5px;padding:0 10px}
+.float-head button:hover{background:rgba(255,255,255,.34)}
+.float-x{margin-left:auto;width:30px;padding:0!important;font-size:19px!important;line-height:1}
+.float-body{flex:1;min-height:0;overflow:auto;padding:10px 16px 22px;font-size:13.5px;line-height:1.62}
+.float-body h2{font-size:15.5px;margin:20px 0 6px;border-bottom:1px solid var(--line);padding-bottom:3px}
+.float-body h2:first-child{margin-top:0}
+.float-grip{position:absolute;right:0;bottom:0;width:28px;height:28px;cursor:nwse-resize;touch-action:none;z-index:2}
+.float-grip::after{content:"";position:absolute;right:2px;bottom:2px;width:18px;height:18px;
+  background:linear-gradient(135deg,transparent 0 50%,#c5cde6 50% 60%,transparent 60% 70%,#c5cde6 70% 80%,transparent 80%)}
+@media (max-width:880px){
+  body{height:auto;overflow:auto;width:auto;display:block}
+  header{padding:10px 10px 0}
+  main{display:flex;flex-direction:column;padding:8px 10px 10px}
+  .col{display:contents}
+  .fig{order:1;flex:none}
+  .fig .cv{flex:none;height:min(58vh,400px)}
+  .controls{order:2;position:sticky;bottom:0;z-index:10;box-shadow:0 -6px 24px rgba(59,91,219,.22);gap:4px;padding:6px 10px}
+  .calc{order:3;flex:none;overflow:visible}
+  .notes{order:4;flex:none;overflow:visible}
+  .float{left:2vw!important;top:6vh!important;width:96vw!important;height:86vh!important}
+}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Slope fields · isoclines · solution curves</h1>
+    <p>Build every picture from scratch, then solve the two mathlet problems</p>
+  </div>
+  <div class="eqpick">
+    <label for="eqSel">equation</label>
+    <select id="eqSel"></select>
+  </div>
+  <button class="btn help-btn" id="helpBtn" aria-expanded="false" aria-controls="helpPanel">Explain everything slowly</button>
+  <nav role="tablist" aria-label="Steps">
+    <button role="tab" data-tab="field" aria-selected="true">1 · What is a slope field?</button>
+    <button role="tab" data-tab="iso" aria-selected="false">2 · What is an isocline?</button>
+    <button role="tab" data-tab="sol" aria-selected="false">3 · What is a solution curve?</button>
+    <button role="tab" data-tab="fit" aria-selected="false">4 · How the three fit together</button>
+    <button role="tab" class="prob" data-tab="p1" aria-selected="false">5 · Problem 1: the 3 black pictures</button>
+    <button role="tab" class="prob" data-tab="p2" aria-selected="false">6 · Problem 2: <span class="m">y′ = y/x</span></button>
+  </nav>
+</header>
+
+<main>
+  <section class="col">
+    <div class="card fig">
+      <div class="figtitle" id="figTitle"></div>
+      <div class="cv"><canvas id="cv" role="img" aria-label="Slope field plot"></canvas></div>
+    </div>
+    <div class="card controls">
+      <div class="row">
+        <label class="chk"><input type="checkbox" id="cField" checked> slope field</label>
+        <label class="chk"><input type="checkbox" id="cDark"> mathlet look (dark)</label>
+        <span class="lbl">grid</span>
+        <input type="range" id="densS" min="7" max="27" step="2" value="17" style="flex:0 1 90px;min-width:70px">
+        <output id="densO"></output>
+        <span class="lbl" id="clickHint"></span>
+      </div>
+
+      <div class="row" data-tabs="field">
+        <span class="lbl">probe <span class="m">x</span></span>
+        <input type="range" id="pxS" min="-4" max="4" step="0.05" value="1.5">
+        <output id="pxO"></output>
+        <span class="lbl">probe <span class="m">y</span></span>
+        <input type="range" id="pyS" min="-4" max="4" step="0.05" value="1.6">
+        <output id="pyO"></output>
+        <button class="btn ghost" id="growBtn">Build the field dash by dash ▶</button>
+      </div>
+
+      <div class="row" data-tabs="iso fit">
+        <span class="lbl" style="color:var(--iso-text);font-weight:600">isocline slope <span class="m">m</span></span>
+        <input type="range" id="mS" min="-3" max="3" step="0.01" value="0.2">
+        <output id="mO" style="color:var(--iso-text);font-weight:600"></output>
+        <div class="pills iso" id="mJump"></div>
+        <label class="chk"><input type="checkbox" id="cLadder"> whole ladder of isoclines</label>
+      </div>
+
+      <div class="row" data-tabs="sol fit">
+        <span class="lbl">start <span class="m">(x<sub>0</sub>, y<sub>0</sub>)</span></span>
+        <input type="range" id="x0S" min="-4" max="4" step="0.05" value="0">
+        <output id="x0O"></output>
+        <input type="range" id="y0S" min="-4" max="4" step="0.05" value="0.5">
+        <output id="y0O"></output>
+        <label class="chk"><input type="checkbox" id="cBack" checked> draw backwards too</label>
+      </div>
+      <div class="row" data-tabs="sol">
+        <span class="lbl" style="color:var(--eul-text);font-weight:600">Euler step <span class="m">h</span></span>
+        <input type="range" id="hS" min="0.05" max="1" step="0.05" value="0.5">
+        <output id="hO" style="color:var(--eul-text);font-weight:600"></output>
+        <button class="btn" id="stepBtn" style="background:var(--eul)">Take one step ▸</button>
+        <button class="btn ghost" id="runBtn">Run all steps ▶</button>
+        <button class="btn ghost" id="resetBtn">reset</button>
+        <label class="chk"><input type="checkbox" id="cExact" checked> exact curve</label>
+      </div>
+
+      <div class="row" data-tabs="p1">
+        <span class="lbl">click the plot, or plant a whole family:</span>
+        <div class="pills" id="bandPills">
+          <button data-b="hi">band A: <span class="m">y<sub>0</sub> &gt; 1</span></button>
+          <button data-b="mid">band B: <span class="m">0 &lt; y<sub>0</sub> &lt; 1</span></button>
+          <button data-b="lo">band C: <span class="m">y<sub>0</sub> &lt; 0</span></button>
+          <button data-b="all">all three</button>
+          <button data-b="quiz">the 3 quiz points</button>
+        </div>
+        <label class="chk"><input type="checkbox" id="cPhase" checked> phase line</label>
+        <button class="btn ghost" id="clearBtn">Clear solutions</button>
+      </div>
+
+      <div class="row" data-tabs="p2">
+        <div class="pills" id="p2Pills">
+          <button data-p="one">the point (1, 1)</button>
+          <button data-p="rays">many rays</button>
+          <button data-p="origin">y(0) = 0 : infinitely many</button>
+          <button data-p="nosol">(0, 1) : no solution at all</button>
+        </div>
+        <label class="chk"><input type="checkbox" id="cAxis" checked> mark the bad line <span class="m">x = 0</span></label>
+        <button class="btn ghost" id="clearBtn2">Clear solutions</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="col">
+    <div class="card calc" id="calc" aria-live="off"></div>
+    <div class="card notes" id="notes"></div>
+  </section>
+</main>
+
+<div id="helpPanel" class="float" role="dialog" aria-labelledby="helpTtl" hidden>
+  <div class="float-head" id="helpHead" tabindex="0" aria-label="Explainer window. Drag to move, or use arrow keys; Shift plus arrow keys resizes.">
+    <span class="ttl" id="helpTtl">The whole story, slowly</span>
+    <span class="hint">drag to move · corner to resize</span>
+    <button id="helpTab" type="button">Open in new tab</button>
+    <button class="float-x" id="helpClose" aria-label="Close explainer">×</button>
+  </div>
+  <div class="float-body" id="helpBody"></div>
+  <div class="float-grip" id="helpGrip" aria-hidden="true"></div>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const XMIN=-4, XMAX=4, YMIN=-4, YMAX=4;
+const f2=(v,d=2)=>(Math.abs(v)<5e-7?0:v).toFixed(d);
+const fs=(v,d=2)=>(v>=0?"":"−")+Math.abs(v).toFixed(d);
+
+/* ================= equations ================= */
+const EQS={
+  log:{
+    name:"y′ = y(1 − y)",  rhs:"y(1 − y)", plain:"y*(1-y)",
+    f:(x,y)=>y*(1-y),
+    autonomous:true,
+    exact:(x,x0,y0)=>{const t=x-x0; const d=y0+(1-y0)*Math.exp(-t); return y0/d;},
+    exactTxt:(x0,y0)=>`y(x) = y<sub>0</sub> / [ y<sub>0</sub> + (1 − y<sub>0</sub>)e<sup>−(x−x<sub>0</sub>)</sup> ]`,
+    blowup:(x0,y0)=>{const r=1-1/y0; return r>0? x0+Math.log(r): null;},
+    equilibria:[0,1],
+    isoLines:m=>{ const D=1-4*m; if(D<0) return []; const s=Math.sqrt(D);
+      return [...new Set([(1+s)/2,(1-s)/2])].map(y=>({kind:"h",y}));},
+    isoAlgebra:m=>{
+      const D=1-4*m;
+      let h=`<div class="step"><span class="k">1</span><div>Write “slope = <span class="m">m</span>”: &nbsp;<span class="m">y(1 − y) = ${f2(m)}</span></div></div>`;
+      h+=`<div class="step"><span class="k">2</span><div>Rearrange: <span class="m">y<sup>2</sup> − y + ${f2(m)} = 0</span></div></div>`;
+      h+=`<div class="step"><span class="k">3</span><div>Quadratic formula: <span class="m">y = [1 ± √(1 − 4·${f2(m)})]/2 = [1 ± √${f2(D)}]/2</span></div></div>`;
+      if(D<0) h+=`<div class="verdict i">√ of a negative number ⇒ <b>no such points exist</b>. The slope <span class="m">${f2(m)}</span> never occurs: <span class="m">y(1−y)</span> can never exceed <span class="m">1/4</span>.</div>`;
+      else{ const s=Math.sqrt(D), a=(1+s)/2, b=(1-s)/2;
+        h+=`<div class="step"><span class="k">4</span><div><span class="m">y = ${f2(a,3)}</span>${Math.abs(a-b)>1e-9?` &nbsp;or&nbsp; <span class="m">y = ${f2(b,3)}</span>`:` (a double root)`}</div></div>`;
+        h+=`<div class="step"><span class="k">5</span><div>No <span class="m">x</span> appears ⇒ these are <b class="i">horizontal lines</b>. Check: <span class="m">${f2(a,3)}×(1−${f2(a,3)}) = ${f2(a*(1-a),3)}</span> ✓</div></div>`;}
+      return h;},
+    isoNote:`Because the right-hand side <span class="m">y(1−y)</span> contains no <span class="m">x</span>, the slope only depends on how high you are. So every isocline is a <b>horizontal line</b>, and every horizontal row of dashes is identical. Such an equation is called <b>autonomous</b>.`,
+    mJumps:[["m = 0 (flat)",0],["m = 0.25 (steepest up)",0.25],["m = −1",-1],["m = −3",-3],["m = 0.2",0.2]]
+  },
+  yx:{
+    name:"y′ = y / x",  rhs:"y / x", plain:"y/x",
+    f:(x,y)=>y/x,
+    singular:"x0",
+    exact:(x,x0,y0)=> (y0/x0)*x,
+    exactTxt:(x0,y0)=>`y(x) = C·x  with  C = y<sub>0</sub>/x<sub>0</sub>`,
+    blowup:()=>null,
+    equilibria:[],
+    isoLines:m=>[{kind:"ray",m}],
+    isoAlgebra:m=>{
+      let h=`<div class="step"><span class="k">1</span><div>Write “slope = <span class="m">m</span>”: &nbsp;<span class="m">y/x = ${f2(m)}</span></div></div>`;
+      h+=`<div class="step"><span class="k">2</span><div>Multiply by <span class="m">x</span>: &nbsp;<span class="m">y = ${f2(m)}·x</span> &nbsp;(with <span class="m">x ≠ 0</span>)</div></div>`;
+      h+=`<div class="step"><span class="k">3</span><div>That is a <b class="i">straight line through the origin of slope ${f2(m)}</b>.</div></div>`;
+      h+=`<div class="verdict i">Now look hard: the isocline <span class="m">y = ${f2(m)}x</span> is a line whose own slope is ${f2(m)} — exactly the slope of the dashes sitting on it. <b>The isocline lies flat along its own dashes, so it IS a solution curve.</b></div>`;
+      return h;},
+    isoNote:`For <span class="m">y′ = y/x</span> the isoclines are rays from the origin, and each one is parallel to its own dashes — so here isoclines and solution curves are the same thing. That coincidence is exactly what Problem 2 is testing.`,
+    mJumps:[["m = 1",1],["m = 2",2],["m = 0",0],["m = −1",-1],["m = 0.5",0.5]]
+  },
+  xmy:{
+    name:"y′ = x − y",  rhs:"x − y", plain:"x-y",
+    f:(x,y)=>x-y,
+    exact:(x,x0,y0)=> x-1+(y0-x0+1)*Math.exp(-(x-x0)),
+    exactTxt:()=>`y(x) = x − 1 + (y<sub>0</sub> − x<sub>0</sub> + 1)e<sup>−(x−x<sub>0</sub>)</sup>`,
+    blowup:()=>null,
+    equilibria:[],
+    isoLines:m=>[{kind:"line",a:1,b:-m}], // y = x - m
+    isoAlgebra:m=>{
+      let h=`<div class="step"><span class="k">1</span><div><span class="m">x − y = ${f2(m)}</span></div></div>`;
+      h+=`<div class="step"><span class="k">2</span><div>Solve for <span class="m">y</span>: &nbsp;<span class="m">y = x − ${f2(m)}</span> — a line of slope 1.</div></div>`;
+      h+=`<div class="step"><span class="k">3</span><div>All isoclines are <b class="i">parallel lines of slope 1</b>, one for each <span class="m">m</span>.</div></div>`;
+      if(Math.abs(m-1)<0.02) h+=`<div class="verdict i">At <span class="m">m = 1</span> the isocline <span class="m">y = x − 1</span> has slope 1 = its own dash slope, so this one isocline is also a solution — every other curve funnels onto it.</div>`;
+      return h;},
+    isoNote:`A good second example: the isoclines are slanted lines, not horizontal ones, because the right-hand side contains <span class="m">x</span>. Only the special isocline <span class="m">m = 1</span> (the line <span class="m">y = x − 1</span>) happens to be a solution too.`,
+    mJumps:[["m = 1 (special)",1],["m = 0",0],["m = 2",2],["m = −1",-1]]
+  },
+  y2mx:{
+    name:"y′ = y² − x",  rhs:"y² − x", plain:"y*y-x",
+    f:(x,y)=>y*y-x,
+    exact:null,
+    exactTxt:()=>`no elementary formula exists`,
+    blowup:()=>null,
+    equilibria:[],
+    isoLines:m=>[{kind:"par",m}], // x = y^2 - m
+    isoAlgebra:m=>{
+      let h=`<div class="step"><span class="k">1</span><div><span class="m">y<sup>2</sup> − x = ${f2(m)}</span></div></div>`;
+      h+=`<div class="step"><span class="k">2</span><div>Solve for <span class="m">x</span>: &nbsp;<span class="m">x = y<sup>2</sup> − ${f2(m)}</span> — a sideways <b class="i">parabola</b>.</div></div>`;
+      h+=`<div class="step"><span class="k">3</span><div>Isoclines do not have to be straight. Any curve is allowed; it is just the level set of the right-hand side.</div></div>`;
+      return h;},
+    isoNote:`This one has <b>no formula solution at all</b> — and yet the slope field and the curves drawn by following it are still perfectly well defined. That is the whole point of these pictures: geometry first, formulas later (or never).`,
+    mJumps:[["m = 0",0],["m = 1",1],["m = −1",-1],["m = 2",2]]
+  }
+};
+
+/* ================= state ================= */
+const S={eq:"log",tab:"field",dark:false,showField:true,dens:17,
+  px:1.5,py:1.6, m:0.2, ladder:false,
+  x0:0,y0:0.5, h:0.5, eulN:0, back:true, exact:true,
+  curves:[], phase:true, p2:new Set(["one"]), axisMark:true, grow:null};
+
+const EQ = () => EQS[S.eq];
+const F  = (x,y) => EQ().f(x,y);
+
+/* ================= canvas ================= */
+const cv=$("cv"), ctx=cv.getContext("2d");
+let W=0,H=0,L=0,R=0,T=0,B=0,kx=1,ky=1;
+function resize(){
+  const r=cv.parentElement.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+  W=r.width; H=r.height; cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0); draw();
+}
+function geom(){
+  const phaseW = (S.tab==="p1" && S.phase)?52:0;
+  L=34; R=W-10-phaseW; T=10; B=H-24;
+  kx=(R-L)/(XMAX-XMIN); ky=(B-T)/(YMAX-YMIN);
+}
+const sx=x=>L+(x-XMIN)*kx, sy=y=>B-(y-YMIN)*ky;
+const ux=p=>XMIN+(p-L)/kx, uy=p=>YMIN+(B-p)/ky;
+
+const PAL=()=>S.dark
+ ? {bg:"#333333",axis:"#dddddd",grid:"#454545",dash:"#c9c9c9",text:"#e8e8e8",sol:"#5ab4f0",iso:"#ff7fb0",eq:"#9aa0a6"}
+ : {bg:"#ffffff",axis:"#98a0b0",grid:"#eef0f5",dash:"#8a93a6",text:"#5f6879",sol:"#1d6fa5",iso:"#c2306a",eq:"#aab1c0"};
+
+function draw(){
+  geom(); const P=PAL();
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle=P.bg; ctx.fillRect(0,0,W,H);
+  // grid + axes
+  ctx.strokeStyle=P.grid; ctx.lineWidth=1;
+  for(let v=-4;v<=4;v++){ ctx.beginPath(); ctx.moveTo(sx(v),T); ctx.lineTo(sx(v),B); ctx.stroke();
+                          ctx.beginPath(); ctx.moveTo(L,sy(v)); ctx.lineTo(R,sy(v)); ctx.stroke(); }
+  ctx.strokeStyle=P.axis; ctx.lineWidth=1.3;
+  ctx.beginPath(); ctx.moveTo(L,sy(0)); ctx.lineTo(R,sy(0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(sx(0),T); ctx.lineTo(sx(0),B); ctx.stroke();
+  ctx.fillStyle=P.text; ctx.font="11px system-ui"; ctx.textAlign="center"; ctx.textBaseline="top";
+  for(let v=-4;v<=4;v++){ if(v) ctx.fillText(String(v),sx(v),B+4); }
+  ctx.textAlign="right"; ctx.textBaseline="middle";
+  for(let v=-4;v<=4;v++){ if(v) ctx.fillText(String(v),L-5,sy(v)); }
+  ctx.textAlign="left"; ctx.fillText("x",R-10,sy(0)-10); ctx.fillText("y",sx(0)+6,T+6);
+
+  if(S.showField) drawField(P);
+  if(S.tab==="iso"||S.tab==="fit") drawIsoclines(P);
+  if(S.tab==="p2"&&S.axisMark) markAxis(P);
+  drawEquilibria(P);
+  if(S.tab==="sol"||S.tab==="fit") drawOneSolution(P);
+  if(S.tab==="p1"||S.tab==="p2") drawManySolutions(P);
+  if(S.tab==="field") drawProbe(P);
+  if(S.tab==="p1"&&S.phase) drawPhase(P);
+}
+
+function dashAt(P,x,y,len,col,wid){
+  const m=F(x,y); if(!isFinite(m)) return null;
+  const vx=kx, vy=-m*ky, n=Math.hypot(vx,vy);
+  const ex=vx/n*len/2, ey=vy/n*len/2, X=sx(x), Y=sy(y);
+  ctx.strokeStyle=col; ctx.lineWidth=wid;
+  ctx.beginPath(); ctx.moveTo(X-ex,Y-ey); ctx.lineTo(X+ex,Y+ey); ctx.stroke();
+  return m;
+}
+function drawField(P){
+  const N=S.dens, step=(XMAX-XMIN)/(N-1), len=Math.min((R-L)/N,(B-T)/N)*0.78;
+  let k=0;
+  for(let j=0;j<N;j++) for(let i=0;i<N;i++){
+    if(S.grow!==null && k>=S.grow){ k++; continue; }
+    k++;
+    const x=XMIN+i*step, y=YMIN+j*step;
+    if(EQ().singular==="x0" && Math.abs(x)<1e-9) continue;
+    dashAt(P,x,y,len,P.dash,1.1);
+  }
+}
+function drawEquilibria(P){
+  const eqs=EQ().equilibria||[]; if(!eqs.length) return;
+  ctx.save(); ctx.setLineDash([6,5]); ctx.strokeStyle=P.eq; ctx.lineWidth=1.4;
+  eqs.forEach(y=>{ ctx.beginPath(); ctx.moveTo(L,sy(y)); ctx.lineTo(R,sy(y)); ctx.stroke(); });
+  ctx.restore();
+  ctx.fillStyle=P.eq; ctx.font="11px system-ui"; ctx.textAlign="left"; ctx.textBaseline="bottom";
+  eqs.forEach(y=>ctx.fillText("y = "+y+"  (constant solution)",L+5,sy(y)-3));
+}
+function strokeIso(P,o,col,wid,dashed){
+  ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=wid; if(dashed) ctx.setLineDash([7,5]);
+  ctx.beginPath();
+  if(o.kind==="h"){ ctx.moveTo(L,sy(o.y)); ctx.lineTo(R,sy(o.y)); }
+  else if(o.kind==="line"){ ctx.moveTo(sx(XMIN),sy(o.a*XMIN+o.b)); ctx.lineTo(sx(XMAX),sy(o.a*XMAX+o.b)); }
+  else if(o.kind==="ray"){ ctx.moveTo(sx(XMIN),sy(o.m*XMIN)); ctx.lineTo(sx(XMAX),sy(o.m*XMAX)); }
+  else if(o.kind==="par"){ let first=true;
+    for(let y=YMIN;y<=YMAX;y+=0.02){ const x=y*y-o.m; if(x<XMIN||x>XMAX){first=true;continue;}
+      if(first){ctx.moveTo(sx(x),sy(y));first=false;} else ctx.lineTo(sx(x),sy(y)); } }
+  ctx.stroke(); ctx.restore();
+}
+function isoSamples(o){ // points along the isocline for marking dashes
+  const out=[];
+  if(o.kind==="h"){ for(let x=-3.5;x<=3.5;x+=1) out.push([x,o.y]); }
+  else if(o.kind==="ray"){ for(let x=-3.5;x<=3.5;x+=1){ if(Math.abs(x)<0.1) continue; const y=o.m*x; if(y>=YMIN&&y<=YMAX) out.push([x,y]); } }
+  else if(o.kind==="line"){ for(let x=-3.5;x<=3.5;x+=1){ const y=o.a*x+o.b; if(y>=YMIN&&y<=YMAX) out.push([x,y]); } }
+  else if(o.kind==="par"){ for(let y=-3.5;y<=3.5;y+=0.7){ const x=y*y-o.m; if(x>=XMIN&&x<=XMAX) out.push([x,y]); } }
+  return out;
+}
+function drawIsoclines(P){
+  if(S.ladder){ const L2=[-3,-2,-1,-0.5,0,0.25,0.5,1,2,3];
+    L2.forEach(mm=>EQ().isoLines(mm).forEach(o=>strokeIso(P,o,S.dark?"#b06080":"#f0b9cf",1.2,true))); }
+  const lines=EQ().isoLines(S.m);
+  lines.forEach(o=>strokeIso(P,o,P.iso,2.2,false));
+  const len=Math.min((R-L)/S.dens,(B-T)/S.dens)*1.5;
+  lines.forEach(o=>isoSamples(o).forEach(([x,y])=>{
+    if(y<YMIN||y>YMAX) return; dashAt(P,x,y,len,P.iso,2.6);
+    ctx.fillStyle=P.iso; ctx.beginPath(); ctx.arc(sx(x),sy(y),2.4,0,7); ctx.fill(); }));
+  // label
+  ctx.fillStyle=P.iso; ctx.font="600 12px system-ui"; ctx.textAlign="left"; ctx.textBaseline="top";
+  if(lines.length) ctx.fillText("isocline: every dash here has slope m = "+f2(S.m),L+6,T+4);
+}
+function markAxis(P){
+  ctx.save(); ctx.strokeStyle="#e0603a"; ctx.lineWidth=3; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(sx(0),T); ctx.lineTo(sx(0),B); ctx.stroke(); ctx.restore();
+  ctx.fillStyle="#e0603a"; ctx.font="600 11px system-ui"; ctx.textAlign="left";
+  ctx.fillText("x = 0 : y/x undefined — no dashes here", sx(0)+6, T+20);
+}
+/* ---- integration ---- */
+function integrate(x0,y0,dir){
+  const h=0.005*dir; let x=x0,y=y0; const pts=[[x,y]];
+  for(let i=0;i<3200;i++){
+    if(x<XMIN-0.02||x>XMAX+0.02) break;
+    if(EQ().singular==="x0" && Math.abs(x)<0.02) break;
+    const k1=F(x,y), k2=F(x+h/2,y+h*k1/2), k3=F(x+h/2,y+h*k2/2), k4=F(x+h,y+h*k3);
+    const yn=y+h/6*(k1+2*k2+2*k3+k4);
+    if(!isFinite(yn)) break;
+    x+=h; y=yn;
+    if(Math.abs(y)>7){ pts.push([x,Math.sign(y)*7]); break; }
+    pts.push([x,y]);
+  }
+  return pts;
+}
+function strokePts(pts,col,wid){
+  if(pts.length<2) return;
+  ctx.strokeStyle=col; ctx.lineWidth=wid; ctx.lineJoin="round"; ctx.beginPath();
+  let started=false;
+  pts.forEach(([x,y])=>{ if(y<YMIN-1||y>YMAX+1){started=false;return;}
+    const X=sx(x),Y=sy(y); if(!started){ctx.moveTo(X,Y);started=true;} else ctx.lineTo(X,Y); });
+  ctx.stroke();
+}
+function eulerRows(){
+  const rows=[]; let x=S.x0,y=S.y0;
+  const n=Math.min(400,Math.max(1,Math.ceil((XMAX-S.x0)/S.h)));
+  for(let i=0;i<n;i++){
+    const m=F(x,y); if(!isFinite(m)) break;
+    const xn=x+S.h, yn=y+S.h*m;
+    if(EQ().singular==="x0" && x<0 && xn>-1e-9) break;   // a step would land on/over x = 0
+    rows.push({i,x,y,m,yn,xn});
+    x=xn; y=yn;
+    if(Math.abs(y)>9) break;                              // escaped the picture
+  }
+  return rows;
+}
+function drawOneSolution(P){
+  const rows=eulerRows();
+  if(S.exact){
+    const fwd=integrate(S.x0,S.y0,1), bwd=S.back?integrate(S.x0,S.y0,-1):[];
+    strokePts(fwd,P.sol,2.4); strokePts(bwd,P.sol,2.4);
+  }
+  // euler polyline up to eulN
+  const kE=Math.min(S.eulN,rows.length);
+  if(kE>0){
+    const pts=[[S.x0,S.y0]];
+    for(let i=0;i<kE;i++) pts.push([rows[i].xn,rows[i].yn]);
+    ctx.save();
+    strokePts(pts,S.dark?"#ffc14d":"#e0900b",2.6);
+    pts.forEach(([x,y])=>{ ctx.fillStyle=S.dark?"#ffc14d":"#e0900b";
+      ctx.beginPath(); ctx.arc(sx(x),sy(y),3,0,7); ctx.fill(); });
+    ctx.restore();
+  }
+  // the slope that the NEXT step will use, at the point the path has reached
+  if(S.tab==="sol"){
+    const nx=rows[kE];
+    if(nx){
+      const len=Math.min((R-L)/S.dens,(B-T)/S.dens)*2.4;
+      dashAt(P,nx.x,nx.y,len,"#d6423a",2.8);
+      ctx.fillStyle="#d6423a"; ctx.font="600 11px system-ui"; ctx.textAlign="left"; ctx.textBaseline="top";
+      ctx.fillText(`next slope ${f2(nx.m,3)}`, sx(nx.x)+9, sy(nx.y)+5);
+    } else if(rows.length){
+      ctx.fillStyle="#d6423a"; ctx.font="600 11px system-ui"; ctx.textAlign="left"; ctx.textBaseline="top";
+      ctx.fillText("no more steps", sx(rows[rows.length-1].xn)+8, sy(rows[rows.length-1].yn)+5);
+    }
+  }
+  // IC marker
+  ctx.fillStyle=P.sol; ctx.beginPath(); ctx.arc(sx(S.x0),sy(S.y0),5,0,7); ctx.fill();
+  ctx.strokeStyle=S.dark?"#fff":"#fff"; ctx.lineWidth=1.6; ctx.stroke();
+  ctx.fillStyle=P.sol; ctx.font="600 11.5px system-ui"; ctx.textAlign="left"; ctx.textBaseline="bottom";
+  ctx.fillText(`(${f2(S.x0,1)}, ${f2(S.y0,2)})`, sx(S.x0)+8, sy(S.y0)-5);
+}
+function drawManySolutions(P){
+  S.curves.forEach(c=>{
+    strokePts(integrate(c.x,c.y,1),P.sol,2.1);
+    strokePts(integrate(c.x,c.y,-1),P.sol,2.1);
+    ctx.fillStyle=P.sol; ctx.beginPath(); ctx.arc(sx(c.x),sy(c.y),3.2,0,7); ctx.fill();
+  });
+  if(S.tab==="p2"&&S.p2.has("origin")){
+    ctx.fillStyle="#e0603a"; ctx.beginPath(); ctx.arc(sx(0),sy(0),5,0,7); ctx.fill();
+    ctx.font="600 11px system-ui"; ctx.textAlign="left";
+    ctx.fillText("every ray passes here ⇒ y(0)=0 has infinitely many solutions",sx(0)+8,sy(0)+16);
+  }
+  if(S.tab==="p2"&&S.p2.has("nosol")){
+    ctx.fillStyle="#e0603a"; ctx.beginPath(); ctx.arc(sx(0),sy(1),5,0,7); ctx.fill();
+    ctx.font="600 11px system-ui"; ctx.textAlign="left";
+    ctx.fillText("no y = Cx reaches (0,1) ⇒ no solution",sx(0)+8,sy(1)-8);
+  }
+}
+function drawProbe(P){
+  const x=S.px, y=S.py, m=F(x,y), X=sx(x), Y=sy(y);
+  if(!isFinite(m)){
+    ctx.strokeStyle="#e0603a"; ctx.lineWidth=2.6;
+    ctx.beginPath(); ctx.moveTo(X-8,Y-8); ctx.lineTo(X+8,Y+8);
+    ctx.moveTo(X+8,Y-8); ctx.lineTo(X-8,Y+8); ctx.stroke();
+    ctx.fillStyle="#e0603a"; ctx.font="600 12px system-ui"; ctx.textAlign="left"; ctx.textBaseline="bottom";
+    ctx.fillText("slope undefined here", X+12, Y-6);
+    return;
+  }
+  // rise / run triangle: one unit of run, m units of rise
+  const run=Math.min(1, (XMAX-x)>0.6?1:0.6)*(x<XMAX-0.6?1:-1);
+  const x2=x+run, y2=y+m*run;
+  if(Math.abs(y2)<=YMAX+0.3 && Math.abs(x2)<=XMAX+0.01){
+    ctx.save(); ctx.setLineDash([4,3]); ctx.strokeStyle=S.dark?"#8ad0ff":"#6f8bd8"; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(X,Y); ctx.lineTo(sx(x2),Y); ctx.lineTo(sx(x2),sy(y2)); ctx.stroke(); ctx.restore();
+    ctx.fillStyle=S.dark?"#8ad0ff":"#4a63b5"; ctx.font="11px system-ui";
+    ctx.textAlign="center"; ctx.textBaseline="top";
+    ctx.fillText("run "+f2(Math.abs(run),1), (X+sx(x2))/2, Y+4);
+    ctx.textAlign=run>0?"left":"right"; ctx.textBaseline="middle";
+    ctx.fillText("rise "+fs(m*run,2), sx(x2)+(run>0?5:-5), (Y+sy(y2))/2);
+  }
+  // the dash itself, drawn long and bold
+  const len=Math.min((R-L)/S.dens,(B-T)/S.dens)*2.6;
+  dashAt(P,x,y,len,S.dark?"#ffd166":"#e0900b",3.4);
+  ctx.fillStyle=S.dark?"#ffd166":"#e0900b";
+  ctx.beginPath(); ctx.arc(X,Y,5,0,7); ctx.fill();
+  ctx.strokeStyle=S.dark?"#333":"#fff"; ctx.lineWidth=1.6; ctx.stroke();
+  ctx.fillStyle=S.dark?"#ffd166":"#a86500"; ctx.font="600 12px system-ui";
+  ctx.textAlign="left"; ctx.textBaseline="bottom";
+  ctx.fillText(`(${f2(x,2)}, ${f2(y,2)})  slope ${f2(m,3)}`, X+9, Y-7);
+}
+function drawPhase(P){
+  const X=R+26, top=T, bot=B;
+  ctx.strokeStyle=S.dark?"#ddd":"#5f6879"; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.moveTo(X,top); ctx.lineTo(X,bot); ctx.stroke();
+  const arrow=(y1,y2,up)=>{ const a=sy(y1), b=sy(y2);
+    ctx.strokeStyle=up?"#1f9d55":"#d6423a"; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(X,a); ctx.lineTo(X,b); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(X,b); ctx.lineTo(X-5,b+(up?8:-8)); ctx.lineTo(X+5,b+(up?8:-8)); ctx.closePath();
+    ctx.fillStyle=up?"#1f9d55":"#d6423a"; ctx.fill(); };
+  arrow(3.8,1.25,false); arrow(0.12,0.85,true); arrow(-0.15,-3.8,false);
+  [[0,false],[1,true]].forEach(([y,stable])=>{
+    ctx.beginPath(); ctx.arc(X,sy(y),5,0,7);
+    ctx.fillStyle=stable?(S.dark?"#ddd":"#1b2230"):(S.dark?"#333":"#fff");
+    ctx.fill(); ctx.strokeStyle=S.dark?"#ddd":"#1b2230"; ctx.lineWidth=1.6; ctx.stroke(); });
+  ctx.fillStyle=S.dark?"#e8e8e8":"#5f6879"; ctx.font="10.5px system-ui"; ctx.textAlign="center";
+  ctx.fillText("phase",X,top-2>0?top:0); ctx.fillText("line",X,top+10);
+}
+
+/* ================= figure title ================= */
+function figTitle(){
+  const e=EQ();
+  let legend=`<span class="sw f"></span>slope field`;
+  if(S.tab==="iso"||S.tab==="fit") legend+=`<span class="sw i"></span>isocline`;
+  if(S.tab!=="field"&&S.tab!=="iso") legend+=`<span class="sw s"></span>solution curve`;
+  if(S.tab==="sol") legend+=`<span class="sw e"></span>Euler steps`;
+  $("figTitle").innerHTML=`<span><b class="m">${e.name}</b> &nbsp;·&nbsp; ${
+    {field:"one dash per point — nothing more",
+     iso:"all points where the dash has the same tilt",
+     sol:"a curve that is tangent to the dashes everywhere",
+     fit:"field + isocline + curve at once",
+     p1:"click anywhere to plant a solution curve",
+     p2:"solutions of y′ = y/x are rays out of the origin"}[S.tab]}</span><span>${legend}</span>`;
+}
+
+/* ================= calc panel ================= */
+function calcHTML(){
+  const e=EQ();
+  if(S.tab==="field") return calcField(e);
+  if(S.tab==="iso")   return calcIso(e);
+  if(S.tab==="sol")   return calcSol(e);
+  if(S.tab==="fit")   return calcFit(e);
+  if(S.tab==="p1")    return calcP1();
+  return calcP2();
+}
+function slopeWork(e,x,y){
+  const m=e.f(x,y);
+  if(e===EQS.log) return `${f2(y,2)}·(1 − ${f2(y,2)}) = ${f2(y,2)}·${f2(1-y,2)} = <b>${f2(m,3)}</b>`;
+  if(e===EQS.yx)  return Math.abs(x)<1e-9? `${f2(y,2)} / 0 = <b>undefined</b>` : `${f2(y,2)} / ${f2(x,2)} = <b>${f2(m,3)}</b>`;
+  if(e===EQS.xmy) return `${f2(x,2)} − ${f2(y,2)} = <b>${f2(m,3)}</b>`;
+  return `(${f2(y,2)})<sup>2</sup> − ${f2(x,2)} = ${f2(y*y,2)} − ${f2(x,2)} = <b>${f2(m,3)}</b>`;
+}
+function calcField(e){
+  const x=S.px,y=S.py,m=e.f(x,y), ang=Math.atan(m)*180/Math.PI;
+  let h=`<h3>The recipe for ONE dash</h3>`;
+  h+=`<div class="step"><span class="k">1</span><div>Pick a point. Here <span class="m">P = (${f2(x,2)}, ${f2(y,2)})</span>. Nothing about a solution is known yet — it is just a dot on graph paper.</div></div>`;
+  h+=`<div class="step"><span class="k">2</span><div>The differential equation is a <b>slope machine</b>: feed it <span class="m">(x, y)</span>, it returns the slope a solution <i>must</i> have there.<div class="box">slope <span class="m">= y′ = ${e.rhs}</span></div></div></div>`;
+  h+=`<div class="step"><span class="k">3</span><div>Put the numbers in: <div class="box s"><span class="m">y′ = ${slopeWork(e,x,y)}</span></div></div></div>`;
+  if(isFinite(m)){
+    h+=`<div class="step"><span class="k">4</span><div>Turn the number into a tilt: rise <span class="m">${f2(m,3)}</span> for every run <span class="m">1</span>, i.e. an angle of <span class="m">arctan(${f2(m,3)}) = ${f2(ang,1)}°</span> from horizontal.</div></div>`;
+    h+=`<div class="step"><span class="k">5</span><div>Draw a <b>short</b> segment with that tilt, centred on <span class="m">P</span>. Short, because the slope is only right <i>at</i> that point. Then move to the next grid point and repeat.</div></div>`;
+  } else {
+    h+=`<div class="verdict i">The machine breaks here: dividing by <span class="m">x = 0</span>. No dash can be drawn on the whole line <span class="m">x = 0</span>. Remember this — Problem 2 lives on it.</div>`;
+  }
+  h+=`<h3>Neighbours (same recipe, different point)</h3><table><tr><th>point</th><th>y′ =</th><th>tilt</th></tr>`;
+  const nb=[[x,y],[x+1,y],[x-1,y],[x,y+0.5],[x,y-0.5]];
+  nb.forEach(([a,b],i)=>{ if(Math.abs(b)>4||Math.abs(a)>4) return; const mm=e.f(a,b);
+    h+=`<tr class="${i===0?"cur":""}"><td>(${f2(a,2)}, ${f2(b,2)})</td><td>${isFinite(mm)?f2(mm,3):"—"}</td><td>${isFinite(mm)?f2(Math.atan(mm)*180/Math.PI,1)+"°":"undefined"}</td></tr>`; });
+  h+=`</table>`;
+  if(e.autonomous) h+=`<div class="verdict">Rows 2 and 3 move sideways only, and the slope <b>does not change</b>: <span class="m">${e.rhs}</span> has no <span class="m">x</span> in it. That is why this field looks the same along every horizontal line.</div>`;
+  h+=`<div class="box">The field of dashes has a name: the <b>slope field</b> (also “direction field”). ${S.dens}×${S.dens} = ${S.dens*S.dens} dashes are drawn above — the computer simply ran steps 1–5 that many times.</div>`;
+  return h;
+}
+function calcIso(e){
+  let h=`<h3>Where is the slope exactly <span class="m">m = ${f2(S.m)}</span>?</h3>`;
+  h+=`<div class="box i">“iso” = same, “cline” = slope. An <b>isocline</b> is the set of all points where the dashes point the same way. You find it by setting the right-hand side equal to <span class="m">m</span> and solving.</div>`;
+  h+=e.isoAlgebra(S.m);
+  const lines=e.isoLines(S.m);
+  if(lines.length){
+    h+=`<h3>Check a few points on it</h3><table><tr><th>point on the isocline</th><th>y′ computed there</th></tr>`;
+    lines.forEach(o=>isoSamples(o).slice(0,4).forEach(([a,b])=>{
+      h+=`<tr><td>(${f2(a,2)}, ${f2(b,2)})</td><td>${slopeWork(e,a,b)}</td></tr>`;}));
+    h+=`</table><div class="verdict i">Every one of them gives the same number ${f2(S.m)} — the dashes drawn on the pink curve are <b>parallel</b>. That is the whole definition.</div>`;
+  }
+  if(e===EQS.log){
+    h+=`<h3>The two special isoclines</h3>`;
+    h+=`<div class="ln"><span class="m">m = 0</span>: <span class="m">y(1−y)=0 ⇒ y = 0</span> and <span class="m">y = 1</span>. Flat dashes all along. A curve that starts flat on a flat line never leaves it ⇒ <b>the constant solutions <span class="m">y ≡ 0</span> and <span class="m">y ≡ 1</span></b> (the dashed grey lines).</div>`;
+    h+=`<div class="ln"><span class="m">m = 1/4</span>: <span class="m">y = 1/2</span> only. This is the steepest uphill anywhere in the picture, since <span class="m">y(1−y)</span> peaks at <span class="m">y=1/2</span>.</div>`;
+    h+=`<div class="ln"><span class="m">m &gt; 1/4</span>: empty. No point in the plane has slope 0.3.</div>`;
+  }
+  return h;
+}
+function calcSol(e){
+  if(e.singular==="x0" && Math.abs(S.x0)<0.06)
+    return `<h3>Nothing can start here</h3><div class="verdict i">You put the starting point on the line <span class="m">x = 0</span>, where <span class="m">y/x</span> is undefined. There is no dash to follow, so no solution curve can begin. Slide <span class="m">x<sub>0</sub></span> away from 0 — and see tab 6 for what this failure means.</div>`;
+  const rows=eulerRows(), k=Math.min(S.eulN,rows.length);
+  let h=`<h3>What we are looking for</h3>`;
+  h+=`<div class="box s">A <b>solution curve</b> (or integral curve) is a curve <span class="m">y = y(x)</span> whose slope at <b>every</b> point equals the dash there. Starting value <span class="m">y(${f2(S.x0,1)}) = ${f2(S.y0,2)}</span> is called the <b>initial condition</b>; equation + initial condition = <b>initial value problem</b>.</div>`;
+  h+=`<h3>How a computer draws it (Euler's method, <span class="m">h = ${f2(S.h,2)}</span>)</h3>`;
+  h+=`<div class="box e">from the point you are at, read the slope, walk straight for a short distance <span class="m">h</span>, read the new slope, repeat:<br><span class="m">y<sub>n+1</sub> = y<sub>n</sub> + h · f(x<sub>n</sub>, y<sub>n</sub>)</span></div>`;
+  if(!rows.length){
+    h+=`<div class="verdict i">No step fits here: the starting point is already at the right-hand edge (or on a line where the slope does not exist). Move <span class="m">x<sub>0</sub></span> left.</div>`;
+  } else {
+  const lo=Math.max(0,Math.min(k-4,rows.length-11)), hi=Math.min(rows.length,lo+11);
+  h+=`<table><tr><th></th><th>n</th><th><span class="m">x<sub>n</sub></span></th><th><span class="m">y<sub>n</sub></span></th><th>slope <span class="m">f</span></th><th><span class="m">y<sub>n+1</sub> = y<sub>n</sub> + h·f</span></th></tr>`;
+  if(lo>0) h+=`<tr><td colspan="6" class="why">… ${lo} earlier step${lo>1?"s":""} …</td></tr>`;
+  rows.slice(lo,hi).forEach(r=>{
+    h+=`<tr class="${r.i===k?"cur":""}"><td>${r.i<k?"✓":(r.i===k?"▸":"")}</td><td>${r.i}</td><td>${f2(r.x,2)}</td><td>${f2(r.y,3)}</td><td>${f2(r.m,3)}</td><td>${f2(r.y,3)} + ${f2(S.h,2)}×${f2(r.m,3)} = <b>${f2(r.yn,3)}</b></td></tr>`;});
+  if(hi<rows.length) h+=`<tr><td colspan="6" class="why">… ${rows.length-hi} more step${rows.length-hi>1?"s":""} to <span class="m">x = ${f2(rows[rows.length-1].xn,2)}</span> …</td></tr>`;
+  h+=`</table>`;
+  const nx=rows[k];
+  h+=`<div class="why"><b>${k}</b> of ${rows.length} steps taken (orange). ${nx
+      ? `The red dash on the plot sits at <span class="m">(${f2(nx.x,2)}, ${f2(nx.y,3)})</span> — the slope <span class="m">${f2(nx.m,3)}</span> that the <b>next</b> press will use.`
+      : `The path has run out of steps: it reached the edge of the picture, the line where the slope is undefined, or it escaped off-screen.`}</div>`;
+  }
+  if(e.exact){
+    const yEnd=e.exact(XMAX,S.x0,S.y0);
+    h+=`<h3>The exact curve (blue)</h3><div class="box s"><span class="m">${e.exactTxt(S.x0,S.y0)}</span></div>`;
+    if(e===EQS.log){
+      h+=`<div class="ln">with your numbers: <span class="m">y(x) = ${f2(S.y0,2)} / [ ${f2(S.y0,2)} + ${f2(1-S.y0,2)}e<sup>−(x−${f2(S.x0,1)})</sup> ]</span></div>`;
+      const bx=e.blowup(S.x0,S.y0);
+      h+=`<div class="ln">at <span class="m">x = 4</span>: <span class="m">y = ${isFinite(yEnd)?f2(yEnd,4):"—"}</span></div>`;
+      if(bx!==null) h+=`<div class="verdict i">The bracket hits 0 at <span class="m">x = ${f2(bx,3)}</span> — the curve shoots off to infinity there (a vertical asymptote). That is why the blue curve stops dead in the picture.</div>`;
+      else h+=`<div class="verdict ok">The bracket never hits 0, so this curve is defined for all <span class="m">x</span> and slides from 0 up to 1.</div>`;
+    } else if(e===EQS.yx){
+      h+=`<div class="ln"><span class="m">C = ${f2(S.y0,2)}/${f2(S.x0,2)} = ${f2(S.y0/S.x0,3)}</span> ⇒ <span class="m">y = ${f2(S.y0/S.x0,3)}x</span>, valid only on the side of the <span class="m">y</span>-axis you started on.</div>`;
+    } else {
+      h+=`<div class="ln">at <span class="m">x = 4</span>: <span class="m">y = ${f2(yEnd,4)}</span></div>`;
+    }
+    if(k>0&&rows[k-1]){ const xe=rows[k-1].xn, bx2=e.blowup?e.blowup(S.x0,S.y0):null;
+      const past = bx2!==null && bx2>S.x0 && xe>bx2;
+      if(past){
+        h+=`<div class="verdict i">Past <span class="m">x = ${f2(bx2,3)}</span> the true solution no longer exists — it has already escaped to infinity. The formula still returns a number there, but it belongs to a <i>different</i> branch, so no comparison is meaningful. Euler, meanwhile, just keeps walking; that is exactly how a blow-up looks to a numerical method.</div>`;
+      } else {
+        const ye=e.exact(xe,S.x0,S.y0);
+        h+=`<div class="ln">Euler after ${k} steps: <span class="m">y(${f2(xe,2)}) ≈ ${f2(rows[k-1].yn,4)}</span>; exact: <span class="m">${f2(ye,4)}</span>; gap <span class="m">${f2(Math.abs(ye-rows[k-1].yn),4)}</span>. Halve <span class="m">h</span> and the gap roughly halves too — Euler is a first-order method.</div>`;
+        const eqs=e.equilibria||[];
+        const stuck=eqs.find(v=>Math.abs(rows[k-1].yn-v)<1e-9 && Math.abs(S.y0-v)>1e-9);
+        if(stuck!==undefined) h+=`<div class="verdict i">Watch out: the step landed <i>exactly</i> on the constant solution <span class="m">y = ${stuck}</span>, where the slope is 0, so Euler freezes there for ever. The true solution only approaches that line, never reaches it. This is a numerical artifact of a too-large <span class="m">h</span> — shrink <span class="m">h</span> and it disappears.</div>`;
+      } }
+  } else {
+    h+=`<h3>No formula exists</h3><div class="box">For <span class="m">y′ = y² − x</span> there is no elementary formula. The blue curve is still drawn — by taking thousands of tiny steps. Slope fields work even where algebra gives up.</div>`;
+  }
+  return h;
+}
+function calcFit(e){
+  const x=S.x0,y=S.y0,m=e.f(x,y);
+  let h=`<h3>Three objects, one picture</h3>`;
+  h+=`<div class="ln"><span class="sw f"></span><b>dash</b> at <span class="m">(${f2(x,1)}, ${f2(y,2)})</span>: slope ${isFinite(m)?f2(m,3):"undefined"} — a signpost, one point only.</div>`;
+  h+=`<div class="ln"><span class="sw i"></span><b>isocline</b> <span class="m">m = ${f2(S.m)}</span>: the set of points whose signposts are parallel. <b>Not</b> a solution (usually).</div>`;
+  h+=`<div class="ln"><span class="sw s"></span><b>solution curve</b>: the path that obeys every signpost it passes.</div>`;
+  h+=`<h3>The rule that links them</h3>`;
+  h+=`<div class="verdict i">Wherever a blue solution curve crosses the pink <span class="m">m</span>-isocline, it crosses with slope exactly <span class="m">${f2(S.m)}</span> (angle ${f2(Math.atan(S.m)*180/Math.PI,1)}°). Always. That is how you sketch curves by hand: draw a few isoclines, put parallel ticks on each, then thread a curve through the ticks.</div>`;
+  if(e===EQS.yx) h+=`<div class="verdict ok">Special case: here the isocline <span class="m">y = ${f2(S.m)}x</span> has slope ${f2(S.m)} itself, so the curve does not cross it — it <b>lies along it</b>. Isocline = solution.</div>`;
+  if(e===EQS.log) h+=`<div class="box">Try <span class="m">m = 0</span>: the isoclines <span class="m">y = 0</span> and <span class="m">y = 1</span> are horizontal and have slope 0 themselves ⇒ those two isoclines are solutions. Every other isocline is crossed, not followed.</div>`;
+  h+=`<h3>Sketching by hand — the 4-line routine</h3><ol>
+  <li>Set <span class="m">${e.rhs} = m</span> for a few easy <span class="m">m</span> (0, ±1, ±2) and plot those curves.</li>
+  <li>On each, draw several parallel ticks of slope <span class="m">m</span>.</li>
+  <li>Mark the <span class="m">m = 0</span> isocline: curves have flat tops/bottoms there.</li>
+  <li>Start at your initial point and thread a smooth curve tangent to each tick you meet.</li></ol>`;
+  return h;
+}
+function logLimit(y0){
+  if(y0>1)  return {lim:"1", txt:"decreases to 1"};
+  if(y0===1)return {lim:"1", txt:"stays at 1"};
+  if(y0>0)  return {lim:"1", txt:"increases to 1"};
+  if(y0===0)return {lim:"0", txt:"stays at 0"};
+  return {lim:"−∞", txt:"plunges to −∞"};
+}
+function calcP1(){
+  const e=EQS.log;
+  let h=`<h3>The equation, read as a sign chart</h3>`;
+  h+=`<div class="box"><span class="m">y′ = y(1 − y)</span> — a product of two things. Its sign is all we need:</div>`;
+  h+=`<table><tr><th>band</th><th><span class="m">y</span></th><th><span class="m">1 − y</span></th><th><span class="m">y′</span></th><th>motion</th></tr>
+  <tr><td>A: <span class="m">y &gt; 1</span></td><td><span class="pill pos">+</span></td><td><span class="pill neg">−</span></td><td><span class="pill neg">−</span></td><td><b class="dn">falling</b></td></tr>
+  <tr><td><span class="m">y = 1</span></td><td>+</td><td>0</td><td><span class="pill zero">0</span></td><td>frozen</td></tr>
+  <tr><td>B: <span class="m">0 &lt; y &lt; 1</span></td><td><span class="pill pos">+</span></td><td><span class="pill pos">+</span></td><td><span class="pill pos">+</span></td><td><b class="up">rising</b></td></tr>
+  <tr><td><span class="m">y = 0</span></td><td>0</td><td>+</td><td><span class="pill zero">0</span></td><td>frozen</td></tr>
+  <tr><td>C: <span class="m">y &lt; 0</span></td><td><span class="pill neg">−</span></td><td><span class="pill pos">+</span></td><td><span class="pill neg">−</span></td><td><b class="dn">falling</b></td></tr></table>`;
+  h+=`<div class="verdict">Bands A and C fall, band B rises — that is the phase line drawn beside the plot, and it is the entire answer to all three quiz parts. A curve can never cross <span class="m">y = 0</span> or <span class="m">y = 1</span>, because those are themselves solutions and two solution curves cannot cross.</div>`;
+  h+=`<h3>The three quiz points, exactly</h3>`;
+  h+=`<div class="box s"><span class="m">y(x) = y<sub>0</sub> / [ y<sub>0</sub> + (1 − y<sub>0</sub>)e<sup>−x</sup> ]</span> &nbsp;(taking <span class="m">x<sub>0</sub> = 0</span>)</div>`;
+  h+=`<table><tr><th><span class="m">y<sub>0</sub></span></th><th>formula</th><th><span class="m">y(2)</span></th><th><span class="m">y(4)</span></th><th>limit</th></tr>`;
+  [0.5,-1,2].forEach(y0=>{
+    const at=x=>{const v=e.exact(x,0,y0); const bx=e.blowup(0,y0); return (bx!==null&&x>bx)?"—":f2(v,3);};
+    const txt=y0===0.5?"1/(1+e<sup>−x</sup>)":y0===2?"2/(2 − e<sup>−x</sup>)":"−1/(2e<sup>−x</sup> − 1)";
+    h+=`<tr><td><span class="m">${y0===0.5?"1/2":y0}</span></td><td><span class="m">${txt}</span></td><td>${at(2)}</td><td>${at(4)}</td><td><b>${logLimit(y0).lim}</b></td></tr>`;});
+  h+=`</table>`;
+  h+=`<div class="ansrow"><span class="tick">✓</span><div><span class="m">y(0) = 1/2</span> → band B, rises → <b>solution approaches 1</b></div></div>`;
+  h+=`<div class="ansrow"><span class="tick">✓</span><div><span class="m">y(0) = −1</span> → band C, falls → <b>solution approaches −∞</b> (in fact it blows up already at <span class="m">x = ln 2 ≈ 0.693</span>)</div></div>`;
+  h+=`<div class="ansrow"><span class="tick">✓</span><div><span class="m">y(0) = 2</span> → band A, falls but is blocked by the line <span class="m">y = 1</span> → <b>solution approaches 1</b></div></div>`;
+  if(S.curves.length){
+    h+=`<h3>Curves you have planted (${S.curves.length})</h3><table><tr><th>start</th><th>band</th><th>as <span class="m">x → ∞</span></th><th>asymptote</th></tr>`;
+    S.curves.slice(-8).forEach(c=>{ const L2=logLimit(c.y), bx=e.blowup(c.x,c.y);
+      h+=`<tr><td>(${f2(c.x,1)}, ${f2(c.y,2)})</td><td>${c.y>1?"A":c.y>0?"B":"C"}</td><td>${L2.txt} → <b>${L2.lim}</b></td><td>${bx!==null?`<span class="m">x = ${f2(bx,2)}</span>`:"none"}</td></tr>`;});
+    h+=`</table>`;
+  }
+  return h;
+}
+function calcP2(){
+  const e=EQS.yx;
+  let h=`<h3>Solve it by hand first</h3>`;
+  h+=`<div class="step"><span class="k">1</span><div>Separate: <span class="m">dy/y = dx/x</span></div></div>`;
+  h+=`<div class="step"><span class="k">2</span><div>Integrate: <span class="m">ln|y| = ln|x| + c</span></div></div>`;
+  h+=`<div class="step"><span class="k">3</span><div>Exponentiate: <span class="m">|y| = e<sup>c</sup>|x|</span> ⇒ <span class="m">y = C x</span></div></div>`;
+  h+=`<div class="box s">Every solution is <span class="m">y = Cx</span> — a straight line through the origin. But the equation is <b>undefined on <span class="m">x = 0</span></b>, so a genuine solution lives only on <span class="m">x &gt; 0</span> or only on <span class="m">x &lt; 0</span>: it is a <b>ray</b>, not a full line.</div>`;
+  h+=`<h3>Through the point (1, 1)</h3>`;
+  h+=`<div class="ln"><span class="m">C = y<sub>0</sub>/x<sub>0</sub> = 1/1 = 1</span> ⇒ <span class="m">y = x</span>, on <span class="m">x &gt; 0</span>.</div>`;
+  h+=`<div class="ln">Check the slope it needs at (1,1): <span class="m">y′ = y/x = 1/1 = 1</span> — and the line <span class="m">y = x</span> has slope 1. It matches at every point of the ray: at (3,3), <span class="m">y′ = 3/3 = 1</span>. ✓</div>`;
+  h+=`<div class="ansrow"><span class="tick">✓</span><div><b>A ray coming out of the origin.</b></div></div>`;
+  h+=`<h3>Why the other five choices fail</h3>
+  <div class="ln"><b>“ray … of indefinite slope”</b> — no: the slope is pinned at exactly 1 by <span class="m">C = 1</span>. “Indefinite” would describe the whole fan of rays through the origin, not this one.</div>
+  <div class="ln"><b>“a line through the origin”</b> — no: a line would cross <span class="m">x = 0</span>, where <span class="m">y/x</span> does not exist. A solution must live on an interval where the equation makes sense. The piece with <span class="m">x &lt; 0</span> is a <i>different</i> solution.</div>
+  <div class="ln"><b>“a line … of indefinite slope”</b> — fails for both reasons above.</div>
+  <div class="ln"><b>semicircle / circle of radius 1</b> — a circle has slope <span class="m">−x/y</span>, not <span class="m">y/x</span> (those are the solutions of the <i>other</i> equation <span class="m">y′ = −x/y</span>); and a circle is not even a function of <span class="m">x</span>.</div>`;
+  h+=`<h3>The origin: where uniqueness dies</h3>`;
+  h+=`<div class="ln">Every ray <span class="m">y = Cx</span> heads into <span class="m">(0,0)</span>. So the initial condition <span class="m">y(0) = 0</span> is satisfied by <b>infinitely many</b> solutions — one for each <span class="m">C</span>. <b>No unique solution.</b></div>`;
+  h+=`<div class="ln">And <span class="m">y(0) = 1</span> has <b>no</b> solution: no line <span class="m">y = Cx</span> passes through <span class="m">(0,1)</span>.</div>`;
+  h+=`<div class="verdict i">The existence-and-uniqueness theorem asks that <span class="m">f(x,y)</span> and <span class="m">∂f/∂y</span> be continuous near the starting point. Here <span class="m">f = y/x</span> is not even defined at <span class="m">x = 0</span>, so the guarantee is void — and indeed it fails, in both possible ways at once.</div>`;
+  if(S.curves.length){
+    h+=`<h3>Rays you have planted</h3><table><tr><th>start</th><th><span class="m">C = y<sub>0</sub>/x<sub>0</sub></span></th><th>solution</th><th>domain</th></tr>`;
+    S.curves.slice(-8).forEach(c=>{ const C=c.y/c.x;
+      h+=`<tr><td>(${f2(c.x,2)}, ${f2(c.y,2)})</td><td>${f2(C,3)}</td><td><span class="m">y = ${f2(C,2)}x</span></td><td><span class="m">x ${c.x>0?"&gt;":"&lt;"} 0</span></td></tr>`;});
+    h+=`</table>`;
+  }
+  return h;
+}
+
+/* ================= notes panel ================= */
+function notesHTML(){
+  const e=EQ();
+  if(S.tab==="field") return `
+  <h3>Words you need</h3>
+  <div class="def"><b>Differential equation</b> — an equation that tells you the <i>slope</i> of an unknown function instead of its value. <span class="m">y′ = ${e.rhs}</span> says: whatever the solution is, at the point <span class="m">(x, y)</span> it must be travelling with slope <span class="m">${e.rhs}</span>.</div>
+  <div class="def"><b>Slope field</b> (direction field) — the picture you get by evaluating that slope on a grid and drawing a short dash of that tilt at each point. It contains <b>no</b> solutions yet; it is a field of signposts.</div>
+  <div class="try"><b>Try it:</b> drag the probe sliders (or click straight on the plot) and watch the numbers in the middle panel change. Press <b>“Build the field dash by dash”</b> to see the computer do it grid point by grid point. ${e.autonomous?"Move the probe sideways only: the slope never changes — so the dashes repeat along every horizontal line.":"Move the probe sideways: the slope changes, because the right-hand side contains x."}</div>
+  <div class="try"><b>Also try:</b> switch the equation at the top to <span class="m">y′ = y/x</span> and put the probe near <span class="m">x = 0</span>. The dashes go vertical and then vanish — the machine divides by zero. That single fact drives all of Problem 2.</div>`;
+
+  if(S.tab==="iso") return `
+  <h3>Isocline</h3>
+  <div class="def"><b>Isocline</b> — “iso” (same) + “cline” (slope). For a chosen number <span class="m">m</span>, the isocline is the set of <b>all</b> points where the slope field says <span class="m">m</span>. You get it by solving <span class="m">${e.rhs} = m</span>.</div>
+  <p>${e.isoNote}</p>
+  <div class="def"><b>Why they are useful:</b> a slope field has hundreds of dashes; isoclines organise them into a few families. Sketching curves by hand is: draw 4–5 isoclines, tick each with its own slope, thread a curve through the ticks.</div>
+  <div class="try"><b>Try it:</b> drag <span class="m">m</span> slowly and watch the pink curve sweep across the plane, always carrying parallel dashes. Then tick <b>“whole ladder of isoclines”</b>: that faint family <i>is</i> the slope field, re-sorted by tilt.</div>
+  <div class="try"><b>Careful:</b> an isocline is normally <b>not</b> a solution. It is a place where curves <i>cross</i> with a known tilt. The exceptions are the ones whose own slope equals their <span class="m">m</span> — for <span class="m">y′ = y(1−y)</span> those are <span class="m">y = 0</span> and <span class="m">y = 1</span>; for <span class="m">y′ = y/x</span>, every single one.</div>`;
+
+  if(S.tab==="sol") return `
+  <h3>Solution curve</h3>
+  <div class="def"><b>Solution curve</b> (integral curve) — a curve that is tangent to the slope field at every one of its points. Follow the signposts and you trace one out.</div>
+  <div class="def"><b>Initial condition</b> — the single point you start from, written <span class="m">y(x<sub>0</sub>) = y<sub>0</sub></span>. Through (almost) every point there is exactly one solution curve; that is why the mathlet lets you <i>click</i> a point and immediately draws a curve.</div>
+  <div class="def"><b>Euler's method</b> — the honest version of “follow the arrows”: step <span class="m">h</span> to the right along the current dash, then re-read the slope. Small <span class="m">h</span> ⇒ the orange path hugs the true blue curve.</div>
+  <div class="try"><b>Try it:</b> set <span class="m">h = 1</span> and press <b>Take one step</b> repeatedly — the orange path cuts corners badly. Now press reset, set <span class="m">h = 0.1</span>, and <b>Run all steps</b>: orange and blue become one. This is exactly what the mathlet does when you click a point (with a better stepper).</div>
+  <div class="try"><b>Notice:</b> the curve never crosses a constant solution (the grey dashed lines). Two solution curves through the same point would contradict uniqueness, so those lines act as walls.</div>`;
+
+  if(S.tab==="fit") return `
+  <h3>The three ideas, ranked</h3>
+  <div class="def"><b>1. Slope field</b> = local data. One dash = one instruction, valid at one point.</div>
+  <div class="def"><b>2. Isocline</b> = bookkeeping. Which points share an instruction. Cheap to compute (it is just algebra, no calculus).</div>
+  <div class="def"><b>3. Solution curve</b> = the answer. The global object that obeys every local instruction.</div>
+  <p>The mathlet is built exactly this way: a checkbox for the field, an <span class="m">m</span>-slider for isoclines, and a click for a solution curve.</p>
+  <div class="try"><b>Try it:</b> park the isocline slider on <span class="m">m = 0</span> and move the start point around. Every blue curve has a horizontal tangent precisely where it meets the pink curve — maxima and minima of solutions always live on the <span class="m">m = 0</span> isocline. That is the fastest way to know where a solution turns around.</div>`;
+
+  if(S.tab==="p1") return `
+  <h3>How the three black pictures were made</h3>
+  <ol>
+  <li>Open the <b>Isoclines</b> mathlet. In the dropdown (picture 5.png) choose <b><span class="m">y′ = y(a − y)</span></b>.</li>
+  <li>Drag the <span class="m">a</span>-slider to <b><span class="m">a = 1.000</span></b>. The screenshots show <span class="m">a = 3</span>, which is the <i>wrong</i> equation; at <span class="m">a = 1</span> the right-hand side becomes <span class="m">y(1 − y)</span>, the one in the question.</li>
+  <li>Tick <b>Slope Field</b>. The plot turns dark grey with pale dashes — that is why those three pictures are black.</li>
+  <li>Click several points inside one band. Each click plants one blue solution curve through that point. Six clicks in <span class="m">y &gt; 1</span> gives picture 1; six in <span class="m">0 &lt; y &lt; 1</span> gives picture 2; six in <span class="m">y &lt; 0</span> gives picture 3.</li>
+  <li><b>Clear Solutions</b> wipes the blue curves and keeps the field.</li>
+  </ol>
+  <div class="try"><b>Do it here:</b> tick <b>mathlet look (dark)</b>, then press <b>band A / B / C</b>. You are reproducing the three pictures exactly — or click your own points anywhere.</div>
+  <h3>Why each band looks the way it does</h3>
+  <div class="def"><b>Band A (<span class="m">y<sub>0</sub> &gt; 1</span>)</b> — <span class="m">y′ &lt; 0</span>, so every curve falls; it cannot pass <span class="m">y = 1</span>, so it flattens onto it. Going <i>backwards</i> it rises, faster and faster, to a vertical asymptote — that is the steep left edge of each blue curve in the first black picture.</div>
+  <div class="def"><b>Band B (<span class="m">0 &lt; y<sub>0</sub> &lt; 1</span>)</b> — <span class="m">y′ &gt; 0</span>, trapped between two walls, so each curve is the S-shaped logistic curve climbing from 0 to 1.</div>
+  <div class="def"><b>Band C (<span class="m">y<sub>0</sub> &lt; 0</span>)</b> — <span class="m">y′ &lt; 0</span> and getting worse as <span class="m">y</span> drops, so the curve dives and reaches <span class="m">−∞</span> at a finite <span class="m">x</span>.</div>
+  <div class="def"><b>Why the curves in each picture look like copies</b> — the equation has no <span class="m">x</span> in it (autonomous), so shifting any solution sideways gives another solution. Each family is literally one curve, slid left and right.</div>
+  <div class="def"><b>Stability</b> — <span class="m">y = 1</span> attracts from both sides (<b>stable</b>); <span class="m">y = 0</span> pushes away on both sides (<b>unstable</b>). That is what the filled and hollow dots on the phase line mean.</div>`;
+
+  return `
+  <h3>Reading 8.png and 9.png</h3>
+  <div class="def"><b>Set-up:</b> in the dropdown choose <b><span class="m">y′ = ay/x</span></b> and set <span class="m">a = 1</span>, giving <span class="m">y′ = y/x</span>. Tick Slope Field, then click the point <span class="m">(1,1)</span>.</div>
+  <div class="def"><b>What you see:</b> a straight blue segment from the origin out through (1,1) and beyond — and nothing to the left of the <span class="m">y</span>-axis. That is the answer: <b>a ray coming out of the origin</b>.</div>
+  <div class="def"><b>Ray vs line</b> — a <i>line</i> would include points with <span class="m">x &lt; 0</span>. But a solution must be differentiable on an interval, and <span class="m">y/x</span> explodes at <span class="m">x = 0</span>, so the interval cannot contain 0. Two separate rays, two separate solutions.</div>
+  <div class="def"><b>“Indefinite slope”</b> — that phrase would fit the <i>whole fan</i> of rays leaving the origin, where no particular slope is singled out. Your initial condition <span class="m">(1,1)</span> does single one out: <span class="m">C = 1</span>.</div>
+  <div class="try"><b>Try it:</b> press <b>many rays</b> — the fan is the general solution <span class="m">y = Cx</span>. Then press <b><span class="m">y(0)=0</span></b>: every ray meets there, so that initial condition has infinitely many answers. Then press <b>(0,1)</b>: no ray reaches it, so that one has none.</div>
+  <div class="def"><b>Compare with Problem 1:</b> <span class="m">y(1−y)</span> is smooth everywhere, so exactly one curve goes through each point and curves never cross. <span class="m">y/x</span> is broken on one line, and on that line both existence and uniqueness fail.</div>
+  <div class="try"><b>One more check:</b> the isocline picture (tab 2 with this equation) explains it in one line — the isocline of slope <span class="m">m</span> is the line <span class="m">y = mx</span>, whose own slope is <span class="m">m</span>. Isocline and solution coincide, which is why the solutions are straight.</div>`;
+}
+
+/* ================= help panel ================= */
+function helpHTML(){ return `
+<h2>0. What a differential equation is actually saying</h2>
+<p>An ordinary equation like <span class="m">x<sup>2</sup> = 4</span> asks for a <i>number</i>. A differential equation asks for a <i>function</i>, and it describes that function indirectly — by telling you its slope at every location. <span class="m">y′ = y(1 − y)</span> means: “whatever function you are, at the moment you are passing through height <span class="m">y</span>, you must be climbing at rate <span class="m">y(1 − y)</span>.”</p>
+<p>So a differential equation is a machine: put in a point <span class="m">(x, y)</span>, get out a slope. Drawing that machine's output at many points is the whole idea behind every picture in this app.</p>
+
+<h2>1. Slope field</h2>
+<p>Pick a grid of points. At each one, evaluate the right-hand side, and draw a very short segment with that slope. Nothing is solved; you are just recording instructions. Example, for <span class="m">y′ = y(1−y)</span> at <span class="m">(2, 0.5)</span>: slope <span class="m">= 0.5 × 0.5 = 0.25</span>, so draw a dash tilted <span class="m">arctan 0.25 = 14°</span>. At <span class="m">(2, 2)</span>: slope <span class="m">= 2 × (−1) = −2</span>, a steep downhill dash. Do that 300 times and you have the field.</p>
+<p>The field already tells you the story before any solving: where dashes are flat, solutions have peaks or plateaus; where they are steep, solutions move fast.</p>
+
+<h2>2. Isoclines</h2>
+<p><b>Iso</b> = same, <b>cline</b> = slope. Fix a number <span class="m">m</span> and ask: where in the plane does the field say exactly <span class="m">m</span>? Solve <span class="m">f(x, y) = m</span>. The answer is a curve (or several), and along it every dash is parallel.</p>
+<p><b>Worked example.</b> <span class="m">y′ = y(1−y)</span>, take <span class="m">m = −2</span>: &nbsp;<span class="m">y − y<sup>2</sup> = −2 ⇒ y<sup>2</sup> − y − 2 = 0 ⇒ (y−2)(y+1) = 0 ⇒ y = 2</span> or <span class="m">y = −1</span>. Two horizontal lines. Check at <span class="m">(3, 2)</span>: <span class="m">2(1−2) = −2</span> ✓, and at <span class="m">(−1, 2)</span> you get the same −2, because no <span class="m">x</span> appears in the formula.</p>
+<p><b>Take <span class="m">m = 0.3</span>:</b> <span class="m">y<sup>2</sup> − y + 0.3 = 0</span> has discriminant <span class="m">1 − 1.2 &lt; 0</span>: no solutions. Slope 0.3 simply never happens, because <span class="m">y(1−y) ≤ 1/4</span>.</p>
+<p><b>The special ones.</b> If an isocline happens to be a curve whose own slope equals <span class="m">m</span>, then following it obeys the equation, so it is also a solution. For <span class="m">y′ = y(1−y)</span>: the <span class="m">m = 0</span> isoclines <span class="m">y = 0</span> and <span class="m">y = 1</span> are horizontal and have slope 0 — they are the two constant solutions. For <span class="m">y′ = y/x</span>: the <span class="m">m</span>-isocline is <span class="m">y = mx</span>, a line of slope <span class="m">m</span> — <i>every</i> isocline is a solution.</p>
+
+<h2>3. Solution curves</h2>
+<p>A solution curve threads through the field so that its tangent always matches the local dash. Pick a starting point (the <b>initial condition</b>) and there is normally exactly one such curve through it.</p>
+<p><b>How it is drawn, concretely (Euler).</b> Start at <span class="m">(0, 0.5)</span> with <span class="m">h = 0.5</span> for <span class="m">y′ = y(1−y)</span>:</p>
+<ul>
+<li>slope <span class="m">= 0.5(1−0.5) = 0.25</span>; step: <span class="m">y = 0.5 + 0.5 × 0.25 = 0.625</span> at <span class="m">x = 0.5</span></li>
+<li>slope <span class="m">= 0.625 × 0.375 = 0.234</span>; step: <span class="m">y = 0.625 + 0.117 = 0.742</span> at <span class="m">x = 1</span></li>
+<li>slope <span class="m">= 0.742 × 0.258 = 0.191</span>; step: <span class="m">y = 0.838</span> at <span class="m">x = 1.5</span> … and so on, creeping toward 1.</li>
+</ul>
+<p>The exact answer here is <span class="m">y = 1/(1 + e<sup>−x</sup>)</span>, which gives <span class="m">y(1.5) = 0.818</span> — the small gap is Euler's error, and it shrinks as <span class="m">h</span> shrinks.</p>
+<p><b>Two curves can never cross</b> where the equation is well behaved: at a crossing point the field would have to prescribe two different slopes. This single fact does most of the work in Problem 1.</p>
+
+<h2>4. Problem 1 — <span class="m">y′ = y(1 − y)</span>, the three black pictures</h2>
+<p><b>Mathlet recipe:</b> dropdown → <span class="m">y′ = y(a − y)</span>; slider <span class="m">a = 1</span> (the screenshots are left at 3, which is a different equation); tick <b>Slope Field</b> (the panel goes dark); click points; <b>Clear Solutions</b> to start over. Each black picture is just six or seven clicks inside one horizontal band.</p>
+<p><b>Sign analysis — the whole solution in three lines.</b></p>
+<ul>
+<li><span class="m">y &gt; 1</span>: <span class="m">y</span> positive, <span class="m">1−y</span> negative ⇒ <span class="m">y′ &lt; 0</span>: falling.</li>
+<li><span class="m">0 &lt; y &lt; 1</span>: both positive ⇒ <span class="m">y′ &gt; 0</span>: rising.</li>
+<li><span class="m">y &lt; 0</span>: <span class="m">y</span> negative, <span class="m">1−y</span> positive ⇒ <span class="m">y′ &lt; 0</span>: falling.</li>
+</ul>
+<p>Add the two constant solutions <span class="m">y ≡ 0</span> and <span class="m">y ≡ 1</span> as impassable walls and every question answers itself:</p>
+<ul>
+<li><span class="m">y(0) = 1/2</span> — rising, blocked by the wall at 1 ⇒ <b>approaches 1</b>.</li>
+<li><span class="m">y(0) = 2</span> — falling, blocked by the same wall from above ⇒ <b>approaches 1</b>.</li>
+<li><span class="m">y(0) = −1</span> — falling with nothing below to stop it ⇒ <b>approaches −∞</b>.</li>
+</ul>
+<p><b>The formula, if you want it.</b> Separating variables and using partial fractions gives <span class="m">y(x) = y<sub>0</sub> / [ y<sub>0</sub> + (1 − y<sub>0</sub>)e<sup>−x</sup> ]</span>. Then:</p>
+<ul>
+<li><span class="m">y<sub>0</sub> = 1/2</span>: <span class="m">y = 1/(1 + e<sup>−x</sup>)</span> → 1. (Values: <span class="m">y(1)=0.731, y(3)=0.953, y(6)=0.998</span>.)</li>
+<li><span class="m">y<sub>0</sub> = 2</span>: <span class="m">y = 2/(2 − e<sup>−x</sup>)</span> → 1. Its denominator vanishes at <span class="m">x = −ln 2 ≈ −0.693</span>, which is the vertical asymptote you see on the <i>left</i> of each curve in the first black picture.</li>
+<li><span class="m">y<sub>0</sub> = −1</span>: <span class="m">y = −1/(2e<sup>−x</sup> − 1)</span>. Denominator vanishes at <span class="m">x = ln 2 ≈ 0.693</span>: the curve reaches <span class="m">−∞</span> there, at a <i>finite</i> <span class="m">x</span>. Strictly speaking it never gets to “<span class="m">x → ∞</span>” at all, but among the four offered choices, <span class="m">−∞</span> is the intended and correct one.</li>
+</ul>
+<p><b>Why each black picture shows several parallel-looking copies.</b> The right-hand side contains no <span class="m">x</span> (the equation is <b>autonomous</b>), so if <span class="m">y(x)</span> is a solution, so is <span class="m">y(x − c)</span> for any shift <span class="m">c</span>. Clicking at different <span class="m">x<sub>0</sub></span> inside one band produces horizontally shifted copies of the same curve — which is exactly what the pictures show, and exactly why the answer does not depend on <span class="m">x<sub>0</sub></span>.</p>
+<p><b>Phase line and stability.</b> Because only <span class="m">y</span> matters, you can compress the plane to a vertical line marked with the sign of <span class="m">y′</span>: down above 1, up between 0 and 1, down below 0. <span class="m">y = 1</span> is <b>stable</b> (arrows point at it), <span class="m">y = 0</span> is <b>unstable</b> (arrows leave it). In population language: 1 is the carrying capacity, and any positive population converges to it.</p>
+
+<h2>5. Problem 2 — <span class="m">y′ = y/x</span>, the origin puzzle</h2>
+<p><b>Mathlet recipe:</b> dropdown → <span class="m">y′ = ay/x</span>, set <span class="m">a = 1</span>, click <span class="m">(1,1)</span>.</p>
+<p><b>Isoclines.</b> <span class="m">y/x = m ⇒ y = mx</span>: straight lines through the origin. The isocline of slope <span class="m">m</span> <i>is</i> a line of slope <span class="m">m</span>, so it is parallel to its own dashes — isoclines and solutions coincide, and all solutions are straight.</p>
+<p><b>Solving.</b> <span class="m">dy/y = dx/x ⇒ ln|y| = ln|x| + c ⇒ y = Cx</span>. Through <span class="m">(1,1)</span>: <span class="m">C = 1</span>, so <span class="m">y = x</span>. Verify: <span class="m">y′ = 1</span> and <span class="m">y/x = x/x = 1</span> ✓ for every <span class="m">x ≠ 0</span>.</p>
+<p><b>Why a ray and not a line.</b> A solution has to be differentiable throughout an interval, and <span class="m">y/x</span> does not exist at <span class="m">x = 0</span>. So the largest interval containing <span class="m">x = 1</span> on which this works is <span class="m">x &gt; 0</span>. The graph is the half-line from the origin through <span class="m">(1,1)</span> — a ray. The mirror piece on <span class="m">x &lt; 0</span> is a different solution, not part of this one.</p>
+<p><b>Why not “indefinite slope”.</b> The initial condition fixes <span class="m">C = 1</span>, so the slope is definitely 1. The phrase “indefinite slope” is there to describe what happens at the origin, where infinitely many rays of every slope emanate.</p>
+<p><b>Why not a circle or semicircle.</b> Circles centred at the origin satisfy <span class="m">x<sup>2</sup>+y<sup>2</sup>=r<sup>2</sup></span>, hence <span class="m">y′ = −x/y</span> — the negative reciprocal. Those are the <i>orthogonal</i> curves to our rays, the solutions of a different equation.</p>
+<p><b>The failure at the origin.</b> Every ray passes through <span class="m">(0,0)</span>, so <span class="m">y(0) = 0</span> is satisfied by infinitely many functions: uniqueness fails. And <span class="m">y(0) = 1</span> is satisfied by none: existence fails. The existence–uniqueness theorem requires <span class="m">f</span> and <span class="m">∂f/∂y</span> to be continuous in a rectangle around the initial point; at <span class="m">x = 0</span>, <span class="m">f = y/x</span> is not even defined, so nothing is promised — and nothing is delivered.</p>
+
+<h2>6. Glossary</h2>
+<ul>
+<li><b>Slope / direction field</b> — grid of short segments showing the slope prescribed at each point.</li>
+<li><b>Isocline</b> — level set <span class="m">f(x,y) = m</span>: all points where the prescribed slope equals <span class="m">m</span>.</li>
+<li><b>Solution curve / integral curve</b> — curve tangent to the field everywhere.</li>
+<li><b>Initial condition</b> — the point <span class="m">(x<sub>0</sub>, y<sub>0</sub>)</span> a solution must pass through; equation + condition = <b>initial value problem</b>.</li>
+<li><b>Equilibrium / critical point / constant solution</b> — a value where <span class="m">y′ = 0</span> for all <span class="m">x</span>, giving a horizontal solution line.</li>
+<li><b>Stable / unstable</b> — nearby solutions move toward / away from the equilibrium.</li>
+<li><b>Autonomous</b> — right-hand side has no <span class="m">x</span>; the field repeats along horizontal lines and solutions are horizontal shifts of each other.</li>
+<li><b>Phase line</b> — the compressed 1-D summary of an autonomous equation: dots at equilibria, arrows for the sign of <span class="m">y′</span>.</li>
+<li><b>Euler's method</b> — <span class="m">y<sub>n+1</sub> = y<sub>n</sub> + h·f(x<sub>n</sub>, y<sub>n</sub>)</span>; the crude version of what the mathlet does when you click.</li>
+<li><b>Separation of variables</b> — solving <span class="m">y′ = g(x)p(y)</span> by writing <span class="m">dy/p(y) = g(x)dx</span> and integrating both sides.</li>
+<li><b>Existence and uniqueness</b> — if <span class="m">f</span> and <span class="m">∂f/∂y</span> are continuous near <span class="m">(x<sub>0</sub>,y<sub>0</sub>)</span>, exactly one solution passes through it; solution curves then never cross.</li>
+</ul>`;
+}
+
+/* ================= float plumbing ================= */
+const panel=$("helpPanel"), head=$("helpHead"), grip=$("helpGrip"), helpBtn=$("helpBtn");
+let placed=false;
+function placePanel(){ if(placed) return; placed=true;
+  const fig=document.querySelector(".fig").getBoundingClientRect();
+  const w=Math.min(680,Math.max(320,fig.width-20)), h=Math.min(Math.max(380,fig.height+80),window.innerHeight*0.84);
+  panel.style.left=(fig.left+10)+"px"; panel.style.top=(fig.top+8)+"px"; panel.style.width=w+"px"; panel.style.height=h+"px"; }
+function openHelp(){ $("helpBody").innerHTML=helpHTML(); placePanel(); panel.hidden=false; helpBtn.setAttribute("aria-expanded","true"); head.focus(); }
+function closeHelp(){ panel.hidden=true; helpBtn.setAttribute("aria-expanded","false"); helpBtn.focus(); }
+helpBtn.addEventListener("click",()=> panel.hidden?openHelp():closeHelp());
+$("helpClose").addEventListener("click",closeHelp);
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!panel.hidden) closeHelp(); });
+$("helpTab").addEventListener("click",()=>{
+  const css=`body{font-family:${getComputedStyle(document.body).fontFamily};color:#1b2230;max-width:78ch;margin:30px auto;padding:0 18px;line-height:1.62;font-size:15px}
+  h1{font-size:23px} h2{font-size:18px;color:#3b5bdb;margin:26px 0 8px;border-bottom:1px solid #e4e8f0;padding-bottom:4px}
+  ul{margin:6px 0 12px} li{margin:3px 0}
+  .m{font-family:${getComputedStyle(document.querySelector(".m")).fontFamily};font-style:italic}
+  .m sup,.m sub{font-style:normal;font-size:.72em}`;
+  const html=`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Slope fields, isoclines and solution curves</title><style>${css}</style></head><body><h1>Slope fields, isoclines and solution curves</h1>${helpHTML()}</body></html>`;
+  window.open(URL.createObjectURL(new Blob([html],{type:"text/html"})),"_blank"); closeHelp();
+});
+let drag=null;
+head.addEventListener("pointerdown",e=>{ if(e.target.tagName==="BUTTON") return; drag={x:e.clientX,y:e.clientY,l:panel.offsetLeft,t:panel.offsetTop}; head.setPointerCapture(e.pointerId); });
+head.addEventListener("pointermove",e=>{ if(!drag) return; panel.style.left=Math.max(0,Math.min(window.innerWidth-80,drag.l+e.clientX-drag.x))+"px"; panel.style.top=Math.max(0,Math.min(window.innerHeight-40,drag.t+e.clientY-drag.y))+"px"; });
+head.addEventListener("pointerup",()=>drag=null); head.addEventListener("pointercancel",()=>drag=null);
+head.addEventListener("keydown",e=>{ const st=16,k={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key]; if(!k) return; e.preventDefault();
+  if(e.shiftKey){ panel.style.width=Math.max(300,panel.offsetWidth+k[0]*st)+"px"; panel.style.height=Math.max(220,panel.offsetHeight+k[1]*st)+"px"; }
+  else { panel.style.left=(panel.offsetLeft+k[0]*st)+"px"; panel.style.top=(panel.offsetTop+k[1]*st)+"px"; } });
+let rs=null;
+grip.addEventListener("pointerdown",e=>{ rs={x:e.clientX,y:e.clientY,w:panel.offsetWidth,h:panel.offsetHeight}; grip.setPointerCapture(e.pointerId); e.preventDefault(); });
+grip.addEventListener("pointermove",e=>{ if(!rs) return; panel.style.width=Math.max(300,rs.w+e.clientX-rs.x)+"px"; panel.style.height=Math.max(220,rs.h+e.clientY-rs.y)+"px"; });
+grip.addEventListener("pointerup",()=>rs=null); grip.addEventListener("pointercancel",()=>rs=null);
+
+/* ================= controls ================= */
+const eqSel=$("eqSel");
+Object.keys(EQS).forEach(k=>{ const o=document.createElement("option"); o.value=k; o.textContent=EQS[k].name; eqSel.appendChild(o); });
+eqSel.value=S.eq;
+eqSel.addEventListener("change",()=>{ S.eq=eqSel.value; S.curves=[]; S.eulN=0; buildJumps(); update(); });
+
+function buildJumps(){
+  const box=$("mJump"); box.innerHTML="";
+  (EQ().mJumps||[]).forEach(([lab,v])=>{ const b=document.createElement("button"); b.innerHTML=lab; b.dataset.mv=v; box.appendChild(b); });
+}
+$("mJump").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return; S.m=+b.dataset.mv; $("mS").value=S.m; update(); });
+
+$("cField").addEventListener("change",()=>{S.showField=$("cField").checked; update();});
+$("cDark").addEventListener("change",()=>{S.dark=$("cDark").checked; update();});
+$("densS").addEventListener("input",()=>{S.dens=+$("densS").value; S.grow=null; update();});
+["px","py"].forEach(k=>$(k+"S").addEventListener("input",()=>{S[k]=+$(k+"S").value; update();}));
+$("mS").addEventListener("input",()=>{S.m=+$("mS").value; update();});
+$("cLadder").addEventListener("change",()=>{S.ladder=$("cLadder").checked; update();});
+$("x0S").addEventListener("input",()=>{S.x0=+$("x0S").value; S.eulN=0; update();});
+$("y0S").addEventListener("input",()=>{S.y0=+$("y0S").value; S.eulN=0; update();});
+$("cBack").addEventListener("change",()=>{S.back=$("cBack").checked; update();});
+$("hS").addEventListener("input",()=>{S.h=+$("hS").value; S.eulN=0; update();});
+$("cExact").addEventListener("change",()=>{S.exact=$("cExact").checked; update();});
+$("stepBtn").addEventListener("click",()=>{S.eulN=Math.min(S.eulN+1,eulerRows().length); update();});
+$("resetBtn").addEventListener("click",()=>{S.eulN=0; update();});
+let runT=null;
+$("runBtn").addEventListener("click",()=>{ if(runT){clearInterval(runT);runT=null;return;} S.eulN=0;
+  const total=eulerRows().length, per=Math.max(1,Math.ceil(total/45));
+  runT=setInterval(()=>{ if(S.eulN>=total){clearInterval(runT);runT=null;}
+    else {S.eulN=Math.min(total,S.eulN+per);update();} },110); });
+$("cPhase").addEventListener("change",()=>{S.phase=$("cPhase").checked; update();});
+$("cAxis").addEventListener("change",()=>{S.axisMark=$("cAxis").checked; update();});
+function clearAll(){ S.curves=[]; S.p2=new Set(); update(); }
+$("clearBtn").addEventListener("click",clearAll);
+$("clearBtn2").addEventListener("click",clearAll);
+const BANDS={hi:[1.4,1.8,2.4,3.2,1.6,2.0], mid:[0.05,0.1,0.2,0.35,0.5,0.7], lo:[-0.05,-0.1,-0.2,-0.4,-0.7,-1.0]};
+const XS=[-3,-2,-1,0,1,2];
+const hasSrc=src=>S.curves.some(c=>c.src===src);
+const dropSrc=src=>{S.curves=S.curves.filter(c=>c.src!==src);};
+function addBand(src){ XS.forEach((x,i)=>S.curves.push({x,y:BANDS[src][i%BANDS[src].length],src})); }
+$("bandPills").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return;
+  const bnd=b.dataset.b;
+  if(bnd==="all"){
+    const on=["hi","mid","lo"].every(hasSrc);
+    ["hi","mid","lo"].forEach(k=>{ dropSrc(k); if(!on) addBand(k); });
+  } else if(bnd==="quiz"){
+    if(hasSrc("quiz")) dropSrc("quiz");
+    else [[0,0.5],[0,-1],[0,2]].forEach(([x,y])=>S.curves.push({x,y,src:"quiz"}));
+  } else {
+    if(hasSrc(bnd)) dropSrc(bnd); else addBand(bnd);
+  }
+  update(); });
+const P2SET={
+  one:[{x:1,y:1}],
+  rays:[0.25,0.5,1,2,4,-0.5,-1,-2].map(C=>({x:1,y:C})),
+  origin:[0.25,0.5,1,2,4,-0.5,-1,-2].map(C=>({x:1,y:C})).concat([0.25,1,2,-1].map(C=>({x:-1,y:-C}))),
+  nosol:[{x:1,y:1},{x:1,y:3},{x:1,y:0.3}]};
+$("p2Pills").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return;
+  const k=b.dataset.p;
+  if(S.p2.has(k)){ S.p2.delete(k); dropSrc(k); }
+  else { S.p2.add(k); P2SET[k].forEach(c=>S.curves.push({x:c.x,y:c.y,src:k})); }
+  update(); });
+$("growBtn").addEventListener("click",()=>{ if(S.grow!==null){S.grow=null;update();return;}
+  S.grow=0; const total=S.dens*S.dens;
+  const t=setInterval(()=>{ S.grow+=Math.max(1,Math.round(total/90)); if(S.grow>=total){clearInterval(t);S.grow=null;} update(); },40); });
+
+document.querySelectorAll('nav [role="tab"]').forEach(t=>t.addEventListener("click",()=>{
+  document.querySelectorAll('nav [role="tab"]').forEach(x=>x.setAttribute("aria-selected",x===t?"true":"false"));
+  S.tab=t.dataset.tab; S.grow=null;
+  if(S.tab==="p1"){ S.eq="log"; S.dark=true; $("cDark").checked=true; if(!S.curves.length) S.curves=[{x:0,y:0.5,src:"quiz"},{x:0,y:-1,src:"quiz"},{x:0,y:2,src:"quiz"}]; }
+  if(S.tab==="p2"){ S.eq="yx"; S.dark=true; $("cDark").checked=true; S.p2=new Set(["one"]); S.curves=[{x:1,y:1,src:"one"}]; }
+  if(S.tab==="sol"||S.tab==="fit"||S.tab==="iso"||S.tab==="field"){ S.curves=[]; }
+  eqSel.value=S.eq; buildJumps(); update();
+}));
+
+// canvas clicking
+let cvDrag=false;
+function cvSet(e){ const r=cv.getBoundingClientRect(); const x=Math.max(XMIN,Math.min(XMAX,ux(e.clientX-r.left))), y=Math.max(YMIN,Math.min(YMAX,uy(e.clientY-r.top)));
+  if(S.tab==="field"){ S.px=Math.round(x*20)/20; S.py=Math.round(y*20)/20; $("pxS").value=S.px; $("pyS").value=S.py; }
+  else if(S.tab==="iso"){ const m=F(x,y); if(isFinite(m)){ S.m=Math.max(-3,Math.min(3,Math.round(m*100)/100)); $("mS").value=S.m; } }
+  else if(S.tab==="sol"||S.tab==="fit"){ S.x0=Math.round(x*20)/20; S.y0=Math.round(y*20)/20; $("x0S").value=S.x0; $("y0S").value=S.y0; S.eulN=0; }
+  update(); }
+function hitCurve(px,py){
+  let best=-1, bd=11;
+  S.curves.forEach((c,i)=>{
+    const pts=integrate(c.x,c.y,1).concat(integrate(c.x,c.y,-1));
+    for(let k=0;k<pts.length;k+=3){
+      const d=Math.hypot(sx(pts[k][0])-px, sy(pts[k][1])-py);
+      if(d<bd){ bd=d; best=i; }
+    }
+  });
+  return best;
+}
+cv.addEventListener("pointerdown",e=>{ if(S.tab==="p1"||S.tab==="p2"){ const r=cv.getBoundingClientRect();
+    const cxp=e.clientX-r.left, cyp=e.clientY-r.top;
+    const hit=hitCurve(cxp,cyp);
+    if(hit>=0){ const src=S.curves[hit].src; S.curves.splice(hit,1);
+      if(src&&!S.curves.some(c=>c.src===src)) S.p2.delete(src); update(); return; }
+    const x=ux(cxp), y=uy(cyp);
+    if(x>XMIN&&x<XMAX&&y>YMIN&&y<YMAX&&!(EQ().singular==="x0"&&Math.abs(x)<0.05)) S.curves.push({x,y,src:"click"});
+    update(); return; }
+  cvDrag=true; cv.setPointerCapture(e.pointerId); cvSet(e); });
+cv.addEventListener("pointermove",e=>{ if(cvDrag) cvSet(e); });
+cv.addEventListener("pointerup",()=>cvDrag=false); cv.addEventListener("pointercancel",()=>cvDrag=false);
+
+/* ================= update ================= */
+function update(){
+  document.querySelectorAll("[data-tabs]").forEach(el=>{ el.hidden=!el.dataset.tabs.split(" ").includes(S.tab); });
+  eqSel.disabled = (S.tab==="p1"||S.tab==="p2");
+  $("densO").textContent=S.dens+"×"+S.dens;
+  $("pxO").textContent=fs(S.px,2); $("pyO").textContent=fs(S.py,2);
+  $("mO").textContent="m = "+fs(S.m,2);
+  $("x0O").textContent=fs(S.x0,2); $("y0O").textContent=fs(S.y0,2);
+  $("hO").textContent="h = "+f2(S.h,2);
+  $("clickHint").textContent={field:"← or click/drag the plot to move the probe",
+    iso:"← or click the plot to jump m to the slope there",
+    sol:"← or click the plot to move the starting point",
+    fit:"← or click the plot to move the starting point",
+    p1:"← click empty space to plant a curve · click a curve to delete it · buttons toggle on/off",
+    p2:"← click empty space to plant a ray · click a ray to delete it · buttons toggle on/off"}[S.tab];
+  document.querySelectorAll("#bandPills button").forEach(b=>{ const k=b.dataset.b;
+    b.classList.toggle("on", k==="all" ? ["hi","mid","lo"].every(hasSrc) : S.curves.some(c=>c.src===k)); });
+  document.querySelectorAll("#p2Pills button").forEach(b=>b.classList.toggle("on",S.p2.has(b.dataset.p)));
+  document.querySelectorAll("#mJump button").forEach(b=>b.classList.toggle("on",Math.abs(S.m-(+b.dataset.mv))<1e-9));
+  figTitle();
+  $("calc").innerHTML=calcHTML();
+  $("notes").innerHTML=notesHTML();
+  if(!panel.hidden) $("helpBody").innerHTML=helpHTML();
+  draw();
+}
+new ResizeObserver(resize).observe(cv.parentElement);
+buildJumps(); resize(); update();
+})();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

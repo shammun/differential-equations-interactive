@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beats — adding two sinusoids of different frequencies</title>
+<style>
+  :root{
+    --bg:#edf1fa;
+    --card:#ffffff;
+    --ink:#1d2440;
+    --muted:#5d6787;
+    --faint:#98a3c0;
+    --line:#e3e8f6;
+    --purple:#6c5ce7;
+    --purple-deep:#5647c9;
+    --shadow:0 14px 40px rgba(97,86,196,.13);
+    /* mathlet palette — kept faithful to the original applet */
+    --sum:#1a1ae0;
+    --fcol:#128a2f;
+    --gcol:#c4007c;
+    --env:#8a8a8a;
+    --plotbg:#f4f5f7;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55;
+    padding:12px 16px 8px;
+    height:100vh;overflow:hidden;display:flex;flex-direction:column;
+  }
+  .m{font-family:Georgia,"Times New Roman",serif;font-weight:600;}
+
+  /* ---------- top bar ---------- */
+  .topbar{max-width:1340px;width:100%;margin:0 auto 9px;flex:0 0 auto;}
+  .eyebrow{font-size:.74rem;letter-spacing:.13em;text-transform:uppercase;color:var(--purple);font-weight:800;margin-bottom:3px;}
+  h1{font-size:1.22rem;margin:0 0 6px;font-weight:800;letter-spacing:-.01em;}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;}
+  .tab{
+    border:1px solid var(--line);background:#fff;color:var(--muted);
+    font-family:inherit;font-size:.83rem;font-weight:800;
+    padding:7px 15px;border-radius:11px;cursor:pointer;transition:all .22s;
+  }
+  .tab:hover{border-color:var(--purple);color:var(--purple);}
+  .tab.active{background:var(--purple);border-color:var(--purple);color:#fff;box-shadow:0 7px 16px rgba(108,92,231,.32);}
+  .tab.active:hover{color:#fff;}
+
+  .pane{flex:1;min-height:0;display:flex;flex-direction:column;max-width:1340px;width:100%;margin:0 auto;}
+  .pane[hidden]{display:none !important;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);}
+
+  /* ---------- mathlet panel ---------- */
+  .mathlet{padding:12px 14px;display:flex;flex-direction:column;min-height:0;gap:6px;}
+  .plotlabel{font-size:.82rem;font-weight:800;margin:0 0 1px;}
+  .plotlabel .s{color:var(--sum);}
+  .plotlabel .f{color:var(--fcol);}
+  .plotlabel .g{color:var(--gcol);}
+  .plotwrap{flex:1;min-height:0;display:flex;flex-direction:column;}
+  .plotwrap svg{display:block;width:100%;height:100%;flex:1;min-height:0;background:var(--plotbg);border-radius:8px;}
+  .midrow{display:flex;align-items:center;gap:18px;flex-wrap:wrap;flex:0 0 auto;padding:2px 2px;}
+  .chk{display:inline-flex;align-items:center;gap:7px;font-size:.85rem;font-weight:700;color:var(--ink);cursor:pointer;user-select:none;}
+  .chk input{width:15px;height:15px;accent-color:var(--purple);cursor:pointer;}
+  .readout{margin-left:auto;font-variant-numeric:tabular-nums;font-size:.85rem;font-weight:800;color:var(--muted);display:flex;gap:16px;}
+  .readout b{color:var(--sum);font-weight:800;}
+
+  .sliders{display:grid;grid-template-columns:repeat(3,1fr);gap:9px 18px;flex:0 0 auto;padding:2px 2px 0;}
+  .sl{display:flex;align-items:center;gap:9px;}
+  .sl .nm{font-family:Georgia,serif;font-size:1.02rem;font-weight:700;color:var(--gcol);width:15px;text-align:center;flex:0 0 auto;}
+  .sl input[type=range]{flex:1;min-width:70px;accent-color:var(--gcol);}
+  .sl .vl{font-variant-numeric:tabular-nums;font-weight:800;color:var(--gcol);min-width:52px;text-align:right;font-size:.87rem;}
+  .sl .rng{font-size:.68rem;color:var(--faint);font-weight:700;flex:0 0 auto;}
+
+  /* ---------- lesson pane ---------- */
+  .wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(330px,.9fr);gap:14px;flex:1;min-height:0;}
+  .lesson{padding:15px 18px 12px;display:flex;flex-direction:column;min-height:0;}
+  .stepeyebrow{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);font-weight:800;margin-bottom:3px;}
+  .lesson h2{margin:0 0 9px;font-size:1.1rem;letter-spacing:-.01em;}
+  #stepBody{flex:1;min-height:0;overflow-y:auto;padding-right:7px;}
+  .lesson p{margin:0 0 9px;font-size:.92rem;color:#333c5e;}
+  .lesson strong{color:var(--ink);}
+  .formula{
+    font-family:Georgia,"Times New Roman",serif;font-size:1rem;
+    background:#f6f8ff;border-left:3px solid var(--purple);
+    padding:8px 12px;border-radius:0 9px 9px 0;margin:9px 0;
+    overflow-x:auto;white-space:nowrap;
+  }
+  .note{background:#eefafa;border:1px solid #c4e7e8;border-radius:9px;padding:8px 11px;margin:9px 0;font-size:.86rem;color:#0b6b70;}
+  .warn{background:#fef7ee;border:1px solid #f2d9bc;border-radius:9px;padding:8px 11px;margin:9px 0;font-size:.86rem;color:#9a5c17;}
+  .try{
+    border:1.5px solid var(--purple);background:#f4f2ff;color:var(--purple);
+    font-family:inherit;font-size:.8rem;font-weight:800;
+    padding:6px 11px;border-radius:9px;cursor:pointer;margin:2px 5px 5px 0;transition:all .2s;
+  }
+  .try:hover{background:var(--purple);color:#fff;}
+  table.vals{border-collapse:collapse;margin:7px 0 10px;font-size:.85rem;font-variant-numeric:tabular-nums;width:100%;}
+  table.vals th, table.vals td{border:1px solid var(--line);padding:4px 8px;text-align:center;}
+  table.vals th{background:#f6f8ff;color:var(--muted);font-size:.77rem;}
+  table.vals td.hl{background:#f4f2ff;font-weight:800;color:var(--purple);}
+  .sw{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:-1px;margin-right:4px;}
+  ol.recipe{margin:5px 0 9px;padding-left:19px;font-size:.9rem;color:#333c5e;}
+  ol.recipe li{margin-bottom:5px;}
+
+  .nav{display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);flex:0 0 auto;}
+  .nav button{border:0;border-radius:11px;padding:9px 16px;font-size:.88rem;font-weight:700;cursor:pointer;}
+  #prev{background:#f1f3fb;color:var(--muted);}
+  #prev:hover:not(:disabled){background:#e6e9f7;}
+  #next{background:var(--purple);color:#fff;box-shadow:0 7px 16px rgba(108,92,231,.32);margin-left:auto;}
+  #next:hover:not(:disabled){background:var(--purple-deep);}
+  .nav button:disabled{opacity:.4;cursor:default;box-shadow:none;}
+  .dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;flex:1;}
+  .dots button{width:10px;height:10px;padding:0;border-radius:50%;border:0;cursor:pointer;background:#d7dcf0;transition:all .22s;}
+  .dots button.cur{background:var(--purple);transform:scale(1.35);}
+  .dots button.seen{background:#b3a9f2;}
+  .kbd{font-size:.72rem;color:var(--faint);text-align:center;margin-top:5px;}
+
+  /* probe strip inside lesson graph */
+  .probe{display:flex;align-items:center;gap:9px;padding:6px 8px;margin-top:5px;background:#f6f8ff;border:1px solid var(--line);border-radius:9px;flex:0 0 auto;}
+  .probe label{font-size:.8rem;font-weight:800;color:var(--muted);white-space:nowrap;}
+  .probe input[type=range]{flex:1;accent-color:var(--purple);}
+  .rd{display:flex;gap:6px;flex-wrap:wrap;font-variant-numeric:tabular-nums;font-size:.82rem;}
+  .rchip{padding:3px 8px;border-radius:8px;font-weight:800;border:1px solid var(--line);background:#fff;}
+  .rchip.rf{color:#0f6b25;border-color:#c2e4cb;background:#f0faf3;}
+  .rchip.rg{color:#a10067;border-color:#f2c4de;background:#fdf2f8;}
+  .rchip.rs{color:#fff;background:var(--sum);border-color:var(--sum);}
+  .rchip.re{color:#5a5a5a;border-color:#dcdcdc;background:#f6f6f6;}
+  .rop{color:var(--faint);font-weight:800;align-self:center;}
+
+  /* ---------- reference pane ---------- */
+  .ref{padding:18px 22px;overflow-y:auto;flex:1;min-height:0;}
+  .ref h3{margin:16px 0 7px;font-size:1rem;color:var(--purple);letter-spacing:-.01em;}
+  .ref h3:first-child{margin-top:0;}
+  .ref p, .ref li{font-size:.91rem;color:#333c5e;}
+  .ref p{margin:0 0 9px;}
+  .refgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;}
+  .refcard{background:#f8f9ff;border:1px solid var(--line);border-radius:12px;padding:13px 15px;}
+  .refcard h4{margin:0 0 6px;font-size:.88rem;color:var(--ink);}
+  .refcard p{font-size:.87rem;margin:0 0 6px;}
+
+  button:focus-visible, input:focus-visible{outline:3px solid rgba(108,92,231,.5);outline-offset:2px;}
+
+  @media (max-width:1000px){
+    body{height:auto;overflow:auto;display:block;}
+    .pane{display:block;}
+    .pane[hidden]{display:none !important;}
+    .wrap{grid-template-columns:1fr;}
+    .plotwrap svg{height:auto;flex:none;}
+    #stepBody{overflow:visible;padding-right:0;}
+    .sliders{grid-template-columns:1fr;}
+    .ref{overflow:visible;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="eyebrow">MIT 18.03x · Unit 3 · Sinusoidal functions</div>
+  <h1>Beats — what happens when you add two sinusoids of <em>different</em> frequencies</h1>
+  <div class="tabs">
+    <button type="button" class="tab active" id="tab0">The applet</button>
+    <button type="button" class="tab" id="tab1">Guided walkthrough</button>
+    <button type="button" class="tab" id="tab2">Formula reference</button>
+  </div>
+</div>
+
+<!-- ==================== TAB 0 · the applet ==================== -->
+<section class="pane" id="pane0">
+  <div class="card mathlet">
+    <div class="plotwrap">
+      <div class="plotlabel"><span class="s">x = f(t) + g(t)</span></div>
+      <svg id="topA" viewBox="0 0 1000 250" role="img" aria-label="Sum of the two waves"></svg>
+    </div>
+    <div class="midrow">
+      <label class="chk"><input type="checkbox" id="zoomA"> Zoom</label>
+      <label class="chk"><input type="checkbox" id="envA"> Envelope</label>
+      <div class="readout"><span>t = <b id="rtA">—</b></span><span>x = <b id="rxA">—</b></span></div>
+    </div>
+    <div class="plotwrap">
+      <div class="plotlabel"><span class="g">g(t) = A sin(ωt − φ)</span><br><span class="f">f(t) = sin(t)</span></div>
+      <svg id="botA" viewBox="0 0 1000 250" role="img" aria-label="The two component waves"></svg>
+    </div>
+    <div class="sliders">
+      <div class="sl"><span class="nm">ω</span><span class="rng">0</span><input type="range" id="wA" min="0" max="2" step="0.005" value="1.77"><span class="rng">2</span><span class="vl" id="wvA">1.770</span></div>
+      <div class="sl"><span class="nm">A</span><span class="rng">0</span><input type="range" id="aA" min="0" max="1" step="0.01" value="1"><span class="rng">1</span><span class="vl" id="avA">1.00</span></div>
+      <div class="sl"><span class="nm">φ</span><span class="rng">0</span><input type="range" id="pA" min="0" max="2" step="0.01" value="1.13"><span class="rng">2</span><span class="vl" id="pvA">1.13</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== TAB 1 · guided walkthrough ==================== -->
+<section class="pane" id="pane1" hidden>
+  <div class="wrap">
+    <div class="card mathlet">
+      <div class="plotwrap">
+        <div class="plotlabel"><span class="s">x = f(t) + g(t)</span></div>
+        <svg id="topB" viewBox="0 0 1000 250" role="img" aria-label="Sum of the two waves"></svg>
+      </div>
+      <div class="midrow">
+        <label class="chk"><input type="checkbox" id="zoomB"> Zoom</label>
+        <label class="chk"><input type="checkbox" id="envB"> Envelope</label>
+        <div class="readout"><span>t = <b id="rtB">—</b></span><span>x = <b id="rxB">—</b></span></div>
+      </div>
+      <div class="plotwrap">
+        <div class="plotlabel"><span class="g">g(t) = A sin(ωt − φ)</span><br><span class="f">f(t) = sin(t)</span></div>
+        <svg id="botB" viewBox="0 0 1000 250" role="img" aria-label="The two component waves"></svg>
+      </div>
+      <div class="sliders">
+        <div class="sl"><span class="nm">ω</span><span class="rng">0</span><input type="range" id="wB" min="0" max="2" step="0.005" value="1.77"><span class="rng">2</span><span class="vl" id="wvB">1.770</span></div>
+        <div class="sl"><span class="nm">A</span><span class="rng">0</span><input type="range" id="aB" min="0" max="1" step="0.01" value="1"><span class="rng">1</span><span class="vl" id="avB">1.00</span></div>
+        <div class="sl"><span class="nm">φ</span><span class="rng">0</span><input type="range" id="pB" min="0" max="2" step="0.01" value="1.13"><span class="rng">2</span><span class="vl" id="pvB">1.13</span></div>
+      </div>
+      <div class="probe" id="probeBox" hidden>
+        <label for="probeT">read at t =</label>
+        <input type="range" id="probeT" min="0" max="30" step="0.02" value="2">
+        <div class="rd" id="probeRead"></div>
+      </div>
+    </div>
+
+    <div class="card lesson">
+      <div class="stepeyebrow" id="stepEyebrow"></div>
+      <h2 id="stepTitle"></h2>
+      <div id="stepBody"></div>
+      <div class="nav">
+        <button id="prev" type="button">← Back</button>
+        <div class="dots" id="dots"></div>
+        <button id="next" type="button">Next →</button>
+      </div>
+      <div class="kbd">← → to step through · the sliders stay live in every step</div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== TAB 2 · reference ==================== -->
+<section class="pane" id="pane2" hidden>
+  <div class="card ref">
+    <h3>The setup</h3>
+    <p>A fixed reference wave and an adjustable one, added together:</p>
+    <div class="formula">f(t) = sin t &nbsp;&nbsp;·&nbsp;&nbsp; g(t) = A sin(ωt − φ) &nbsp;&nbsp;·&nbsp;&nbsp; x(t) = f(t) + g(t)</div>
+    <p>Three knobs, three independent jobs: <strong>ω</strong> sets how fast g wiggles (radians per second), <strong>A</strong> sets how tall it is, <strong>φ</strong> slides it along the time axis.</p>
+
+    <h3>What each slider controls</h3>
+    <table class="vals">
+      <tr><th>Knob</th><th>Directly sets</th><th>Effect on the sum</th><th>Does NOT affect</th></tr>
+      <tr><td class="hl">ω</td><td>g's period, 2π/ω</td><td>beat period 2π/|ω−1| and carrier period 4π/(1+ω)</td><td>how deep the nulls go</td></tr>
+      <tr><td class="hl">A</td><td>g's height</td><td>envelope range: max 1+A, min |1−A|</td><td>any timing at all</td></tr>
+      <tr><td class="hl">φ</td><td>g's time shift, φ/ω</td><td>slides the whole beat pattern left/right by φ/(ω−1)</td><td>beat period, null depth</td></tr>
+    </table>
+
+    <h3>The envelope, derived</h3>
+    <p>Write each sinusoid as the imaginary part of a rotating complex number:</p>
+    <div class="formula">x(t) = Im( e<sup>it</sup> ) + Im( A e<sup>i(ωt − φ)</sup> ) = Im( e<sup>it</sup> [ 1 + A e<sup>iψ(t)</sup> ] )</div>
+    <p>where the exponent split works because e<sup>it</sup> · A e<sup>iψ</sup> = A e<sup>i(t + ψ)</sup>, and we choose</p>
+    <div class="formula">ψ(t) = (ω − 1) t − φ &nbsp;&nbsp; so that &nbsp;&nbsp; t + ψ(t) = ωt − φ ✓</div>
+    <p>ψ is the <strong>phase gap</strong>: how far ahead g's arrow is of f's arrow. Now write the bracket in polar form, 1 + A e<sup>iψ</sup> = R e<sup>iα</sup>. Its modulus comes from the law of cosines on the two-vector triangle:</p>
+    <div class="formula">R(t) = √( 1 + A² + 2A cos ψ(t) ) &nbsp;&nbsp;·&nbsp;&nbsp; α(t) = atan2( A sin ψ, 1 + A cos ψ )</div>
+    <p>Therefore</p>
+    <div class="formula">x(t) = R(t) · sin( t + α(t) )</div>
+    <p>— a sine whose amplitude R and phase α both drift slowly. The gray curves in the applet are ±R(t).</p>
+
+    <h3>Key consequences</h3>
+    <div class="refgrid">
+      <div class="refcard">
+        <h4>Envelope range</h4>
+        <p>cos ψ swings over [−1, 1], so R swings over</p>
+        <div class="formula">|1 − A| ≤ R(t) ≤ 1 + A</div>
+        <p>Full silence at the nulls needs A = 1 exactly.</p>
+      </div>
+      <div class="refcard">
+        <h4>Beat period</h4>
+        <p>R repeats when ψ advances by 2π:</p>
+        <div class="formula">T<sub>beat</sub> = 2π / |ω − 1|</div>
+        <p>Closer frequencies → slower beats. ω = 1 → no beats at all.</p>
+      </div>
+      <div class="refcard">
+        <h4>Carrier period</h4>
+        <p>The fast wiggle inside the envelope runs at the average frequency (1 + ω)/2:</p>
+        <div class="formula">T<sub>carrier</sub> = 4π / (1 + ω)</div>
+      </div>
+      <div class="refcard">
+        <h4>Clean product form (A = 1, φ = 0)</h4>
+        <div class="formula">sin t + sin ωt = 2 sin( (1+ω)t/2 ) cos( (1−ω)t/2 )</div>
+        <p>Fast sine × slow cosine — the textbook beats formula, a special case of R sin(t + α).</p>
+      </div>
+    </div>
+
+    <h3>Special cases worth trying</h3>
+    <table class="vals">
+      <tr><th>Setting</th><th>What you get</th><th>Why</th></tr>
+      <tr><td>ω = 1, any φ</td><td>a pure sinusoid, constant amplitude √(2 + 2cos φ)</td><td>ψ = −φ is frozen, so R never changes</td></tr>
+      <tr><td>ω = 1, A = 1, φ = π</td><td>flat line, x ≡ 0</td><td>the two arrows are opposite and equal — permanent cancellation</td></tr>
+      <tr><td>ω = 1.1, A = 1</td><td>classic beats: ~10.5 fast cycles per hump</td><td>T<sub>beat</sub> = 62.8 vs T<sub>carrier</sub> = 5.98</td></tr>
+      <tr><td>A = 0.5</td><td>humps that never fully die (floor 0.5)</td><td>min R = |1 − A| = 0.5</td></tr>
+      <tr><td>ω = 0</td><td>a plain sine ridden up or down</td><td>g = A sin(−φ), a constant</td></tr>
+      <tr><td>ω = 2, A = 1</td><td>lumpy, not beat-like</td><td>T<sub>beat</sub> = 6.28 ≈ T<sub>carrier</sub> = 4.19 — no separation of scales</td></tr>
+    </table>
+
+    <h3>When is it really "beats"?</h3>
+    <p>The word applies when the envelope is much slower than the wiggle inside it, which needs ω close to 1. The ratio of the two time scales is</p>
+    <div class="formula">T<sub>beat</sub> / T<sub>carrier</sub> = (1 + ω) / (2|ω − 1|)</div>
+    <p>At ω = 1.1 that ratio is 10.5 — a clear, audible throb. At the applet's default ω = 1.77 it is only 1.8, which is why the default picture looks lumpy rather than like textbook beats.</p>
+  </div>
+</section>
+
+<script>
+(function(){
+"use strict";
+
+var PI = Math.PI;
+var NS = 'http://www.w3.org/2000/svg';
+
+function el(name, attrs, parent){
+  var e = document.createElementNS(NS, name);
+  for (var k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function txt(parent, x, y, s, attrs){
+  var a = attrs || {}; a.x = x; a.y = y;
+  var e = el('text', a, parent); e.textContent = s; return e;
+}
+function piLabel(t){
+  var n = t / PI;
+  return (Math.abs(n - Math.round(n)) < 1e-9 ? String(Math.round(n)) : n.toFixed(2)) + 'π';
+}
+
+/* =========================================================
+   makePlot — builds one linked pair of windows (sum + parts)
+   ========================================================= */
+function makePlot(cfg){
+  var topSvg = document.getElementById(cfg.top);
+  var botSvg = document.getElementById(cfg.bot);
+  var rt = document.getElementById(cfg.rt);
+  var rx = document.getElementById(cfg.rx);
+
+  var W = 1000, H = 250;
+  var L = 46, R = 20, T = 12, B = 30;
+  var state = { w:1.77, A:1.0, p:1.13, tmax:20*PI, env:false };
+
+  function X(t){ return L + t/state.tmax * (W - L - R); }
+  function tOfX(px){ return (px - L) / (W - L - R) * state.tmax; }
+
+  var TOPMAX = 2.2, BOTMAX = 1.35;
+  function Ytop(y){ return T + (TOPMAX - y)/(2*TOPMAX) * (H - T - B); }
+  function Ybot(y){ return T + (BOTMAX - y)/(2*BOTMAX) * (H - T - B); }
+
+  /* ---- functions ---- */
+  function f(t){ return Math.sin(t); }
+  function g(t){ return state.A * Math.sin(state.w*t - state.p); }
+  function sum(t){ return f(t) + g(t); }
+  function psi(t){ return (state.w - 1)*t - state.p; }
+  function env(t){
+    var A = state.A;
+    return Math.sqrt(1 + A*A + 2*A*Math.cos(psi(t)));
+  }
+
+  /* ---- layers ---- */
+  var tg = {}, bg = {};
+  tg.grid  = el('g', {}, topSvg);
+  tg.envG  = el('g', {}, topSvg);
+  tg.curve = el('g', {}, topSvg);
+  tg.cur   = el('g', {}, topSvg);
+  bg.grid  = el('g', {}, botSvg);
+  bg.curve = el('g', {}, botSvg);
+  bg.cur   = el('g', {}, botSvg);
+
+  var envU = el('path', {fill:'none', stroke:'var(--env)', 'stroke-width':1.7}, tg.envG);
+  var envL = el('path', {fill:'none', stroke:'var(--env)', 'stroke-width':1.7}, tg.envG);
+  var sumP = el('path', {fill:'none', stroke:'var(--sum)', 'stroke-width':1.9, 'stroke-linejoin':'round'}, tg.curve);
+  var fP   = el('path', {fill:'none', stroke:'var(--fcol)', 'stroke-width':1.9}, bg.curve);
+  var gP   = el('path', {fill:'none', stroke:'var(--gcol)', 'stroke-width':1.9}, bg.curve);
+
+  var curT = el('line', {stroke:'#7c86a8','stroke-width':1, 'stroke-dasharray':'3 3', opacity:0}, tg.cur);
+  var curB = el('line', {stroke:'#7c86a8','stroke-width':1, 'stroke-dasharray':'3 3', opacity:0}, bg.cur);
+  var curD = el('circle', {r:4.5, fill:'var(--sum)', stroke:'#fff','stroke-width':1.6, opacity:0}, tg.cur);
+
+  /* probe marks (walkthrough only) */
+  var pbT = el('line', {stroke:'var(--purple)','stroke-width':1.4,'stroke-dasharray':'4 4', opacity:0}, tg.cur);
+  var pbB = el('line', {stroke:'var(--purple)','stroke-width':1.4,'stroke-dasharray':'4 4', opacity:0}, bg.cur);
+  var pbS = el('circle', {r:5, fill:'var(--sum)', stroke:'#fff','stroke-width':1.8, opacity:0}, tg.cur);
+  var pbE = el('circle', {r:4.5, fill:'var(--env)', stroke:'#fff','stroke-width':1.6, opacity:0}, tg.cur);
+  var pbF = el('circle', {r:4.5, fill:'var(--fcol)', stroke:'#fff','stroke-width':1.6, opacity:0}, bg.cur);
+  var pbG = el('circle', {r:4.5, fill:'var(--gcol)', stroke:'#fff','stroke-width':1.6, opacity:0}, bg.cur);
+
+  /* ---- axes (rebuilt when tmax changes) ---- */
+  function drawAxes(){
+    [tg.grid, bg.grid].forEach(function(G){
+      while (G.firstChild) G.removeChild(G.firstChild);
+    });
+    var stepMajor = (state.tmax > 30*PI) ? 10*PI : 5*PI;
+    var t;
+    for (t = 0; t <= state.tmax + 1e-9; t += stepMajor){
+      [[tg.grid, Ytop], [bg.grid, Ybot]].forEach(function(pair){
+        var G = pair[0], Yf = pair[1], hi = (Yf === Ytop) ? TOPMAX : BOTMAX;
+        el('line', {x1:X(t), y1:Yf(hi), x2:X(t), y2:Yf(-hi), stroke:'#e0e3ec','stroke-width':1}, G);
+        txt(G, X(t), Yf(-hi) + 19, piLabel(t), {'font-size':'12','fill':'#8a93ad','text-anchor':'middle','font-weight':'700'});
+      });
+    }
+    /* horizontal rules + y labels */
+    [[tg.grid, Ytop, [-2,-1,1,2], TOPMAX], [bg.grid, Ybot, [-1,1], BOTMAX]].forEach(function(cfg2){
+      var G = cfg2[0], Yf = cfg2[1], ys = cfg2[2], hi = cfg2[3];
+      ys.forEach(function(y){
+        el('line', {x1:L, y1:Yf(y), x2:W-R, y2:Yf(y), stroke:'#e8eaf1','stroke-width':1}, G);
+        txt(G, L-8, Yf(y)+4, String(y), {'font-size':'12','fill':'#8a93ad','text-anchor':'end','font-weight':'700'});
+      });
+      el('line', {x1:L, y1:Yf(0), x2:W-R+8, y2:Yf(0), stroke:'#9aa3ba','stroke-width':1.3}, G);
+      el('line', {x1:L, y1:Yf(hi), x2:L, y2:Yf(-hi), stroke:'#9aa3ba','stroke-width':1.3}, G);
+      txt(G, L-8, Yf(0)+4, '0', {'font-size':'12','fill':'#8a93ad','text-anchor':'end','font-weight':'700'});
+      txt(G, W-R+4, Yf(0)-7, 't', {'font-size':'13','fill':'#6b748f','font-style':'italic'});
+    });
+  }
+
+  /* ---- sampling: enough points that the fastest wave stays smooth ---- */
+  function pathOf(fn, Yf){
+    var N = 2200, d = '', i, t;
+    for (i = 0; i <= N; i++){
+      t = i/N * state.tmax;
+      d += (i ? 'L' : 'M') + X(t).toFixed(2) + ' ' + Yf(fn(t)).toFixed(2);
+    }
+    return d;
+  }
+
+  function draw(){
+    sumP.setAttribute('d', pathOf(sum, Ytop));
+    fP.setAttribute('d', pathOf(f, Ybot));
+    gP.setAttribute('d', pathOf(g, Ybot));
+    if (state.env){
+      envU.setAttribute('d', pathOf(env, Ytop));
+      envL.setAttribute('d', pathOf(function(t){ return -env(t); }, Ytop));
+    }
+    tg.envG.style.display = state.env ? '' : 'none';
+    updateProbe();
+  }
+
+  /* ---- hover readout ---- */
+  function hover(evt){
+    var box = topSvg.getBoundingClientRect();
+    var px = (evt.clientX - box.left) / box.width * W;
+    if (px < L || px > W - R){ leave(); return; }
+    var t = tOfX(px), y = sum(t);
+    [curT, curB, curD].forEach(function(n){ n.setAttribute('opacity', 1); });
+    curT.setAttribute('x1', X(t)); curT.setAttribute('x2', X(t));
+    curT.setAttribute('y1', Ytop(TOPMAX)); curT.setAttribute('y2', Ytop(-TOPMAX));
+    curB.setAttribute('x1', X(t)); curB.setAttribute('x2', X(t));
+    curB.setAttribute('y1', Ybot(BOTMAX)); curB.setAttribute('y2', Ybot(-BOTMAX));
+    curD.setAttribute('cx', X(t)); curD.setAttribute('cy', Ytop(y));
+    rt.textContent = piLabel(t);
+    rx.textContent = (y < 0 ? '−' : '') + Math.abs(y).toFixed(2);
+  }
+  function leave(){
+    [curT, curB, curD].forEach(function(n){ n.setAttribute('opacity', 0); });
+    rt.textContent = '—'; rx.textContent = '—';
+  }
+  topSvg.addEventListener('mousemove', hover);
+  topSvg.addEventListener('mouseleave', leave);
+
+  /* ---- probe (walkthrough) ---- */
+  var probeOn = false, probeVal = 2, probeRead = null;
+  function updateProbe(){
+    var vis = probeOn ? 1 : 0;
+    [pbT, pbB, pbS, pbE, pbF, pbG].forEach(function(n){ n.setAttribute('opacity', vis); });
+    if (!probeOn) return;
+    var t = probeVal, yf = f(t), yg = g(t), ys = yf + yg, ye = env(t);
+    pbT.setAttribute('x1', X(t)); pbT.setAttribute('x2', X(t));
+    pbT.setAttribute('y1', Ytop(TOPMAX)); pbT.setAttribute('y2', Ytop(-TOPMAX));
+    pbB.setAttribute('x1', X(t)); pbB.setAttribute('x2', X(t));
+    pbB.setAttribute('y1', Ybot(BOTMAX)); pbB.setAttribute('y2', Ybot(-BOTMAX));
+    pbS.setAttribute('cx', X(t)); pbS.setAttribute('cy', Ytop(ys));
+    pbE.setAttribute('cx', X(t)); pbE.setAttribute('cy', Ytop(ye));
+    pbE.setAttribute('opacity', state.env ? 1 : 0);
+    pbF.setAttribute('cx', X(t)); pbF.setAttribute('cy', Ybot(yf));
+    pbG.setAttribute('cx', X(t)); pbG.setAttribute('cy', Ybot(yg));
+    if (probeRead){
+      var s = function(v){ return (v < 0 ? '−' : '') + Math.abs(v).toFixed(3); };
+      probeRead.innerHTML =
+        '<span class="rchip rf">f = ' + s(yf) + '</span>' +
+        '<span class="rop">+</span>' +
+        '<span class="rchip rg">g = ' + s(yg) + '</span>' +
+        '<span class="rop">=</span>' +
+        '<span class="rchip rs">x = ' + s(ys) + '</span>' +
+        '<span class="rchip re">envelope R = ' + ye.toFixed(3) + '</span>' +
+        '<span class="rchip re">phase gap ψ = ' + psi(t).toFixed(3) + '</span>';
+    }
+  }
+
+  drawAxes(); draw();
+
+  return {
+    set: function(o){
+      var re = false;
+      if (o.w !== undefined) state.w = o.w;
+      if (o.A !== undefined) state.A = o.A;
+      if (o.p !== undefined) state.p = o.p;
+      if (o.env !== undefined) state.env = o.env;
+      if (o.tmax !== undefined && o.tmax !== state.tmax){ state.tmax = o.tmax; re = true; }
+      if (re) drawAxes();
+      draw();
+    },
+    state: state,
+    probe: function(on, val, readEl){
+      probeOn = on;
+      if (val !== undefined) probeVal = val;
+      if (readEl !== undefined) probeRead = readEl;
+      updateProbe();
+    },
+    beatPeriod: function(){ return 2*PI/Math.abs(state.w - 1); }
+  };
+}
+
+/* =========================================================
+   wire a slider trio to a plot
+   ========================================================= */
+function wire(plot, ids){
+  var w = document.getElementById(ids.w), wv = document.getElementById(ids.wv);
+  var a = document.getElementById(ids.a), av = document.getElementById(ids.av);
+  var p = document.getElementById(ids.p), pv = document.getElementById(ids.pv);
+  var z = document.getElementById(ids.zoom), e = document.getElementById(ids.env);
+  function push(){
+    wv.textContent = parseFloat(w.value).toFixed(3);
+    av.textContent = parseFloat(a.value).toFixed(2);
+    pv.textContent = parseFloat(p.value).toFixed(2);
+    plot.set({ w:parseFloat(w.value), A:parseFloat(a.value), p:parseFloat(p.value),
+               tmax:(z.checked ? 60*PI : 20*PI), env:e.checked });
+    if (ids.onchange) ids.onchange();
+  }
+  [w,a,p].forEach(function(n){ n.addEventListener('input', push); });
+  [z,e].forEach(function(n){ n.addEventListener('change', push); });
+  push();
+  return {
+    push: push,
+    setVals: function(o){
+      if (o.w !== undefined) w.value = o.w;
+      if (o.A !== undefined) a.value = o.A;
+      if (o.p !== undefined) p.value = o.p;
+      if (o.zoom !== undefined) z.checked = o.zoom;
+      if (o.env !== undefined) e.checked = o.env;
+      push();
+    }
+  };
+}
+
+/* ---------- tab 0 ---------- */
+var plotA = makePlot({top:'topA', bot:'botA', rt:'rtA', rx:'rxA'});
+wire(plotA, {w:'wA', wv:'wvA', a:'aA', av:'avA', p:'pA', pv:'pvA', zoom:'zoomA', env:'envA'});
+
+/* =========================================================
+   tab 1 — guided walkthrough
+   ========================================================= */
+var plotB = makePlot({top:'topB', bot:'botB', rt:'rtB', rx:'rxB'});
+var probeT = document.getElementById('probeT');
+var probeRead = document.getElementById('probeRead');
+var probeBox = document.getElementById('probeBox');
+var liveB = null;
+
+function refreshLive(){
+  var st = plotB.state;
+  var d = Math.abs(st.w - 1);
+  var out = document.querySelectorAll('.livecalc');
+  var beat = d < 1e-6 ? '∞ (no beats)' : (2*PI/d).toFixed(2);
+  var carrier = (4*PI/(1+st.w)).toFixed(2);
+  var ratio = d < 1e-6 ? '∞' : ((1+st.w)/(2*d)).toFixed(1);
+  var i;
+  for (i = 0; i < out.length; i++){
+    out[i].innerHTML =
+      '<table class="vals"><tr><th>quantity</th><th>formula</th><th>right now</th></tr>' +
+      '<tr><td>g\u2019s period</td><td>2π/ω</td><td class="hl">' + (2*PI/Math.max(st.w,1e-9)).toFixed(2) + '</td></tr>' +
+      '<tr><td>beat period</td><td>2π/|ω−1|</td><td class="hl">' + beat + '</td></tr>' +
+      '<tr><td>carrier period</td><td>4π/(1+ω)</td><td class="hl">' + carrier + '</td></tr>' +
+      '<tr><td>envelope max</td><td>1+A</td><td class="hl">' + (1+st.A).toFixed(2) + '</td></tr>' +
+      '<tr><td>envelope min</td><td>|1−A|</td><td class="hl">' + Math.abs(1-st.A).toFixed(2) + '</td></tr>' +
+      '<tr><td>beats-to-wiggle ratio</td><td>(1+ω)/(2|ω−1|)</td><td class="hl">' + ratio + '</td></tr>' +
+      '</table>';
+  }
+}
+
+var wireB = wire(plotB, {w:'wB', wv:'wvB', a:'aB', av:'avB', p:'pB', pv:'pvB',
+                         zoom:'zoomB', env:'envB', onchange:refreshLive});
+
+probeT.addEventListener('input', function(){
+  plotB.probe(true, parseFloat(probeT.value), probeRead);
+});
+
+window.setLesson = function(o){ wireB.setVals(o); };
+window.setProbe = function(t){ probeT.value = String(t); plotB.probe(true, t, probeRead); };
+
+var F = function(s){ return '<div class="formula">' + s + '</div>'; };
+var SWF = '<span class="sw" style="background:var(--fcol)"></span>';
+var SWG = '<span class="sw" style="background:var(--gcol)"></span>';
+var SWS = '<span class="sw" style="background:var(--sum)"></span>';
+var SWE = '<span class="sw" style="background:var(--env)"></span>';
+
+var steps = [
+{
+  eyebrow:'Step 1 of 13 · The ingredients',
+  title:'One fixed wave, one adjustable wave',
+  preset:{w:1.77, A:1, p:1.13, zoom:false, env:false},
+  body:
+    '<p>The bottom window holds the two waves we are going to add. Only one of them can be changed.</p>'
+    + '<p>' + SWF + '<strong>f(t) = sin t</strong> — the fixed reference. Amplitude 1, period 2π ≈ 6.28. It never moves, no matter which slider you drag.</p>'
+    + '<p>' + SWG + '<strong>g(t) = A sin(ωt − φ)</strong> — the adjustable one, with three independent knobs:</p>'
+    + '<p>• <strong>ω</strong> (circular frequency) — how fast it wiggles;<br>'
+    + '• <strong>A</strong> (amplitude) — how tall it is;<br>'
+    + '• <strong>φ</strong> (phase lag) — how far it is slid along the time axis.</p>'
+    + '<p>' + SWS + 'The top window shows their sum, <strong>x = f + g</strong>. With the starting values ω = 1.77, A = 1, φ = 1.13 the sum already looks strange: the wiggles grow and shrink in a repeating pattern instead of keeping one steady height. Working out where that pattern comes from is the job of this walkthrough.</p>'
+    + '<div class="note">Move your mouse across the top window at any time — the readout above it reports the exact t (in units of π) and the height x there.</div>'
+},
+{
+  eyebrow:'Step 2 of 13 · The method',
+  title:'The sum is built one height at a time',
+  preset:{w:1.77, A:1, p:1.13, zoom:false, env:false},
+  probe:2,
+  body:
+    '<p>There is no clever shortcut hiding in the top window. At each instant t, the computer evaluates both waves and adds the two numbers. Drag the <strong>“read at t”</strong> slider under the graph and watch the three chips.</p>'
+    + '<p>At <strong>t = 2</strong>, with the starting values:</p>'
+    + F('f(2) = sin 2 = 0.909')
+    + F('g(2) = sin(1.77 × 2 − 1.13) = sin(2.410) = 0.668')
+    + F('x(2) = 0.909 + 0.668 = 1.577')
+    + '<p>Both waves happen to be positive there, so they <strong>reinforce</strong> and the sum is taller than either one. Now drag the probe to <strong>t ≈ 5.5</strong>: the two waves have opposite signs and mostly cancel, leaving a sum near zero.</p>'
+    + '<p>That alternation between reinforcing and cancelling — repeated over and over — is the whole phenomenon. The rest of the walkthrough explains why it repeats <em>regularly</em>.</p>'
+    + '<button class="try" onclick="setProbe(2)">probe t = 2</button>'
+    + '<button class="try" onclick="setProbe(5.55)">probe t = 5.55</button>'
+    + '<button class="try" onclick="setProbe(9.63)">probe t = 9.63</button>'
+},
+{
+  eyebrow:'Step 3 of 13 · The first knob',
+  title:'ω — how fast the second wave wiggles',
+  preset:{w:1.77, A:1, p:1.13, zoom:false, env:false},
+  body:
+    '<p>ω is measured in <strong>radians per second</strong>. It multiplies t inside the sine, so it controls how quickly the angle runs, and therefore the period:</p>'
+    + F('period of g = 2π / ω')
+    + '<p>At ω = 1.77 that is 3.55 seconds, against f’s 6.28 — g fits roughly 1.8 cycles into each of f’s cycles. Watch the magenta wave get denser as you push ω up.</p>'
+    + '<p>Now try the single most informative setting in the whole applet:</p>'
+    + '<button class="try" onclick="setLesson({w:1})">ω = 1 (matched)</button>'
+    + '<button class="try" onclick="setLesson({w:1.77})">back to 1.77</button>'
+    + '<p>At <strong>ω = 1</strong> the two waves have the <em>same</em> frequency, and the sum snaps into a single clean sinusoid of constant height — exactly the amplitude–phase situation from the damped-oscillator lesson. Every wiggle in the envelope you have been looking at exists <strong>only because ω ≠ 1</strong>.</p>'
+    + '<div class="note">Keep this in mind: ω controls <em>timing</em> — how fast, and how quickly the pattern repeats. It has no say in how deep the quiet moments get. That is A’s job, next.</div>'
+},
+{
+  eyebrow:'Step 4 of 13 · The second knob',
+  title:'A — how tall the second wave is',
+  preset:{w:1.77, A:1, p:1.13, zoom:false, env:true},
+  body:
+    '<p>A simply scales g up and down. Its effect on the sum is easiest to see through the two extremes the sum can ever reach:</p>'
+    + '<p>• When the two waves line up perfectly, the heights add: <strong>1 + A</strong>.<br>'
+    + '• When they oppose perfectly, they subtract: <strong>|1 − A|</strong>.</p>'
+    + '<p>The gray envelope curves (now switched on) mark exactly this range. Try:</p>'
+    + '<button class="try" onclick="setLesson({A:1})">A = 1</button>'
+    + '<button class="try" onclick="setLesson({A:0.5})">A = 0.5</button>'
+    + '<button class="try" onclick="setLesson({A:0.2})">A = 0.2</button>'
+    + '<table class="vals"><tr><th>A</th><th>loudest 1+A</th><th>quietest |1−A|</th><th>look</th></tr>'
+    + '<tr><td>1.0</td><td>2.00</td><td class="hl">0.00</td><td>total silence at the nulls</td></tr>'
+    + '<tr><td>0.5</td><td>1.50</td><td class="hl">0.50</td><td>humps that never fully die</td></tr>'
+    + '<tr><td>0.2</td><td>1.20</td><td class="hl">0.80</td><td>a barely-rippling sine</td></tr></table>'
+    + '<p><strong>Complete cancellation requires A = 1 exactly.</strong> A shorter partner can never fully erase a taller one — some of f always survives.</p>'
+    + '<div class="warn">Notice what A did <em>not</em> change: the horizontal positions of the humps. Drag A back and forth and watch the peaks stay put. A controls height only; timing belongs to ω and φ.</div>'
+},
+{
+  eyebrow:'Step 5 of 13 · The third knob',
+  title:'φ — where the second wave sits in time',
+  preset:{w:1.77, A:1, p:1.13, zoom:false, env:true},
+  body:
+    '<p>φ is subtracted from the angle, so it delays g. Setting ωt − φ = 0 gives t = φ/ω: the whole magenta wave is shifted <strong>right by φ/ω seconds</strong>. At φ = 1.13 and ω = 1.77 that is a 0.64-second delay.</p>'
+    + '<button class="try" onclick="setLesson({p:0})">φ = 0</button>'
+    + '<button class="try" onclick="setLesson({p:1.13})">φ = 1.13</button>'
+    + '<button class="try" onclick="setLesson({p:2})">φ = 2</button>'
+    + '<p>Watch the top window as you click through these. The envelope <strong>slides sideways</strong>, but its shape, its height and the spacing between humps are all untouched. φ decides <em>when</em> the loud and quiet moments occur, never how loud, how quiet, or how often.</p>'
+    + '<p>Concretely, shifting φ moves the whole beat pattern by φ/(ω−1) — at ω = 1.77 that is φ/0.77, so a phase lag of 1.13 slides everything 1.47 seconds to the right.</p>'
+    + '<div class="note">Three knobs, three clean jobs: <strong>ω = how often</strong>, <strong>A = how deep</strong>, <strong>φ = when</strong>. The next step shows why the three separate so tidily.</div>'
+},
+{
+  eyebrow:'Step 6 of 13 · The key idea',
+  title:'The phase gap drifts — that is the whole story',
+  preset:{w:1.77, A:1, p:1.13, zoom:false, env:true},
+  probe:2,
+  body:
+    '<p>Compare the angles the two sines are fed at time t: f gets <span class="m">t</span>, g gets <span class="m">ωt − φ</span>. Subtract to get the <strong>phase gap</strong> — how far ahead g is of f:</p>'
+    + F('ψ(t) = (ωt − φ) − t = (ω − 1) t − φ')
+    + '<p>This is a <em>straight line in t</em>. If ω ≠ 1 the gap never settles — it drifts forever at the constant rate ω − 1. Drag the probe and watch the ψ chip climb steadily.</p>'
+    + '<p>Everything follows from where that drifting gap happens to be:</p>'
+    + '<p>• <strong>ψ ≈ 0</strong> (or any multiple of 2π): the waves are in step, crests on crests → the sum is loudest;<br>'
+    + '• <strong>ψ ≈ π</strong>: crest meets trough → the waves fight and the sum collapses.</p>'
+    + '<p>With ω = 1.77, φ = 1.13, the drift rate is 0.77 rad/s, so:</p>'
+    + F('ψ = 0 at t = 1.13/0.77 = 1.47 &nbsp;→ loud')
+    + F('ψ = π at t = (π + 1.13)/0.77 = 5.55 &nbsp;→ quiet')
+    + F('ψ = 2π at t = (2π + 1.13)/0.77 = 9.63 &nbsp;→ loud again')
+    + '<button class="try" onclick="setProbe(1.47)">probe the loud spot</button>'
+    + '<button class="try" onclick="setProbe(5.55)">probe the quiet spot</button>'
+    + '<p>Check those against the picture — 1.47 and 9.63 sit under tall humps, 5.55 sits in the pinch between them.</p>'
+},
+{
+  eyebrow:'Step 7 of 13 · The picture behind it',
+  title:'Two arrows, one turning faster than the other',
+  preset:{w:1.77, A:1, p:1.13, zoom:false, env:true},
+  body:
+    '<p>Each sinusoid is the vertical shadow of a rotating arrow. f’s arrow has length 1 and turns at 1 rad/s; g’s has length A and turns at ω rad/s. The angle between them is exactly the phase gap ψ(t) from the last step.</p>'
+    + '<p>Adding the waves means adding the arrows tip-to-tail. The resultant arrow has a length given by the law of cosines on that triangle:</p>'
+    + F('R = √( 1 + A² + 2A cos ψ )')
+    + '<p>Here is the crucial difference from the damped-oscillator problem. There, both arrows turned at the same speed, so the angle between them was frozen and R was a constant — one rigid arrow, one clean sinusoid. Here <strong>one arrow outruns the other</strong>, the angle keeps opening and closing, and so R <em>breathes</em>.</p>'
+    + '<p>Check the two extremes against the formula with A = 1:</p>'
+    + F('ψ = 0: &nbsp; R = √(1 + 1 + 2) = 2 &nbsp;&nbsp;(arrows parallel)')
+    + F('ψ = π: &nbsp; R = √(1 + 1 − 2) = 0 &nbsp;&nbsp;(arrows opposite)')
+    + '<div class="note">Same triangle, same law of cosines as the 1–2–√5 triangle in the damped-oscillator lesson — the only new ingredient is that the angle is now a function of time instead of a constant.</div>'
+},
+{
+  eyebrow:'Step 8 of 13 · The envelope',
+  title:'Where the gray curves come from',
+  preset:{w:1.77, A:1, p:1.13, zoom:false, env:true},
+  probe:1.47,
+  body:
+    '<p>Putting the last two steps together gives the exact formula for the whole picture. Writing each sine as the imaginary part of a rotating complex number and factoring out e<sup>it</sup>:</p>'
+    + F('x(t) = Im( e<sup>it</sup> [ 1 + A e<sup>iψ(t)</sup> ] ) = R(t) · sin( t + α(t) )')
+    + '<p>with</p>'
+    + F('R(t) = √( 1 + A² + 2A cos((ω−1)t − φ) )')
+    + '<p>So the sum is a sine whose <strong>amplitude is itself a slowly moving function of time</strong>. The gray curves are ±R(t), and the blue curve is trapped between them exactly as the damped solution was trapped inside its exponential walls.</p>'
+    + '<p>Verify one point with the probe (parked at t = 1.47): the envelope chip reads R ≈ 2.00, and the blue curve is grazing the top wall right there. Move to t = 5.55 and R drops to ≈ 0.</p>'
+    + '<div class="warn">One honest difference from the damped case: there the walls only ever fell. Here they rise and fall forever, so the blue curve kisses the top wall, the bottom wall, and everything in between — but it can still never escape them, because |sin| ≤ 1 always.</div>'
+},
+{
+  eyebrow:'Step 9 of 13 · The rhythm',
+  title:'How often the humps repeat',
+  preset:{w:1.77, A:1, p:1.13, zoom:false, env:true},
+  body:
+    '<p>R depends on t only through cos ψ, so the envelope repeats whenever ψ has advanced by a full 2π. Since ψ grows at rate (ω − 1):</p>'
+    + F('(ω − 1) · T<sub>beat</sub> = 2π &nbsp;&nbsp;⟹&nbsp;&nbsp; T<sub>beat</sub> = 2π / |ω − 1|')
+    + '<p>At ω = 1.77: T<sub>beat</sub> = 6.283/0.77 = <strong>8.16 seconds</strong> ≈ 2.6π. Over the visible 20π ≈ 62.8, that gives about 7.7 humps — count them.</p>'
+    + '<p>The absolute value matters: ω = 0.8 and ω = 1.2 are both 0.2 away from 1 and produce identically spaced beats. Try it:</p>'
+    + '<button class="try" onclick="setLesson({w:0.8})">ω = 0.8</button>'
+    + '<button class="try" onclick="setLesson({w:1.2})">ω = 1.2</button>'
+    + '<button class="try" onclick="setLesson({w:1.05})">ω = 1.05</button>'
+    + '<p>Push ω toward 1 and the beats stretch out dramatically — at ω = 1.05 the period is 125.7, so a single hump no longer fits on screen. Tick <strong>Zoom</strong> to widen the window to 60π and it reappears.</p>'
+    + '<div class="note"><strong>Live values for your current settings:</strong></div>'
+    + '<div class="livecalc"></div>'
+},
+{
+  eyebrow:'Step 10 of 13 · Inside the humps',
+  title:'The fast wiggle runs at the average frequency',
+  preset:{w:1.77, A:1, p:1.13, zoom:false, env:true},
+  body:
+    '<p>The envelope tells you the shape of the humps; something else sets the rate of the wiggles inside them. For the clean case A = 1, φ = 0 a product identity makes it explicit:</p>'
+    + F('sin t + sin ωt = 2 sin( (1+ω)t/2 ) · cos( (1−ω)t/2 )')
+    + '<p>Read the two factors:</p>'
+    + '<p>• <strong>2 cos((1−ω)t/2)</strong> — the slow one. This is the envelope (its absolute value is the R from step 8 when A = 1).<br>'
+    + '• <strong>sin((1+ω)t/2)</strong> — the fast one, the <em>carrier</em>. Its frequency is the <strong>average</strong> of the two input frequencies, (1+ω)/2.</p>'
+    + F('T<sub>carrier</sub> = 2π / ((1+ω)/2) = 4π / (1 + ω)')
+    + '<p>At ω = 1.77 the carrier period is 4.54 seconds. Compare with the beat period of 8.16: only <strong>1.8 fast cycles per hump</strong>, which is why the default picture looks lumpy rather than like the smooth throb the word “beats” suggests. That is the subject of the next step.</p>'
+    + '<button class="try" onclick="setLesson({w:1.77,A:1,p:0})">try the clean case φ = 0</button>'
+},
+{
+  eyebrow:'Step 11 of 13 · When is it really “beats”?',
+  title:'Beats need two clearly separated time scales',
+  preset:{w:1.1, A:1, p:0, zoom:false, env:true},
+  body:
+    '<p>ω has been set to <strong>1.1</strong> — nearly matching f. Now the picture looks like the textbook illustration of beats: long, smooth swells, each packed with many fast oscillations.</p>'
+    + '<p>The numbers explain the difference:</p>'
+    + '<table class="vals"><tr><th>ω</th><th>T<sub>beat</sub></th><th>T<sub>carrier</sub></th><th>cycles per hump</th></tr>'
+    + '<tr><td>1.10</td><td>62.83</td><td>5.98</td><td class="hl">10.5</td></tr>'
+    + '<tr><td>1.77</td><td>8.16</td><td>4.54</td><td class="hl">1.8</td></tr>'
+    + '<tr><td>2.00</td><td>6.28</td><td>4.19</td><td class="hl">1.5</td></tr></table>'
+    + '<p>In general the ratio of the two time scales is</p>'
+    + F('T<sub>beat</sub> / T<sub>carrier</sub> = (1 + ω) / (2 |ω − 1|)')
+    + '<p>which blows up as ω → 1 and collapses toward 1 as the frequencies separate. “Beats” is the regime where that ratio is large.</p>'
+    + '<p>This is what you hear when two instruments are slightly out of tune: the pitch you perceive is the <em>average</em> of the two (the carrier), and the <strong>wobble</strong> you hear is the envelope. A piano tuner slows the wobble until it disappears — at which point ω = 1 and the strings match.</p>'
+    + '<button class="try" onclick="setLesson({w:1.02,A:1,p:0,zoom:true})">ω = 1.02, zoomed out</button>'
+    + '<button class="try" onclick="setLesson({w:1.77,A:1,p:1.13,zoom:false})">back to the default</button>'
+},
+{
+  eyebrow:'Step 12 of 13 · The corners of the parameter space',
+  title:'Five settings worth trying deliberately',
+  preset:{w:1.77, A:1, p:1.13, zoom:false, env:true},
+  body:
+    '<p>Each of these isolates one idea. Click, look, then read the reason.</p>'
+    + '<p><button class="try" onclick="setLesson({w:1,A:1,p:1.13})">ω = 1</button> ψ = −φ is frozen, so R is a constant √(2 + 2cos 1.13) = 1.69. A pure sinusoid — no beats can exist without a frequency difference.</p>'
+    + '<p><button class="try" onclick="setLesson({w:1,A:1,p:2})">ω = 1, φ = 2</button> Still constant, but quieter: R = √(2 + 2cos 2) = 0.84. Pushing φ to π would give R = 0 — the two waves annihilate for all time.</p>'
+    + '<p><button class="try" onclick="setLesson({w:0,A:1,p:1.13})">ω = 0</button> g stops rotating entirely: g(t) = sin(−1.13) = −0.904, a constant. The sum is just f pushed down by 0.904 — a sine riding at an offset.</p>'
+    + '<p><button class="try" onclick="setLesson({w:2,A:1,p:0})">ω = 2, φ = 0</button> An exact 2:1 ratio. The sum is strictly periodic with period 2π and looks like a repeating lopsided shape rather than beats, because T<sub>beat</sub> and T<sub>carrier</sub> are too close to separate.</p>'
+    + '<p><button class="try" onclick="setLesson({w:1.1,A:0.4,p:0,env:true})">ω = 1.1, A = 0.4</button> Slow beats that never reach silence: the envelope breathes between 1.4 and 0.6, so you get a gentle tremolo instead of full nulls.</p>'
+    + '<div class="livecalc"></div>'
+},
+{
+  eyebrow:'Step 13 of 13 · Recap',
+  title:'How the picture is drawn, and what to remember',
+  preset:{w:1.77, A:1, p:1.13, zoom:false, env:true},
+  body:
+    '<p><strong>How the curve is actually rendered.</strong> There is no symbolic magic: the code evaluates x(t) = sin t + A sin(ωt − φ) at 2200 evenly spaced values of t and joins the results with straight segments. The envelope is a second pass over the same grid using R(t). Everything you see is arithmetic at 2200 points.</p>'
+    + '<p>This is why the <strong>Zoom</strong> view (0 to 60π) looks so much denser: the same ~950 pixels of width now cover 188.5 seconds, so at ω = 2 a single fast cycle occupies about 15 pixels. Nothing has changed about the function — only how many wiggles are being crammed into each pixel.</p>'
+    + '<p><strong>The five facts worth keeping:</strong></p>'
+    + '<ol class="recipe">'
+    + '<li>Adding two sinusoids means adding heights, instant by instant. Nothing else.</li>'
+    + '<li>The <strong>phase gap ψ = (ω−1)t − φ</strong> drifts linearly whenever the frequencies differ. Beats are what that drift looks like.</li>'
+    + '<li>The sum is <strong>x = R(t) sin(t + α(t))</strong> with <strong>R = √(1 + A² + 2A cos ψ)</strong> — the law of cosines on two rotating arrows.</li>'
+    + '<li><strong>ω</strong> sets the beat period 2π/|ω−1| and the carrier period 4π/(1+ω); <strong>A</strong> sets the envelope range from |1−A| to 1+A; <strong>φ</strong> only slides the pattern sideways.</li>'
+    + '<li>When ω = 1 the drift stops, R freezes, and you are back to the ordinary amplitude–phase form — beats are precisely what you lose when the frequencies match.</li>'
+    + '</ol>'
+    + '<div class="livecalc"></div>'
+    + '<p>The <strong>Formula reference</strong> tab has the full derivation and a table of every special case in one place.</p>'
+}
+];
+
+/* ---------- walkthrough navigation ---------- */
+var cur = 0;
+var stepEyebrow = document.getElementById('stepEyebrow');
+var stepTitle   = document.getElementById('stepTitle');
+var stepBody    = document.getElementById('stepBody');
+var prevBtn     = document.getElementById('prev');
+var nextBtn     = document.getElementById('next');
+var dotsBox     = document.getElementById('dots');
+
+steps.forEach(function(_, i){
+  var d = document.createElement('button');
+  d.type = 'button';
+  d.setAttribute('aria-label', 'Go to step ' + (i+1));
+  d.addEventListener('click', function(){ go(i); });
+  dotsBox.appendChild(d);
+});
+
+function go(i){
+  cur = Math.max(0, Math.min(steps.length - 1, i));
+  var s = steps[cur];
+
+  stepEyebrow.textContent = s.eyebrow;
+  stepTitle.innerHTML = s.title;
+  stepBody.innerHTML = s.body;
+  stepBody.scrollTop = 0;
+
+  if (s.preset) wireB.setVals(s.preset);
+
+  var hasProbe = (s.probe !== undefined);
+  probeBox.hidden = !hasProbe;
+  if (hasProbe){
+    probeT.value = String(s.probe);
+    plotB.probe(true, s.probe, probeRead);
+  } else {
+    plotB.probe(false);
+  }
+
+  refreshLive();
+
+  prevBtn.disabled = (cur === 0);
+  nextBtn.disabled = (cur === steps.length - 1);
+  nextBtn.textContent = (cur === steps.length - 1) ? 'Done ✓' : 'Next →';
+
+  Array.prototype.forEach.call(dotsBox.children, function(d, j){
+    d.classList.toggle('cur', j === cur);
+    d.classList.toggle('seen', j < cur);
+  });
+}
+
+prevBtn.addEventListener('click', function(){ go(cur - 1); });
+nextBtn.addEventListener('click', function(){ go(cur + 1); });
+
+/* ---------- tabs ---------- */
+var panes = [document.getElementById('pane0'), document.getElementById('pane1'), document.getElementById('pane2')];
+var tabs  = [document.getElementById('tab0'),  document.getElementById('tab1'),  document.getElementById('tab2')];
+var active = 0;
+function showTab(i){
+  active = i;
+  panes.forEach(function(p, j){ p.hidden = (j !== i); });
+  tabs.forEach(function(t, j){ t.classList.toggle('active', j === i); });
+}
+tabs.forEach(function(t, i){ t.addEventListener('click', function(){ showTab(i); }); });
+
+document.addEventListener('keydown', function(e){
+  if (active !== 1) return;
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowRight') go(cur + 1);
+  if (e.key === 'ArrowLeft')  go(cur - 1);
+});
+
+/* ---------- boot ---------- */
+go(0);
+showTab(0);
+
+})();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

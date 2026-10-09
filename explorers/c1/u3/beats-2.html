@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beats — an interactive tour</title>
+<style>
+  :root{
+    --bg:#edf1f9;            /* blue-tinted background */
+    --card:#ffffff;
+    --ink:#242b3e;
+    --muted:#5c6479;
+    --line:#e2e7f3;
+    --purple:#6b4fd8;        /* actions */
+    --purple-soft:rgba(107,79,216,.12);
+    --orange:#e8710a;        /* inputs / things you control */
+    --orange-soft:rgba(232,113,10,.12);
+    --teal:#0d8f86;          /* outputs / computed values */
+    --teal-soft:rgba(13,143,134,.10);
+    --c-sum:#1d3fd0;         /* blue  : x = f + g   */
+    --c-f:#2e8b2f;           /* green : f(t)=sin t  */
+    --c-g:#cf1180;           /* magenta: g(t)       */
+    --c-env:#828282;         /* gray  : envelope    */
+    --shadow:0 10px 30px rgba(88,66,180,.10);
+    --radius:14px;
+    --serif:Georgia,'Times New Roman',serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:var(--sans);font-size:15.5px;line-height:1.62;
+    padding:26px 14px 60px;
+  }
+  .wrap{max-width:none;margin:0 auto}
+
+  /* ---------- header ---------- */
+  header{margin:2px 4px 18px}
+  .eyebrow{
+    font-family:var(--sans);font-size:.74rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--purple);font-weight:700;
+  }
+  h1{
+    font-family:var(--serif);font-weight:600;font-size:2.05rem;
+    margin:.15em 0 .1em;letter-spacing:.005em;
+  }
+  .subtitle{color:var(--muted);margin:0;max-width:none}
+
+  /* ---------- tabs ---------- */
+  .tabs{
+    display:flex;flex-wrap:wrap;gap:6px;
+    background:var(--card);border-radius:999px;box-shadow:var(--shadow);
+    padding:7px;margin:20px 0 22px;position:sticky;top:8px;z-index:20;
+  }
+  .tabbtn{
+    appearance:none;border:0;background:transparent;color:var(--muted);
+    font-family:var(--sans);font-size:.92rem;font-weight:600;
+    padding:8px 15px;border-radius:999px;cursor:pointer;white-space:nowrap;
+  }
+  .tabbtn:hover{color:var(--ink)}
+  .tabbtn.active{background:var(--purple-soft);color:var(--purple)}
+  .tabbtn:focus-visible,button:focus-visible,input:focus-visible,a:focus-visible{
+    outline:2px solid var(--purple);outline-offset:2px;
+  }
+  section.tab{display:none}
+  section.tab.active{display:block}
+
+  /* ---------- cards ---------- */
+  .card{
+    background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:22px 26px;margin-bottom:20px;
+  }
+  .card h2{
+    font-family:var(--serif);font-weight:600;font-size:1.32rem;margin:0 0 .5em;
+  }
+  .card h3{
+    font-family:var(--serif);font-weight:600;font-size:1.08rem;margin:1.2em 0 .4em;
+  }
+  .card p{margin:.55em 0}
+  .card ul{margin:.4em 0 .6em;padding-left:1.35em}
+  .card li{margin:.3em 0}
+  .note{color:var(--muted);font-size:.88rem}
+
+  /* ---------- math / live values ---------- */
+  .math, .eq{font-family:var(--serif)}
+  .math i, .eq i{font-style:italic}
+  .eq{
+    background:#f7f9fe;border:1px solid var(--line);border-radius:10px;
+    padding:12px 16px;margin:12px 0;font-size:1.06rem;line-height:1.9;
+    overflow-x:auto;
+  }
+  .eq .step{display:block}
+  .eq .why{font-family:var(--sans);font-size:.8rem;color:var(--muted);margin-left:1.2em}
+  .chip{
+    display:inline-block;border-radius:7px;padding:0 .38em;
+    font-family:var(--sans);font-weight:700;font-size:.92em;
+    font-variant-numeric:tabular-nums;white-space:nowrap;
+  }
+  .lv{background:var(--teal-soft);color:var(--teal)}       /* computed (output) */
+  .adj{background:var(--orange-soft);color:var(--orange)}  /* adjustable (input) */
+  .cw{color:var(--c-sum);font-weight:700}
+  .cf{color:var(--c-f);font-weight:700}
+  .cg{color:var(--c-g);font-weight:700}
+  .ce{color:var(--c-env);font-weight:700}
+  .legendline{font-size:.86rem;color:var(--muted);margin-top:4px}
+
+  /* ---------- graphs ---------- */
+  canvas.graph{width:100%;display:block;border-radius:8px}
+  #cvSum{height:250px} #cvParts{height:210px} #cvWaves{height:240px}
+  #cvFactor{height:430px} #cvPhasor{height:300px} #cvAlias{height:230px}
+  .graphbox{margin:8px 0 2px}
+  .graphlabel{
+    font-family:var(--sans);font-weight:700;font-size:.95rem;margin:0 0 2px 44px;
+  }
+
+  /* ---------- mathlet replica ---------- */
+  .mathlet{position:relative}
+  .mathlet-top{display:flex;justify-content:space-between;align-items:baseline}
+  .mathlet-title{font-weight:800;letter-spacing:.02em;font-size:1.02rem}
+  .helplink{
+    background:none;border:0;color:#1996d3;font-weight:700;cursor:pointer;
+    font-size:.95rem;padding:2px 4px;
+  }
+  .helpbox{
+    background:#f7f9fe;border:1px solid var(--line);border-radius:10px;
+    padding:12px 16px;margin:10px 0;font-size:.92rem;display:none;
+  }
+  .helpbox.open{display:block}
+  .midrow{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    margin:8px 6px 8px 44px;flex-wrap:wrap;gap:10px;
+  }
+  .checks{display:flex;gap:26px}
+  .checks label{
+    display:flex;align-items:center;gap:8px;font-weight:700;cursor:pointer;
+    color:#444a5c;
+  }
+  .checks input{
+    appearance:none;width:15px;height:15px;border:2px solid #555;border-radius:2px;
+    background:#fff;cursor:pointer;margin:0;
+  }
+  .checks input:checked{background:#b9b9c2}
+  .readout{
+    text-align:left;min-width:120px;font-weight:700;color:#444a5c;
+    font-variant-numeric:tabular-nums;line-height:1.7;
+  }
+  .readout span{color:var(--ink)}
+
+  /* ---------- sliders ---------- */
+  .sliders{margin-top:14px}
+  .sl-row{display:flex;align-items:flex-end;gap:12px;margin:6px 0 12px}
+  .sl-name{
+    font-family:var(--serif);font-style:italic;font-size:1.1rem;
+    width:22px;text-align:right;color:var(--c-g);font-weight:700;padding-bottom:2px;
+  }
+  .sl-body{flex:1;min-width:120px}
+  .ticks{
+    display:flex;justify-content:space-between;
+    font-size:.8rem;color:var(--muted);padding:0 2px;margin-bottom:1px;
+    font-variant-numeric:tabular-nums;
+  }
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:22px;
+    background:transparent;cursor:pointer;margin:0;
+  }
+  input[type=range]::-webkit-slider-runnable-track{
+    height:5px;border-radius:3px;background:#d9dfee;
+  }
+  input[type=range]::-moz-range-track{height:5px;border-radius:3px;background:#d9dfee}
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;
+    background:var(--orange);border:2.5px solid #fff;
+    box-shadow:0 1px 4px rgba(0,0,0,.28);margin-top:-5.5px;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:12px;height:12px;border-radius:50%;background:var(--orange);
+    border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.28);
+  }
+  .sl-val{
+    min-width:56px;font-weight:800;color:var(--c-g);
+    font-variant-numeric:tabular-nums;padding-bottom:2px;
+  }
+  .sl-half{display:flex;gap:30px;flex-wrap:wrap}
+  .sl-half .sl-row{flex:1;min-width:250px}
+
+  /* teaching-tab slider variant: orange name (it's an input you control) */
+  .teach .sl-name{color:var(--orange)}
+  .teach .sl-val{color:var(--orange)}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    appearance:none;border:0;border-radius:9px;cursor:pointer;
+    font-family:var(--sans);font-weight:700;font-size:.92rem;
+    padding:8px 16px;background:var(--purple);color:#fff;
+  }
+  .btn:hover{filter:brightness(1.08)}
+  .btn.ghost{background:var(--purple-soft);color:var(--purple)}
+  .controlrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:10px 0}
+  .controlrow label{font-size:.88rem;color:var(--muted);font-weight:600}
+
+  /* ---------- misc ---------- */
+  .hoverout{
+    font-family:var(--sans);font-size:.92rem;margin-top:6px;min-height:1.5em;
+    color:var(--muted);font-variant-numeric:tabular-nums;
+  }
+  pre.code{
+    background:#20263a;color:#dfe6f7;border-radius:10px;padding:14px 16px;
+    font-family:var(--mono);font-size:.82rem;line-height:1.55;overflow-x:auto;
+  }
+  pre.code .cm{color:#8a93ad}
+  pre.code .kw{color:#8fb8ff}
+  .tryit{
+    border-left:4px solid var(--orange);background:var(--orange-soft);
+    border-radius:0 10px 10px 0;padding:10px 16px;margin:14px 0;
+  }
+  .tryit b{color:var(--orange)}
+  footer{color:var(--muted);font-size:.82rem;margin-top:26px;text-align:center}
+  @media (max-width:640px){
+    .card{padding:16px}
+    h1{font-size:1.6rem}
+    .midrow{margin-left:0}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">MIT 18.03 &middot; sums of sinusoids</div>
+  <h1>Beats — an interactive tour</h1>
+  <p class="subtitle">
+    A rebuild of the classic 18.03 “Beats” mathlet, plus a guided walk through the
+    mathematics behind every pixel of it. The sliders are shared across all tabs:
+    change <span class="math"><i>ω</i></span>, <span class="math"><i>A</i></span> or
+    <span class="math"><i>φ</i></span> anywhere and every graph, formula and worked
+    number updates together.
+  </p>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button class="tabbtn active" data-tab="tab1">1 &middot; The mathlet</button>
+  <button class="tabbtn" data-tab="tab2">2 &middot; Meet the two waves</button>
+  <button class="tabbtn" data-tab="tab3">3 &middot; Why beats appear</button>
+  <button class="tabbtn" data-tab="tab4">4 &middot; The envelope</button>
+  <button class="tabbtn" data-tab="tab5">5 &middot; How it&rsquo;s drawn</button>
+</nav>
+
+<!-- ================= TAB 1 : THE MATHLET ================= -->
+<section class="tab active" id="tab1">
+  <div class="card mathlet">
+    <div class="mathlet-top">
+      <span class="mathlet-title">BEATS</span>
+      <button class="helplink" id="helpToggle">+ help</button>
+    </div>
+    <div class="helpbox" id="helpBox">
+      <p style="margin-top:0">
+        The lower window shows the two ingredients:
+        <span class="cf math">f(t) = sin(t)</span> in green and
+        <span class="cg math">g(t) = A sin(ωt − φ)</span> in magenta.
+        The upper window shows their sum <span class="cw math">x = f(t) + g(t)</span> in blue.
+      </p>
+      <ul style="margin:0 0 4px">
+        <li>Drag the <b>ω</b>, <b>A</b>, <b>φ</b> sliders to change the circular frequency,
+            amplitude, and phase lag of <span class="cg">g</span>.</li>
+        <li>Move the pointer across the upper window to read off <b>t</b> and <b>x</b>
+            at the crosshair.</li>
+        <li><b>Zoom</b> switches the time window between [0,&nbsp;60π] and [0,&nbsp;20π].</li>
+        <li><b>Envelope</b> overlays the slowly varying amplitude curve on the sum
+            (derived step by step in tab&nbsp;4).</li>
+      </ul>
+      <p class="note" style="margin-bottom:0">
+        Rebuilt after the 18.03 mathlet by H.&nbsp;Hohn and H.&nbsp;Miller (© 2001 MIT).
+      </p>
+    </div>
+
+    <div class="graphbox">
+      <div class="graphlabel"><span class="cw">x</span> = <span class="cf">f(t)</span> + <span class="cg">g(t)</span></div>
+      <canvas class="graph" id="cvSum" height="250"></canvas>
+    </div>
+
+    <div class="midrow">
+      <div class="checks">
+        <label><input type="checkbox" id="ckZoom"> Zoom</label>
+        <label><input type="checkbox" id="ckEnv"> Envelope</label>
+      </div>
+      <div class="readout">
+        t&nbsp;=&nbsp;<span id="roT"></span><br>
+        x&nbsp;=&nbsp;<span id="roX"></span>
+      </div>
+    </div>
+
+    <div class="graphbox">
+      <div class="graphlabel" style="line-height:1.35">
+        <span class="cg">g(t) = A&thinsp;sin(ωt − φ)</span><br>
+        <span class="cf">f(t) = sin(t)</span>
+      </div>
+      <canvas class="graph" id="cvParts" height="210"></canvas>
+    </div>
+
+    <div class="sliders">
+      <div class="sl-row">
+        <span class="sl-name">ω</span>
+        <div class="sl-body">
+          <div class="ticks"><span>0</span><span>0.5</span><span>1.0</span><span>1.5</span><span>2.0</span></div>
+          <input type="range" data-key="w" min="0" max="2" step="0.005" value="1.77" aria-label="omega, circular frequency of g">
+        </div>
+        <span class="sl-val" data-out="w">1.770</span>
+      </div>
+      <div class="sl-half">
+        <div class="sl-row">
+          <span class="sl-name">A</span>
+          <div class="sl-body">
+            <div class="ticks"><span>0</span><span>0.5</span><span>1.0</span></div>
+            <input type="range" data-key="A" min="0" max="1" step="0.005" value="1" aria-label="A, amplitude of g">
+          </div>
+          <span class="sl-val" data-out="A">1.00</span>
+        </div>
+        <div class="sl-row">
+          <span class="sl-name">φ</span>
+          <div class="sl-body">
+            <div class="ticks"><span>0</span><span>1</span><span>2</span></div>
+            <input type="range" data-key="phi" min="0" max="2" step="0.005" value="1.13" aria-label="phi, phase lag of g">
+          </div>
+          <span class="sl-val" data-out="phi">1.13</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>What you are looking at</h2>
+    <p>
+      Two pure tones are being added, sample by sample. The green wave
+      <span class="math cf">f(t) = sin(t)</span> is fixed. The magenta wave
+      <span class="math cg">g(t) = A&thinsp;sin(ωt − φ)</span> has three dials:
+      an amplitude <span class="chip adj">A = <b data-live="A"></b></span>,
+      a circular frequency <span class="chip adj">ω = <b data-live="w"></b></span>,
+      and a phase lag <span class="chip adj">φ = <b data-live="phi"></b></span>.
+    </p>
+    <p>
+      When the two frequencies are <em>close but not equal</em> — right now the gap is
+      <span class="chip lv">ω − 1 = <b data-live="gap"></b></span> — the waves drift slowly
+      in and out of step. Where they agree they reinforce (the sum reaches about
+      <span class="chip lv">1 + A = <b data-live="Emax"></b></span>); where they disagree
+      they cancel (down to <span class="chip lv">|1 − A| = <b data-live="Emin"></b></span>).
+      That slow swelling and fading of loudness is a <b>beat</b> — the throbbing
+      <i>wah&#8209;wah&#8209;wah</i> you hear when two guitar strings are almost, but not quite, in tune.
+    </p>
+    <p>
+      With the current sliders a full beat lasts
+      <span class="chip lv">2π&#8202;/&#8202;|ω − 1| = <b data-live="beatT"></b></span>,
+      so the [0,&nbsp;60π] window holds about
+      <span class="chip lv"><b data-live="beats60"></b> beats</span>.
+      Turn on <b>Envelope</b> to see the loudness curve drawn in gray, then visit the
+      next tabs to see where all of these numbers come from.
+    </p>
+    <p class="legendline">
+      Color code used everywhere: <span class="cf">green = f</span>,
+      <span class="cg">magenta = g</span>, <span class="cw">blue = the sum x</span>,
+      <span class="ce">gray = envelope</span>. Orange chips are values
+      <b>you control</b>; teal chips are values <b>computed from them</b>.
+    </p>
+  </div>
+</section>
+
+<!-- ================= TAB 2 : MEET THE TWO WAVES ================= -->
+<section class="tab teach" id="tab2">
+  <div class="card">
+    <h2>Step 0 — the two ingredients, one dial at a time</h2>
+    <p>
+      Before adding anything, let&rsquo;s be sure of what each wave is by itself.
+      A sinusoid is completely described by three numbers, and each slider changes
+      exactly one of them:
+    </p>
+
+    <div class="eq">
+      <span class="step"><span class="cf">f(t) = sin(t)</span> &nbsp;&nbsp;— amplitude 1, circular frequency 1, no phase lag</span>
+      <span class="step"><span class="cg">g(t) = A&thinsp;sin(ωt − φ)</span> &nbsp;— amplitude <span class="chip adj"><b data-live="A"></b></span>, circular frequency <span class="chip adj"><b data-live="w"></b></span>, phase lag <span class="chip adj"><b data-live="phi"></b></span></span>
+    </div>
+
+    <div class="graphbox">
+      <canvas class="graph" id="cvWaves" height="240"></canvas>
+    </div>
+    <div class="hoverout" id="hoWaves">Move the pointer over the graph to sample both waves at one instant.</div>
+
+    <h3>Amplitude <i>A</i> — how tall</h3>
+    <p>
+      <span class="math">sin(&middot;)</span> only ever outputs numbers between −1 and 1.
+      Multiplying by <i>A</i> stretches that range to
+      [−<i>A</i>, +<i>A</i>]. With <span class="chip adj">A = <b data-live="A"></b></span> the magenta
+      peaks sit at <span class="chip lv">±<b data-live="A"></b></span> — the dashed orange
+      lines in the graph. <i>A</i> changes <em>nothing</em> about timing: peaks stay
+      exactly where they were, they just get taller or shorter.
+    </p>
+
+    <h3>Circular frequency <i>ω</i> — how fast</h3>
+    <p>
+      Think of <i>ω</i> as a speed: the angle fed into the sine grows by
+      <i>ω</i>&nbsp;radians per unit of time. One full cycle needs the angle to grow
+      by 2π radians, so the period is
+    </p>
+    <div class="eq">
+      <span class="step"><i>T<sub>g</sub></i> = 2π&#8202;/&#8202;ω = 6.283&#8202;/&#8202;<b data-live="w"></b> = <span class="chip lv"><b data-live="Tg"></b></span></span>
+      <span class="step why">compare: f has ω = 1, so <i>T<sub>f</sub></i> = 2π ≈ 6.28 (that is why the t-axis is marked in multiples of π)</span>
+    </div>
+    <p>
+      Equivalently: in the time green completes <b>one</b> cycle, magenta completes
+      <span class="chip lv">ω = <b data-live="w"></b> cycles</span>. In the mathlet&rsquo;s
+      [0,&nbsp;60π] window, f fits exactly 30 cycles while g fits
+      <span class="chip lv">30ω = <b data-live="gCycles60"></b> cycles</span>.
+    </p>
+
+    <h3>Phase lag <i>φ</i> — how late</h3>
+    <p>
+      The &ldquo;−&thinsp;φ&rdquo; inside the sine holds the wave back: g doesn&rsquo;t begin
+      its upward zero-crossing until the angle <span class="math">ωt − φ</span> reaches 0,
+      i.e. at
+    </p>
+    <div class="eq">
+      <span class="step">ωt − φ = 0 &nbsp;⇒&nbsp; t = φ&#8202;/&#8202;ω = <b data-live="phi"></b>&#8202;/&#8202;<b data-live="w"></b> = <span class="chip lv"><b data-live="gShift"></b></span></span>
+      <span class="step why">marked by the dashed magenta line in the graph — the whole wave is slid right by this amount</span>
+    </div>
+    <p>
+      Note the division by ω: a lag of φ <em>radians of angle</em> translates into
+      φ/ω <em>units of time</em>, because a faster wave burns through radians faster.
+    </p>
+
+    <div class="tryit">
+      <b>Try it.</b> (1) Drag <b>A</b> to 0.3 — magenta shrinks, timing untouched.
+      (2) Drag <b>ω</b> to 1.0 — both waves now have the same wavelength and never
+      drift apart (this kills the beats in tab 1!). (3) Drag <b>φ</b> from 0 to 2 and
+      watch the magenta wave slide right without changing shape.
+    </div>
+  </div>
+</section>
+
+<!-- ================= TAB 3 : WHY BEATS APPEAR ================= -->
+<section class="tab teach" id="tab3">
+  <div class="card">
+    <h2>Step 1 — adding the waves is just adding heights</h2>
+    <p>
+      At every instant <i>t</i>, the blue curve of tab 1 is nothing more than two
+      numbers added together: <span class="math cw">x(t) = f(t) + g(t)</span>.
+      Hover over the graph below and the readout does that arithmetic for you at the
+      crosshair. Everything else in this subject is about <em>understanding the
+      pattern</em> those sums make.
+    </p>
+    <p class="note">
+      This tab pins <b>A = 1</b> (equal loudness), because the classic factoring trick
+      below needs equal amplitudes. Tab 4 removes that restriction. Your ω and φ
+      sliders still apply here.
+    </p>
+
+    <h3>Step 2 — the sum-to-product identity</h3>
+    <p>
+      The whole phenomenon of beats falls out of one trig identity:
+    </p>
+    <div class="eq">
+      <span class="step">sin&thinsp;α + sin&thinsp;β = 2&thinsp;sin<big>(</big>(α+β)/2<big>)</big>&thinsp;cos<big>(</big>(α−β)/2<big>)</big></span>
+      <span class="step why">&ldquo;sum of two sines = (sine at the average angle) × (cosine at half the disagreement)&rdquo;</span>
+    </div>
+    <p>
+      Substitute our two angles, α = t and β = ωt − φ, then simplify the averages:
+    </p>
+    <div class="eq">
+      <span class="step">x(t) = sin(t) + sin(ωt − φ)</span>
+      <span class="step">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 2&thinsp;<span class="ce">cos<big>(</big>&#189;[(ω−1)t − φ]<big>)</big></span> &middot; <span class="cw">sin<big>(</big>&#189;[(ω+1)t − φ]<big>)</big></span></span>
+      <span class="step why">with your sliders: x(t) = 2&thinsp;cos( <b data-live="halfGap"></b>&thinsp;t − <b data-live="halfPhi"></b> ) · sin( <b data-live="meanW"></b>&thinsp;t − <b data-live="halfPhi"></b> )</span>
+    </div>
+
+    <h3>Step 3 — read the two factors as “volume knob × tone”</h3>
+    <p>
+      Look at the two frequencies that appeared:
+    </p>
+    <ul>
+      <li>The <b>sine factor</b> oscillates at the <em>average</em> frequency
+        <span class="chip lv">(ω+1)/2 = <b data-live="meanW"></b></span> — nearly as fast
+        as the originals. This is the fast wiggle you see (and the pitch you would hear).</li>
+      <li>The <b>cosine factor</b> oscillates at <em>half the difference</em>
+        <span class="chip lv">(ω−1)/2 = <b data-live="halfGap"></b></span> — much slower.
+        Over any one fast wiggle it barely moves, so it acts as a slowly turning
+        <b>volume knob</b> multiplying the tone.</li>
+    </ul>
+    <p>
+      The graph below shows the factorization visually: slow knob on top, fast tone in
+      the middle, and their product at the bottom — which is exactly the blue curve of
+      tab 1 (for A = 1).
+    </p>
+
+    <div class="graphbox">
+      <canvas class="graph" id="cvFactor" height="430"></canvas>
+    </div>
+    <div class="hoverout" id="hoFactor">Hover to multiply the two factors at one instant.</div>
+
+    <h3>Step 4 — how long is a beat?</h3>
+    <p>
+      Loudness peaks whenever the volume knob hits ±1, i.e. whenever
+      <span class="math">cos(&#189;[(ω−1)t − φ]) = ±1</span>. Consecutive peaks of
+      |cos| are π radians of its argument apart, so consecutive loud moments are
+      separated by
+    </p>
+    <div class="eq">
+      <span class="step">&#189;&thinsp;(ω−1)&thinsp;ΔT = π &nbsp;⇒&nbsp; ΔT = 2π&#8202;/&#8202;(ω−1) = 6.283&#8202;/&#8202;<b data-live="gap"></b> = <span class="chip lv"><b data-live="beatT"></b></span></span>
+      <span class="step why">so the [0, 60π] window of tab 1 contains 60π ÷ ΔT ≈ <b data-live="beats60"></b> beats — count the gray lobes!</span>
+    </div>
+
+    <div class="tryit">
+      <b>Try it.</b> Drag <b>ω</b> toward 1 (say 1.10): the knob turns extremely slowly
+      — beats become long and languid (ΔT = 2π/0.10 ≈ 63 = 20π: one beat fills a whole
+      zoomed window). Drag ω far from 1 (say 1.9): beats get short and fast. At ω = 1
+      exactly the knob freezes — constant loudness, no beats at all.
+    </div>
+  </div>
+</section>
+
+<!-- ================= TAB 4 : THE ENVELOPE ================= -->
+<section class="tab teach" id="tab4">
+  <div class="card">
+    <h2>Step 5 — unequal amplitudes: think of rotating arrows</h2>
+    <p>
+      The factoring trick of tab 3 needs equal amplitudes. For general
+      <span class="chip adj">A = <b data-live="A"></b></span> there is a picture that works
+      every time: <b>each sinusoid is the height of the tip of a rotating arrow</b>
+      (a <i>phasor</i>).
+    </p>
+    <ul>
+      <li><span class="cf">Green arrow</span>: length 1, angle <i>t</i> — it turns at
+        1 radian per unit time. Its tip-height is sin(t) = f(t).</li>
+      <li><span class="cg">Magenta arrow</span>: length <i>A</i>, angle ωt − φ, glued
+        tail-to-tip onto the green one — it turns at
+        <span class="chip adj">ω = <b data-live="w"></b></span> rad per unit time and starts
+        <span class="chip adj">φ = <b data-live="phi"></b></span> radians behind.</li>
+      <li><span class="cw">Blue arrow</span>: from the origin to the final tip. Heights
+        simply add, so its tip-height is <span class="cw math">x(t) = f(t) + g(t)</span> —
+        the blue dot tracing the curve on the right.</li>
+    </ul>
+
+    <div class="graphbox">
+      <canvas class="graph" id="cvPhasor" height="300"></canvas>
+    </div>
+    <div class="controlrow">
+      <button class="btn" id="btnPlay">Play</button>
+      <label>scrub&nbsp;t
+        <input type="range" id="scrubT" min="0" max="62.8318" step="0.02" value="0" style="width:200px;vertical-align:middle">
+      </label>
+      <label>speed
+        <select id="selSpeed">
+          <option value="0.5">0.5×</option>
+          <option value="1" selected>1×</option>
+          <option value="2">2×</option>
+          <option value="4">4×</option>
+        </select>
+      </label>
+      <span class="hoverout" id="phasorReadout" style="margin:0"></span>
+    </div>
+
+    <h3>Step 6 — the angle between the arrows is everything</h3>
+    <p>
+      Both arrows spin fast, but what decides the <em>length</em> of the blue arrow is
+      only the <b>gap angle</b> between them:
+    </p>
+    <div class="eq">
+      <span class="step">gap(t) = (ωt − φ) − t = (ω − 1)&thinsp;t − φ</span>
+      <span class="step why">it grows at the slow rate ω − 1 = <b data-live="gap"></b> rad per unit time — one full lap of the gap every 2π/(ω−1) = <b data-live="beatT"></b>, the beat period again</span>
+    </div>
+    <p>
+      When the gap is 0 the arrows point the same way and lengths add:
+      <span class="chip lv">1 + A = <b data-live="Emax"></b></span>. When the gap is π they
+      point opposite ways and lengths subtract:
+      <span class="chip lv">|1 − A| = <b data-live="Emin"></b></span><span id="cancelNote"></span>.
+      In between, the law of cosines gives the length exactly:
+    </p>
+    <div class="eq">
+      <span class="step">E(t)² = 1² + A² + 2A&thinsp;cos(gap) &nbsp;&nbsp;⇒&nbsp;&nbsp; <span class="ce">E(t) = √(&thinsp;1 + A² + 2A&thinsp;cos((ω−1)t − φ)&thinsp;)</span></span>
+      <span class="step why">with your sliders: E(t) = √( <b data-live="onePlusA2"></b> + <b data-live="twoA"></b>&thinsp;cos( <b data-live="gap"></b>&thinsp;t − <b data-live="phi"></b> ) ), swinging between <b data-live="Emin"></b> and <b data-live="Emax"></b></span>
+    </div>
+    <p>
+      <b>This is the gray envelope of tab 1.</b> The blue curve is the fast rotation
+      filling the inside; ±E(t) is the slowly breathing boundary it can never cross.
+      The first loudest instant after t = 0 is where the gap first returns to zero:
+    </p>
+    <div class="eq">
+      <span class="step">(ω−1)&thinsp;t − φ = 0 &nbsp;⇒&nbsp; t = φ&#8202;/&#8202;(ω−1) = <b data-live="phi"></b>&#8202;/&#8202;<b data-live="gap"></b> = <span class="chip lv"><b data-live="tPeak"></b></span></span>
+      <span class="step why">so φ does not change the size or spacing of the beats — it only slides the whole envelope in time</span>
+    </div>
+    <p>
+      Sanity checks that fall out for free: with <b>A = 1</b>,
+      √(2 + 2cos&thinsp;θ) = 2|cos(θ/2)| — exactly the volume knob of tab 3. And with
+      <b>ω = 1</b> the gap never moves, so E is a constant
+      <span class="chip lv">√(1+A²+2A&thinsp;cos&thinsp;φ) = <b data-live="steadyAmp"></b></span>:
+      two equal-frequency sines always merge into one steady sinusoid — no beats.
+    </p>
+
+    <div class="tryit">
+      <b>Try it.</b> Press <b>Play</b> and watch the gap angle open and close. Then drag
+      <b>A</b> to 0.5: the arrows can no longer cancel, so the quiet parts of the beat
+      bottom out at |1−A| = 0.5 instead of touching zero — check the envelope in tab 1.
+    </div>
+  </div>
+</section>
+
+<!-- ================= TAB 5 : HOW IT'S DRAWN ================= -->
+<section class="tab teach" id="tab5">
+  <div class="card">
+    <h2>From formula to pixels</h2>
+    <p>
+      Everything you see is produced by one loop: pick many values of <i>t</i>, compute
+      <span class="math cw">x(t) = sin(t) + A&thinsp;sin(ωt − φ)</span> for each, convert every
+      (t, x) pair to a pixel position, and connect the dots with short line segments.
+      This tab shows that machinery — including how it can <em>lie</em> to you.
+    </p>
+
+    <h3>Step 7 — the coordinate map</h3>
+    <p>
+      A canvas has its origin at the <em>top-left</em>, with y growing <em>downward</em> —
+      the opposite of math convention. Two linear maps translate between the worlds
+      (padL = 44 px of margin holds the y-labels; the plot area is
+      <span class="chip lv"><b data-live="pw"></b> px wide</span> and
+      <span class="chip lv"><b data-live="ph"></b> px tall</span> on your screen right now):
+    </p>
+    <div class="eq">
+      <span class="step">px(t) = padL + ( t / t<sub>max</sub> ) · plotWidth <span class="why" style="display:inline">— fraction of the window, scaled to pixels</span></span>
+      <span class="step">py(x) = midY − ( x / 2 ) · ( plotHeight / 2 ) <span class="why" style="display:inline">— minus flips y; the 2 is the axis limit ±2</span></span>
+    </div>
+    <p>
+      Worked example with the current sliders and the <b>actual</b> top window of tab 1
+      (t<sub>max</sub> = <span class="chip lv"><b data-live="tmaxNow"></b></span>):
+      take t = <span class="chip lv"><b data-live="exT"></b></span>. Then
+      x(t) = <span class="chip lv"><b data-live="exX"></b></span>, which lands at
+      pixel <span class="chip lv">( <b data-live="exPx"></b> , <b data-live="exPy"></b> )</span>.
+      The crosshair readout runs this in reverse: from the mouse pixel it computes
+      t = (mouseX − padL)/plotWidth · t<sub>max</sub>, then <em>evaluates the formula</em> —
+      it reads mathematics, not pixels.
+    </p>
+
+    <h3>Step 8 — the drawing loop (the real code)</h3>
+    <p>This is the exact routine this page uses for every curve:</p>
+<pre class="code">function drawCurve(ctx, map, fn, color, width, N){
+  <span class="cm">// N sample points, evenly spaced across the time window</span>
+  ctx.strokeStyle = color;  ctx.lineWidth = width;
+  ctx.beginPath();
+  <span class="kw">for</span> (let i = 0; i &lt;= N; i++){
+    const t = i / N * map.tMax;      <span class="cm">// math world</span>
+    const v = fn(t);                 <span class="cm">// x(t) = sin(t) + A·sin(ωt − φ)</span>
+    const X = map.px(t), Y = map.py(v);  <span class="cm">// pixel world</span>
+    i === 0 ? ctx.moveTo(X, Y) : ctx.lineTo(X, Y);
+  }
+  ctx.stroke();
+}</pre>
+
+    <h3>Step 9 — how many samples are enough? (aliasing)</h3>
+    <p>
+      Straight segments only look like a smooth curve if the samples are dense compared
+      with the fastest wiggle. The fastest component has frequency
+      max(1, ω) = <span class="chip lv"><b data-live="fmax"></b></span>, so its period is
+      <span class="chip lv">2π/max(1,ω) = <b data-live="fastT"></b> time units</span>, and the
+      [0,&nbsp;60π] window contains
+      <span class="chip lv"><b data-live="fastCycles"></b></span> such cycles. With
+      <b>N</b> samples you get <span class="chip lv">N ÷ <b data-live="fastCycles2"></b> =
+      <b data-live="spc"></b> samples per fastest cycle</span> —
+      <span id="aliasVerdict"></span>
+    </p>
+    <div class="graphbox">
+      <canvas class="graph" id="cvAlias" height="230"></canvas>
+    </div>
+    <div class="sl-row" style="max-width:560px">
+      <span class="sl-name" style="width:auto;font-style:normal;font-family:var(--sans);font-size:.9rem">N</span>
+      <div class="sl-body">
+        <div class="ticks"><span>40</span><span>1520</span><span>3000</span></div>
+        <input type="range" id="rN" min="40" max="3000" step="5" value="3000" aria-label="number of samples">
+      </div>
+      <span class="sl-val" id="vN" style="color:var(--orange)">3000</span>
+    </div>
+    <p>
+      Drag <b>N</b> down. Below ~2 samples per cycle (the <i>Nyquist</i> limit) the dots
+      genuinely cannot tell the true curve from a much slower impostor, and the plot
+      draws confident nonsense — same formula, same dots, wrong story. This page uses
+      N = 4200 for the 60π window (≈ <span class="chip lv"><b data-live="appSpc"></b></span>
+      samples per fastest cycle), far above danger. Dots are shown when N ≤ 260 so you
+      can see exactly what the line is built from.
+    </p>
+
+    <h3>Step 10 — the remaining details</h3>
+    <ul>
+      <li><b>Envelope:</b> drawn as two more curves, +E(t) and −E(t), with the formula
+        from tab 4 — the gray lines are ordinary plots, not magic.</li>
+      <li><b>Zoom:</b> only t<sub>max</sub> changes (60π ↔ 20π); the same map formulas
+        instantly re-spread the pixels. Nothing about x(t) is recomputed differently.</li>
+      <li><b>Sharpness:</b> the canvas is rendered at devicePixelRatio × CSS size, so
+        lines stay crisp on high-density screens.</li>
+      <li><b>Reactivity:</b> every slider writes to one shared state object
+        {ω, A, φ, zoom, envelope}; any change triggers one render() pass that redraws
+        all visible canvases and refreshes every teal number on this page.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  Built as a study companion for MITx 18.03x &middot; functional recreation of the
+  18.03 &ldquo;Beats&rdquo; mathlet (original © 2001 H.&nbsp;Hohn &amp; H.&nbsp;Miller, MIT) &middot;
+  single file, vanilla JS, no libraries.
+</footer>
+</div>
+
+<script>
+'use strict';
+/* ============================================================
+   Beats explorer — shared state, live math, and canvas engine
+   ============================================================ */
+const PI = Math.PI, TAU = 2*Math.PI;
+
+const S = {
+  w: 1.77,      // circular frequency of g
+  A: 1.00,      // amplitude of g
+  phi: 1.13,    // phase lag of g
+  zoom: false,  // false: [0,60π]   true: [0,20π]
+  env:  false,  // envelope overlay on the sum
+  t4: 0,        // phasor-tab time
+  playing: false,
+  N: 3000       // sample count in the aliasing demo
+};
+
+/* ----- the mathematics ----- */
+const fFun  = t => Math.sin(t);
+const gFun  = t => S.A * Math.sin(S.w*t - S.phi);
+const xFun  = t => fFun(t) + gFun(t);
+const envFun= t => Math.sqrt(1 + S.A*S.A + 2*S.A*Math.cos((S.w-1)*t - S.phi));
+const slowFun = t => 2*Math.cos(0.5*((S.w-1)*t - S.phi));   // A = 1 factorization
+const fastFun = t => Math.sin(0.5*((S.w+1)*t - S.phi));
+
+/* ----- formatting ----- */
+const f1 = v => v.toFixed(1), f2 = v => v.toFixed(2), f3 = v => v.toFixed(3);
+const piForm = v => `${f2(v)} (${f2(v/PI)}\u03C0)`;   // "8.16 (2.60π)"
+
+/* ============================================================
+   Generic single-panel graph
+   ============================================================ */
+function sizeCanvas(cv){
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth, H = cv.clientHeight;
+  if (!W || !H) return null;
+  const pw = Math.round(W*dpr), ph = Math.round(H*dpr);
+  if (cv.width !== pw)  cv.width  = pw;
+  if (cv.height !== ph) cv.height = ph;
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx, W, H};
+}
+
+function drawCurve(ctx, map, fn, color, width, N, dash){
+  ctx.strokeStyle = color;  ctx.lineWidth = width;
+  ctx.setLineDash(dash || []);
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++){
+    const t = i / N * map.tMax;
+    const v = fn(t);
+    const X = map.px(t), Y = map.py(v);
+    i === 0 ? ctx.moveTo(X, Y) : ctx.lineTo(X, Y);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function axisArrow(ctx, x, y){
+  ctx.beginPath();
+  ctx.moveTo(x-7, y-3.5); ctx.lineTo(x, y); ctx.lineTo(x-7, y+3.5);
+  ctx.stroke();
+}
+
+/* o: {tMax, yAbs, yStep, tickPi, curves:[{fn,color,lw,dash}], samples, extras, hoverT} */
+function drawGraph(cv, o){
+  const s = sizeCanvas(cv);
+  if (!s) return null;
+  const {ctx, W, H} = s;
+  const padL = 44, padR = 30, padT = 10, padB = 26;
+  const pw = W - padL - padR, ph = H - padT - padB;
+  const px = t => padL + t / o.tMax * pw;
+  const py = v => padT + ph/2 - (v / o.yAbs) * (ph/2);
+  const map = {px, py, padL, padR, padT, padB, pw, ph, W, H, tMax:o.tMax, yAbs:o.yAbs};
+
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(padL, padT, pw, ph);
+
+  // horizontal gridlines
+  ctx.strokeStyle = '#eef1f8'; ctx.lineWidth = 1;
+  for (let v = -o.yAbs; v <= o.yAbs + 1e-9; v += o.yStep){
+    if (Math.abs(v) < 1e-9) continue;
+    const y = py(v);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL+pw, y); ctx.stroke();
+  }
+  // frame
+  ctx.strokeStyle = '#d5dae8';
+  ctx.strokeRect(padL+.5, padT+.5, pw-1, ph-1);
+  // zero axis with arrow
+  ctx.strokeStyle = '#8b93a8'; ctx.lineWidth = 1.1;
+  const y0 = py(0);
+  ctx.beginPath(); ctx.moveTo(padL, y0); ctx.lineTo(padL+pw+10, y0); ctx.stroke();
+  axisArrow(ctx, padL+pw+12, y0);
+  ctx.fillStyle = '#444a5c'; ctx.font = 'bold 13px Segoe UI, sans-serif';
+  ctx.fillText('t', padL+pw+16, y0+4);
+
+  // y tick labels
+  ctx.fillStyle = '#5c6479'; ctx.font = '12px Segoe UI, sans-serif';
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for (let v = -o.yAbs+ (o.yAbs%o.yStep===0?0:o.yAbs%o.yStep); v <= o.yAbs+1e-9; v += o.yStep){
+    const vv = Math.round(v/o.yStep)*o.yStep;
+    ctx.fillText(String(vv), padL-7, py(vv));
+  }
+  // t tick labels (multiples of tickPi·π)
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (let k = 0; k*o.tickPi*PI <= o.tMax + 1e-9; k++){
+    const t = k*o.tickPi*PI, lbl = (k*o.tickPi) + '\u03C0';
+    ctx.fillText(lbl, px(t), padT+ph+6);
+    ctx.strokeStyle = '#c8cede';
+    ctx.beginPath(); ctx.moveTo(px(t), padT+ph); ctx.lineTo(px(t), padT+ph+3); ctx.stroke();
+  }
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+
+  // curves (clipped to the plot area)
+  ctx.save();
+  ctx.beginPath(); ctx.rect(padL, padT, pw, ph); ctx.clip();
+  for (const c of o.curves) drawCurve(ctx, map, c.fn, c.color, c.lw, o.samples, c.dash);
+  if (o.extras) o.extras(ctx, map);
+  // hover crosshair
+  if (o.hoverT != null){
+    ctx.strokeStyle = '#a7aec3'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(px(o.hoverT), padT); ctx.lineTo(px(o.hoverT), padT+ph); ctx.stroke();
+  }
+  ctx.restore();
+  return map;
+}
+
+/* mouse → time coordinate for a canvas last drawn with drawGraph geometry */
+function mouseT(cv, ev, tMax){
+  const r = cv.getBoundingClientRect();
+  const mx = ev.clientX - r.left;
+  const padL = 44, padR = 30;
+  const pw = cv.clientWidth - padL - padR;
+  const t = (mx - padL) / pw * tMax;
+  return Math.min(Math.max(t, 0), tMax);
+}
+
+/* ============================================================
+   TAB 1 — the mathlet replica
+   ============================================================ */
+let hoverT1 = null;      // crosshair time in the mathlet
+let mapTop  = null;      // geometry of the top window (used by tab 5)
+
+function renderReplica(){
+  const cvS = document.getElementById('cvSum');
+  const cvP = document.getElementById('cvParts');
+  const tMax = S.zoom ? 20*PI : 60*PI;
+  const samples = S.zoom ? 2200 : 4200;
+
+  const sumCurves = [{fn:xFun, color:'#1d3fd0', lw:1.8}];
+  if (S.env){
+    sumCurves.push({fn:t=> envFun(t), color:'#828282', lw:1.6});
+    sumCurves.push({fn:t=>-envFun(t), color:'#828282', lw:1.6});
+  }
+  const m = drawGraph(cvS, {tMax, yAbs:2, yStep:1, tickPi:10,
+                            curves:sumCurves, samples, hoverT:hoverT1});
+  if (m) mapTop = m;
+
+  drawGraph(cvP, {tMax, yAbs:2, yStep:1, tickPi:10,
+                  curves:[{fn:fFun, color:'#2e8b2f', lw:1.4},
+                          {fn:gFun, color:'#cf1180', lw:1.4}],
+                  samples, hoverT:hoverT1});
+
+  const roT = document.getElementById('roT'), roX = document.getElementById('roX');
+  if (hoverT1 == null){ roT.textContent = ''; roX.textContent = ''; }
+  else { roT.textContent = f2(hoverT1/PI) + '\u03C0'; roX.textContent = f2(xFun(hoverT1)); }
+}
+
+/* ============================================================
+   TAB 2 — the two waves, annotated
+   ============================================================ */
+let hoverT2 = null;
+function renderWaves(){
+  const cv = document.getElementById('cvWaves');
+  const tMax = 6*PI;
+  const m = drawGraph(cv, {tMax, yAbs:1.35, yStep:1, tickPi:2,
+    curves:[{fn:fFun, color:'#2e8b2f', lw:2},
+            {fn:gFun, color:'#cf1180', lw:2}],
+    samples: 1200, hoverT: hoverT2,
+    extras: (ctx, map) => {
+      // ±A guide lines (orange, dashed)
+      ctx.strokeStyle = '#e8710a'; ctx.lineWidth = 1; ctx.setLineDash([6,5]);
+      for (const sgn of [1,-1]){
+        const y = map.py(sgn*S.A);
+        ctx.beginPath(); ctx.moveTo(map.padL, y); ctx.lineTo(map.padL+map.pw, y); ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#e8710a'; ctx.font = 'bold 12px Segoe UI, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('+A', map.padL+map.pw-6, map.py(S.A)-5);
+      ctx.fillText('\u2212A', map.padL+map.pw-6, map.py(-S.A)+14);
+      ctx.textAlign = 'left';
+
+      // first upward zero of g at t = φ/ω  (dashed magenta)
+      if (S.w > 0.03){
+        const t0 = S.phi / S.w;
+        if (t0 <= tMax){
+          ctx.strokeStyle = '#cf1180'; ctx.setLineDash([5,4]); ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.moveTo(map.px(t0), map.padT); ctx.lineTo(map.px(t0), map.padT+map.ph); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = '#cf1180'; ctx.font = 'bold 11px Segoe UI, sans-serif';
+          ctx.fillText('t = \u03C6/\u03C9 = ' + f2(t0), map.px(t0)+5, map.padT+14);
+        }
+        // one-period bracket for g
+        const Tg = TAU / S.w;
+        let b0 = S.phi / S.w;
+        while (b0 + Tg > tMax && b0 - Tg >= -1e-9) b0 -= Tg;
+        if (b0 >= 0 && b0 + Tg <= tMax && Tg < tMax){
+          const yb = map.py(1.18);
+          ctx.strokeStyle = '#cf1180'; ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.moveTo(map.px(b0), yb-4);      ctx.lineTo(map.px(b0), yb+4);
+          ctx.moveTo(map.px(b0), yb);        ctx.lineTo(map.px(b0+Tg), yb);
+          ctx.moveTo(map.px(b0+Tg), yb-4);   ctx.lineTo(map.px(b0+Tg), yb+4);
+          ctx.stroke();
+          ctx.fillStyle = '#cf1180'; ctx.font = 'bold 11px Segoe UI, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('one period of g:  T = 2\u03C0/\u03C9 = ' + f2(Tg), map.px(b0+Tg/2), yb-8);
+          ctx.textAlign = 'left';
+        }
+      }
+      // hover sample dots
+      if (hoverT2 != null){
+        for (const [fn,col] of [[fFun,'#2e8b2f'],[gFun,'#cf1180']]){
+          ctx.fillStyle = col;
+          ctx.beginPath(); ctx.arc(map.px(hoverT2), map.py(fn(hoverT2)), 4, 0, TAU); ctx.fill();
+        }
+      }
+    }});
+  const out = document.getElementById('hoWaves');
+  if (hoverT2 == null){
+    out.textContent = 'Move the pointer over the graph to sample both waves at one instant.';
+  } else {
+    const t = hoverT2;
+    out.innerHTML = `at t = ${f2(t)} (${f2(t/PI)}\u03C0):&nbsp; ` +
+      `<span class="cf">f = sin(${f2(t)}) = ${f2(fFun(t))}</span> &nbsp;\u00B7&nbsp; ` +
+      `<span class="cg">g = ${f2(S.A)}\u00B7sin(${f2(S.w)}\u00B7${f2(t)} \u2212 ${f2(S.phi)}) = ${f2(gFun(t))}</span>` +
+      ` &nbsp;\u2192&nbsp; sum = <span class="cw">${f2(xFun(t))}</span>`;
+  }
+}
+
+/* ============================================================
+   TAB 3 — the factorization, three stacked panels (A pinned to 1)
+   ============================================================ */
+let hoverT3 = null;
+function renderFactor(){
+  const cv = document.getElementById('cvFactor');
+  const s = sizeCanvas(cv);
+  if (!s) return;
+  const {ctx, W, H} = s;
+  const padL = 44, padR = 30, gap = 12, axisH = 24, padT = 6;
+  const tMax = 20*PI;
+  const pw = W - padL - padR;
+  const panelH = Math.floor((H - padT - axisH - 2*gap) / 3);
+  const pxOf = t => padL + t/tMax*pw;
+  ctx.clearRect(0,0,W,H);
+
+  const slow1 = t => 2*Math.cos(0.5*((S.w-1)*t - S.phi));   // A = 1 slow factor
+  const fast1 = t => Math.sin(0.5*((S.w+1)*t - S.phi));
+  const prod1 = t => slow1(t)*fast1(t);
+
+  function panel(idx, yTop, yAbs, curves, label, labelColor){
+    const py = v => yTop + panelH/2 - (v/yAbs)*(panelH/2);
+    ctx.fillStyle = '#fff'; ctx.fillRect(padL, yTop, pw, panelH);
+    ctx.strokeStyle = '#d5dae8'; ctx.lineWidth = 1;
+    ctx.strokeRect(padL+.5, yTop+.5, pw-1, panelH-1);
+    ctx.strokeStyle = '#aab1c4';
+    ctx.beginPath(); ctx.moveTo(padL, py(0)); ctx.lineTo(padL+pw, py(0)); ctx.stroke();
+    // y labels ±
+    ctx.fillStyle = '#5c6479'; ctx.font = '11px Segoe UI, sans-serif';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    const yl = yAbs > 1.5 ? 2 : 1;
+    ctx.fillText(String(yl),  padL-6, py(yl));
+    ctx.fillText(String(-yl), padL-6, py(-yl));
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    // curves
+    ctx.save(); ctx.beginPath(); ctx.rect(padL, yTop, pw, panelH); ctx.clip();
+    for (const c of curves){
+      ctx.strokeStyle = c.color; ctx.lineWidth = c.lw; ctx.setLineDash(c.dash||[]);
+      ctx.beginPath();
+      const N = 2600;
+      for (let i = 0; i <= N; i++){
+        const t = i/N*tMax, v = c.fn(t);
+        i===0 ? ctx.moveTo(pxOf(t), py(v)) : ctx.lineTo(pxOf(t), py(v));
+      }
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    if (hoverT3 != null){
+      ctx.strokeStyle = '#a7aec3';
+      ctx.beginPath(); ctx.moveTo(pxOf(hoverT3), yTop); ctx.lineTo(pxOf(hoverT3), yTop+panelH); ctx.stroke();
+      ctx.fillStyle = curves[curves.length-1].color;
+      ctx.beginPath(); ctx.arc(pxOf(hoverT3), py(curves[curves.length-1].fn(hoverT3)), 4, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+    ctx.fillStyle = labelColor; ctx.font = 'bold 12px Segoe UI, sans-serif';
+    ctx.fillText(label, padL+8, yTop+16);
+  }
+
+  const y1 = padT, y2 = padT+panelH+gap, y3 = padT+2*(panelH+gap);
+  panel(0, y1, 2.3, [{fn:slow1, color:'#0d8f86', lw:2}],
+        'slow factor (volume knob):  2 cos( \u00BD[(\u03C9\u22121)t \u2212 \u03C6] )', '#0d8f86');
+  panel(1, y2, 1.25, [{fn:fast1, color:'#7b8ff2', lw:1.6}],
+        'fast factor (the tone):  sin( \u00BD[(\u03C9+1)t \u2212 \u03C6] )', '#5468d8');
+  panel(2, y3, 2.3, [{fn:t=> slow1(t), color:'#b9bfd0', lw:1.2, dash:[5,4]},
+                     {fn:t=>-slow1(t), color:'#b9bfd0', lw:1.2, dash:[5,4]},
+                     {fn:prod1, color:'#1d3fd0', lw:1.7}],
+        'product = slow \u00D7 fast  (this is x(t) for A = 1)', '#1d3fd0');
+
+  // shared t axis under bottom panel
+  ctx.fillStyle = '#5c6479'; ctx.font = '12px Segoe UI, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (let k = 0; k <= 2; k++){
+    ctx.fillText((k*10)+'\u03C0', pxOf(k*10*PI), y3+panelH+6);
+  }
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+
+  const out = document.getElementById('hoFactor');
+  if (hoverT3 == null){
+    out.textContent = 'Hover to multiply the two factors at one instant.';
+  } else {
+    const t = hoverT3, sl = slow1(t), fa = fast1(t);
+    out.innerHTML = `t = ${f2(t)} (${f2(t/PI)}\u03C0):&nbsp; ` +
+      `<span style="color:#0d8f86;font-weight:700">slow = ${f2(sl)}</span> \u00D7 ` +
+      `<span style="color:#5468d8;font-weight:700">fast = ${f2(fa)}</span> = ` +
+      `<span class="cw">x = ${f2(sl*fa)}</span>` +
+      (Math.abs(sl) < 0.25 ? ' &nbsp;\u2014 knob near zero: this is the quiet part of a beat' :
+       Math.abs(sl) > 1.75 ? ' &nbsp;\u2014 knob near \u00B12: this is the loud crest of a beat' : '');
+  }
+}
+
+/* ============================================================
+   TAB 4 — phasor animation
+   ============================================================ */
+function drawArrow(ctx, x1, y1, x2, y2, color, lw){
+  const ang = Math.atan2(y2-y1, x2-x1), hl = 9;
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = lw;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - hl*Math.cos(ang - 0.42), y2 - hl*Math.sin(ang - 0.42));
+  ctx.lineTo(x2 - hl*Math.cos(ang + 0.42), y2 - hl*Math.sin(ang + 0.42));
+  ctx.closePath(); ctx.fill();
+}
+
+function renderPhasor(){
+  const cv = document.getElementById('cvPhasor');
+  const s = sizeCanvas(cv);
+  if (!s) return;
+  const {ctx, W, H} = s;
+  ctx.clearRect(0,0,W,H);
+  const padT = 12, padB = 26, padR = 30;
+  const ph = H - padT - padB, midY = padT + ph/2, sc = ph/4;   // sc px per unit
+  const tMaxP = 20*PI;
+  const t = ((S.t4 % tMaxP) + tMaxP) % tMaxP;
+
+  const traceX0 = 330;
+  const haveTrace = (W - traceX0) > 140;
+  const cx = haveTrace ? 160 : W/2, cy = midY;
+
+  /* --- right: the trace x(t) with envelope --- */
+  let dotX = null, dotY = null;
+  if (haveTrace){
+    const tw = W - traceX0 - padR;
+    const pxT = tt => traceX0 + tt/tMaxP*tw;
+    const pyT = v  => midY - v*sc;
+    ctx.fillStyle = '#fff'; ctx.fillRect(traceX0, padT, tw, ph);
+    ctx.strokeStyle = '#d5dae8'; ctx.strokeRect(traceX0+.5, padT+.5, tw-1, ph-1);
+    ctx.strokeStyle = '#aab1c4';
+    ctx.beginPath(); ctx.moveTo(traceX0, midY); ctx.lineTo(traceX0+tw, midY); ctx.stroke();
+    ctx.save(); ctx.beginPath(); ctx.rect(traceX0, padT, tw, ph); ctx.clip();
+    for (const [fn,col,lw] of [[tt=> envFun(tt),'#b9bfd0',1.2],
+                               [tt=>-envFun(tt),'#b9bfd0',1.2],
+                               [tt=> xFun(tt), '#1d3fd0',1.6]]){
+      ctx.strokeStyle = col; ctx.lineWidth = lw;
+      ctx.beginPath();
+      const N = 2400;
+      for (let i=0;i<=N;i++){
+        const tt=i/N*tMaxP, v=fn(tt);
+        i===0?ctx.moveTo(pxT(tt),pyT(v)):ctx.lineTo(pxT(tt),pyT(v));
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+    ctx.fillStyle = '#5c6479'; ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    for (let k=0;k<=2;k++) ctx.fillText((k*10)+'\u03C0', pxT(k*10*PI), padT+ph+6);
+    ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    dotX = pxT(t); dotY = pyT(xFun(t));
+  }
+
+  /* --- left: the phasors --- */
+  const th1 = t, th2 = S.w*t - S.phi;
+  const tip1x = cx + sc*Math.cos(th1), tip1y = cy - sc*Math.sin(th1);
+  const tip2x = tip1x + S.A*sc*Math.cos(th2), tip2y = tip1y - S.A*sc*Math.sin(th2);
+  const E = envFun(t);
+
+  // axes
+  ctx.strokeStyle = '#dfe3ee'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(cx-sc*2.15, cy); ctx.lineTo(cx+sc*2.15, cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx, cy-sc*2.1); ctx.lineTo(cx, cy+sc*2.1); ctx.stroke();
+  // reach circle |z| = E(t)
+  ctx.strokeStyle = '#0d8f86'; ctx.setLineDash([5,5]); ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.arc(cx, cy, Math.max(E*sc, 0.5), 0, TAU); ctx.stroke();
+  ctx.setLineDash([]);
+  // connector: tip height = value on the trace
+  if (haveTrace){
+    ctx.strokeStyle = '#9aa3b8'; ctx.setLineDash([5,4]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(tip2x, tip2y); ctx.lineTo(dotX, dotY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#1d3fd0';
+    ctx.beginPath(); ctx.arc(dotX, dotY, 4.5, 0, TAU); ctx.fill();
+  }
+  // arrows: green (f), magenta (g), blue (sum)
+  drawArrow(ctx, cx, cy, tip1x, tip1y, '#2e8b2f', 2.4);
+  drawArrow(ctx, tip1x, tip1y, tip2x, tip2y, '#cf1180', 2.4);
+  drawArrow(ctx, cx, cy, tip2x, tip2y, '#1d3fd0', 2.8);
+  // labels
+  ctx.font = 'bold 12px Segoe UI, sans-serif';
+  ctx.fillStyle = '#0d8f86';
+  ctx.fillText('E(t) = ' + f2(E), cx - sc*2.1, cy - sc*2.1 + 2);
+
+  const ro = document.getElementById('phasorReadout');
+  if (ro){
+    const gapAng = (S.w-1)*t - S.phi;
+    ro.innerHTML =
+      `t = ${f2(t)} (${f2(t/PI)}\u03C0) \u00B7 gap = (\u03C9\u22121)t \u2212 \u03C6 = ${f2(gapAng)} rad` +
+      ` \u00B7 <span style="color:#0d8f86;font-weight:700">|blue| = E = ${f2(E)}</span>` +
+      ` \u00B7 <span class="cw">x(t) = ${f2(xFun(t))}</span>`;
+  }
+  const sc2 = document.getElementById('scrubT');
+  if (sc2 && document.activeElement !== sc2) sc2.value = t;
+}
+
+/* ============================================================
+   TAB 5 — sampling / aliasing demo
+   ============================================================ */
+function renderAlias(){
+  const cv = document.getElementById('cvAlias');
+  const tMax = 60*PI;
+  drawGraph(cv, {tMax, yAbs:2.2, yStep:1, tickPi:10,
+    curves:[{fn:xFun, color:'#dbe0ef', lw:1.2}],   // ghost of the true curve
+    samples: 4200,
+    extras: (ctx, map) => {
+      // the N-sample polyline
+      ctx.strokeStyle = '#1d3fd0'; ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      for (let i = 0; i <= S.N; i++){
+        const t = i/S.N*tMax, v = xFun(t);
+        i===0 ? ctx.moveTo(map.px(t), map.py(v)) : ctx.lineTo(map.px(t), map.py(v));
+      }
+      ctx.stroke();
+      if (S.N <= 260){
+        ctx.fillStyle = '#e8710a';
+        for (let i = 0; i <= S.N; i++){
+          const t = i/S.N*tMax;
+          ctx.beginPath(); ctx.arc(map.px(t), map.py(xFun(t)), 2.2, 0, TAU); ctx.fill();
+        }
+      }
+    }});
+}
+
+/* ============================================================
+   Live numbers — every teal chip on the page
+   ============================================================ */
+const LIVE = {
+  w:   () => f2(S.w),
+  A:   () => f2(S.A),
+  phi: () => f2(S.phi),
+  gap: () => f2(S.w - 1),
+  Emax:() => f2(1 + S.A),
+  Emin:() => f2(Math.abs(1 - S.A)),
+  onePlusA2: () => f2(1 + S.A*S.A),
+  twoA: () => f2(2*S.A),
+  Tg:  () => S.w < 1e-3 ? '\u221E \u2014 with \u03C9 = 0, g never oscillates' : piForm(TAU/S.w),
+  gShift: () => S.w < 1e-3 ? '\u2014' : f2(S.phi/S.w) + ' time units',
+  gCycles60: () => f1(30*S.w),
+  meanW:  () => f2((S.w+1)/2),
+  halfGap:() => f2((S.w-1)/2),
+  halfPhi:() => f2(S.phi/2),
+  beatT:  () => Math.abs(S.w-1) < 0.005 ? '\u221E (no beats \u2014 equal frequencies)' : piForm(TAU/Math.abs(S.w-1)),
+  beats60:() => Math.abs(S.w-1) < 0.005 ? '0' : f1(30*Math.abs(S.w-1)),
+  tPeak:  () => {
+    if (Math.abs(S.w-1) < 0.005) return '\u2014 (envelope is flat)';
+    const T = TAU/Math.abs(S.w-1);
+    let tp = S.phi/(S.w-1);
+    tp = ((tp % T) + T) % T;
+    return piForm(tp);
+  },
+  steadyAmp: () => f2(Math.sqrt(1 + S.A*S.A + 2*S.A*Math.cos(S.phi))),
+  pw: () => mapTop ? String(Math.round(mapTop.pw)) : '\u2014',
+  ph: () => mapTop ? String(Math.round(mapTop.ph)) : '\u2014',
+  tmaxNow: () => S.zoom ? '20\u03C0' : '60\u03C0',
+  exT: () => '41.60 (13.24\u03C0)',
+  exX: () => f2(xFun(13.24*PI)),
+  exPx: () => mapTop ? String(Math.round(mapTop.px(Math.min(13.24*PI, mapTop.tMax)))) + ' px' : '\u2014',
+  exPy: () => mapTop ? String(Math.round(mapTop.py(xFun(13.24*PI)))) + ' px' : '\u2014',
+  fmax: () => f2(Math.max(1, S.w)),
+  fastT: () => f2(TAU/Math.max(1, S.w)),
+  fastCycles:  () => f1(30*Math.max(1, S.w)),
+  fastCycles2: () => f1(30*Math.max(1, S.w)),
+  spc: () => f1(S.N/(30*Math.max(1, S.w))),
+  appSpc: () => (4200/(30*Math.max(1, S.w))).toFixed(0)
+};
+
+function updateLive(){
+  document.querySelectorAll('[data-live]').forEach(el => {
+    const k = el.getAttribute('data-live');
+    if (LIVE[k]) el.textContent = LIVE[k]();
+  });
+  // slider value labels
+  const fmt = {w:f3, A:f2, phi:f2};
+  document.querySelectorAll('[data-out]').forEach(el => {
+    const k = el.getAttribute('data-out');
+    el.textContent = fmt[k](S[k]);
+  });
+  // keep every bound slider in sync (they exist once per key here, but stay general)
+  document.querySelectorAll('input[data-key]').forEach(inp => {
+    const k = inp.getAttribute('data-key');
+    if (document.activeElement !== inp) inp.value = S[k];
+  });
+  // aliasing verdict
+  const spc = S.N/(30*Math.max(1,S.w));
+  const v = document.getElementById('aliasVerdict');
+  if (v){
+    let msg, col;
+    if (spc >= 20){ msg = 'plenty: the polyline is indistinguishable from the true curve.'; col = '#0d8f86'; }
+    else if (spc >= 4){ msg = 'workable, but the curve is visibly polygonal.'; col = '#b06a00'; }
+    else if (spc >= 2){ msg = 'on the edge of the Nyquist limit \u2014 expect dents and false flat spots.'; col = '#c2410c'; }
+    else { msg = 'below the Nyquist limit: the drawn wave is an alias \u2014 a fiction at the wrong frequency.'; col = '#c11d3f'; }
+    v.textContent = msg; v.style.color = col; v.style.fontWeight = '700';
+  }
+  const cn = document.getElementById('cancelNote');
+  if (cn) cn.textContent = (S.A > 0.995) ? ' \u2014 with A = 1 that is total cancellation: the sound dies to silence between beats' : '';
+  const vn = document.getElementById('vN');
+  if (vn) vn.textContent = String(S.N);
+}
+
+/* ============================================================
+   Wiring
+   ============================================================ */
+function render(){
+  updateLive();
+  renderReplica();
+  renderWaves();
+  renderFactor();
+  renderPhasor();
+  renderAlias();
+}
+
+/* tabs */
+document.querySelectorAll('.tabbtn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tabbtn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('section.tab').forEach(sc => sc.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+    render();
+  });
+});
+
+/* parameter sliders (shared state) */
+document.querySelectorAll('input[data-key]').forEach(inp => {
+  inp.addEventListener('input', () => {
+    S[inp.dataset.key] = parseFloat(inp.value);
+    render();
+  });
+});
+
+/* replica checkboxes */
+document.getElementById('ckZoom').addEventListener('change', e => { S.zoom = e.target.checked; render(); });
+document.getElementById('ckEnv') .addEventListener('change', e => { S.env  = e.target.checked; render(); });
+
+/* help */
+document.getElementById('helpToggle').addEventListener('click', () => {
+  const b = document.getElementById('helpBox');
+  const open = b.classList.toggle('open');
+  document.getElementById('helpToggle').textContent = open ? '\u2212 help' : '+ help';
+});
+
+/* crosshair on the mathlet */
+for (const id of ['cvSum','cvParts']){
+  const cv = document.getElementById(id);
+  cv.addEventListener('mousemove', ev => {
+    hoverT1 = mouseT(cv, ev, S.zoom ? 20*PI : 60*PI);
+    renderReplica();
+  });
+  cv.addEventListener('mouseleave', () => { hoverT1 = null; renderReplica(); });
+}
+
+/* hover on tab-2 and tab-3 canvases */
+{
+  const cv2 = document.getElementById('cvWaves');
+  cv2.addEventListener('mousemove', ev => { hoverT2 = mouseT(cv2, ev, 6*PI); renderWaves(); });
+  cv2.addEventListener('mouseleave', () => { hoverT2 = null; renderWaves(); });
+  const cv3 = document.getElementById('cvFactor');
+  cv3.addEventListener('mousemove', ev => { hoverT3 = mouseT(cv3, ev, 20*PI); renderFactor(); });
+  cv3.addEventListener('mouseleave', () => { hoverT3 = null; renderFactor(); });
+}
+
+/* phasor animation */
+let lastTS = null;
+function tick(ts){
+  if (!S.playing){ lastTS = null; return; }
+  if (lastTS == null) lastTS = ts;
+  const dt = Math.min((ts - lastTS)/1000, 0.05);
+  lastTS = ts;
+  const speed = parseFloat(document.getElementById('selSpeed').value);
+  S.t4 += dt * 2.2 * speed;
+  if (S.t4 > 20*PI) S.t4 -= 20*PI;
+  renderPhasor();
+  requestAnimationFrame(tick);
+}
+document.getElementById('btnPlay').addEventListener('click', () => {
+  S.playing = !S.playing;
+  document.getElementById('btnPlay').textContent = S.playing ? 'Pause' : 'Play';
+  if (S.playing) requestAnimationFrame(tick);
+});
+document.getElementById('scrubT').addEventListener('input', e => {
+  S.t4 = parseFloat(e.target.value);
+  renderPhasor();
+});
+
+/* aliasing sample-count slider */
+document.getElementById('rN').addEventListener('input', e => {
+  S.N = parseInt(e.target.value, 10);
+  updateLive();
+  renderAlias();
+});
+
+/* resize */
+let resizeQueued = false;
+window.addEventListener('resize', () => {
+  if (resizeQueued) return;
+  resizeQueued = true;
+  requestAnimationFrame(() => { resizeQueued = false; render(); });
+});
+
+render();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

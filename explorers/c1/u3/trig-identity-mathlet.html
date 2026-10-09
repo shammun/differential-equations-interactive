@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trigonometric Identity</title>
+<style>
+:root{
+  --panel:#eceef0; --ink:#1d2540; --muted:#5b6784; --axis:#8a8f99; --grid:#d8dce2;
+  --mag:#c2179a;   /* A cos(wt - phi) */
+  --grn:#1f8a3b;   /* a cos + b sin  */
+  --red:#d4441c;   /* a cos(wt) */
+  --blu:#1140d8;   /* b sin(wt) */
+  --link:#1a86d0;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#f6f7f9;color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:18px 14px 60px}
+.mathlet{background:var(--panel);border-radius:10px;padding:16px 18px 22px}
+.head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.title{font-weight:700;letter-spacing:.06em;font-size:.95rem}
+.help{color:var(--link);font-weight:700;font-size:.9rem;cursor:pointer;user-select:none}
+.layout{display:grid;grid-template-columns:420px 1fr;gap:18px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+canvas{background:#fff;border-radius:3px;display:block;width:100%;height:auto}
+.plotwrap{margin-bottom:14px}
+.legend{font-weight:700;font-size:.95rem;line-height:1.5;margin-bottom:10px}
+.legend .m{color:var(--mag)} .legend .g{color:var(--grn)}
+.legend .r{color:var(--red)} .legend .b{color:var(--blu)}
+.sl{display:grid;grid-template-columns:26px 1fr 62px;align-items:center;gap:8px;margin:10px 0}
+.sl .nm{font-weight:700;font-size:1.05rem;text-align:right}
+.sl .rd{font-weight:700;font-size:.98rem}
+.sl.mag .nm,.sl.mag .rd{color:var(--mag)}
+.sl.red .nm,.sl.red .rd{color:var(--red)}
+.sl.blu .nm,.sl.blu .rd{color:var(--blu)}
+.sl.blk .nm,.sl.blk .rd{color:#333}
+.track{position:relative;padding-top:16px}
+.ticks{position:absolute;top:0;left:0;right:0;height:14px;font-size:.72rem;color:var(--muted)}
+.ticks span{position:absolute;transform:translateX(-50%)}
+input[type=range]{width:100%;margin:0;accent-color:#555;height:16px}
+.right{display:flex;flex-direction:column;gap:12px}
+.checks label{display:flex;align-items:center;gap:8px;font-weight:700;font-size:1rem;cursor:pointer;margin:6px 0}
+.checks input{appearance:none;-webkit-appearance:none;width:14px;height:14px;border:1.5px solid #6b7280;
+  border-radius:2px;background:#fff;cursor:pointer;position:relative;flex:none}
+.checks input#showAB:checked{background:#1f8a3b;border-color:#1f8a3b;box-shadow:inset 0 0 0 2px #fff}
+.checks input#showAP:checked{background:#c2179a;border-color:#c2179a;box-shadow:inset 0 0 0 2px #fff}
+.checks .ab{color:#333}.checks .ap{color:#333}
+.eqbox{background:#fff;border-radius:6px;padding:10px 12px;font-family:Cambria,Georgia,serif;font-size:.98rem;line-height:1.6}
+.eqbox b{color:var(--mag)} .eqbox i{font-style:normal;color:var(--grn);font-weight:700}
+.note{font-size:.82rem;color:var(--muted);line-height:1.45}
+.helpbox{display:none;background:#fff;border-radius:6px;padding:12px 14px;margin-bottom:12px;font-size:.9rem;line-height:1.55}
+.helpbox.on{display:block}
+.helpbox ul{margin:6px 0 0 18px;padding:0}
+.helpbox li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="mathlet">
+  <div class="head">
+    <div class="title">TRIGONOMETRIC IDENTITY</div>
+    <div class="help" id="helpBtn">+ help</div>
+  </div>
+
+  <div class="helpbox" id="helpBox">
+    <b>a cos(&omega;t) + b sin(&omega;t) = A cos(&omega;t &minus; &phi;)</b>
+    <ul>
+      <li>All four sliders are <b>independent</b>. The <span style="color:var(--mag)"><b>magenta</b></span> curve is A cos(&omega;t &minus; &phi;); the <span style="color:var(--grn)"><b>green</b></span> curve is a cos(&omega;t) + b sin(&omega;t). In general they are different curves.</li>
+      <li>The two checkboxes are <b>display toggles</b> for the plane on the right, and either or both may be ticked:
+        <br><b>a,b</b> draws the point (a, b) with its horizontal leg a and vertical leg b;
+        <br><b>A,&phi;</b> draws the arrow of length A at angle &phi;, with the circle of radius A.</li>
+      <li>Tick <b>both</b> and adjust the sliders until the point lands exactly on the arrow tip. At that moment A = &radic;(a&sup2;+b&sup2;) and &phi; = atan2(b, a) &mdash; and the magenta and green curves coincide. That is the identity.</li>
+      <li>&omega; changes the frequency of everything at once and never affects A, &phi;, a or b.</li>
+    </ul>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="plotwrap"><canvas id="top" width="420" height="300"></canvas></div>
+      <div class="plotwrap"><canvas id="bot" width="420" height="300"></canvas></div>
+    </div>
+
+    <div class="right">
+      <div>
+        <div class="legend">
+          <span class="m">A cos(&omega;t &minus; &phi;)</span><br>
+          <span class="g">a cos(&omega;t) + b sin(&omega;t)</span>
+        </div>
+        <div class="sl mag"><div class="nm">A</div>
+          <div class="track"><div class="ticks" id="tkA"></div><input type="range" id="A" min="0" max="3" step="0.01" value="2"></div>
+          <div class="rd" id="rdA"></div></div>
+        <div class="sl mag"><div class="nm">&phi;</div>
+          <div class="track"><div class="ticks" id="tkP"></div><input type="range" id="phi" min="-3.14159" max="3.14159" step="0.005" value="1.3614"></div>
+          <div class="rd" id="rdP"></div></div>
+      </div>
+
+      <div>
+        <div class="legend">
+          <span class="r">a cos(&omega;t)</span><br>
+          <span class="b">b sin(&omega;t)</span>
+        </div>
+        <div class="sl red"><div class="nm">a</div>
+          <div class="track"><div class="ticks" id="tka"></div><input type="range" id="a" min="-2" max="2" step="0.01" value="0.37"></div>
+          <div class="rd" id="rda"></div></div>
+        <div class="sl blu"><div class="nm">b</div>
+          <div class="track"><div class="ticks" id="tkb"></div><input type="range" id="b" min="-2" max="2" step="0.01" value="-1"></div>
+          <div class="rd" id="rdb"></div></div>
+      </div>
+
+      <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+        <canvas id="ab" width="250" height="250" style="max-width:250px"></canvas>
+        <div class="checks">
+          <label><input type="checkbox" id="showAB"> <span class="ab">a,b</span></label>
+          <label><input type="checkbox" id="showAP"> <span class="ap">A,&phi;</span></label>
+          <div class="note" id="lockNote" style="margin-top:6px;max-width:200px"></div>
+          <button id="matchBtn" style="margin-top:8px;background:#e7e9ed;border:none;border-radius:6px;padding:6px 10px;font-weight:700;font-size:.82rem;cursor:pointer">set A,&phi; from a,b</button>
+        </div>
+      </div>
+
+      <div class="sl blk"><div class="nm">&omega;</div>
+        <div class="track"><div class="ticks" id="tkw"></div><input type="range" id="w" min="0" max="3" step="0.01" value="1.5"></div>
+        <div class="rd" id="rdw"></div></div>
+
+      <div class="eqbox" id="eqbox"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const F=(x,n=2)=>{const v=+x.toFixed(n);return (n===2?v.toFixed(2):v.toString());};
+
+/* ---- tick labels above each slider ---- */
+function ticks(el,min,max,labels){
+  el.innerHTML=labels.map(([v,t])=>
+    `<span style="left:${((v-min)/(max-min)*100).toFixed(2)}%">${t}</span>`).join('');
+}
+ticks($('tkA'),0,3,[[0,'0'],[1,'1'],[2,'2'],[3,'3']]);
+ticks($('tkP'),-Math.PI,Math.PI,[[-Math.PI,'-\u03c0'],[0,'0'],[Math.PI,'\u03c0']]);
+ticks($('tka'),-2,2,[[-2,'-2'],[-1,'-1'],[0,'0'],[1,'1'],[2,'2']]);
+ticks($('tkb'),-2,2,[[-2,'-2'],[-1,'-1'],[0,'0'],[1,'1'],[2,'2']]);
+ticks($('tkw'),0,3,[[0,'0'],[1,'1'],[2,'2'],[3,'3']]);
+
+/* ---- generic plotter matching the mathlet look ---- */
+function plot(cv,curves,opt){
+  const c=cv.getContext('2d'),W=cv.width,H=cv.height;
+  const L=40,R=18,T=22,B=28;
+  c.clearRect(0,0,W,H);
+  const xs=-4,xe=4,ys=-3,ye=3;
+  const X=v=>L+(v-xs)/(xe-xs)*(W-L-R), Y=v=>H-B-(v-ys)/(ye-ys)*(H-T-B);
+  // frame
+  c.strokeStyle='#c9ced6';c.lineWidth=1;c.strokeRect(L,T,W-L-R,H-T-B);
+  // axes
+  c.strokeStyle='#77797d';c.lineWidth=1.2;
+  c.beginPath();c.moveTo(L,Y(0));c.lineTo(W-R+6,Y(0));c.stroke();
+  c.beginPath();c.moveTo(X(0),H-B);c.lineTo(X(0),T-12);c.stroke();
+  // arrow heads
+  c.fillStyle='#77797d';
+  c.beginPath();c.moveTo(W-R+9,Y(0));c.lineTo(W-R+2,Y(0)-3.5);c.lineTo(W-R+2,Y(0)+3.5);c.fill();
+  c.beginPath();c.moveTo(X(0),T-15);c.lineTo(X(0)-3.5,T-8);c.lineTo(X(0)+3.5,T-8);c.fill();
+  c.fillStyle='#333';c.font='bold 12px Segoe UI';
+  c.fillText('t',W-R+4,Y(0)+15); c.fillText('x',X(0)-14,T-16);
+  // ticks
+  c.fillStyle='#333';c.font='11px Segoe UI';c.strokeStyle='#77797d';c.lineWidth=1;
+  for(let v=-4;v<=4;v++){ if(v===0)continue;
+    c.beginPath();c.moveTo(X(v),Y(0)-3);c.lineTo(X(v),Y(0)+3);c.stroke();
+    c.fillText(v,X(v)-(v<0?6:3),H-B+14);}
+  for(let v=-3;v<=3;v++){ if(v===0)continue;
+    c.beginPath();c.moveTo(X(0)-3,Y(v));c.lineTo(X(0)+3,Y(v));c.stroke();
+    c.fillText(v,L-(v<0?18:14),Y(v)+4);}
+  c.fillText('0',L-14,Y(0)+4);
+  // curves, clipped to the frame
+  c.save();c.beginPath();c.rect(L,T,W-L-R,H-T-B);c.clip();
+  curves.forEach(cu=>{
+    c.strokeStyle=cu.color;c.lineWidth=cu.lw||2.2;
+    if(cu.dash)c.setLineDash(cu.dash);
+    c.beginPath();let st=false;
+    for(let i=0;i<=900;i++){const t=xs+(xe-xs)*i/900,y=cu.f(t);
+      if(!isFinite(y)){st=false;continue;}
+      const px=X(t),py=Y(Math.max(-6,Math.min(6,y)));
+      st?c.lineTo(px,py):c.moveTo(px,py);st=true;}
+    c.stroke();c.setLineDash([]);});
+  c.restore();
+}
+
+/* ---- the (a,b) plane ---- */
+function plotAB(a,b,A,phi,showAB,showAP){
+  const cv=$('ab'),c=cv.getContext('2d'),W=cv.width,H=cv.height;
+  const L=34,R=14,T=20,B=26;
+  c.clearRect(0,0,W,H);
+  const s=-3,e=3;
+  const X=v=>L+(v-s)/(e-s)*(W-L-R), Y=v=>H-B-(v-s)/(e-s)*(H-T-B);
+  c.strokeStyle='#c9ced6';c.lineWidth=1;c.strokeRect(L,T,W-L-R,H-T-B);
+  c.strokeStyle='#77797d';c.lineWidth=1.2;
+  c.beginPath();c.moveTo(L,Y(0));c.lineTo(W-R+6,Y(0));c.stroke();
+  c.beginPath();c.moveTo(X(0),H-B);c.lineTo(X(0),T-10);c.stroke();
+  c.fillStyle='#77797d';
+  c.beginPath();c.moveTo(W-R+9,Y(0));c.lineTo(W-R+2,Y(0)-3.5);c.lineTo(W-R+2,Y(0)+3.5);c.fill();
+  c.fillStyle='#333';c.font='bold 12px Segoe UI';
+  c.fillText('a',W-R+3,Y(0)+15); c.fillText('b',X(0)-14,T-12);
+  c.font='11px Segoe UI';c.strokeStyle='#77797d';
+  for(let v=-3;v<=3;v++){ if(v===0)continue;
+    c.beginPath();c.moveTo(X(v),Y(0)-3);c.lineTo(X(v),Y(0)+3);c.stroke();
+    c.fillText(v,X(v)-(v<0?6:3),H-B+13);
+    c.beginPath();c.moveTo(X(0)-3,Y(v));c.lineTo(X(0)+3,Y(v));c.stroke();
+    c.fillText(v,L-(v<0?18:13),Y(v)+4);}
+  c.fillText('0',L-13,Y(0)+4);
+  c.save();c.beginPath();c.rect(L,T,W-L-R,H-T-B);c.clip();
+  const diamond=(x,y,col,r)=>{c.fillStyle=col;c.beginPath();
+    c.moveTo(x,y-r);c.lineTo(x+r,y);c.lineTo(x,y+r);c.lineTo(x-r,y);c.closePath();c.fill();};
+  // ---- A,phi : magenta arc from the +a axis, radius arm, diamond at the tip ----
+  if(showAP){
+    const ax=X(A*Math.cos(phi)), ay=Y(A*Math.sin(phi));
+    if(A>0.02&&Math.abs(phi)>0.01){
+      const rr=Math.min(Math.abs(A)/(e-s)*(W-L-R),46);
+      c.strokeStyle='#c2179a';c.lineWidth=1.6;
+      c.beginPath();c.arc(X(0),Y(0),rr,0,-phi,phi>0);c.stroke();
+    }
+    c.strokeStyle='#c2179a';c.lineWidth=1.8;
+    c.beginPath();c.moveTo(X(0),Y(0));c.lineTo(ax,ay);c.stroke();
+    diamond(ax,ay,'#c2179a',4.5);
+  }
+  // ---- a,b : red horizontal leg, blue vertical leg, green diamond at the point ----
+  if(showAB){
+    c.strokeStyle='#d4441c';c.lineWidth=1.8;
+    c.beginPath();c.moveTo(X(0),Y(0));c.lineTo(X(a),Y(0));c.stroke();
+    c.strokeStyle='#1140d8';c.lineWidth=1.8;
+    c.beginPath();c.moveTo(X(a),Y(0));c.lineTo(X(a),Y(b));c.stroke();
+    diamond(X(a),Y(b),'#1f8a3b',4.5);
+  }
+  c.restore();
+}
+/* ---- all four sliders are independent ---- */
+function draw(){
+  const A=+$('A').value, phi=+$('phi').value, a=+$('a').value, b=+$('b').value, w=+$('w').value;
+  $('rdA').textContent=F(A);
+  $('rdP').textContent=Math.round(phi*180/Math.PI)+'\u00b0';
+  $('rda').textContent=F(a);
+  $('rdb').textContent=F(b);
+  $('rdw').textContent=F(w);
+  plot($('top'),[
+    {f:t=>A*Math.cos(w*t-phi),color:'#c2179a'},
+    {f:t=>a*Math.cos(w*t)+b*Math.sin(w*t),color:'#1f8a3b'}
+  ]);
+  plot($('bot'),[
+    {f:t=>a*Math.cos(w*t),color:'#d4441c'},
+    {f:t=>b*Math.sin(w*t),color:'#1140d8'}
+  ]);
+  plotAB(a,b,A,phi,$('showAB').checked,$('showAP').checked);
+  // equations
+  const Acalc=Math.hypot(a,b), phicalc=Math.atan2(b,a);
+  const match=Math.abs(Acalc-A)<0.02&&Math.abs(Math.atan2(Math.sin(phicalc-phi),Math.cos(phicalc-phi)))<0.02;
+  $('eqbox').innerHTML=
+    '<b>A cos(&omega;t &minus; &phi;)</b> = '+F(A)+' cos('+F(w)+'t &minus; '+F(phi)+')<br>'+
+    '<i>a cos(&omega;t) + b sin(&omega;t)</i> = '+F(a)+' cos('+F(w)+'t) + '+F(b)+' sin('+F(w)+'t)'+
+    '<hr style="border:none;border-top:1px solid #e3e6ec;margin:7px 0">'+
+    'from a and b: &nbsp; A = &radic;(a&sup2;+b&sup2;) = &radic;('+F(a*a)+'+'+F(b*b)+') = <b>'+F(Acalc)+'</b>, &nbsp; '+
+    '&phi; = atan2(b, a) = <b>'+Math.round(phicalc*180/Math.PI)+'&deg;</b><br>'+
+    'from A and &phi;: &nbsp; a = A cos&phi; = <b>'+F(A*Math.cos(phi))+'</b>, &nbsp; b = A sin&phi; = <b>'+F(A*Math.sin(phi))+'</b><br>'+
+    '<span style="color:'+(match?'#1f8a3b':'#b03a3a')+';font-weight:700">'+
+    (match?'the two curves coincide \u2014 the identity holds'
+          :'the two curves differ \u2014 A, \u03c6 do not match a, b')+'</span>';
+  const shown=[$('showAB').checked?'the point (a, b)':null,$('showAP').checked?'the arrow A at angle \u03c6':null].filter(Boolean);
+  $('lockNote').innerHTML = shown.length
+    ? 'showing '+shown.join(' and ')+(shown.length===2?(match?' \u2014 they coincide':' \u2014 move the sliders until they coincide'):'')
+    : 'both representations hidden';
+}
+/* sliders — independent */
+['A','phi','a','b','w'].forEach(id=>$(id).addEventListener('input',draw));
+/* checkboxes are display toggles: either, both, or neither */
+['showAB','showAP'].forEach(id=>$(id).addEventListener('change',draw));
+$('matchBtn').onclick=()=>{
+  const a=+$('a').value,b=+$('b').value;
+  $('A').value=Math.min(3,Math.hypot(a,b));
+  $('phi').value=Math.atan2(b,a);
+  draw();};
+$('helpBtn').onclick=()=>{$('helpBox').classList.toggle('on');
+  $('helpBtn').textContent=$('helpBox').classList.contains('on')?'\u2212 help':'+ help';};
+draw();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

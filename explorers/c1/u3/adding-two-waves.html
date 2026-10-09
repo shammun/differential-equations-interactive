@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How cos t + 2 sin t becomes one wave</title>
+<style>
+  :root{
+    --bg:#edf1fa;
+    --card:#ffffff;
+    --ink:#1d2440;
+    --muted:#5d6787;
+    --faint:#98a3c0;
+    --line:#e3e8f6;
+    --grid:#e9edf8;
+    --orange:#ee8631;      /* cos t (input 1) */
+    --blue:#4f74c9;        /* 2 sin t (input 2) */
+    --teal:#0d9aa0;        /* the sum (output) */
+    --purple:#6c5ce7;      /* landmarks, actions */
+    --purple-deep:#5647c9;
+    --shadow:0 14px 40px rgba(97,86,196,.13);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55;
+    padding:14px 18px 10px;
+    height:100vh;overflow:hidden;display:flex;flex-direction:column;
+  }
+  .top{max-width:1280px;width:100%;margin:0 auto 10px;flex:0 0 auto;}
+  .eyebrow{font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--purple);font-weight:700;margin-bottom:4px;}
+  h1{font-size:1.38rem;margin:0 0 3px;font-weight:800;letter-spacing:-.01em;}
+  .m{font-family:Georgia,"Times New Roman",serif;font-weight:600;}
+  .sub{color:var(--muted);margin:0 0 8px;font-size:.92rem;}
+  .phases{display:flex;gap:8px;flex-wrap:wrap;}
+  .phase{
+    font-size:.8rem;font-weight:600;color:var(--muted);
+    background:#fff;border:1px solid var(--line);
+    padding:6px 12px;border-radius:999px;transition:all .3s;
+    cursor:pointer;font-family:inherit;
+  }
+  .phase:hover{border-color:var(--purple);color:var(--purple);}
+  .phase.active{background:var(--purple);border-color:var(--purple);color:#fff;box-shadow:0 6px 16px rgba(108,92,231,.35);}
+  .phase.active:hover{color:#fff;}
+  .phase.done{color:var(--purple);border-color:#cdc6f5;}
+
+  .wrap{
+    max-width:1280px;width:100%;margin:0 auto;
+    display:grid;grid-template-columns:minmax(0,1.06fr) minmax(340px,.94fr);gap:16px;
+    align-items:stretch;flex:1;min-height:0;
+  }
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);}
+  .graphcard{padding:12px;display:flex;flex-direction:column;min-height:0;}
+  #graph{display:block;width:100%;height:100%;flex:1;min-height:0;}
+  svg text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+
+  .controls{margin:0 4px 8px;flex:0 0 auto;}
+  .crow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .playbtn{
+    border:0;border-radius:10px;background:var(--purple);color:#fff;
+    font-weight:800;font-size:.86rem;padding:8px 14px;cursor:pointer;min-width:92px;
+  }
+  .playbtn:hover{background:var(--purple-deep);}
+  .controls input[type=range]{flex:1;min-width:120px;accent-color:var(--purple);}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;font-variant-numeric:tabular-nums;font-size:.86rem;}
+  .chip{padding:4px 10px;border-radius:9px;font-weight:700;background:#fff;border:1px solid var(--line);}
+  .chip.c1{color:#c26a17;border-color:#f2d9bc;background:#fef7ee;}
+  .chip.c2{color:#3a5cae;border-color:#ccd8f2;background:#f0f4fd;}
+  .chip.cs{color:#fff;background:var(--teal);border-color:var(--teal);}
+  .chip.cr{color:var(--purple);border-color:#d7d1f7;background:#f4f2ff;}
+  .freqrow{
+    display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 10px;
+    background:#fef7ee;border:1px solid #f2d9bc;border-radius:10px;
+  }
+  .freqrow label{font-size:.82rem;font-weight:700;color:#9a5c17;white-space:nowrap;}
+  .freqrow input[type=range]{flex:1;accent-color:var(--orange);}
+  .freqrow button{
+    border:1px solid #f2d9bc;background:#fff;color:#9a5c17;font-weight:800;
+    font-size:.8rem;padding:6px 10px;border-radius:9px;cursor:pointer;
+  }
+  #omegaVal{font-weight:800;color:#9a5c17;min-width:64px;text-align:right;font-variant-numeric:tabular-nums;}
+
+  .lesson{padding:16px 20px 14px;display:flex;flex-direction:column;min-height:0;}
+  .stepeyebrow{font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);font-weight:800;margin-bottom:4px;}
+  .lesson h2{margin:0 0 10px;font-size:1.18rem;letter-spacing:-.01em;}
+  #stepBody{flex:1;min-height:0;overflow-y:auto;padding-right:8px;}
+  .lesson p{margin:0 0 10px;font-size:.94rem;color:#333c5e;}
+  .lesson strong{color:var(--ink);}
+  .formula{
+    font-family:Georgia,"Times New Roman",serif;font-size:1.03rem;
+    background:#f6f8ff;border-left:3px solid var(--purple);
+    padding:9px 13px;border-radius:0 10px 10px 0;margin:10px 0;
+    overflow-x:auto;white-space:nowrap;
+  }
+  .note{background:#eefafa;border:1px solid #c4e7e8;border-radius:10px;padding:9px 12px;margin:10px 0;font-size:.87rem;color:#0b6b70;}
+  .warn{background:#fef7ee;border:1px solid #f2d9bc;border-radius:10px;padding:9px 12px;margin:10px 0;font-size:.87rem;color:#9a5c17;}
+  table.vals{border-collapse:collapse;margin:8px 0 12px;font-size:.88rem;font-variant-numeric:tabular-nums;}
+  table.vals th, table.vals td{border:1px solid var(--line);padding:5px 10px;text-align:center;}
+  table.vals th{background:#f6f8ff;color:var(--muted);font-size:.8rem;}
+  table.vals td.hl{background:#f4f2ff;font-weight:800;color:var(--purple);}
+  .sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:4px;}
+  ol.recipe{margin:6px 0 10px;padding-left:20px;font-size:.92rem;color:#333c5e;}
+  ol.recipe li{margin-bottom:6px;}
+
+  .nav{display:flex;align-items:center;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);flex:0 0 auto;}
+  .nav button{border:0;border-radius:12px;padding:11px 18px;font-size:.92rem;font-weight:700;cursor:pointer;}
+  #prev{background:#f1f3fb;color:var(--muted);}
+  #prev:hover:not(:disabled){background:#e6e9f7;}
+  #next{background:var(--purple);color:#fff;box-shadow:0 8px 18px rgba(108,92,231,.35);margin-left:auto;}
+  #next:hover:not(:disabled){background:var(--purple-deep);}
+  .nav button:disabled{opacity:.4;cursor:default;box-shadow:none;}
+  .dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;flex:1;}
+  .dots button{width:11px;height:11px;padding:0;border-radius:50%;border:0;cursor:pointer;background:#d7dcf0;transition:all .25s;}
+  .dots button.cur{background:var(--purple);transform:scale(1.35);}
+  .dots button.seen{background:#b3a9f2;}
+  .kbd{font-size:.76rem;color:var(--faint);text-align:center;margin-top:6px;}
+
+  footer{max-width:1280px;margin:8px auto 0;flex:0 0 auto;color:var(--faint);font-size:.75rem;text-align:center;}
+
+  .layer{opacity:0;transition:opacity .5s ease;pointer-events:none;}
+  .layer.on{opacity:1;}
+  button:focus-visible, input:focus-visible{outline:3px solid rgba(108,92,231,.5);outline-offset:2px;}
+
+  @media (max-width:980px){
+    body{height:auto;overflow:auto;display:block;}
+    .wrap{grid-template-columns:1fr;}
+    h1{font-size:1.15rem;}
+    #graph{height:auto;flex:none;}
+    #stepBody{overflow:visible;padding-right:0;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .layer{transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="eyebrow">MIT 18.03x · Behind Step 2 of the sketching lesson</div>
+  <h1>How <span class="m">cos <i>t</i> + 2 sin <i>t</i></span> becomes one single wave</h1>
+  <p class="sub">First we add the curves height by height — then the rotating-arrow picture shows <em>why</em> the result is always a perfect sinusoid.</p>
+  <div class="phases">
+    <button type="button" class="phase" id="phase0" title="Jump to Step 1">Part 1 · Stack the heights</button>
+    <button type="button" class="phase" id="phase1" title="Jump to Step 6">Part 2 · The rotating-arrow secret</button>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="card graphcard">
+    <div class="controls" id="controls" hidden>
+      <div class="crow">
+        <button class="playbtn" id="playBtn" type="button">&#9654; Play</button>
+        <input type="range" id="tSlider" min="0" max="7.8" step="0.01" value="0.5" aria-label="time t">
+      </div>
+      <div class="chips" id="chips"></div>
+      <div class="freqrow" id="freqRow" hidden>
+        <label for="omega">frequency of the 2nd wave: 2 sin(&omega; t)</label>
+        <input type="range" id="omega" min="0.4" max="2" step="0.05" value="1">
+        <span id="omegaVal">&omega; = 1.00</span>
+        <button type="button" id="omegaReset">snap to &omega; = 1</button>
+      </div>
+    </div>
+    <svg id="graph" viewBox="0 0 1040 520" role="img" aria-label="Interactive picture of adding two sinusoids"></svg>
+  </section>
+
+  <section class="card lesson">
+    <div class="stepeyebrow" id="stepEyebrow"></div>
+    <h2 id="stepTitle"></h2>
+    <div id="stepBody"></div>
+    <div class="nav">
+      <button id="prev" type="button">&#8592; Back</button>
+      <div class="dots" id="dots"></div>
+      <button id="next" type="button">Next &#8594;</button>
+    </div>
+    <div class="kbd">&#8592; &#8594; to step through &middot; space to play/pause</div>
+  </section>
+
+</main>
+
+<footer>Companion to &ldquo;Sketching y(t) = e&#8315;&sup2;&#7511;(cos t + 2 sin t)&rdquo; &mdash; this page zooms into the moment two waves became &radic;5 cos(t &minus; &phi;).</footer>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- math constants ---------- */
+var PI = Math.PI;
+var SQ5 = Math.sqrt(5);            // 2.2360679...
+var PHI = Math.atan(2);            // 1.1071487...
+var omega = 1.0;                   // frequency of the second wave (step 8 plays with this)
+
+/* ---------- geometry ---------- */
+var W=1040, H=520;
+var YMAX=2.7, YMIN=-2.7;
+var TOP=14, BOT=40;
+var KY=(H-TOP-BOT)/(YMAX-YMIN);    // px per unit  (~86.3)
+function Y(y){ return TOP + (YMAX-y)*KY; }
+
+var MX=210;                        // meter line / wheel center x
+var WX0=438, WX1=1032;             // wave plot area
+var T0=-0.3, T1=7.8;
+function X(t){ return WX0 + (t-T0)/(T1-T0)*(WX1-WX0); }
+
+/* ---------- functions ---------- */
+function f1(t){ return Math.cos(t); }
+function f2(t){ return 2*Math.sin(omega*t); }
+function fsum(t){ return f1(t)+f2(t); }
+
+/* ---------- svg helpers ---------- */
+var svg = document.getElementById('graph');
+var NS='http://www.w3.org/2000/svg';
+function el(name, attrs, parent){
+  var e=document.createElementNS(NS,name);
+  for(var k in attrs) e.setAttribute(k,attrs[k]);
+  (parent||svg).appendChild(e); return e;
+}
+function layer(){ return el('g',{'class':'layer'}); }
+function txt(parent,x,y,s,attrs){
+  var a=attrs||{}; a.x=x; a.y=y;
+  var e=el('text',a,parent); e.textContent=s; return e;
+}
+function pathOf(fn,t0,t1){
+  var d='',t,first=true;
+  for(t=t0;t<=t1+1e-9;t+=0.02){
+    d+=(first?'M':'L')+X(t).toFixed(2)+' '+Y(fn(t)).toFixed(2); first=false;
+  }
+  return d||'M0 0';
+}
+
+/* arrowhead markers */
+var defs=el('defs',{});
+[['ahO','var(--orange)'],['ahB','var(--blue)'],['ahT','var(--teal)']].forEach(function(p){
+  var m=el('marker',{id:p[0],viewBox:'0 0 10 10',refX:'8',refY:'5',markerWidth:'6.5',markerHeight:'6.5',orient:'auto-start-reverse'},defs);
+  el('path',{d:'M0 0 L10 5 L0 10 z',fill:p[1]},m);
+});
+
+/* ---------- static layers ---------- */
+var gGrid=layer();
+(function(){
+  var marks=[PI/2,PI,3*PI/2,2*PI,5*PI/2];
+  marks.forEach(function(t){ if(t<T1) el('line',{x1:X(t),y1:Y(YMIN+0.15),x2:X(t),y2:Y(YMAX-0.15),stroke:'var(--grid)','stroke-width':1},gGrid); });
+  for(var y=-2;y<=2;y++) if(y!==0) el('line',{x1:WX0,y1:Y(y),x2:WX1,y2:Y(y),stroke:'var(--grid)','stroke-width':1},gGrid);
+})();
+
+var gAxes=layer();
+(function(){
+  el('line',{x1:18,y1:Y(0),x2:WX1,y2:Y(0),stroke:'var(--faint)','stroke-width':1.6},gAxes);
+  el('line',{x1:X(0),y1:Y(YMIN),x2:X(0),y2:Y(YMAX),stroke:'var(--faint)','stroke-width':1.6},gAxes);
+  var labs=[[PI/2,'\u03C0/2'],[PI,'\u03C0'],[3*PI/2,'3\u03C0/2'],[2*PI,'2\u03C0']];
+  labs.forEach(function(p){
+    el('line',{x1:X(p[0]),y1:Y(0)-4,x2:X(p[0]),y2:Y(0)+4,stroke:'var(--faint)','stroke-width':1.4},gAxes);
+    txt(gAxes,X(p[0]),Y(0)+18,p[1],{'font-size':'12','fill':'var(--faint)','text-anchor':'middle'});
+  });
+  for(var y=-2;y<=2;y++) if(y!==0){
+    el('line',{x1:X(0)-4,y1:Y(y),x2:X(0)+4,y2:Y(y),stroke:'var(--faint)','stroke-width':1.4},gAxes);
+    txt(gAxes,X(0)-9,Y(y)+4,String(y),{'font-size':'12','fill':'var(--faint)','text-anchor':'end'});
+  }
+  txt(gAxes,WX1-4,Y(0)-10,'t',{'font-size':'15','fill':'var(--muted)','font-style':'italic','text-anchor':'end'});
+  txt(gAxes,X(0)+11,Y(YMAX)+13,'y',{'font-size':'15','fill':'var(--muted)','font-style':'italic'});
+})();
+
+/* the two parent waves */
+var gWaves=layer();
+var wave1=el('path',{d:pathOf(f1,0,T1),fill:'none',stroke:'var(--orange)','stroke-width':2.4},gWaves);
+var wave2=el('path',{d:pathOf(f2,0,T1),fill:'none',stroke:'var(--blue)','stroke-width':2.4},gWaves);
+var wave1Lab=txt(gWaves,X(6.55),Y(1.28),'cos t',{'font-size':'13','fill':'var(--orange)','font-weight':'800','font-style':'italic'});
+var wave2Lab=txt(gWaves,X(5.2),Y(-2.3),'2 sin t',{'font-size':'13','fill':'var(--blue)','font-weight':'800','font-style':'italic'});
+
+/* legend in the left zone (step 1 only) */
+var gLegend=layer();
+(function(){
+  var lx=60,ly=Y(1.6);
+  el('line',{x1:lx,y1:ly,x2:lx+46,y2:ly,stroke:'var(--orange)','stroke-width':3.5},gLegend);
+  txt(gLegend,lx+56,ly+5,'cos t \u2014 height swings \u00B11',{'font-size':'13.5','fill':'#c26a17','font-weight':'700'});
+  el('line',{x1:lx,y1:ly+34,x2:lx+46,y2:ly+34,stroke:'var(--blue)','stroke-width':3.5},gLegend);
+  txt(gLegend,lx+56,ly+39,'2 sin t \u2014 height swings \u00B12',{'font-size':'13.5','fill':'#3a5cae','font-weight':'700'});
+  txt(gLegend,lx,ly+86,'Goal: add them,',{'font-size':'14','fill':'var(--muted)','font-weight':'700'});
+  txt(gLegend,lx,ly+106,'height by height.',{'font-size':'14','fill':'var(--muted)','font-weight':'700'});
+})();
+
+/* the height meter (vertical projection axis on the left) */
+var gMeter=layer();
+el('line',{x1:MX,y1:Y(2.55),x2:MX,y2:Y(-2.55),stroke:'var(--faint)','stroke-width':1.6},gMeter);
+txt(gMeter,MX,Y(2.55)-8,'height meter',{'font-size':'12','fill':'var(--muted)','font-weight':'700','text-anchor':'middle'});
+[-2,-1,1,2].forEach(function(y){
+  el('line',{x1:MX-4,y1:Y(y),x2:MX+4,y2:Y(y),stroke:'var(--faint)','stroke-width':1.3},gMeter);
+  txt(gMeter,MX-9,Y(y)+4,String(y),{'font-size':'11','fill':'var(--faint)','text-anchor':'end'});
+});
+
+/* stacking arrows on the meter */
+var gStackM=layer();
+var mA1=el('line',{'marker-end':'url(#ahO)',stroke:'var(--orange)','stroke-width':4},gStackM);
+var mA2=el('line',{'marker-end':'url(#ahB)',stroke:'var(--blue)','stroke-width':4},gStackM);
+var mA2tie=el('line',{stroke:'var(--blue)','stroke-width':1.4,'stroke-dasharray':'2 3'},gStackM);
+var mSumDot=el('circle',{r:6,fill:'var(--teal)',stroke:'#fff','stroke-width':2},gStackM);
+var mLab1=txt(gStackM,MX-46,0,'',{'font-size':'12.5','fill':'#c26a17','font-weight':'800','text-anchor':'end'});
+var mLab2=txt(gStackM,MX+58,0,'',{'font-size':'12.5','fill':'#3a5cae','font-weight':'800'});
+var mLabS=txt(gStackM,MX-46,0,'',{'font-size':'12.5','fill':'var(--teal)','font-weight':'800','text-anchor':'end'});
+
+/* stacking arrows on the wave plot */
+var gStackW=layer();
+var wA1=el('line',{'marker-end':'url(#ahO)',stroke:'var(--orange)','stroke-width':3,opacity:.9},gStackW);
+var wA2=el('line',{'marker-end':'url(#ahB)',stroke:'var(--blue)','stroke-width':3,opacity:.9},gStackW);
+var wTick=el('line',{x1:0,y1:0,x2:0,y2:0,stroke:'var(--faint)','stroke-width':1,'stroke-dasharray':'2 3'},gStackW);
+
+/* teal connector + sum dot on the wave */
+var gConn=layer();
+var connLine=el('line',{stroke:'var(--teal)','stroke-width':1.4,'stroke-dasharray':'5 5'},gConn);
+var sumDot=el('circle',{r:6.5,fill:'var(--teal)',stroke:'#fff','stroke-width':2},gConn);
+
+/* landmark dots on the sum (step 3) */
+var gLm=layer();
+(function(){
+  var pts=[[0,1,'1'],[PI/2,2,'2'],[PI,-1,'\u22121'],[3*PI/2,-2,'\u22122'],[2*PI,1,'1'],[PI/4,2.1213,'2.12 !']];
+  pts.forEach(function(p){
+    el('circle',{cx:X(p[0]),cy:Y(p[1]),r:5,fill:'#fff',stroke:'var(--purple)','stroke-width':2.6},gLm);
+    txt(gLm,X(p[0])+8,Y(p[1])-8,p[2],{'font-size':'12','fill':'var(--purple)','font-weight':'800'});
+  });
+})();
+
+/* the traced sum */
+var gSum=layer();
+var sumPath=el('path',{d:'',fill:'none',stroke:'var(--teal)','stroke-width':3.2,'stroke-linecap':'round'},gSum);
+
+/* measurements of the finished sum (amplitude, peak, zeros) */
+var gMarks=layer();
+el('line',{x1:WX0,y1:Y(SQ5),x2:WX1,y2:Y(SQ5),stroke:'var(--purple)','stroke-width':1.3,'stroke-dasharray':'3 5'},gMarks);
+txt(gMarks,WX1-4,Y(SQ5)-7,'\u221A5 \u2248 2.24',{'font-size':'12.5','fill':'var(--purple)','font-weight':'800','text-anchor':'end'});
+el('circle',{cx:X(PHI),cy:Y(SQ5),r:5.5,fill:'var(--purple)'},gMarks);
+txt(gMarks,X(PHI)+9,Y(SQ5)+16,'peak at t = \u03C6 \u2248 1.11',{'font-size':'12','fill':'var(--purple)','font-weight':'800'});
+[PHI+PI/2,PHI+3*PI/2].forEach(function(z){
+  el('circle',{cx:X(z),cy:Y(0),r:5,fill:'#fff',stroke:'var(--purple)','stroke-width':2.6},gMarks);
+  txt(gMarks,X(z)+7,Y(0)-10,'t \u2248 '+z.toFixed(2),{'font-size':'11.5','fill':'var(--purple)','font-weight':'700'});
+});
+
+/* dashed overlay: sqrt5 cos(t - phi) */
+var gIdent=layer();
+el('path',{d:pathOf(function(t){return SQ5*Math.cos(t-PHI);},0,T1),fill:'none',stroke:'var(--ink)','stroke-width':1.8,'stroke-dasharray':'7 6'},gIdent);
+txt(gIdent,X(2.15),Y(2.5),'\u221A5 cos(t \u2212 \u03C6) \u2014 exact match',{'font-size':'12.5','fill':'var(--ink)','font-weight':'800'});
+
+/* ---------- the wheel (phasor) ---------- */
+var gWheel=layer();
+el('circle',{cx:MX,cy:Y(0),r:SQ5*KY,fill:'none',stroke:'#d3daee','stroke-width':1.6,'stroke-dasharray':'4 5'},gWheel);
+el('circle',{cx:MX,cy:Y(0),r:1*KY,fill:'none',stroke:'#e4e9f6','stroke-width':1.3},gWheel);
+el('circle',{cx:MX,cy:Y(0),r:2*KY,fill:'none',stroke:'#e4e9f6','stroke-width':1.3},gWheel);
+el('circle',{cx:MX,cy:Y(0),r:3.5,fill:'var(--faint)'},gWheel);
+txt(gWheel,MX+SQ5*KY*0.72,Y(0)+SQ5*KY*0.72,'radius \u221A5',{'font-size':'11.5','fill':'#8b98bd','font-weight':'700'});
+
+var gArrows=layer();                 /* the two component arrows */
+var arrC=el('line',{'marker-end':'url(#ahO)',stroke:'var(--orange)','stroke-width':4},gArrows);
+var arrS=el('line',{'marker-end':'url(#ahB)',stroke:'var(--blue)','stroke-width':4},gArrows);
+var arrCLab=txt(gArrows,0,0,'1',{'font-size':'13','fill':'#c26a17','font-weight':'800'});
+var arrSLab=txt(gArrows,0,0,'2',{'font-size':'13','fill':'#3a5cae','font-weight':'800'});
+
+var gShadow=layer();                 /* projections onto the waves */
+var shC=el('line',{stroke:'var(--orange)','stroke-width':1.2,'stroke-dasharray':'4 4',opacity:.8},gShadow);
+var shS=el('line',{stroke:'var(--blue)','stroke-width':1.2,'stroke-dasharray':'4 4',opacity:.8},gShadow);
+var shCd=el('circle',{r:4.5,fill:'var(--orange)',stroke:'#fff','stroke-width':1.5},gShadow);
+var shSd=el('circle',{r:4.5,fill:'var(--blue)',stroke:'#fff','stroke-width':1.5},gShadow);
+
+var gPara=layer();                   /* dashed parallelogram */
+var pa1=el('line',{stroke:'#9aa6c6','stroke-width':1.4,'stroke-dasharray':'5 5'},gPara);
+var pa2=el('line',{stroke:'#9aa6c6','stroke-width':1.4,'stroke-dasharray':'5 5'},gPara);
+
+var gR=layer();                      /* resultant arrow */
+var arrR=el('line',{'marker-end':'url(#ahT)',stroke:'var(--teal)','stroke-width':5},gR);
+var arrRLab=txt(gR,0,0,'\u221A5',{'font-size':'13.5','fill':'var(--teal)','font-weight':'800'});
+
+var LAYERS={grid:gGrid,axes:gAxes,waves:gWaves,legend:gLegend,meter:gMeter,
+            stackM:gStackM,stackW:gStackW,conn:gConn,lm:gLm,sum:gSum,marks:gMarks,
+            ident:gIdent,wheel:gWheel,arrows:gArrows,shadow:gShadow,para:gPara,r:gR};
+
+/* ---------- dynamic update ---------- */
+var tCur=0.5, partialTrace=false, showSumFull=false;
+var chips=document.getElementById('chips');
+
+function fmt(v){ return (v<0?'\u2212':'')+Math.abs(v).toFixed(2); }
+
+function update(){
+  var t=tCur;
+  var c=f1(t), s=f2(t), sum=c+s;
+  var xw=X(t);
+
+  /* meter stack */
+  mA1.setAttribute('x1',MX); mA1.setAttribute('y1',Y(0));
+  mA1.setAttribute('x2',MX); mA1.setAttribute('y2',Y(c));
+  mA2.setAttribute('x1',MX+8); mA2.setAttribute('y1',Y(c));
+  mA2.setAttribute('x2',MX+8); mA2.setAttribute('y2',Y(sum));
+  mA2tie.setAttribute('x1',MX+8); mA2tie.setAttribute('y1',Y(sum));
+  mA2tie.setAttribute('x2',MX);  mA2tie.setAttribute('y2',Y(sum));
+  mSumDot.setAttribute('cx',MX); mSumDot.setAttribute('cy',Y(sum));
+  mLab1.setAttribute('y',(Y(0)+Y(c))/2+4); mLab1.textContent='cos t = '+fmt(c);
+  mLab2.setAttribute('y',(Y(c)+Y(sum))/2+4); mLab2.setAttribute('x',MX+20);
+  mLab2.textContent=(omega===1?'2 sin t = ':'2 sin \u03C9t = ')+fmt(s);
+  mLabS.setAttribute('y',Y(sum)+(sum>=0?-10:18)); mLabS.textContent='sum = '+fmt(sum);
+
+  /* wave-side stack */
+  wA1.setAttribute('x1',xw); wA1.setAttribute('y1',Y(0));
+  wA1.setAttribute('x2',xw); wA1.setAttribute('y2',Y(c));
+  wA2.setAttribute('x1',xw+6); wA2.setAttribute('y1',Y(c));
+  wA2.setAttribute('x2',xw+6); wA2.setAttribute('y2',Y(sum));
+  wTick.setAttribute('x1',xw+6); wTick.setAttribute('y1',Y(sum));
+  wTick.setAttribute('x2',xw);  wTick.setAttribute('y2',Y(sum));
+
+  /* wheel arrows: C at angle t+90deg (radius 1), S at angle omega*t (radius 2) */
+  var thC=t+PI/2, thS=omega*t;
+  var cx=MX, cy=Y(0);
+  var Cx=cx+1*KY*Math.cos(thC), Cy=cy-1*KY*Math.sin(thC);
+  var Sx=cx+2*KY*Math.cos(thS), Sy=cy-2*KY*Math.sin(thS);
+  var Rx=cx+KY*(Math.cos(thC)+2*Math.cos(thS));
+  var Ry=cy-KY*(Math.sin(thC)+2*Math.sin(thS));   /* sin(thC)+2sin(thS) = the sum */
+  arrC.setAttribute('x1',cx); arrC.setAttribute('y1',cy);
+  arrC.setAttribute('x2',Cx); arrC.setAttribute('y2',Cy);
+  arrS.setAttribute('x1',cx); arrS.setAttribute('y1',cy);
+  arrS.setAttribute('x2',Sx); arrS.setAttribute('y2',Sy);
+  arrCLab.setAttribute('x',cx+(Cx-cx)*0.55+8); arrCLab.setAttribute('y',cy+(Cy-cy)*0.55-6);
+  arrSLab.setAttribute('x',cx+(Sx-cx)*0.55+8); arrSLab.setAttribute('y',cy+(Sy-cy)*0.55-6);
+  pa1.setAttribute('x1',Cx); pa1.setAttribute('y1',Cy); pa1.setAttribute('x2',Rx); pa1.setAttribute('y2',Ry);
+  pa2.setAttribute('x1',Sx); pa2.setAttribute('y1',Sy); pa2.setAttribute('x2',Rx); pa2.setAttribute('y2',Ry);
+  arrR.setAttribute('x1',cx); arrR.setAttribute('y1',cy);
+  arrR.setAttribute('x2',Rx); arrR.setAttribute('y2',Ry);
+  arrRLab.setAttribute('x',cx+(Rx-cx)*0.6+9); arrRLab.setAttribute('y',cy+(Ry-cy)*0.6+2);
+  var Rlen=Math.sqrt(Math.pow(Math.cos(thC)+2*Math.cos(thS),2)+Math.pow(Math.sin(thC)+2*Math.sin(thS),2));
+  arrRLab.textContent=(omega===1)?'\u221A5':Rlen.toFixed(2);
+
+  /* projections: dashed lines from arrow tips to the waves */
+  shC.setAttribute('x1',Cx); shC.setAttribute('y1',Cy); shC.setAttribute('x2',X(t)); shC.setAttribute('y2',Y(c));
+  shS.setAttribute('x1',Sx); shS.setAttribute('y1',Sy); shS.setAttribute('x2',X(t)); shS.setAttribute('y2',Y(s));
+  shCd.setAttribute('cx',X(t)); shCd.setAttribute('cy',Y(c));
+  shSd.setAttribute('cx',X(t)); shSd.setAttribute('cy',Y(s));
+
+  /* teal connector from R tip (or meter) to the sum point on the wave */
+  var fromX = gR.classList.contains('on') ? Rx : MX;
+  connLine.setAttribute('x1',fromX); connLine.setAttribute('y1',Y(sum));
+  connLine.setAttribute('x2',xw); connLine.setAttribute('y2',Y(sum));
+  sumDot.setAttribute('cx',xw); sumDot.setAttribute('cy',Y(sum));
+
+  /* traced sum */
+  if(partialTrace) sumPath.setAttribute('d', pathOf(fsum,0,Math.max(tCur,0.02)));
+  else if(showSumFull) sumPath.setAttribute('d', pathOf(fsum,0,T1));
+
+  /* chips */
+  var rChip = document.getElementById('freqRow').hidden ? '' :
+    '<span class="chip cr">arrow length \u2016R\u2016 = '+Rlen.toFixed(2)+'</span>';
+  chips.innerHTML =
+    '<span class="chip c1">cos t = '+fmt(c)+'</span>'+
+    '<span class="chip c2">'+(omega===1?'2 sin t = ':'2 sin('+omega.toFixed(2)+'t) = ')+fmt(s)+'</span>'+
+    '<span class="chip cs">sum = '+fmt(sum)+'</span>'+rChip;
+}
+
+function rebuildOmega(){
+  wave2.setAttribute('d', pathOf(f2,0,T1));
+  wave2Lab.textContent = (omega===1)?'2 sin t':'2 sin('+omega.toFixed(2)+'t)';
+  if(showSumFull) sumPath.setAttribute('d', pathOf(fsum,0,T1));
+  update();
+}
+
+/* ---------- play / sweep ---------- */
+var playing=false, rafId=null, lastTs=null, loopMode=true;
+var playBtn=document.getElementById('playBtn');
+var tSlider=document.getElementById('tSlider');
+var reduceMotion=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function setT(v){ tCur=v; tSlider.value=String(v); update(); }
+function tick(ts){
+  if(lastTs===null) lastTs=ts;
+  var dt=(ts-lastTs)/1000; lastTs=ts;
+  var nt=tCur+dt*1.15;
+  if(nt>=T1){
+    if(loopMode) nt=0;
+    else { setT(T1); stopPlay(); return; }
+  }
+  setT(nt);
+  rafId=requestAnimationFrame(tick);
+}
+function startPlay(){
+  if(playing) return;
+  playing=true; lastTs=null;
+  playBtn.innerHTML='&#9208; Pause';
+  rafId=requestAnimationFrame(tick);
+}
+function stopPlay(){
+  playing=false;
+  if(rafId) cancelAnimationFrame(rafId);
+  rafId=null; playBtn.innerHTML='&#9654; Play';
+}
+playBtn.addEventListener('click',function(){ if(playing){stopPlay();}else{startPlay();} });
+tSlider.addEventListener('input',function(){ stopPlay(); setT(parseFloat(tSlider.value)); });
+document.addEventListener('keydown',function(e){
+  if(e.key===' ' && !document.getElementById('controls').hidden && e.target.tagName!=='INPUT'){
+    e.preventDefault(); if(playing){stopPlay();}else{startPlay();}
+  }
+});
+
+/* ---------- frequency control ---------- */
+var omegaSlider=document.getElementById('omega');
+var omegaVal=document.getElementById('omegaVal');
+function setOmega(v){
+  omega=Math.round(v*100)/100;
+  omegaSlider.value=String(omega);
+  omegaVal.textContent='\u03C9 = '+omega.toFixed(2);
+  rebuildOmega();
+}
+omegaSlider.addEventListener('input',function(){ setOmega(parseFloat(omegaSlider.value)); });
+document.getElementById('omegaReset').addEventListener('click',function(){ setOmega(1); });
+
+/* ---------- steps ---------- */
+var F=function(s){ return '<div class="formula">'+s+'</div>'; };
+var SW1='<span class="sw" style="background:var(--orange)"></span>';
+var SW2='<span class="sw" style="background:var(--blue)"></span>';
+var SWS='<span class="sw" style="background:var(--teal)"></span>';
+
+var steps=[
+{
+  phase:0, eyebrow:'Step 1 of 9 \u00B7 The ingredients',
+  title:'Two waves, one goal',
+  layers:['grid','axes','waves','legend'],
+  body:
+    '<p>These are the two waves inside the parentheses of the solution:</p>'
+    +'<p>'+SW1+'<strong>cos <i>t</i></strong> \u2014 starts at its peak, height 1, at <i>t</i> = 0, and repeats every 2\u03C0 \u2248 6.28.</p>'
+    +'<p>'+SW2+'<strong>2 sin <i>t</i></strong> \u2014 starts at 0 climbing steeply, and reaches its peak, height 2, a quarter period later at <i>t</i> = \u03C0/2 \u2248 1.57.</p>'
+    +'<p>Notice they <strong>disagree everywhere</strong>: when one peaks the other is crossing zero; sometimes both are positive, sometimes they pull in opposite directions. Yet their sum will turn out to be one perfectly clean wave.</p>'
+    +'<p>To add two curves there is only one honest method: at every single time <i>t</i>, <strong>add the two heights</strong>. That is exactly what we do next.</p>'
+},
+{
+  phase:0, eyebrow:'Step 2 of 9 \u00B7 The method',
+  title:'Adding curves means stacking heights',
+  layers:['grid','axes','waves','meter','stackM','stackW','conn'],
+  opts:{controls:true, tInit:0.5},
+  body:
+    '<p>Drag the slider (or press Play). At the chosen time <i>t</i>, two arrows appear:</p>'
+    +'<p>'+SW1+'the <strong>orange arrow</strong> goes from the axis up (or down) by cos <i>t</i>;</p>'
+    +'<p>'+SW2+'the <strong>blue arrow</strong> starts <strong>where the orange one ended</strong> and adds 2 sin <i>t</i> more \u2014 upward if positive, back downward if negative.</p>'
+    +'<p>'+SWS+'The <strong>teal dot</strong> at the end of the stack is the sum. The stack is drawn twice: big, on the left \u201Cheight meter\u201D, and small, directly on the graph at position <i>t</i>.</p>'
+    +'<p>Concrete check at <i>t</i> = 0.5:</p>'
+    +F('cos 0.5 + 2 sin 0.5 = 0.88 + 0.96 = 1.84')
+    +'<p>Now slide to <i>t</i> = 2.5 and watch a <strong>partial cancellation</strong>: cos 2.5 = \u22120.80 pulls down, 2 sin 2.5 = +1.20 pushes up, and the sum is only 0.40. Adding waves is a constant tug-of-war between the two arrows.</p>'
+},
+{
+  phase:0, eyebrow:'Step 3 of 9 \u00B7 Landmark values',
+  title:'Walk through the easy points first',
+  layers:['grid','axes','waves','meter','stackM','stackW','conn','lm'],
+  opts:{controls:true},
+  body:
+    '<p>Before sweeping everything, compute the sum where one of the two waves is zero \u2014 those points come for free:</p>'
+    +'<table class="vals"><tr><th>t</th><th>cos t</th><th>2 sin t</th><th>sum</th></tr>'
+    +'<tr><td>0</td><td>1</td><td>0</td><td class="hl">1</td></tr>'
+    +'<tr><td>\u03C0/2 \u2248 1.57</td><td>0</td><td>2</td><td class="hl">2</td></tr>'
+    +'<tr><td>\u03C0 \u2248 3.14</td><td>\u22121</td><td>0</td><td class="hl">\u22121</td></tr>'
+    +'<tr><td>3\u03C0/2 \u2248 4.71</td><td>0</td><td>\u22122</td><td class="hl">\u22122</td></tr>'
+    +'<tr><td>2\u03C0 \u2248 6.28</td><td>1</td><td>0</td><td class="hl">1</td></tr></table>'
+    +'<p>Those five purple rings are on the graph. But here is the surprise \u2014 try a point where <strong>both</strong> waves are positive, <i>t</i> = \u03C0/4 \u2248 0.79:</p>'
+    +F('0.71 + 1.41 = 2.12')
+    +'<p>That is <strong>higher than 2</strong>, the biggest value in the whole table! So the sum\u2019s true peak is not at either parent\u2019s peak \u2014 it hides somewhere in between, where the two waves cooperate best. Slide around near <i>t</i> \u2248 1 and hunt for the largest sum you can find before moving on.</p>'
+},
+{
+  phase:0, eyebrow:'Step 4 of 9 \u00B7 The sweep',
+  title:'Sweep t and trace the sum',
+  layers:['grid','axes','waves','meter','stackM','stackW','conn','sum'],
+  opts:{controls:true, tInit:0, partial:true, autoplay:true, once:true},
+  body:
+    '<p>Now do the stacking at <strong>every</strong> <i>t</i>. The sweep is running: the teal dot rides along, and the curve it leaves behind is the graph of cos <i>t</i> + 2 sin <i>t</i>. (Press Play to run it again, or scrub the slider by hand.)</p>'
+    +'<p>Watch three things as it goes:</p>'
+    +'<p>\u2022 near <i>t</i> \u2248 1.1 the two arrows point the same way and reinforce \u2014 the trace crests;<br>'
+    +'\u2022 near <i>t</i> \u2248 2.7 the arrows exactly cancel \u2014 the trace crosses zero;<br>'
+    +'\u2022 near <i>t</i> \u2248 4.2 both arrows point down \u2014 the trace bottoms out.</p>'
+    +'<p>The result is unmistakable: <strong>a single, smooth wave</strong> \u2014 not a lumpy compromise. Same period as the parents, one clean crest per cycle.</p>'
+},
+{
+  phase:0, eyebrow:'Step 5 of 9 \u00B7 Measure it',
+  title:'The sum is a sinusoid: amplitude \u221A5, shifted by \u03C6',
+  layers:['grid','axes','waves','meter','stackM','stackW','conn','sum','marks','ident'],
+  opts:{controls:true, full:true, tInit:1.1071},
+  body:
+    '<p>Measure the curve we just built:</p>'
+    +'<p>\u2022 <strong>Amplitude.</strong> The crest grazes the dashed line at \u221A5 \u2248 2.24. Check it exactly at <i>t</i> = \u03C6 = arctan 2 \u2248 1.107 (the slider is parked there):</p>'
+    +F('cos(1.107) + 2 sin(1.107) = 0.447 + 1.789 = 2.236 = \u221A5 \u2713')
+    +'<p>\u2022 <strong>Shift.</strong> A plain cosine peaks at <i>t</i> = 0; this one peaks at <i>t</i> = \u03C6 \u2248 1.11 \u2014 the whole wave is a cosine dragged right by \u03C6.</p>'
+    +'<p>\u2022 <strong>Zeros</strong> at <i>t</i> \u2248 2.68 and 5.82 \u2014 a quarter period (\u03C0/2) after the peak, then every \u03C0.</p>'
+    +'<p>The dashed dark curve is \u221A5 cos(<i>t</i> \u2212 \u03C6) drawn on top: it matches <strong>point for point</strong>. So graphically we have discovered</p>'
+    +F('cos <i>t</i> + 2 sin <i>t</i> = \u221A5 cos(<i>t</i> \u2212 \u03C6), &nbsp; \u03C6 = arctan 2')
+    +'<p>But a measurement is not an explanation. <em>Why</em> is the sum always a perfect sinusoid \u2014 why doesn\u2019t stacking two fighting waves produce something lumpy? Part 2 shows the mechanism.</p>'
+},
+{
+  phase:1, eyebrow:'Step 6 of 9 \u00B7 The secret picture',
+  title:'Every sinusoid is the shadow of a rotating arrow',
+  layers:['grid','axes','waves','meter','wheel','arrows','shadow'],
+  opts:{controls:true, autoplay:true},
+  body:
+    '<p>Here is the machine behind all sinusoids \u2014 a wheel turning at 1 radian per second, with arrows bolted to it. The <strong>height of an arrow\u2019s tip</strong> traces a sinusoid as the wheel turns.</p>'
+    +'<p>'+SW2+'The <strong>blue arrow</strong> has length 2 and points at angle <i>t</i>. Its tip height is 2 sin <i>t</i> \u2014 follow the blue dashed line across to the blue wave.</p>'
+    +'<p>'+SW1+'The <strong>orange arrow</strong> has length 1 and is bolted <strong>90\u00B0 ahead</strong> of the blue one, at angle <i>t</i> + 90\u00B0. Its tip height is sin(<i>t</i> + 90\u00B0) = cos <i>t</i> \u2014 the orange wave.</p>'
+    +'<p>Sanity-check the picture at <i>t</i> = 0 (drag the slider there): the orange arrow points straight up (height 1 = cos 0 \u2713) and the blue arrow lies flat to the right (height 0 = 2 sin 0 \u2713).</p>'
+    +'<div class="note">The crucial observation: both arrows are bolted to the <strong>same wheel</strong>, so the 90\u00B0 gap between them never changes. They rotate as one rigid piece.</div>'
+},
+{
+  phase:1, eyebrow:'Step 7 of 9 \u00B7 The punchline',
+  title:'Rigid arrows add up to one rigid arrow',
+  layers:['grid','axes','waves','meter','wheel','arrows','shadow','para','r','conn','sum','marks'],
+  opts:{controls:true, full:true},
+  body:
+    '<p>Adding the two waves means adding the two tip heights \u2014 and heights add exactly like <strong>vectors</strong>: complete the dashed parallelogram, and the thick teal arrow R (the diagonal) has height = orange height + blue height, at every instant.</p>'
+    +'<p>Because the orange and blue arrows are welded 90\u00B0 apart, <strong>R is welded to the wheel too</strong> \u2014 it is just one more rigid arrow, with a fixed length and a fixed angle. Read both off the right triangle made by the two components:</p>'
+    +F('length of R = \u221A(1\u00B2 + 2\u00B2) = \u221A5, &nbsp;&nbsp; R sits \u03C6 = arctan 2 \u2248 63.4\u00B0 behind the orange arrow')
+    +'<p><strong>That is the whole secret.</strong> One rigid rotating arrow \u2192 one clean sinusoid: its shadow is \u221A5 cos(<i>t</i> \u2212 \u03C6). The sum peaks exactly when R points straight up \u2014 press Play and watch: that happens at <i>t</i> = \u03C6 \u2248 1.11, which is why the crest sits there.</p>'
+    +'<div class="note">This 1\u20132\u2013\u221A5 triangle on the wheel is the <em>same triangle</em> from the algebra lesson \u2014 the trig-identity method and the rotating-arrow picture are two views of one fact. (In 18.03 language: cos t + 2 sin t = Re[(1 \u2212 2i)e<sup>it</sup>], and 1 \u2212 2i has modulus \u221A5 and argument \u2212\u03C6.)</div>'
+},
+{
+  phase:1, eyebrow:'Step 8 of 9 \u00B7 Stress test',
+  title:'Break the magic: change one frequency',
+  layers:['grid','axes','waves','meter','wheel','arrows','shadow','para','r','conn','sum'],
+  opts:{controls:true, full:true, freq:true, autoplay:true, omegaInit:1.4},
+  body:
+    '<p>The whole argument leaned on one hypothesis: <strong>equal frequencies</strong>, so that the arrows stay welded. Let\u2019s knock that leg out. The second wave is now 2 sin(\u03C9<i>t</i>) with \u03C9 = 1.40 \u2014 its arrow spins faster than the orange one.</p>'
+    +'<p>Watch the wheel: the angle between the arrows keeps changing, so the parallelogram flexes and the resultant R <strong>\u201Cbreathes\u201D</strong> \u2014 its length swells and shrinks (see the \u2016R\u2016 chip above the graph). A stretching, turning arrow does not cast a sinusoidal shadow: the teal curve is now lumpy, with unequal crests.</p>'
+    +'<p>Drag \u03C9 around. Near \u03C9 = 1 the lumps stretch into slow \u201Cbeats\u201D; far from 1 the sum is visibly a mess; and the instant you snap back to \u03C9 = 1, the arrows weld, \u2016R\u2016 locks at \u221A5 = 2.24, and the perfect sinusoid returns.</p>'
+    +'<div class="warn">This is why the amplitude\u2013phase trick applies <em>only</em> to same-frequency terms \u2014 and why it always works for our oscillator: cos t and 2 sin t both came from the same characteristic roots \u22122 \u00B1 i, so they share \u03C9 = 1 automatically.</div>'
+},
+{
+  phase:1, eyebrow:'Step 9 of 9 \u00B7 Recap',
+  title:'What you now know',
+  layers:['grid','axes','waves','meter','wheel','arrows','shadow','para','r','conn','sum','marks','ident'],
+  opts:{controls:true, full:true, tInit:1.1071},
+  body:
+    '<ol class="recipe">'
+    +'<li><strong>Adding curves = stacking heights</strong>, time by time. Cheap points first: where one wave is zero, the sum equals the other wave.</li>'
+    +'<li>Two sinusoids of the <strong>same frequency</strong> always sum to one sinusoid \u2014 their arrows are welded to one wheel, so their vector sum is one rigid arrow.</li>'
+    +'<li>The new amplitude comes from the right triangle of the two amplitudes: <span class="m">\u221A(1\u00B2 + 2\u00B2) = \u221A5 \u2248 2.24</span>. Bigger than either parent, but smaller than 1 + 2 = 3 \u2014 the arrows sit 90\u00B0 apart and are never perfectly aligned.</li>'
+    +'<li>The new peak sits at the phase lag <span class="m">\u03C6 = arctan 2 \u2248 1.11</span> \u2014 between the cosine\u2019s peak (at 0) and the sine\u2019s peak (at \u03C0/2 \u2248 1.57), closer to the stronger partner.</li>'
+    +'<li>Different frequencies \u2192 no welding \u2192 no single sinusoid. The trick is legal for our solution precisely because both terms share \u03C9 = 1.</li>'
+    +'</ol>'
+    +'<p>Back in the sketching lesson, this is the step where cos <i>t</i> + 2 sin <i>t</i> quietly became \u221A5 cos(<i>t</i> \u2212 \u03C6) \u2014 now you have seen the gears turn.</p>'
+}
+];
+
+/* ---------- navigation ---------- */
+var cur=0;
+var stepEyebrow=document.getElementById('stepEyebrow');
+var stepTitle=document.getElementById('stepTitle');
+var stepBody=document.getElementById('stepBody');
+var prevBtn=document.getElementById('prev');
+var nextBtn=document.getElementById('next');
+var dotsBox=document.getElementById('dots');
+var controls=document.getElementById('controls');
+var freqRow=document.getElementById('freqRow');
+
+steps.forEach(function(_,i){
+  var d=document.createElement('button');
+  d.type='button'; d.setAttribute('aria-label','Go to step '+(i+1));
+  d.addEventListener('click',function(){ go(i); });
+  dotsBox.appendChild(d);
+});
+
+function go(i){
+  cur=Math.max(0,Math.min(steps.length-1,i));
+  var s=steps[cur], o=s.opts||{};
+
+  stopPlay();
+  stepEyebrow.textContent=s.eyebrow;
+  stepTitle.innerHTML=s.title;
+  stepBody.innerHTML=s.body;
+  stepBody.scrollTop=0;
+
+  for(var key in LAYERS) LAYERS[key].classList.toggle('on', s.layers.indexOf(key)!==-1);
+
+  controls.hidden=!o.controls;
+  freqRow.hidden=!o.freq;
+  loopMode=!o.once;
+  partialTrace=!!o.partial;
+  showSumFull=!!o.full;
+
+  if(!o.freq && omega!==1) setOmega(1);
+  if(o.freq && o.omegaInit) setOmega(o.omegaInit);
+
+  if(partialTrace) sumPath.setAttribute('d','M0 0');
+  else if(showSumFull) sumPath.setAttribute('d',pathOf(fsum,0,T1));
+  else sumPath.setAttribute('d','M0 0');
+
+  if(typeof o.tInit==='number') setT(o.tInit); else update();
+
+  if(o.autoplay && !reduceMotion){ if(o.once) setT(0); startPlay(); }
+  else if(o.partial && reduceMotion){ partialTrace=false; showSumFull=true; sumPath.setAttribute('d',pathOf(fsum,0,T1)); update(); }
+
+  prevBtn.disabled=(cur===0);
+  nextBtn.disabled=(cur===steps.length-1);
+  nextBtn.innerHTML=(cur===steps.length-1)?'Done \u2713':'Next \u2192';
+
+  Array.prototype.forEach.call(dotsBox.children,function(d,j){
+    d.classList.toggle('cur',j===cur);
+    d.classList.toggle('seen',j<cur);
+  });
+  [0,1].forEach(function(p){
+    var chip=document.getElementById('phase'+p);
+    chip.classList.toggle('active',s.phase===p);
+    chip.classList.toggle('done',s.phase>p);
+  });
+}
+
+prevBtn.addEventListener('click',function(){ go(cur-1); });
+nextBtn.addEventListener('click',function(){ go(cur+1); });
+var PHASE_START=[0,5];
+[0,1].forEach(function(p){
+  document.getElementById('phase'+p).addEventListener('click',function(){ go(PHASE_START[p]); });
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowRight'&&e.target.tagName!=='INPUT') go(cur+1);
+  if(e.key==='ArrowLeft'&&e.target.tagName!=='INPUT') go(cur-1);
+});
+
+/* ---------- boot ---------- */
+go(0);
+
+})();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

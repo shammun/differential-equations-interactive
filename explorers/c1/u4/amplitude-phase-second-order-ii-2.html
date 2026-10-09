@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amplitude and Phase: Second Order II</title>
+<style>
+  html, body { margin:0; height:100%; overflow:hidden; background:#f5f5f5; font-family:"Open Sans","Segoe UI",Helvetica,Arial,sans-serif; color:#555; }
+  #wrap  { position:relative; width:100%; height:100vh; height:100dvh; overflow:hidden; }
+  #stage { position:absolute; left:0; top:0; width:1560px; height:712px; transform-origin:0 0; }
+  #explBtn { position:absolute; left:720px; top:8px; font-weight:700; font-size:18px; color:#1a9cd8; cursor:pointer; user-select:none; }
+  #expl  { display:none; position:absolute; left:965px; top:6px; width:780px; height:702px; box-sizing:border-box; z-index:8;
+           background:#fff; border:1px solid #c9c9c9; border-radius:5px; box-shadow:0 3px 14px rgba(0,0,0,.18);
+           font-size:11.7px; line-height:1.32; color:#333; display:flex; flex-direction:column; }
+  #expl.open { display:flex; }
+  #expl.min { height:auto; }
+  #explBar { flex:0 0 auto; display:flex; align-items:center; gap:6px; padding:5px 8px; background:#e9edf3; border-bottom:1px solid #d5d5d5;
+             border-radius:5px 5px 0 0; cursor:move; user-select:none; font-weight:700; font-size:13px; color:#4a4a4a; touch-action:none; }
+  #expl.min #explBar { border-bottom:none; border-radius:5px; }
+  #explBar .sp { flex:1; }
+  #explBar .ib { width:20px; height:20px; border:1px solid #999; border-radius:3px; background:#fff; text-align:center; line-height:18px;
+                 font-size:14px; cursor:pointer; color:#444; }
+  #explBar .ib:hover { background:#1a9cd8; color:#fff; border-color:#1a9cd8; }
+  #explBody { flex:1 1 auto; overflow-y:auto; padding:6px 10px 8px; column-count:3; column-gap:14px; column-rule:1px solid #e5e5e5; }
+  #expl.min #explBody { display:none; }
+  #expl h3 { margin:5px 0 1px; font-size:12.5px; color:#4a4a4a; break-after:avoid; }
+  #expl h3:first-child { margin-top:0; }
+  #expl p { margin:0 0 3px; }
+  #expl .eq { font-family:"Times New Roman",Times,serif; font-size:13px; }
+  #expl .b { color:#1a1aff; font-weight:700; } #expl .o { color:#e0451c; font-weight:700; }
+  #expl .g { color:#1a8f1a; font-weight:700; } #expl .d { color:#1414b8; font-weight:700; } #expl .k { color:#555; }
+  #expl .r { color:#e03a1a; font-weight:700; }
+  #expl .box { background:#f3f6fb; border-left:3px solid #1a9cd8; padding:3px 6px; margin:3px 0; break-inside:avoid; }
+  #expl .hint { color:#777; font-style:italic; }
+  body.portrait #stage { height:1400px; }
+  body.portrait #expl { width:944px; height:680px; }
+  body.portrait #explBody { column-count:3; }
+
+  #bar   { position:relative; height:42px; }
+  #title { position:absolute; left:8px; top:8px; font-weight:700; font-size:18px; color:#4a4a4a; }
+  #helpBtn { position:absolute; left:880px; top:8px; font-weight:700; font-size:18px; color:#1a9cd8; cursor:pointer; user-select:none; }
+  #help  { display:none; position:absolute; left:0; top:42px; width:960px; height:670px; box-sizing:border-box; overflow-y:auto; z-index:5;
+           background:#f5f5f5; padding:2px 14px 12px 8px; font-size:14px; line-height:1.5; color:#333; }
+  #help p { max-width:700px; }
+  #help p { margin:0 0 12px; }
+  #help i { font-family:"Times New Roman",Times,serif; }
+  #app   { position:relative; height:670px; }
+  .abs   { position:absolute; }
+  canvas { position:absolute; display:block; touch-action:none; }
+  .lbl, .ro { position:absolute; font-weight:700; font-size:16px; color:#555; white-space:nowrap; line-height:22px; }
+  .blue  { color:#1414b8; }
+  .red   { color:#e0451c; }
+  .green { color:#1a8f1a; }
+  #btn { position:absolute; left:218px; top:328px; font:700 14px "Open Sans","Segoe UI",Arial,sans-serif; color:#555;
+         background:#fff; border:1px solid #aaa; border-radius:3px; width:36px; height:24px; padding:0; cursor:pointer; }
+  #btn:focus-visible { outline:2px solid #1a9cd8; }
+  .chk { position:absolute; display:flex; align-items:center; gap:9px; font-weight:700; font-size:16px; color:#555; cursor:pointer; user-select:none; line-height:22px; }
+  .chk .bx { width:13px; height:13px; border:2px solid #444; background:#fff; box-sizing:border-box; }
+  .chk.on .bx { background:#555; }
+  .chk input { position:absolute; opacity:0; width:0; height:0; }
+  .hid { display:none !important; }
+</style>
+</head>
+<body>
+<div id="wrap">
+<div id="stage">
+  <div id="bar">
+    <div id="title">AMPLITUDE AND PHASE: SECOND ORDER II</div>
+    <div id="explBtn" role="button" tabindex="0">+ explanation</div>
+    <div id="helpBtn" role="button" tabindex="0">+ help</div>
+  </div>
+
+  <div id="help">
+    <p>At left is a spring–mass–dashpot system. The spring hangs from a fixed support and carries the mass; the mass's rod is the piston of a dashpot whose cylinder is moved up and down by a driving piston at the bottom.</p>
+    <p>The equation governing the system is shown in orange at the top. The mass is 1; <i>b</i> is the damping constant, <i>k</i> the spring constant, and <i>ω</i> the circular frequency of the sinusoidal motion of the driving piston.</p>
+    <p>In the graphing window the position of the top of the dashpot — the input signal cos(<i>ωt</i>) — is drawn in blue, and the position of the mass (the system response <i>x</i>) in orange. Diamonds mark the current values of cos(<i>ωt</i>) and <i>x</i>; the gray vertical line between them is the extension of the spring. The time lag <i>t</i><sub>0</sub> is read out in dark blue at the bottom of the screen, below the period <i>P</i>. When <i>t</i><sub>0</sub> &gt; 0 it is also shown in the graph as a gray vertical line measured by a dark blue segment.</p>
+    <p>Move the cursor over the graphing window to get crosshairs and a readout of <i>t</i> and <i>x</i>. Holding the mouse button down hides the crosshairs. The horizontal crosshair is continued into the window showing the system.</p>
+    <p>Use the slider handle below the graph to choose a value of <i>t</i>. The [&gt;&gt;] key animates the system; while running it reads [||] and stops the animation when pressed. At the end of the run it reads [&lt;&lt;], which resets <i>t</i> to zero.</p>
+    <p>Drag the [<i>b</i>], [<i>k</i>] or [<i>ω</i>] slider to change those parameters.</p>
+    <p>The [Bode plots] key shows or hides two windows on the right. The upper one graphs the amplitude <i>A</i> of the sinusoidal response against <i>ω</i>; the lower one graphs the negative of the phase lag, −<i>φ</i>, against <i>ω</i>.</p>
+    <p>The [Nyquist plot] key shows or hides a window at lower right containing part of the complex plane. The gray curve is the path of the complex gain <i>biω</i> / <i>p</i>(<i>iω</i>), where <i>p</i>(<i>s</i>) = <i>s</i><sup>2</sup> + <i>bs</i> + <i>k</i> is the characteristic polynomial, as <i>ω</i> runs over positive values. The orange diamond is the gain at the chosen <i>ω</i>, joined to the origin by an orange segment whose length is the amplitude <i>A</i>; the angle from the positive real axis, marked by the green arc, is −<i>φ</i>.</p>
+    <p>Move the cursor over the amplitude window to draw an orange horizontal line there and in the graphing window marking the maximal displacement, with a readout of that maximum. Move the cursor over the phase window for a readout of the phase shift.</p>
+    <p>Note: these are not true Bode or Nyquist plots. A Bode plot uses log(<i>A</i>) against log(<i>ω</i>) and −<i>φ</i> against log(<i>ω</i>); a Nyquist plot lets <i>ω</i> run from −∞ to +∞, adding a mirror-image portion above the real axis.</p>
+    <p>Re-implementation in HTML/JavaScript of the MIT Mathlet "Amplitude and Phase: Second Order II" (original © 2006 H. Miller and J.-M. Claus).</p>
+  </div>
+
+  <div id="app">
+    <canvas id="sys" style="left:40px;top:28px"></canvas>
+    <canvas id="graph" style="left:190px;top:43px"></canvas>
+
+    <div class="lbl" style="left:197px;top:297px">t</div>
+    <canvas id="tsl" style="left:210px;top:298px"></canvas>
+    <div class="ro" id="tro" style="left:693px;top:297px">0.0</div>
+    <button id="btn" type="button">&gt;&gt;</button>
+    <div class="ro" id="tread" style="left:505px;top:327px">t =</div>
+    <div class="ro" id="xread" style="left:610px;top:327px">x =</div>
+
+    <div class="lbl" style="left:196px;top:397px">b</div>
+    <canvas id="bsl" style="left:210px;top:383px"></canvas>
+    <div class="ro" id="bro" style="left:462px;top:397px">0.99</div>
+    <div class="lbl" style="left:196px;top:455px">k</div>
+    <canvas id="ksl" style="left:210px;top:441px"></canvas>
+    <div class="ro" id="kro" style="left:462px;top:455px">2.00</div>
+
+    <label class="chk" id="bodeChk" style="left:553px;top:418px"><input type="checkbox"><span class="bx"></span>Bode Plots</label>
+    <label class="chk" id="nyqChk" style="left:553px;top:453px"><input type="checkbox"><span class="bx"></span>Nyquist Plot</label>
+
+    <div class="lbl" style="left:745px;top:341px">ω</div>
+    <canvas id="wsl" style="left:765px;top:328px"></canvas>
+    <div class="ro" id="wro" style="left:878px;top:341px">2.00</div>
+
+    <canvas id="bodeA" class="hid" style="left:745px;top:58px"></canvas>
+    <canvas id="bodeP" class="hid" style="left:745px;top:203px"></canvas>
+    <div class="ro red hid" id="aread" style="left:790px;top:60px;font-size:13px"></div>
+    <div class="ro green hid" id="pread" style="left:790px;top:205px;font-size:13px"></div>
+    <canvas id="nyq" class="hid" style="left:720px;top:398px"></canvas>
+
+    <div class="ro blue" id="Pro" style="left:218px;top:527px">P = 2 π/ω = 3.14</div>
+    <div class="ro blue" id="t0ro" style="left:218px;top:561px">t<sub style="font-size:11px">0</sub> = ( Φ/2 π ) P = Φ/ω = 0.40</div>
+  </div>
+  <div id="expl"><div id="explBar"><span>Explanation &amp; interpretation</span><span class="sp"></span><span class="ib" id="explMin" title="Minimize">&#8211;</span><span class="ib" id="explClose" title="Close">&#215;</span></div><div id="explBody"></div></div>
+</div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const PI = Math.PI, TMAX = 8 * PI;
+  const FONT = '"Open Sans","Segoe UI",Helvetica,Arial,sans-serif';
+  const C = { blue:'#1a1aff', orange:'#e0451c', dark:'#1414b8', green:'#1a8f1a', red:'#e03a1a',
+              gray:'#888', text:'#555', curve:'#777' };
+
+  // ---------- state ----------
+  const S = { b:0.99, k:2.0, w:2.0, t:0, bode:false, nyq:false };
+  const anim = { state:'idle', last:0 };          // idle | running | done
+  let hover = null, suppress = false, hoverA = false, hoverP = false;
+
+  // ---------- model ----------
+  // gain = b i w / p(i w),  p(i w) = (k - w^2) + i b w
+  function gainAt(b, k, w) {
+    const pr = k - w * w, pi = b * w, den = pr * pr + pi * pi;
+    if (den < 1e-14) return { re: 1, im: 0 };
+    return { re: pi * pi / den, im: pi * pr / den };
+  }
+  function resp() {
+    const g = gainAt(S.b, S.k, S.w);
+    const A = Math.hypot(g.re, g.im);
+    const phi = A < 1e-12 ? 0 : -Math.atan2(g.im, g.re);
+    return { g, A, phi, t0: S.w > 0 ? phi / S.w : 0 };
+  }
+  function xOf(t, r) { return r.A * Math.cos(S.w * t - r.phi); }
+  function maxAmp() {                       // maximum of A over w > 0
+    let m = 0;
+    for (let i = 1; i <= 400; i++) { const g = gainAt(S.b, S.k, i / 100); m = Math.max(m, Math.hypot(g.re, g.im)); }
+    return m;
+  }
+
+  // ---------- canvas helpers ----------
+  function mk(id, w, h) {
+    const c = document.getElementById(id), d = window.devicePixelRatio || 1;
+    c.width = w * d; c.height = h * d; c.style.width = w + 'px'; c.style.height = h + 'px';
+    const x = c.getContext('2d'); x.scale(d, d);
+    return { c, x, w, h };
+  }
+  function pos(cv, e) {
+    const r = cv.c.getBoundingClientRect();
+    return { x: (e.clientX - r.left) * cv.w / r.width, y: (e.clientY - r.top) * cv.h / r.height };
+  }
+  function diamond(x, cx, cy, r, color) {
+    x.beginPath(); x.moveTo(cx, cy - r); x.lineTo(cx + r, cy); x.lineTo(cx, cy + r); x.lineTo(cx - r, cy);
+    x.closePath(); x.fillStyle = color; x.fill();
+  }
+  function line(x, x1, y1, x2, y2, color, w, dash) {
+    x.save(); x.strokeStyle = color; x.lineWidth = w || 1; if (dash) x.setLineDash(dash);
+    x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.stroke(); x.restore();
+  }
+  function arrow(x, x1, y1, x2, y2) {           // gray axis with arrowhead at (x2,y2)
+    line(x, x1, y1, x2, y2, C.gray, 1);
+    const a = Math.atan2(y2 - y1, x2 - x1);
+    x.save(); x.fillStyle = C.gray; x.beginPath(); x.moveTo(x2, y2);
+    x.lineTo(x2 - 7 * Math.cos(a - 0.4), y2 - 7 * Math.sin(a - 0.4));
+    x.lineTo(x2 - 7 * Math.cos(a + 0.4), y2 - 7 * Math.sin(a + 0.4)); x.closePath(); x.fill(); x.restore();
+  }
+  function text(x, s, px, py, opt) {
+    opt = opt || {};
+    x.fillStyle = opt.color || C.text; x.font = (opt.bold ? '700 ' : '') + (opt.size || 13) + 'px ' + FONT;
+    x.textAlign = opt.align || 'center'; x.textBaseline = opt.base || 'middle'; x.fillText(s, px, py);
+  }
+
+  // ---------- slider ----------
+  class Slider {
+    constructor(cv, o) {
+      this.cv = cv; this.min = o.min; this.max = o.max; this.value = o.value;
+      this.x0 = o.x0; this.x1 = o.x1; this.ty = o.trackY; this.ticks = o.ticks || [];
+      this.minor = o.minor || 0; this.showLabels = o.labels !== false; this.fmt = o.fmt; this.onChange = o.onChange;
+      this.ro = o.readout; this.drag = false;
+      const c = cv.c;
+      c.addEventListener('pointerdown', e => { this.drag = true; c.setPointerCapture(e.pointerId); this.fromEvent(e); });
+      c.addEventListener('pointermove', e => { if (this.drag) this.fromEvent(e); });
+      const up = e => { this.drag = false; };
+      c.addEventListener('pointerup', up); c.addEventListener('pointercancel', up);
+      this.draw();
+    }
+    px(v) { return this.x0 + (v - this.min) / (this.max - this.min) * (this.x1 - this.x0); }
+    fromEvent(e) {
+      const p = pos(this.cv, e);
+      let v = this.min + (p.x - this.x0) / (this.x1 - this.x0) * (this.max - this.min);
+      v = Math.max(this.min, Math.min(this.max, v));
+      this.set(v, true);
+    }
+    set(v, fire) {
+      this.value = v; if (this.ro) this.ro.textContent = this.fmt(v); this.draw();
+      if (fire && this.onChange) this.onChange(v);
+    }
+    draw() {
+      const x = this.cv.x, ty = this.ty; x.clearRect(0, 0, this.cv.w, this.cv.h);
+      line(x, this.x0, ty, this.x1, ty, C.gray, 1);
+      if (this.minor) for (let v = this.min; v <= this.max + 1e-9; v += this.minor) {
+        const p = this.px(v); line(x, p, ty - 3, p, ty, C.gray, 1);
+      }
+      for (const v of this.ticks) {
+        const p = this.px(v); line(x, p, ty - 6, p, ty, C.gray, 1);
+        if (this.showLabels) text(x, this.fmt(v), p, 8);
+      }
+      const h = this.px(this.value);
+      x.save(); x.beginPath(); x.moveTo(h, ty - 1); x.lineTo(h - 5, ty + 9); x.lineTo(h + 5, ty + 9); x.closePath();
+      x.fillStyle = '#d9d9d9'; x.fill(); x.strokeStyle = '#444'; x.lineWidth = 1; x.stroke(); x.restore();
+      line(x, h, ty + 9, h, ty + 13, '#444', 1);
+    }
+  }
+
+  // ---------- canvases ----------
+  const sys = mk('sys', 100, 480), gr = mk('graph', 520, 260);
+  const bA = mk('bodeA', 155, 140), bP = mk('bodeP', 155, 125), ny = mk('nyq', 180, 230);
+  const tsl = mk('tsl', 480, 24), bsl = mk('bsl', 250, 40), ksl = mk('ksl', 250, 40), wsl = mk('wsl', 105, 40);
+  const $ = id => document.getElementById(id);
+  const f1 = v => v.toFixed(1), f2 = v => v.toFixed(2);
+
+  const btn = $('btn');
+  const tS = new Slider(tsl, { min:0, max:TMAX, value:0, x0:6, x1:472, trackY:12, minor:PI/2, fmt:f1, readout:$('tro'),
+    onChange: v => { S.t = v; if (anim.state !== 'idle') { anim.state = 'idle'; btn.textContent = '>>'; } redraw(); } });
+  const bS = new Slider(bsl, { min:0, max:1.5, value:S.b, x0:14, x1:236, trackY:27, ticks:[0,0.5,1,1.5], minor:0.1, fmt:f1, readout:$('bro'),
+    onChange: v => { S.b = v; redraw(); } });
+  bS.fmt = f2; bS.set(S.b);
+  const kS = new Slider(ksl, { min:0, max:4, value:S.k, x0:14, x1:236, trackY:27, ticks:[0,1,2,3,4], minor:0.25, fmt:f1, readout:$('kro'),
+    onChange: v => { S.k = v; redraw(); } });
+  kS.fmt = f2; kS.set(S.k);
+  const wS = new Slider(wsl, { min:0, max:4, value:S.w, x0:8, x1:97, trackY:27, ticks:[0,1,2,3,4], minor:0.5, fmt:v => String(Math.round(v)), readout:$('wro'),
+    onChange: v => { S.w = v; redraw(); } });
+  wS.fmt = f2; wS.set(S.w);
+  // slider tick labels use one-decimal / integer format, readouts two decimals
+  bS.draw = function () { const f = this.fmt; this.fmt = f1; Slider.prototype.draw.call(this); this.fmt = f; };
+  kS.draw = function () { const f = this.fmt; this.fmt = f1; Slider.prototype.draw.call(this); this.fmt = f; };
+  wS.draw = function () { const f = this.fmt; this.fmt = v => String(Math.round(v)); Slider.prototype.draw.call(this); this.fmt = f; };
+  bS.draw(); kS.draw(); wS.draw();
+
+  // ---------- system window ----------
+  const SY = { top1:100, top0:148, topm1:194, bot1:377, bot0:424, botm1:471, cx:55, unit:47, rodLen:165, cylH:222 };
+  function drawSystem(r) {
+    const x = sys.x, cx = SY.cx; x.clearRect(0, 0, sys.w, sys.h);
+    x.fillStyle = '#ececec'; x.fillRect(28, 10, 54, 468);
+    x.fillStyle = '#c9c9c9'; x.fillRect(28, 10, 54, 12);
+    for (const [v, y] of [[1,SY.top1],[0,SY.top0],[-1,SY.topm1],[1,SY.bot1],[0,SY.bot0],[-1,SY.botm1]]) {
+      text(x, String(v), 20, y, { bold:true, size:14, align:'right' }); line(x, 24, y, 28, y, C.gray, 1);
+    }
+    const xv = xOf(S.t, r), yv = Math.cos(S.w * S.t);
+    const massY = SY.top0 - SY.unit * xv;
+    // spring
+    x.save(); x.strokeStyle = '#777'; x.lineWidth = 1.5; x.beginPath();
+    const s0 = 22, s1 = massY - 6, n = 12, amp = 7;
+    x.moveTo(cx, s0); x.lineTo(cx, s0 + 6);
+    for (let i = 0; i < n; i++) {
+      const y0 = s0 + 6 + (s1 - 6 - s0 - 6) * i / n, y1 = s0 + 6 + (s1 - 6 - s0 - 6) * (i + 1) / n;
+      x.lineTo(cx + (i % 2 ? amp : -amp), (y0 + y1) / 2);
+    }
+    x.lineTo(cx, s1 - 6); x.lineTo(cx, s1); x.stroke(); x.restore();
+    // mass + marker
+    x.fillStyle = C.orange; x.fillRect(cx - 11, massY - 6, 22, 12);
+    line(x, 30, massY, 45, massY, C.orange, 2);
+    // piston rod
+    const headY = massY + SY.rodLen;
+    line(x, cx, massY + 6, cx, headY, '#8a8a8a', 3);
+    // dashpot cylinder (moves with y)
+    const top = SY.top0 + SY.unit * (1 - yv), bot = top + SY.cylH;
+    line(x, cx - 11, top, cx - 11, bot, C.blue, 3); line(x, cx + 11, top, cx + 11, bot, C.blue, 3);
+    line(x, cx - 12, bot, cx + 12, bot, C.blue, 3);
+    line(x, cx, headY + 4, cx, bot, C.blue, 6);
+    x.fillStyle = '#9a9a9a'; x.fillRect(cx - 6, headY - 4, 12, 8);
+    x.fillStyle = C.blue; x.fillRect(cx - 18, top + 226, 36, 6); x.fillRect(cx - 3, top + 229, 6, 480 - (top + 229));
+    // continued crosshair
+    if (hover && !suppress) {
+      const hy = SY.top0 - SY.unit * hover.x;
+      if (hy > 10 && hy < 478) line(x, 28, hy, 82, hy, '#666', 1);
+    }
+  }
+
+  // ---------- graphing window ----------
+  const G = { x0:25, x1:490, y0:40, y1:227 };
+  const tx = t => G.x0 + t / TMAX * (G.x1 - G.x0);
+  const ty = v => (G.y0 + G.y1) / 2 - v * (G.y1 - G.y0) / 4;
+  function drawGraph(r) {
+    const x = gr.x; x.clearRect(0, 0, gr.w, gr.h);
+    text(x, 'ẍ + bẋ + kx = bẏ , y = cos(ωt)', (G.x0 + G.x1) / 2, 12, { color:C.orange, bold:true, size:16 });
+    x.fillStyle = '#fff'; x.fillRect(G.x0, G.y0, G.x1 - G.x0, G.y1 - G.y0);
+    arrow(x, G.x0, G.y1, G.x0, G.y0 - 10); arrow(x, G.x0, ty(0), G.x1 + 14, ty(0));
+    text(x, 'x', G.x0 + 4, G.y0 - 20, { bold:true, size:15 });
+    text(x, 't', G.x1 + 24, ty(0), { bold:true, size:15 });
+    for (let v = -2; v <= 2; v++) { line(x, G.x0 - 4, ty(v), G.x0, ty(v), C.gray); text(x, String(v), G.x0 - 8, ty(v), { bold:true, size:14, align:'right' }); }
+    const lab = ['0','π','2π','3π','4π','5π','6π','7π','8π'];
+    for (let i = 0; i <= 8; i++) { const p = tx(i * PI); line(x, p, G.y1, p, G.y1 + 4, C.gray); text(x, lab[i], p, G.y1 + 14, { bold:true, size:14 }); }
+
+    x.save(); x.beginPath(); x.rect(G.x0, G.y0, G.x1 - G.x0, G.y1 - G.y0); x.clip();
+    // t0 marker
+    if (r.t0 > 1e-6) { line(x, tx(r.t0), G.y0, tx(r.t0), G.y1, '#c8c8c8', 1); line(x, tx(0), ty(-1.3), tx(r.t0), ty(-1.3), C.dark, 2.5); }
+    // max amplitude lines (amplitude-window hover)
+    if (hoverA && S.bode) { const m = maxAmp(); line(x, G.x0, ty(m), G.x1, ty(m), C.orange, 1); line(x, G.x0, ty(-m), G.x1, ty(-m), C.orange, 1); }
+    // curves
+    const N = 700;
+    x.lineWidth = 2;
+    x.strokeStyle = C.blue; x.beginPath();
+    for (let i = 0; i <= N; i++) { const t = TMAX * i / N; const p = tx(t), q = ty(Math.cos(S.w * t)); i ? x.lineTo(p, q) : x.moveTo(p, q); }
+    x.stroke();
+    x.strokeStyle = C.orange; x.beginPath();
+    for (let i = 0; i <= N; i++) { const t = TMAX * i / N; const p = tx(t), q = ty(xOf(t, r)); i ? x.lineTo(p, q) : x.moveTo(p, q); }
+    x.stroke();
+    // current values
+    const cy = Math.cos(S.w * S.t), cx = xOf(S.t, r), px = tx(S.t);
+    line(x, px, ty(cy), px, ty(cx), '#999', 1);
+    diamond(x, px, ty(cy), 5, C.blue); diamond(x, px, ty(cx), 5, C.orange);
+    // crosshairs
+    if (hover && !suppress) { line(x, G.x0, hover.py, G.x1, hover.py, '#666', 1); line(x, hover.px, G.y0, hover.px, G.y1, '#666', 1); }
+    x.restore();
+  }
+  gr.c.addEventListener('pointermove', e => {
+    const p = pos(gr, e);
+    if (p.x >= G.x0 && p.x <= G.x1 && p.y >= G.y0 && p.y <= G.y1) {
+      hover = { px:p.x, py:p.y, t:(p.x - G.x0) / (G.x1 - G.x0) * TMAX, x:((G.y0 + G.y1) / 2 - p.y) / ((G.y1 - G.y0) / 4) };
+      $('tread').textContent = 't = ' + hover.t.toFixed(2); $('xread').textContent = 'x = ' + hover.x.toFixed(2);
+    } else { hover = null; $('tread').textContent = 't ='; $('xread').textContent = 'x ='; }
+    redraw();
+  });
+  gr.c.addEventListener('pointerleave', () => { hover = null; suppress = false; $('tread').textContent = 't ='; $('xread').textContent = 'x ='; redraw(); });
+  gr.c.addEventListener('pointerdown', () => { suppress = true; redraw(); });
+  gr.c.addEventListener('pointerup', () => { suppress = false; redraw(); });
+
+  // ---------- Bode windows ----------
+  const BA = { x0:25, x1:118, y0:25, y1:118 };       // A window: w 0..4, A 0..2
+  const BP = { x0:25, x1:118, y0:20, y1:100, mid:60 }; // phase window: -phi in [-pi/2, pi/2]
+  const wx = (B, w) => B.x0 + w / 4 * (B.x1 - B.x0);
+  const ay = A => BA.y1 - A / 2 * (BA.y1 - BA.y0);
+  const py = v => BP.mid - v / (PI / 2) * (BP.mid - BP.y0);
+
+  function drawBodeA(r) {
+    const x = bA.x; x.clearRect(0, 0, bA.w, bA.h);
+    x.fillStyle = '#fff'; x.fillRect(BA.x0, BA.y0, BA.x1 - BA.x0, BA.y1 - BA.y0);
+    arrow(x, BA.x0, BA.y1, BA.x0, BA.y0 - 8); arrow(x, BA.x0, BA.y1, BA.x1 + 10, BA.y1);
+    text(x, 'A', BA.x0 + 2, 8, { color:C.orange, bold:true, size:15 });
+    text(x, 'ω', BA.x1 + 18, BA.y1, { bold:true, size:14 });
+    for (let v = 0; v <= 2; v++) { line(x, BA.x0 - 4, ay(v), BA.x0, ay(v), C.gray); text(x, String(v), BA.x0 - 8, ay(v), { bold:true, size:13, align:'right' }); }
+    for (let v = 0; v <= 4; v++) { line(x, wx(BA, v), BA.y1, wx(BA, v), BA.y1 + 4, C.gray); text(x, String(v), wx(BA, v), BA.y1 + 12, { bold:true, size:13 }); }
+    x.save(); x.beginPath(); x.rect(BA.x0, BA.y0, BA.x1 - BA.x0, BA.y1 - BA.y0); x.clip();
+    x.strokeStyle = C.curve; x.lineWidth = 1.5; x.beginPath();
+    for (let i = 0; i <= 300; i++) { const w = 4 * i / 300, g = gainAt(S.b, S.k, w), A = Math.hypot(g.re, g.im); i ? x.lineTo(wx(BA, w), ay(A)) : x.moveTo(wx(BA, w), ay(A)); }
+    x.stroke();
+    if (hoverA) line(x, BA.x0, ay(maxAmp()), BA.x1, ay(maxAmp()), C.orange, 1);
+    x.restore();
+    line(x, wx(BA, S.w), ay(0), wx(BA, S.w), ay(r.A), C.red, 2);
+    diamond(x, wx(BA, S.w), ay(r.A), 4, C.red);
+  }
+  function drawBodeP(r) {
+    const x = bP.x; x.clearRect(0, 0, bP.w, bP.h);
+    x.fillStyle = '#fff'; x.fillRect(BP.x0, BP.y0, BP.x1 - BP.x0, BP.y1 - BP.y0);
+    arrow(x, BP.x0, BP.y1, BP.x0, BP.y0 - 8); arrow(x, BP.x0, BP.mid, BP.x1 + 10, BP.mid);
+    text(x, '-Φ', BP.x0 + 4, 8, { color:C.green, bold:true, size:14 });
+    text(x, 'ω', BP.x1 + 18, BP.mid, { bold:true, size:14 });
+    line(x, BP.x0 - 4, BP.mid, BP.x0, BP.mid, C.gray); text(x, '0', BP.x0 - 8, BP.mid, { bold:true, size:13, align:'right' });
+    for (let v = 0; v <= 4; v++) { line(x, wx(BP, v), BP.y1, wx(BP, v), BP.y1 + 4, C.gray); text(x, String(v), wx(BP, v), BP.y1 + 12, { bold:true, size:13 }); }
+    x.save(); x.beginPath(); x.rect(BP.x0, BP.y0, BP.x1 - BP.x0, BP.y1 - BP.y0); x.clip();
+    x.strokeStyle = C.curve; x.lineWidth = 1.5; x.beginPath();
+    for (let i = 0; i <= 300; i++) {
+      const w = 4 * i / 300, g = gainAt(S.b, S.k, w), A = Math.hypot(g.re, g.im);
+      const mphi = A < 1e-12 ? PI / 2 : Math.atan2(g.im, g.re);
+      i ? x.lineTo(wx(BP, w), py(mphi)) : x.moveTo(wx(BP, w), py(mphi));
+    }
+    x.stroke(); x.restore();
+    line(x, wx(BP, S.w), BP.mid, wx(BP, S.w), py(-r.phi), C.green, 2);
+    diamond(x, wx(BP, S.w), py(-r.phi), 4, C.green);
+  }
+  bA.c.addEventListener('pointerenter', () => { hoverA = true; $('aread').textContent = 'max A = ' + maxAmp().toFixed(2); $('aread').classList.remove('hid'); redraw(); });
+  bA.c.addEventListener('pointerleave', () => { hoverA = false; $('aread').classList.add('hid'); redraw(); });
+  bP.c.addEventListener('pointerenter', () => { hoverP = true; $('pread').textContent = '-Φ = ' + (-resp().phi).toFixed(2); $('pread').classList.remove('hid'); });
+  bP.c.addEventListener('pointerleave', () => { hoverP = false; $('pread').classList.add('hid'); });
+
+  // ---------- Nyquist window ----------
+  const NQ = { x0:35, x1:145, y0:25, y1:135, mid:80 };
+  const rx = re => NQ.x0 + re * 110, iy = im => NQ.mid - im * 110;
+  function drawNyq(r) {
+    const x = ny.x; x.clearRect(0, 0, ny.w, ny.h);
+    x.fillStyle = '#fff'; x.fillRect(NQ.x0, NQ.y0, NQ.x1 - NQ.x0, NQ.y1 - NQ.y0);
+    arrow(x, NQ.x0, NQ.y1, NQ.x0, NQ.y0 - 10); arrow(x, NQ.x0, NQ.mid, NQ.x1 + 12, NQ.mid);
+    text(x, 'Im', NQ.x0 + 6, 8, { bold:true, size:14 }); text(x, 'Re', NQ.x1 + 22, NQ.mid, { bold:true, size:14 });
+    for (const [s, v] of [['0.5',0.5],['0',0],['-0.5',-0.5]]) { line(x, NQ.x0 - 4, iy(v), NQ.x0, iy(v), C.gray); text(x, s, NQ.x0 - 7, iy(v), { bold:true, size:13, align:'right' }); }
+    for (const [s, v] of [['0',0],['0.5',0.5],['1.0',1]]) { line(x, rx(v), NQ.y1, rx(v), NQ.y1 + 4, C.gray); text(x, s, rx(v), NQ.y1 + 13, { bold:true, size:13 }); }
+    // path of the gain: the circle |z - 1/2| = 1/2
+    x.save(); x.strokeStyle = C.curve; x.lineWidth = 1.5; x.beginPath(); x.arc(rx(0.5), iy(0), 55, 0, 2 * PI); x.stroke(); x.restore();
+    const g = r.g, ang = Math.atan2(g.im, g.re);
+    if (r.A > 1e-9) {
+      x.save(); x.strokeStyle = C.green; x.lineWidth = 1.5; x.beginPath();
+      x.arc(rx(0), iy(0), 40, 0, -ang, ang > 0); x.stroke(); x.restore();
+    }
+    line(x, rx(0), iy(0), rx(g.re), iy(g.im), C.orange, 2);
+    diamond(x, rx(g.re), iy(g.im), 4, C.orange);
+    text(x, 'biω / p(iω)', 90, 178, { bold:true, size:14 });
+    text(x, 'p(s) = s² + bs + k', 94, 218, { bold:true, size:14 });
+  }
+
+  // ---------- readouts / redraw ----------
+  function updateReadouts(r) {
+    $('Pro').textContent = 'P = 2 π/ω = ' + (S.w > 0 ? (2 * PI / S.w).toFixed(2) : '∞');
+    $('t0ro').innerHTML = 't<sub style="font-size:11px">0</sub> = ( Φ/2 π ) P = Φ/ω = ' + (S.w > 0 ? r.t0.toFixed(2) : '—');
+    if (hoverP) $('pread').textContent = '-Φ = ' + (-r.phi).toFixed(2);
+    if (hoverA) $('aread').textContent = 'max A = ' + maxAmp().toFixed(2);
+  }
+  const deg = v => (v * 180 / PI).toFixed(1) + '°';
+  const sgn = v => (v < 0 ? ' − ' : ' + ') + Math.abs(v).toFixed(2);
+  function explain(r) {
+    const b = S.b, k = S.k, w = S.w, t = S.t;
+    const pr = k - w * w, pi = b * w, den = pr * pr + pi * pi, g = r.g;
+    const w0 = Math.sqrt(k), yv = Math.cos(w * t), xv = xOf(t, r);
+    let where;
+    if (w < 1e-9) where = 'ω = 0: the piston never moves, so there is no input and the mass rests at 0 (A = 0).';
+    else if (Math.abs(w - w0) < 0.02) where = 'ω ≈ ω₀: <b>resonance</b>. The piston pushes at the spring–mass system\'s own frequency, so the mass copies the input exactly: A = 1 and φ = 0 (no lag). This is the top of the amplitude curve and the point G = 1 on the Nyquist circle.';
+    else if (w < w0) where = 'ω &lt; ω₀: driving <b>slowly</b>, below resonance. k − ω² &gt; 0, so G has positive imaginary part, φ &lt; 0 and −φ &gt; 0: the mass runs <b>ahead</b> of the piston (t₀ &lt; 0) with A &lt; 1.';
+    else where = 'ω &gt; ω₀: driving <b>fast</b>, above resonance. k − ω² &lt; 0, so G has negative imaginary part, φ &gt; 0: the mass <b>lags</b> the piston by t₀ &gt; 0 with A &lt; 1. As ω grows the lag approaches a quarter period and A → 0.';
+    const disc = b * b - 4 * k;
+    const damp = b <= 1e-9 ? 'b = 0: no damping, and then the dashpot transmits no force at all — the right-hand side bẏ is 0, so the steady response is 0 except at resonance.'
+      : (disc < -1e-9 ? 'b² = ' + (b * b).toFixed(2) + ' &lt; 4k = ' + (4 * k).toFixed(2) + ': the free system is <b>underdamped</b> (it would ring at √(k − b²/4) = ' + Math.sqrt(k - b * b / 4).toFixed(2) + ' while dying out).'
+      : disc > 1e-9 ? 'b² = ' + (b * b).toFixed(2) + ' &gt; 4k = ' + (4 * k).toFixed(2) + ': the free system is <b>overdamped</b> (no ringing).' : 'b² = 4k: <b>critically damped</b>.')
+      + ' That only affects the transient, which is not drawn: the plot shows the periodic (steady-state) response the system settles into.';
+    const cur = hover ? '<p>Cursor: t = ' + hover.t.toFixed(2) + ', x = ' + hover.x.toFixed(2) + '.</p>' : '';
+    return `
+<h3>What the two curves are</h3>
+<p><span class="b">Blue</span> = the <b>input</b> y(t) = cos(ωt): the position of the top of the dashpot, moved by the piston at the bottom of the picture (blue T-bar, lower scale). It always has amplitude 1.</p>
+<p><span class="o">Orange</span> = the <b>response</b> x(t): the position of the mass (orange block, upper scale). The equation ẍ + bẋ + kx = bẏ says the dashpot pushes the mass with force b(ẏ − ẋ) and the spring pulls it back with force −kx. The periodic solution is
+<span class="eq">x(t) = A cos(ωt − φ)</span>, with A and φ found below.</p>
+<h3>1. Evaluate p(s) = s² + bs + k at s = iω</h3>
+<div class="box"><span class="eq">p(iω) = (k − ω²) + i·bω = (${f2(k)} − ${f2(w * w)}) + i(${f2(b)}·${f2(w)}) = <b>${f2(pr)}${sgn(pi)} i</b></span></div>
+<h3>2. Complex gain G = biω / p(iω)</h3>
+<p>Multiply top and bottom by the conjugate of p(iω); |p(iω)|² = (${f2(pr)})² + (${f2(pi)})² = ${f2(den)}.</p>
+<div class="box"><span class="eq">G = (bω)²/|p|² + i·(bω)(k − ω²)/|p|² = <b>${f2(g.re)}${sgn(g.im)} i</b></span></div>
+<p>G is the complex number the <span class="o">orange</span> segment points to in the Nyquist window; it always lies on the circle |z − ½| = ½, which is why A can never exceed 1.</p>
+<h3>3. Amplitude and phase lag</h3>
+<div class="box"><span class="eq">A = |G| = √((${f2(g.re)})² + (${f2(g.im)})²) = <b>${f2(r.A)}</b><br>φ = −arg G = −atan2(${f2(g.im)}, ${f2(g.re)}) = <b>${f2(r.phi)} rad</b> (${deg(r.phi)})</span></div>
+<p>So x(t) = ${f2(r.A)}·cos(${f2(w)} t${sgn(-r.phi)}). A is the height of the orange wave (red dot in the A window); −φ = ${f2(-r.phi)} is the green dot in the phase window and the green arc in the Nyquist window.</p>
+<h3>4. Period and time lag <span class="d">(blue readouts)</span></h3>
+<div class="box"><span class="eq">P = 2π/ω = 6.28/${f2(w)} = <b>${w > 0 ? f2(2 * PI / w) : '∞'}</b><br>t₀ = φ/ω = ${f2(r.phi)}/${f2(w)} = <b>${w > 0 ? f2(r.t0) : '—'}</b>&nbsp; (= φ/2π = ${f2(r.phi / (2 * PI))} of a period)</span></div>
+<p>Each orange peak comes t₀ after the blue peak (dark-blue segment at the bottom left of the graph).</p>
+<h3>5. Reading the current setting</h3>
+<p>Natural frequency ω₀ = √k = √${f2(k)} = <b>${f2(w0)}</b>, and you are driving at ω = ${f2(w)}. ${where}</p>
+<p>${damp}</p>
+<h3>6. At t = ${f2(t)} (the diamonds)</h3>
+<div class="box"><span class="eq">y = cos(${f2(w)}·${f2(t)}) = <span class="b">${f2(yv)}</span>&nbsp;&nbsp; x = ${f2(r.A)}·cos(${f2(w * t)} − ${f2(r.phi)}) = <span class="o">${f2(xv)}</span><br>spring stretch x − y = <span class="k">${f2(xv - yv)}</span> (the gray line joining the diamonds)</span></div>${cur}
+${bodeText(r, w0)}${nyqText(r, w0)}`;
+  }
+  function bodeText(r, w0) {
+    const b = S.b, k = S.k, w = S.w;
+    if (!S.bode) return '<h3>Bode plots</h3><p class="hint">Tick “Bode Plots” to open the A(ω) and −φ(ω) windows; their explanation will appear here.</p>';
+    const disc = Math.sqrt(b * b + 4 * k), lo = (-b + disc) / 2, hi = (b + disc) / 2;
+    const side = w < 1e-9 ? 'ω = 0, where A = 0.' : Math.abs(w - w0) < 0.02 ? 'exactly at the peak.' : (w < w0 ? 'on the rising side, left of the peak.' : 'on the falling tail, right of the peak.');
+    const ph = w < 1e-9 ? 'ω = 0, where −φ = +π/2.' : Math.abs(w - w0) < 0.02 ? 'the zero crossing: no lag.' : (w < w0 ? 'above 0: the mass leads the piston.' : 'below 0: the mass lags the piston.');
+    return `
+<h3>Bode plots (right)</h3>
+<p><b>Upper window, A(ω):</b> the gray curve is the amplitude of the response for <i>every</i> driving frequency; the <span class="r">red</span> bar is the one you chose, ω = ${f2(w)}, giving A = ${f2(r.A)} — you are ${side} The curve rises from 0 at ω = 0 to its peak A = 1 at ω₀ = √k = ${f2(w0)}, then decays toward 0.</p>
+<div class="box"><span class="eq">A = 1/√(1 + u²), &nbsp;u = (k − ω²)/(bω) = ${f2(k - w * w)}/${f2(b * w)} = ${w > 0 && b > 0 ? f2((k - w * w) / (b * w)) : '—'}</span></div>
+<p>The peak's width is set by b: A drops to 1/√2 ≈ 0.71 at ω = ${f2(lo)} and ω = ${f2(hi)}, and the gap between them is exactly b = ${f2(b)}. Small b → tall narrow spike; large b → broad hump. Moving k slides the peak to √k without changing that width.</p>
+<p><b>Lower window, −φ(ω):</b> the negative phase lag. It starts at +π/2 (mass a quarter period <i>ahead</i>) for tiny ω, passes through 0 at ω₀, and falls toward −π/2 (a quarter period <i>behind</i>) for large ω. The <span class="g">green</span> bar marks −φ = ${f2(-r.phi)} at ω = ${f2(w)}: ${ph} The smaller b is, the more abruptly the curve swings through ω₀.</p>
+${hoverA ? '<p>The orange line you are hovering marks max A = ' + maxAmp().toFixed(2) + ', reached at ω₀; the same lines in the graph show the largest displacement the mass can ever reach.</p>' : ''}
+`;
+  }
+  function nyqText(r, w0) {
+    const b = S.b, k = S.k, w = S.w, g = r.g;
+    if (!S.nyq) return '<h3>Nyquist plot</h3><p class="hint">Tick “Nyquist Plot” to open the complex-plane window; its explanation will appear here.</p>';
+    const u = (w > 0 && b > 0) ? (k - w * w) / (b * w) : NaN;
+    const half = w < 1e-9 ? 'at the origin (ω = 0).' : Math.abs(w - w0) < 0.02 ? 'at the far right of the circle, G = 1.' : (w < w0 ? 'on the <b>upper</b> half (ω &lt; ω₀), the leading side.' : 'on the <b>lower</b> half (ω &gt; ω₀), the lagging side.');
+    return `
+<h3>Nyquist plot (lower right)</h3>
+<p>Each point of the gray circle is the complex gain G for one value of ω. Writing G = 1/(1 − iu) with u = (k − ω²)/(bω) shows |G − ½| = ½ for every ω, so the whole path is the circle of radius ½ centred at ½.</p>
+<div class="box"><span class="eq">G = 1/(1 − iu) = (1 + iu)/(1 + u²), &nbsp;u = ${isNaN(u) ? '—' : f2(u)} &nbsp;→&nbsp; G = ${f2(g.re)}${sgn(g.im)} i</span></div>
+<p>As ω grows from 0, u runs from +∞ down to −∞ and G travels from the origin over the top of the circle, reaches 1 at resonance ω₀ = ${f2(w0)}, and returns to the origin along the bottom. Your point is ${half}</p>
+<p>The <span class="o">orange</span> segment from the origin has length |G| = A = ${f2(r.A)} and makes angle arg G = −φ = ${f2(-r.phi)} rad (${deg(-r.phi)}) with the positive real axis (the <span class="g">green</span> arc): length = amplitude, angle = phase.</p>
+<p class="hint">(Not true Bode/Nyquist plots: those use log scales, and run ω &lt; 0 too.)</p>`;
+  }
+  function redraw() {
+    const r = resp();
+    drawSystem(r); drawGraph(r); updateReadouts(r); if (PANEL.open && !PANEL.min) $('explBody').innerHTML = explain(r);
+    if (S.bode) { drawBodeA(r); drawBodeP(r); }
+    if (S.nyq) drawNyq(r);
+  }
+
+  // ---------- animation ----------
+  const SPEED = 3; // t units per second
+  function step(ts) {
+    if (anim.state !== 'running') return;
+    const dt = Math.min(0.1, (ts - anim.last) / 1000); anim.last = ts;
+    S.t += dt * SPEED;
+    if (S.t >= TMAX) { S.t = TMAX; anim.state = 'done'; btn.textContent = '<<'; }
+    tS.set(S.t, false); redraw();
+    if (anim.state === 'running') requestAnimationFrame(step);
+  }
+  btn.addEventListener('click', () => {
+    if (anim.state === 'idle') {
+      if (S.t >= TMAX) S.t = 0;
+      anim.state = 'running'; anim.last = performance.now(); btn.textContent = '||'; requestAnimationFrame(step);
+    } else if (anim.state === 'running') { anim.state = 'idle'; btn.textContent = '>>'; }
+    else { S.t = 0; anim.state = 'idle'; btn.textContent = '>>'; tS.set(0, false); redraw(); }
+  });
+
+  // ---------- toggles ----------
+  function wireCheck(id, key, els) {
+    const lab = $(id), inp = lab.querySelector('input');
+    inp.addEventListener('change', () => {
+      S[key] = inp.checked; lab.classList.toggle('on', inp.checked);
+      els.forEach(e => $(e).classList.toggle('hid', !inp.checked)); wS.showLabels = !S.bode; wS.draw(); redraw();
+    });
+  }
+  wireCheck('bodeChk', 'bode', ['bodeA', 'bodeP']);
+  wireCheck('nyqChk', 'nyq', ['nyq']);
+
+  const helpBtn = $('helpBtn'), help = $('help');
+  function toggleHelp() { const on = help.style.display !== 'block'; help.style.display = on ? 'block' : 'none'; helpBtn.textContent = on ? '- help' : '+ help'; fit(); }
+  helpBtn.addEventListener('click', toggleHelp);
+  helpBtn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleHelp(); } });
+
+  // ---------- scale to fit narrow screens ----------
+  const wrap = $('wrap'), stage = $('stage');
+  const expl = $('expl'), explBtn = $('explBtn');
+  const PANEL = { open:false, min:false, dragged:false, x:965, y:36, scale:1, portrait:false };
+  function placePanel() {
+    if (!PANEL.dragged) { PANEL.x = PANEL.portrait ? 8 : 965; PANEL.y = PANEL.portrait ? 712 : 6; }
+    expl.style.left = PANEL.x + 'px'; expl.style.top = PANEL.y + 'px';
+  }
+  function fit() {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const portrait = vw < vh;                       // phones: stack the panel under the app and scroll
+    if (portrait !== PANEL.portrait) { PANEL.portrait = portrait; PANEL.dragged = false; }
+    document.body.classList.toggle('portrait', portrait);
+    const W = portrait ? 960 : (PANEL.open ? 1750 : 960);
+    const H = portrait ? (PANEL.open && !PANEL.min ? 1400 : 712) : 712;
+    stage.style.width = W + 'px'; stage.style.height = H + 'px';
+    const s = portrait ? vw / W : Math.min(vw / W, vh / H);   // laptops: exactly fill the window, no scrolling
+    PANEL.scale = s;
+    stage.style.transform = 'scale(' + s + ')';
+    stage.style.left = Math.max(0, (vw - W * s) / 2) + 'px';
+    stage.style.top = portrait ? '0px' : Math.max(0, (vh - H * s) / 2) + 'px';
+    document.documentElement.style.overflowY = document.body.style.overflowY = portrait ? 'auto' : 'hidden';
+    wrap.style.height = portrait ? (H * s) + 'px' : '100vh';
+    placePanel();
+  }
+  function setPanel(open) {
+    PANEL.open = open; expl.classList.toggle('open', open);
+    explBtn.textContent = (open ? '\u2212 ' : '+ ') + 'explanation';
+    fit(); if (open) redraw();
+  }
+  explBtn.addEventListener('click', () => setPanel(!PANEL.open));
+  explBtn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPanel(!PANEL.open); } });
+  $('explClose').addEventListener('click', e => { e.stopPropagation(); setPanel(false); });
+  $('explMin').addEventListener('click', e => {
+    e.stopPropagation(); PANEL.min = !PANEL.min; expl.classList.toggle('min', PANEL.min);
+    $('explMin').innerHTML = PANEL.min ? '&#9633;' : '&#8211;'; $('explMin').title = PANEL.min ? 'Restore' : 'Minimize'; fit();
+  });
+  // drag the panel by its title bar (coordinates are in stage units, so divide by the current scale)
+  (function () {
+    const bar = $('explBar'); let d = null;
+    bar.addEventListener('pointerdown', e => {
+      if (e.target.classList.contains('ib')) return;
+      d = { x0:e.clientX, y0:e.clientY, px:PANEL.x, py:PANEL.y }; bar.setPointerCapture(e.pointerId);
+    });
+    bar.addEventListener('pointermove', e => {
+      if (!d) return;
+      const W = stage.offsetWidth, H = stage.offsetHeight;
+      PANEL.x = Math.max(0, Math.min(W - 80, d.px + (e.clientX - d.x0) / PANEL.scale));
+      PANEL.y = Math.max(0, Math.min(H - 30, d.py + (e.clientY - d.y0) / PANEL.scale));
+      PANEL.dragged = true; expl.style.left = PANEL.x + 'px'; expl.style.top = PANEL.y + 'px';
+    });
+    const up = () => { d = null; };
+    bar.addEventListener('pointerup', up); bar.addEventListener('pointercancel', up);
+  })();
+  window.addEventListener('resize', fit);
+  fit(); redraw();
+})();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

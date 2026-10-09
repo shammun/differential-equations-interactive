@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The RLC radio circuit, from scratch</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']], processEscapes: true },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] },
+  startup: { typeset: true }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+:root{
+  --bg:#eaeffb;
+  --bg2:#dfe6f7;
+  --card:#ffffff;
+  --ink:#1e2340;
+  --muted:#666e94;
+  --line:#dde3f3;
+  --shadow:0 2px 6px rgba(96,82,178,.08), 0 12px 28px rgba(96,82,178,.13);
+  --act:#6d5cbe;      /* actions */
+  --src:#e0832f;      /* input signal V(t) */
+  --res:#1a9a8f;      /* resistor / speaker = system response */
+  --ind:#3a63cf;      /* inductor */
+  --cap:#c03a52;      /* capacitor */
+  --cur:#8a56c9;      /* current */
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;-webkit-text-size-adjust:100%}
+body{
+  background:radial-gradient(120% 100% at 50% 0%, var(--bg) 0%, var(--bg2) 100%);
+  color:var(--ink); font-family:var(--sans); font-size:15px; line-height:1.5;
+}
+button{font:inherit;color:inherit}
+#app{height:100%;display:flex;flex-direction:column}
+
+/* ---------- header ---------- */
+header{
+  flex:0 0 auto;display:flex;align-items:center;gap:14px;
+  padding:8px 14px;background:rgba(255,255,255,.72);
+  border-bottom:1px solid var(--line);backdrop-filter:blur(8px);
+}
+header h1{
+  margin:0;font-family:var(--serif);font-weight:600;font-size:17px;letter-spacing:.1px;
+  white-space:nowrap;
+}
+header h1 small{display:block;font-family:var(--sans);font-size:11px;font-weight:400;color:var(--muted);letter-spacing:.2px}
+nav{display:flex;gap:4px;flex:1;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{white-space:nowrap}
+.short{display:none}
+nav button{
+  border:1px solid transparent;background:transparent;border-radius:9px;
+  padding:6px 12px;cursor:pointer;color:var(--muted);font-size:13.5px;
+}
+nav button:hover{background:rgba(109,92,190,.08);color:var(--act)}
+nav button[aria-selected="true"]{background:#fff;color:var(--act);border-color:var(--line);box-shadow:0 1px 4px rgba(96,82,178,.12);font-weight:600}
+nav button:focus-visible,.pill:focus-visible,.icon:focus-visible{outline:2px solid var(--act);outline-offset:2px}
+.icon{
+  border:1px solid var(--line);background:#fff;border-radius:9px;padding:6px 12px;
+  cursor:pointer;color:var(--act);font-size:13.5px;font-weight:600;white-space:nowrap;
+  box-shadow:0 1px 4px rgba(96,82,178,.1);
+}
+.icon:hover{background:#f6f4ff}
+
+/* ---------- stage ---------- */
+main{flex:1 1 auto;position:relative;min-height:0}
+.view{position:absolute;inset:0;display:none;padding:12px;gap:12px;min-height:0}
+.view.on{display:flex}
+.col{display:flex;flex-direction:column;gap:12px;min-height:0;min-width:0}
+.left{flex:1 1 auto}
+.right{flex:0 0 330px;max-width:330px}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  box-shadow:var(--shadow);padding:10px 12px;min-height:0;display:flex;flex-direction:column;
+}
+.card h2{
+  margin:0 0 6px;font-family:var(--serif);font-size:14.5px;font-weight:600;color:var(--ink);
+}
+.card h2 span{font-family:var(--sans);font-weight:400;font-size:12px;color:var(--muted);margin-left:6px}
+.grow{flex:1 1 auto;min-height:0;position:relative}
+#circWrap>div{position:relative}
+canvas{position:absolute;inset:0;display:block;width:100%;height:100%}
+.scroll{overflow-y:auto;overscroll-behavior:contain}
+
+/* ---------- controls ---------- */
+.controls{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(225px,1fr));gap:7px 16px;
+  align-items:center;
+}
+.ctl{display:flex;align-items:center;gap:9px}
+.ctl label{flex:0 0 auto;font-size:12px;color:var(--muted);min-width:92px}
+.ctl label b{color:var(--ink);font-family:var(--serif);font-size:14px;font-style:italic}
+.ctl input[type=range]{flex:1 1 auto;min-width:60px;accent-color:var(--act);height:22px}
+.ctl output{
+  flex:0 0 auto;min-width:58px;text-align:right;font-variant-numeric:tabular-nums;
+  font-size:12.5px;color:var(--ink);
+}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.pill{
+  border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 13px;
+  font-size:12.5px;cursor:pointer;color:var(--muted);
+}
+.pill:hover{border-color:var(--act);color:var(--act)}
+.pill[aria-pressed="true"],.pill.primary{background:var(--act);border-color:var(--act);color:#fff;font-weight:600}
+.hint{font-size:12px;color:var(--muted);margin:2px 0 0}
+.speedbar{border-top:1px dashed var(--line);padding-top:7px;margin-top:7px}
+.spdctl{flex:1 1 200px;min-width:170px}
+.spdctl label{min-width:48px}
+.spdctl output{min-width:104px}
+#defPills{gap:6px}
+
+/* ---------- live readout panel ---------- */
+.calc{font-size:13px}
+.calc .blk{padding:7px 0;border-bottom:1px dashed var(--line)}
+.calc .blk:last-child{border-bottom:0}
+.calc .nm{font-family:var(--serif);font-style:italic;font-size:14.5px}
+.calc .work{
+  font-variant-numeric:tabular-nums;color:var(--muted);font-size:12.5px;margin-top:2px;
+  word-break:break-word;
+}
+.calc .val{font-weight:700;font-variant-numeric:tabular-nums}
+.swatch{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.cS{background:var(--src)} .cR{background:var(--res)} .cL{background:var(--ind)}
+.cC{background:var(--cap)} .cI{background:var(--cur)}
+.tag{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 6px;margin-left:6px}
+
+/* ---------- prose ---------- */
+.prose{font-family:var(--serif);font-size:15.5px;line-height:1.62;max-width:68ch}
+.prose p{margin:0 0 .75em}
+.prose h3{font-family:var(--serif);font-size:16px;margin:1.1em 0 .35em}
+.prose ul{margin:.2em 0 .8em;padding-left:1.2em}
+.prose li{margin:.25em 0}
+.prose code{font-size:.9em;background:#f2f1fb;padding:1px 4px;border-radius:4px}
+.note{
+  background:#f7f6ff;border-left:3px solid var(--act);border-radius:0 8px 8px 0;
+  padding:8px 12px;margin:.8em 0;font-size:14.5px;
+}
+
+/* ---------- derivation ---------- */
+.step{display:none}
+.step.on{display:block}
+.stepwrap{font-family:var(--serif);font-size:15.5px;line-height:1.6}
+.stepwrap .why{color:var(--muted);font-size:14px;margin:.2em 0 .6em}
+.dots{display:flex;gap:5px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line);cursor:pointer;border:0;padding:0}
+.dot[aria-current="true"]{background:var(--act);transform:scale(1.25)}
+
+/* ---------- floating explanation ---------- */
+#overlay{
+  position:absolute;inset:10px;display:none;z-index:40;
+  background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:16px;
+  box-shadow:0 18px 60px rgba(45,38,90,.3);
+  flex-direction:column;overflow:hidden;
+}
+#overlay.on{display:flex}
+#overlay .ohead{
+  display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);
+  background:#faf9ff;
+}
+#overlay .ohead strong{font-family:var(--serif);font-size:15px;flex:1}
+#overlay .obody{padding:14px 18px;overflow-y:auto}
+.hidden{display:none}
+
+/* ---------- responsive ---------- */
+@media (max-width:900px){
+  header{gap:8px;padding:7px 9px}
+  header h1{font-size:14px}
+  header h1 small{display:none}
+  .full{display:none}
+  .short{display:inline}
+  nav button{padding:5px 10px;font-size:12.5px}
+  .icon{padding:5px 11px;font-size:12.5px}
+  .view{padding:0;gap:0}
+  .view.on{display:block;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:9px}
+  .col{display:block;max-width:none;flex:none}
+  .card{display:block;margin-bottom:9px}
+  .card.grow,.card .grow{height:auto}
+  .scroll{overflow:visible}
+  .view[data-view="defs"] .card.grow > .grow{height:290px}
+  .speedbar .spdctl{flex:1 1 100%;order:-1}
+  .spdctl output{min-width:96px}
+  .view[data-view="parts"] .card.grow > .grow{height:330px}
+  .view[data-view="tune"] .card.grow > .grow{height:400px}
+  #circWrap{display:block;height:auto}
+  #circWrap>div{width:100% !important;flex:none !important;height:250px;margin-bottom:6px}
+  #overlay{inset:6px}
+  .prose{font-size:15px}
+  .ctl label{min-width:88px}
+}
+@media (max-width:560px){
+  header h1{display:none}
+  nav button{padding:5px 9px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<header>
+  <h1>The radio circuit<small>An RLC loop, taken apart piece by piece</small></h1>
+  <nav id="tabs" role="tablist">
+    <button role="tab" data-view="defs" aria-selected="true"><span class="full">0 &middot; The words</span><span class="short">Words</span></button>
+    <button role="tab" data-view="parts" aria-selected="false"><span class="full">1 &middot; The four parts</span><span class="short">Parts</span></button>
+    <button role="tab" data-view="circuit" aria-selected="false"><span class="full">2 &middot; The whole loop</span><span class="short">The loop</span></button>
+    <button role="tab" data-view="derive" aria-selected="false"><span class="full">3 &middot; The derivation</span><span class="short">Derivation</span></button>
+    <button role="tab" data-view="tune" aria-selected="false"><span class="full">4 &middot; Why it's a radio</span><span class="short">Radio</span></button>
+  </nav>
+  <button class="icon" id="explainBtn"><span class="full">Read the walk-through</span><span class="short">Guide</span></button>
+</header>
+
+<main id="stage">
+
+<!-- ============ VIEW 0: DEFINITIONS ============ -->
+<section class="view on" data-view="defs">
+  <div class="col left">
+    <div class="card grow">
+      <h2 id="defHead">What the word actually means</h2>
+      <div class="grow"><canvas id="defCanvas"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="row" id="defPills">
+        <button class="pill" data-term="charge" aria-pressed="true">Charge</button>
+        <button class="pill" data-term="current" aria-pressed="false">Current</button>
+        <button class="pill" data-term="voltage" aria-pressed="false">Voltage</button>
+        <button class="pill" data-term="resistor" aria-pressed="false">Resistor</button>
+        <button class="pill" data-term="inductor" aria-pressed="false">Inductor</button>
+        <button class="pill" data-term="capacitor" aria-pressed="false">Capacitor</button>
+      </div>
+      <div class="row speedbar">
+        <button class="pill primary" data-play>Pause</button>
+        <div class="ctl spdctl"><label><b>speed</b></label>
+          <input type="range" class="spd" min="-3" max="0.3" step="0.002" value="0">
+          <output class="spdv"></output></div>
+        <button class="pill" data-spd="0.001">0.1%</button>
+        <button class="pill" data-spd="0.01">1%</button>
+        <button class="pill" data-spd="0.05">5%</button>
+        <button class="pill" data-spd="0.25">25%</button>
+        <button class="pill" data-spd="1">1&times;</button>
+      </div>
+    </div>
+  </div>
+  <div class="col right">
+    <div class="card grow scroll">
+      <h2 id="defTitle">Charge</h2>
+      <div class="prose" style="font-size:14.5px" id="defText"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VIEW 1: PARTS ============ -->
+<section class="view" data-view="parts">
+  <div class="col left">
+    <div class="card grow">
+      <h2>Push the same current through each part <span>and watch the voltage it demands</span></h2>
+      <div class="grow"><canvas id="partsCanvas"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="controls">
+        <div class="ctl"><label><b>&omega;</b> how fast</label><input type="range" id="p_w" min="0.3" max="6" step="0.05" value="2"><output id="p_wv"></output></div>
+        <div class="ctl"><label><b>R</b> resistor</label><input type="range" id="p_R" min="0.1" max="3" step="0.05" value="1"><output id="p_Rv"></output></div>
+        <div class="ctl"><label><b>L</b> inductor</label><input type="range" id="p_L" min="0.1" max="3" step="0.05" value="1"><output id="p_Lv"></output></div>
+        <div class="ctl"><label><b>C</b> capacitor</label><input type="range" id="p_C" min="0.1" max="3" step="0.05" value="1"><output id="p_Cv"></output></div>
+      </div>
+      <div class="row speedbar">
+        <button class="pill primary" data-play>Pause</button>
+        <div class="ctl spdctl"><label><b>speed</b></label>
+          <input type="range" class="spd" min="-3" max="0.3" step="0.002" value="0">
+          <output class="spdv"></output></div>
+        <button class="pill" data-spd="0.001">0.1%</button>
+        <button class="pill" data-spd="0.01">1%</button>
+        <button class="pill" data-spd="0.05">5%</button>
+        <button class="pill" data-spd="0.25">25%</button>
+        <button class="pill" data-spd="1">1&times;</button>
+      </div>
+      <p class="hint">The purple curve is the current <i>I(t)</i> &mdash; identical in all three rows, because in a single loop the same current flows through everything. Each coloured curve is the voltage that part needs in order to let that current through.</p>
+    </div>
+  </div>
+
+  <div class="col right">
+    <div class="card grow scroll">
+      <h2>What you are looking at</h2>
+      <div class="calc" id="partsCalc"></div>
+      <div class="prose" style="font-size:14.5px;margin-top:10px">
+        <p>Three different jobs, three different relationships to the <em>same</em> current:</p>
+        <ul>
+          <li>the resistor cares about the current <em>right now</em>,</li>
+          <li>the inductor cares about how fast the current is <em>changing</em>,</li>
+          <li>the capacitor cares about how much current has <em>accumulated</em>.</li>
+        </ul>
+        <p>Value now, derivative, integral. That is the whole reason a circuit obeys a second-order differential equation.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VIEW 2: CIRCUIT ============ -->
+<section class="view" data-view="circuit">
+  <div class="col left">
+    <div class="card grow">
+      <h2>One loop, one current <span>voltage gain at the source = total drop around the rest</span></h2>
+      <div class="grow" style="display:flex;gap:10px;min-height:0" id="circWrap">
+        <div style="flex:0 0 46%;min-width:0"><canvas id="circCanvas"></canvas></div>
+        <div style="flex:1 1 auto;min-width:0"><canvas id="traceCanvas"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="controls">
+        <div class="ctl"><label><b>R</b> resistor</label><input type="range" id="c_R" min="0.05" max="4" step="0.05" value="0.6"><output id="c_Rv"></output></div>
+        <div class="ctl"><label><b>L</b> inductor</label><input type="range" id="c_L" min="0.2" max="4" step="0.05" value="1"><output id="c_Lv"></output></div>
+        <div class="ctl"><label><b>C</b> capacitor</label><input type="range" id="c_C" min="0.02" max="1.5" step="0.01" value="0.25"><output id="c_Cv"></output></div>
+        <div class="ctl"><label><b>&omega;</b> antenna</label><input type="range" id="c_w" min="0.1" max="6" step="0.02" value="2"><output id="c_wv"></output></div>
+        <div class="ctl"><label><b>A</b> strength</label><input type="range" id="c_A" min="0.2" max="3" step="0.1" value="1"><output id="c_Av"></output></div>
+      </div>
+      <div class="row speedbar">
+        <button class="pill primary" data-play>Pause</button>
+        <div class="ctl spdctl"><label><b>speed</b></label>
+          <input type="range" class="spd" min="-3" max="0.3" step="0.002" value="0">
+          <output class="spdv"></output></div>
+        <button class="pill" data-spd="0.001">0.1%</button>
+        <button class="pill" data-spd="0.01">1%</button>
+        <button class="pill" data-spd="0.05">5%</button>
+        <button class="pill" data-spd="0.25">25%</button>
+        <button class="pill" data-spd="1">1&times;</button>
+      </div>
+      <div class="row">
+        <button class="pill" id="c_reset">Restart from rest</button>
+        <button class="pill" id="c_tune">Tune to resonance</button>
+        <span class="hint" id="c_res"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="col right">
+    <div class="card grow scroll">
+      <h2>Every number, worked out <span>at this instant</span></h2>
+      <div class="calc" id="circCalc"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VIEW 3: DERIVATION ============ -->
+<section class="view" data-view="derive">
+  <div class="col left">
+    <div class="card grow scroll">
+      <h2>Step by step <span id="d_title"></span></h2>
+      <div class="row" style="margin:0 0 8px">
+        <button class="pill" data-track="R" aria-pressed="true">Speaker &middot; V<sub>R</sub></button>
+        <button class="pill" data-track="L" aria-pressed="false">Coil &middot; V<sub>L</sub></button>
+        <button class="pill" data-track="C" aria-pressed="false">Capacitor &middot; V<sub>C</sub></button>
+      </div>
+      <div class="stepwrap" id="d_steps"></div>
+      <div class="row" style="margin-top:14px">
+        <button class="pill" id="d_prev">Back</button>
+        <button class="pill primary" id="d_next">Next step</button>
+        <span class="dots" id="d_dots"></span>
+      </div>
+    </div>
+  </div>
+  <div class="col right">
+    <div class="card grow scroll">
+      <h2>The punchline</h2>
+      <div class="prose" style="font-size:14.5px">
+        <p>All three answers have the <em>same</em> left-hand side:</p>
+        <p style="text-align:center">$$L\ddot{V}_\bullet + R\dot{V}_\bullet + \tfrac{1}{C}V_\bullet = (\text{something})\,V$$</p>
+        <p>That left side is the circuit itself &mdash; the parts and how they are wired. It does not care which voltage you decided to watch.</p>
+        <p>Only the right-hand side changes, and it changes in a way you can almost guess:</p>
+        <ul>
+          <li>watching the resistor &rarr; $R\dot V$ &nbsp;<span class="tag">R&middot;D</span></li>
+          <li>watching the inductor &rarr; $L\ddot V$ &nbsp;<span class="tag">L&middot;D^2</span></li>
+          <li>watching the capacitor &rarr; $\tfrac1C V$ &nbsp;<span class="tag">1/C</span></li>
+        </ul>
+        <p>Each output gets driven through its own component, so the input arrives wearing that component's operator: multiply for $R$, differentiate twice for $L$, scale by $1/C$ for the capacitor.</p>
+        <div class="note">Those bracketed answers are exactly what the homework boxes want: <b>R</b>, <b>1/C</b>, and then <b>L*D^2</b> for the inductor problem and <b>1/C</b> for the capacitor problem.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VIEW 4: TUNING ============ -->
+<section class="view" data-view="tune">
+  <div class="col left">
+    <div class="card grow">
+      <h2>Turn the dial <span>how loud the speaker gets, station by station</span></h2>
+      <div class="grow"><canvas id="tuneCanvas"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="controls">
+        <div class="ctl"><label><b>C</b> tuning knob</label><input type="range" id="t_C" min="40" max="420" step="1" value="100"><output id="t_Cv"></output></div>
+        <div class="ctl"><label><b>L</b> coil</label><input type="range" id="t_L" min="80" max="500" step="5" value="250"><output id="t_Lv"></output></div>
+        <div class="ctl"><label><b>R</b> speaker</label><input type="range" id="t_R" min="20" max="1500" step="10" value="400"><output id="t_Rv"></output></div>
+      </div>
+      <p class="hint">Real AM values: <i>L</i> in microhenries, <i>C</i> in picofarads, <i>R</i> in ohms. Every other tab shows the same circuit in friendlier units.</p>
+    </div>
+  </div>
+  <div class="col right">
+    <div class="card grow scroll">
+      <h2>The dial reading</h2>
+      <div class="calc" id="tuneCalc"></div>
+      <div class="prose" style="font-size:14.5px;margin-top:8px">
+        <p>The antenna picks up <em>every</em> station at once. The loop only passes current easily at one frequency, so only one station reaches the speaker loudly. Turning the knob changes <i>C</i>, which slides the peak along the dial.</p>
+        <p>A smaller <i>R</i> makes the peak taller and narrower: more selective, but the speaker also rings longer after the signal stops.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FLOATING EXPLANATION ============ -->
+<aside id="overlay" aria-live="polite">
+  <div class="ohead">
+    <strong id="o_title">Walk-through</strong>
+    <button class="pill" id="o_newtab">Open in a new tab</button>
+    <button class="pill" id="o_close">Close</button>
+  </div>
+  <div class="obody prose" id="o_body"></div>
+</aside>
+
+</main>
+</div>
+
+<!-- ================= explanation sources (hidden) ================= -->
+<div class="hidden">
+
+
+<div id="def-charge" data-title="Charge">
+<p><b>Symbol</b> $Q$ &nbsp;&middot;&nbsp; <b>unit</b> the coulomb (C)</p>
+<p>Charge is the <em>stuff that moves</em>. It is a property some particles have; in a wire the movers are electrons. One coulomb is about $6.24\times10^{18}$ electrons &mdash; the amount that passes through a 1-amp torch bulb every second.</p>
+<h3>The two facts you actually need</h3>
+<ul>
+<li><b>It is conserved.</b> Charge is never created or destroyed inside the circuit, only relocated. In a single loop there is nowhere for it to pile up, which is exactly why one symbol $I(t)$ describes the current everywhere.</li>
+<li><b>It is what a capacitor stores.</b> The capacitor in this circuit works by holding charge on its plates: $Q = C\,V_C$. Nothing else in the circuit stores charge.</li>
+</ul>
+<h3>In the plumbing picture</h3>
+<p>Charge is the water itself. Not the flow, not the pressure &mdash; the litres.</p>
+<div class="note">Charge rarely appears explicitly in the differential equation. It hides inside the capacitor law, and the book eliminates it immediately by differentiating $Q = CV_C$ into $I = C\dot V_C$.</div>
+</div>
+
+<div id="def-current" data-title="Current">
+<p><b>Symbol</b> $I(t)$ &nbsp;&middot;&nbsp; <b>unit</b> the ampere (A) = coulombs per second</p>
+<p>Current is the <em>rate</em> at which charge flows past a point:</p>
+<p style="text-align:center">$$I = \frac{dQ}{dt}$$</p>
+<p>If 0.5 coulombs cross a given cross-section of wire in 0.25 seconds, the current there is $0.5/0.25 = 2$ amps.</p>
+<h3>Why it carries a sign</h3>
+<p>Current has a direction, so before you can write a number you have to pick which way counts as positive. The book picks clockwise and draws the arrow $I$ on the left wire. If the charge is actually running anticlockwise at that moment, $I(t)$ simply comes out negative. Nothing about the equations changes.</p>
+<h3>Why there is only one of them here</h3>
+<p>This is a <b>series</b> circuit &mdash; a single loop with no branches. Charge cannot accumulate in the wire and has nowhere else to go, so the current in the top wire equals the current in the bottom wire at every instant. That is what lets the whole circuit be described by one unknown function.</p>
+<p>In the plumbing picture: litres per second through the pipe.</p>
+</div>
+
+<div id="def-voltage" data-title="Voltage">
+<p><b>Symbol</b> $V$ &nbsp;&middot;&nbsp; <b>unit</b> the volt (V) = joules per coulomb</p>
+<p>Voltage is <em>energy per unit of charge</em>. It is not a substance and it does not flow. It is always a <b>difference between two points</b> &mdash; like height, which only means something relative to some other height.</p>
+<h3>Gain and drop</h3>
+<p>Gravity is the honest analogy, and it is the one drawn on the left.</p>
+<ul>
+<li>The antenna, driven by the radio wave, <b>lifts</b> charge to higher energy. That is a voltage <b>gain</b> of $V(t)$ volts.</li>
+<li>Each of the other three parts lets charge <b>fall back down</b>, taking energy out. That is a voltage <b>drop</b>.</li>
+</ul>
+<p>Go all the way round the loop and you must end up back where you started, so the total lift equals the total descent:</p>
+<p style="text-align:center">$$V = V_L + V_R + V_C$$</p>
+<p>That is Kirchhoff's voltage law, and it is nothing more than energy conservation written for a closed path.</p>
+<h3>A worked number</h3>
+<p>Pushing 2 coulombs through a 6-volt drop releases $2\times6 = 12$ joules. Do that in one second and you are dissipating 12 watts &mdash; power is $P = VI$. In this circuit the power delivered to $R$ is what comes out of the speaker as sound, which is why the book declares $V_R$ to be the system response.</p>
+</div>
+
+<div id="def-resistor" data-title="Resistor">
+<p><b>Symbol</b> $R$ &nbsp;&middot;&nbsp; <b>unit</b> the ohm ($\Omega$) = volts per amp &nbsp;&middot;&nbsp; drawn as a zigzag</p>
+<p>A resistor is a part that opposes flow and converts the electrical energy irreversibly into some other form. In an ordinary circuit that means heat; here the resistor <em>is</em> the speaker, so it comes out as sound.</p>
+<h3>Its defining law</h3>
+<p style="text-align:center">$$V_R = R\,I$$</p>
+<p>This is Ohm's law, and it is a <b>definition</b>: a resistor is by definition the part whose drop is proportional to the current through it. The constant of proportionality $R$ measures how strongly it obstructs.</p>
+<h3>The property that matters for the ODE</h3>
+<p>The resistor is <b>memoryless</b>. Its drop depends only on the current <em>at this very instant</em> &mdash; not on what the current was doing a moment ago, not on how fast it is changing. Double the current now, double the drop now, instantly and in step.</p>
+<p><b>Worked number.</b> $R = 3\ \Omega$ and $I = 2$ A give a drop of 6 V, dissipating $6\times2 = 12$ W.</p>
+<div class="note">In the mechanical dictionary the resistor is the <b>dashpot</b>: a damping constant $b$. Both act on the first derivative, both drain energy out of the system, and both are the reason oscillations die away.</div>
+</div>
+
+<div id="def-inductor" data-title="Inductor">
+<p><b>Symbol</b> $L$ &nbsp;&middot;&nbsp; <b>unit</b> the henry (H) = volt-seconds per amp &nbsp;&middot;&nbsp; drawn as a coil</p>
+<p>An inductor is a coil of wire. Current through the coil creates a magnetic field around it; if that current changes, the changing field pushes back against the change. That push-back is the voltage drop.</p>
+<h3>Its defining law</h3>
+<p style="text-align:center">$$V_L = L\,\dot I$$</p>
+<p>The drop is proportional to the <b>rate of change</b> of the current, not the current itself.</p>
+<h3>What that implies</h3>
+<ul>
+<li>A perfectly steady current through an ideal coil costs <b>zero</b> volts, however large that current is.</li>
+<li>Current through an inductor cannot jump instantaneously &mdash; that would need an infinite voltage. The coil is the <b>inertia</b> of the circuit.</li>
+<li>The drop reverses sign the moment the current stops rising and starts falling.</li>
+</ul>
+<p><b>Worked number.</b> $L = 0.5$ H with the current climbing at 4 A/s gives $0.5\times4 = 2$ V. If the current is falling at 4 A/s instead, the drop is $-2$ V. If the current is held at 100 A but steady, the drop is 0.</p>
+<p>Energy is not lost here, only parked: the coil stores $\tfrac12 L I^2$ in its magnetic field and gives it back.</p>
+<div class="note">In the mechanical dictionary the inductor is the <b>mass</b>. Both resist change rather than motion, both act on the second derivative of the response, and both store energy rather than dissipate it.</div>
+</div>
+
+<div id="def-capacitor" data-title="Capacitor">
+<p><b>Symbol</b> $C$ &nbsp;&middot;&nbsp; <b>unit</b> the farad (F) = coulombs per volt &nbsp;&middot;&nbsp; drawn as two parallel plates</p>
+<p>A capacitor is two conducting plates separated by a gap. Charge piles up on one plate and an equal amount leaves the other. <em>No charge ever crosses the gap</em> &mdash; and yet current flows in the wires on both sides, because charge arriving at one plate pushes charge off the other.</p>
+<h3>Its defining law</h3>
+<p>The charge stored is proportional to the voltage across the plates, $Q = C\,V_C$. Differentiate that, using $I = \dot Q$:</p>
+<p style="text-align:center">$$C\,\dot V_C = I \qquad\text{equivalently}\qquad V_C = \frac{1}{C}\int I\,dt$$</p>
+<h3>What that implies</h3>
+<ul>
+<li>The capacitor has <b>memory</b>. Its voltage is not set by the current now but by the entire history of current that has flowed into it.</li>
+<li>Its voltage cannot jump instantaneously &mdash; that would need infinite current.</li>
+<li>A <b>small</b> $C$ is a <b>stiff</b> capacitor: little charge produces a lot of back-voltage.</li>
+</ul>
+<p><b>Worked number.</b> $C = 0.25$ F carrying $I = 1$ A gives $\dot V_C = 1/0.25 = 4$ V/s. Its voltage climbs four volts every second for as long as that current keeps flowing.</p>
+<p>Like the coil it stores rather than dissipates, holding $\tfrac12 C V_C^2$ in the electric field between the plates.</p>
+<div class="note">In the mechanical dictionary the capacitor is the <b>spring</b>, with spring constant $k = 1/C$. Note the reciprocal: a small capacitor is a stiff spring. Both push back in proportion to accumulated displacement.</div>
+</div>
+
+<div id="src-defs" data-title="Reading these six definitions together">
+<p>Everything in this circuit is built from three ideas, and the differential equation falls out of how they combine.</p>
+<h3>Charge, current, voltage</h3>
+<p>Charge $Q$ is the stuff. Current $I = \dot Q$ is how fast it moves. Voltage is the energy each unit of charge picks up or gives up &mdash; a <em>difference</em> between two points, like height.</p>
+<p>Only two of these ever appear in the final equation. Charge is eliminated early, as soon as $Q = CV_C$ is differentiated into $C\dot V_C = I$.</p>
+<h3>The three components, side by side</h3>
+<p>Each part is <em>defined</em> by how its voltage drop relates to the same current $I$:</p>
+<ul>
+<li>resistor &nbsp;$V_R = RI$ &nbsp;&mdash;&nbsp; the current <b>now</b></li>
+<li>inductor &nbsp;$V_L = L\dot I$ &nbsp;&mdash;&nbsp; the <b>derivative</b> of the current</li>
+<li>capacitor &nbsp;$V_C = \frac1C\int I\,dt$ &nbsp;&mdash;&nbsp; the <b>integral</b> of the current</li>
+</ul>
+<p>Value, derivative, integral of one single function. Add those three together, set the sum equal to the source, and differentiate once to clear the integral: you have a second-order ODE. There is no deeper reason than that.</p>
+<h3>The dictionary to the mechanical case</h3>
+<p>Inductance is mass (resists change, stores energy). Resistance is the damping constant (drains energy). $1/C$ is the spring constant (pushes back on accumulated displacement). Every result you already derived for $m\ddot x + b\dot x + kx$ transfers across unchanged.</p>
+</div>
+
+<div id="src-parts" data-title="The vocabulary, in plain words">
+<p>Before any differential equation, four words.</p>
+
+<h3>Charge, current, voltage</h3>
+<p><b>Charge</b> is the stuff that moves. <b>Current</b> $I(t)$ is how fast it moves &mdash; amps are coulombs per second. <b>Voltage</b> is the push: the energy each unit of charge gains or gives up in passing through something. Volts are joules per coulomb.</p>
+<p>A plumbing picture that is accurate enough to be useful: current is the litres per second flowing through the pipe, voltage is the pressure difference across a section of pipe.</p>
+
+<h3>Why one current for the whole circuit</h3>
+<p>This circuit is a single loop &mdash; a <b>series</b> circuit. There is nowhere for charge to pile up or branch off, so the current in the wire at the top is the same number as the current in the wire at the bottom. That is why the text can write one symbol $I(t)$ and be done.</p>
+<p>Choosing "clockwise" is just choosing which direction counts as positive. If the real current is running the other way, $I(t)$ comes out negative. Nothing breaks.</p>
+
+<h3>Gain versus drop</h3>
+<p>The antenna, driven by the incoming radio wave, <b>lifts</b> charge to higher energy: a voltage <em>gain</em> of $V(t)$ volts. Everything else takes energy back out: a voltage <em>drop</em>. Kirchhoff's voltage law is just energy bookkeeping around the loop &mdash; go all the way around and you must return to where you started:</p>
+<p style="text-align:center">$$V = V_L + V_R + V_C$$</p>
+<p>Same logic as walking a closed hiking loop: total climb equals total descent.</p>
+
+<h3>The three components</h3>
+<p><b>Resistor</b> $\;V_R = RI$. It obstructs flow and dumps the energy &mdash; here as sound, since the resistor is the speaker. Its drop depends on the current <em>at this instant</em>. Double the current now, double the drop now. With $R=3$ and $I=2$ amps, the drop is $6$ volts.</p>
+<p><b>Inductor</b> $\;V_L = L\dot I$. A coil of wire storing energy in a magnetic field. It is the <em>inertia</em> of the circuit: it does not object to current, it objects to <em>changing</em> current. Steady current through an ideal coil costs zero volts. With $L=0.5$ and the current climbing at $4$ amps per second, the drop is $2$ volts &mdash; and it flips sign the moment the current starts falling.</p>
+<p><b>Capacitor</b> $\;C\dot V_C = I$, i.e. $\dot V_C = I/C$. Two plates with a gap; charge collects on them. Think of a rubber membrane across a pipe: flow stretches it and it pushes back harder the more it has stretched. Its voltage is not set by the current now but by the <em>accumulated</em> current: $V_C = \frac1C\int I\,dt$. With $C = 0.25$ and $I = 1$ amp, $\dot V_C = 4$, so its voltage climbs 4 volts every second for as long as that current keeps flowing.</p>
+
+<div class="note">Value, derivative, integral of the same $I$. Add them up and set the sum equal to $V$, and you are one differentiation away from a second-order ODE. That is the entire trick.</div>
+
+<h3>Reading the plot on the left</h3>
+<p>Drive $I(t)=\cos\omega t$ through each part. The peaks are $R$, $\;\omega L$, and $1/(\omega C)$. Notice what happens as you drag $\omega$: the coil gets harder to push at high frequency, the capacitor gets harder to push at low frequency, and the resistor does not care. Those two opposite trends cross at one frequency &mdash; keep that in mind for tab 4.</p>
+</div>
+
+<div id="src-circuit" data-title="Reading the live circuit">
+<p>Here the loop runs for real. Nothing is a formula for a sine wave; the state is integrated forward in time from the two equations that actually define the circuit.</p>
+
+<h3>What is being integrated</h3>
+<p>Take Kirchhoff's law $V = L\dot I + RI + V_C$ and solve for the derivative:</p>
+<p style="text-align:center">$$\dot I = \frac{V(t) - RI - V_C}{L},\qquad \dot V_C = \frac{I}{C}$$</p>
+<p>Two state variables, $I$ and $V_C$, and the rest is arithmetic: $V_R = RI$, and $V_L = L\dot I$, which is whatever is left over after the other two drops are subtracted from $V$. The right-hand panel shows exactly that arithmetic at the current instant, so you can check the bookkeeping line by line.</p>
+
+<h3>Things worth doing</h3>
+<ul>
+<li>Set $R$ very small and press <b>Restart from rest</b>. The current sloshes back and forth between coil and capacitor almost forever &mdash; energy trading between magnetic field and electric field. That is an undamped oscillator, the electrical twin of a mass on a spring.</li>
+<li>Raise $R$. The oscillation dies out. $R$ is the dashpot.</li>
+<li>Press <b>Tune to resonance</b> ($\omega = 1/\sqrt{LC}$) and watch $V_R$ grow far taller than the source $V$ itself. The circuit is not creating energy; the coil and the capacitor are handing the same energy back and forth, and the source only has to top up what the speaker consumes.</li>
+<li>Watch $V_L$ and $V_C$ at resonance: they are large and almost exactly out of phase, so they nearly cancel. What is left over is $V_R$, which is why $V_R \approx V$ at resonance.</li>
+</ul>
+
+<h3>The mechanical twin</h3>
+<p>Put the two equations side by side:</p>
+<p style="text-align:center">$$m\ddot x + b\dot x + kx = \text{forcing}\qquad\longleftrightarrow\qquad L\ddot V_\bullet + R\dot V_\bullet + \tfrac1C V_\bullet = \text{forcing}$$</p>
+<p>Mass $\leftrightarrow$ inductance (both resist change). Damping $\leftrightarrow$ resistance (both drain energy). Spring constant $\leftrightarrow$ $1/C$ (a <em>small</em> capacitor is a <em>stiff</em> spring &mdash; it fights back hard after only a little charge). Every result from the spring-mass-dashpot unit of the course transfers over unchanged.</p>
+</div>
+
+<div id="src-derive" data-title="Why the algebra goes the way it does">
+<p>The derivation looks fiddly, but there is one idea driving every move.</p>
+
+<h3>The obstacle</h3>
+<p>Kirchhoff's law $V = V_L + V_R + V_C$ mixes three quantities that relate to $I$ in three different ways. You cannot just substitute and be done, because the capacitor is defined by $C\dot V_C = I$ &mdash; a derivative, not a plain multiplication.</p>
+
+<h3>The strategy</h3>
+<p>Pick the one variable you actually want to watch, then make every other term wear that variable's clothing. You are allowed exactly two tools:</p>
+<ul>
+<li>differentiate the whole equation (legal: both sides are functions of $t$),</li>
+<li>multiply the whole equation by a constant ($L$, or $R$, or $1/C$).</li>
+</ul>
+<p>Which tool and how many times is decided entirely by <em>where the derivatives sit</em> in your target's definition.</p>
+
+<h3>Worked out for the coil</h3>
+<p>Target $V_L = L\dot I$. That definition eats one derivative of $I$, so $V_L$ is "one derivative ahead" of $I$. To turn $\;RI\;$ into something containing $V_L$, you need an $\dot I$ &mdash; so differentiate. To turn $\;\frac1C\!\int\! I\;$ into $V_L$, you need to climb two derivatives &mdash; so differentiate twice in total. And $L\dot I$ only becomes exactly $V_L$ if the factor $L$ is present, so multiply through by $L$.</p>
+<p>That is the entire plan: differentiate twice, multiply by $L$. The steps on the left are just that plan executed carefully.</p>
+
+<h3>Worked out for the capacitor</h3>
+<p>Target $V_C$, which sits <em>one derivative behind</em> $I$ (since $\dot V_C = I/C$). So this time no extra differentiation is needed at the start &mdash; substituting turns $I$ into $\dot V_C$ and $\dot I$ into $\ddot V_C$ all by itself. You only need the factor $1/C$ to be present, so multiply through by $1/C$. Fewer moves, same destination.</p>
+
+<div class="note">If you ever forget the recipe, count derivatives. $V_C$ is one behind $I$, $V_R$ is level with $I$, $V_L$ is one ahead. Differentiate the whole law until your target's lowest-order term lands on plain $V_\bullet$, then multiply by whatever constant makes the substitution exact.</div>
+
+<h3>Checking the answer</h3>
+<p>Every version must come out as $L\ddot V_\bullet + R\dot V_\bullet + \frac1C V_\bullet$ on the left. If your left-hand side has different coefficients, you multiplied by the wrong constant. The right-hand side should be the input $V$ acted on by your target component's own operator: $RD$, $LD^2$, or $1/C$.</p>
+</div>
+
+<div id="src-tune" data-title="How a loop of wire picks one station">
+<p>This is the part the textbook is building towards, and it explains why anyone would model a radio this way at all.</p>
+
+<h3>Reactance: the frequency-dependent resistance</h3>
+<p>Drive the loop with a pure sine at frequency $\omega$. Feeding a sinusoidal current of amplitude 1 through each part costs a peak voltage of</p>
+<ul>
+<li>resistor: $R$ &mdash; flat, indifferent to frequency,</li>
+<li>inductor: $\omega L$ &mdash; rises with frequency,</li>
+<li>capacitor: $1/(\omega C)$ &mdash; falls with frequency.</li>
+</ul>
+<p>The last two also act in <em>opposite</em> directions in time: the coil's voltage peaks a quarter cycle early, the capacitor's a quarter cycle late. So they partly cancel, and their net cost is $\;\omega L - 1/(\omega C)$.</p>
+
+<h3>Resonance</h3>
+<p>At one special frequency that difference is zero:</p>
+<p style="text-align:center">$$\omega L = \frac{1}{\omega C}\quad\Longrightarrow\quad \omega_0 = \frac{1}{\sqrt{LC}}$$</p>
+<p>There, the coil and capacitor cancel each other exactly and the loop behaves as if only the resistor were there. Current is at its maximum, and since loudness is proportional to $V_R = RI$, the speaker is at its loudest. The amplitude of $V_R$ relative to $V$ is</p>
+<p style="text-align:center">$$\left|\frac{V_R}{V}\right| = \frac{R}{\sqrt{R^2 + \left(\omega L - \frac{1}{\omega C}\right)^2}}$$</p>
+<p>which equals 1 at $\omega_0$ and falls off on both sides &mdash; a band-pass filter.</p>
+
+<h3>Tuning</h3>
+<p>The antenna receives every broadcaster in town simultaneously, superimposed. Only the frequencies near $\omega_0$ produce appreciable current. Turning the tuning knob is physically turning a variable capacitor, moving $\omega_0$ onto the station you want. With $L = 250\ \mu\text{H}$ and $C = 100\ \text{pF}$, $\omega_0 = 1/\sqrt{LC} \approx 6.3\times10^{6}$ rad/s, i.e. about 1007 kHz &mdash; a normal AM dial position.</p>
+
+<h3>Sharpness</h3>
+<p>How narrow the peak is depends on $Q = \frac{1}{R}\sqrt{L/C}$. Large $Q$ (small $R$) means sharp selectivity &mdash; neighbouring stations are rejected &mdash; but also a long ringing transient, which smears fast changes in the signal. In oscillator language, high $Q$ is lightly damped. The engineering trade-off and the ODE trade-off are literally the same trade-off.</p>
+</div>
+
+</div>
+<div class="hidden" id="derive-src">
+
+<!-- ---------------- TRACK R ---------------- -->
+<div data-track="R" data-title="the speaker voltage &mdash; the version worked in the textbook">
+  <div class="step">
+    <p class="why">Start where all three derivations start: the loop law. Gain at the antenna equals the sum of the drops.</p>
+    <p>$$V = V_L + V_R + V_C$$</p>
+    <p class="why">Right now this has three unknown voltages in it. The definitions of the components will let us write all of them in terms of the single current $I$.</p>
+  </div>
+  <div class="step">
+    <p class="why">The three defining relations. Notice the derivative in the capacitor one &mdash; that is the awkward term.</p>
+    <p>$$V_L = L\dot I,\qquad V_R = R I,\qquad C\dot V_C = I$$</p>
+    <p class="why">Two of these give a voltage directly. The third gives the <em>derivative</em> of a voltage. So substituting straight into the loop law would leave an integral behind.</p>
+  </div>
+  <div class="step">
+    <p class="why">Fix that by differentiating the whole loop law once. Now every term is a voltage <em>rate</em>, and $\dot V_C$ is something we have a formula for.</p>
+    <p>$$\dot V = \dot V_L + \dot V_R + \dot V_C$$</p>
+  </div>
+  <div class="step">
+    <p class="why">Substitute: $\dot V_L = L\ddot I$, $\;\dot V_R = R\dot I$, $\;\dot V_C = I/C$. Everything is now in terms of $I$ alone.</p>
+    <p>$$\dot V = L\ddot I + R\dot I + \tfrac{1}{C} I$$</p>
+    <p class="why">This is already a perfectly good ODE &mdash; for the current. But the question asked about the speaker, so keep going.</p>
+  </div>
+  <div class="step">
+    <p class="why">We want $V_R$, and $V_R = RI$. Multiplying every term by $R$ makes each $I$ appear as $RI$.</p>
+    <p>$$R\dot V = L\,(R\ddot I) + R\,(R\dot I) + \tfrac{1}{C}(R I)$$</p>
+  </div>
+  <div class="step">
+    <p class="why">Now read off the substitutions: $RI = V_R$, and differentiating that, $R\dot I = \dot V_R$ and $R\ddot I = \ddot V_R$.</p>
+    <p>$$L\ddot V_R + R\dot V_R + \tfrac{1}{C} V_R = R\dot V$$</p>
+    <p class="why">Standard form: response on the left, input on the right. In operator notation the right side is $RD\,V$.</p>
+  </div>
+</div>
+
+<!-- ---------------- TRACK L ---------------- -->
+<div data-track="L" data-title="the coil voltage &mdash; first homework box">
+  <div class="step">
+    <p class="why">Same starting point, then differentiate once, exactly as before.</p>
+    <p>$$\dot V_L + \dot V_R + \dot V_C = \dot V$$</p>
+    <p class="why">Our target is $V_L = L\dot I$, so somewhere a factor of $L$ has to appear on every term. Put it there now.</p>
+  </div>
+  <div class="step">
+    <p class="why">Multiply both sides by $L$.</p>
+    <p>$$L\dot V_L + L\dot V_R + L\dot V_C = L\dot V$$</p>
+  </div>
+  <div class="step">
+    <p class="why">Substitute the two easy ones: $\dot V_R = R\dot I$ and $\dot V_C = I/C$.</p>
+    <p>$$L\dot V_L + LR\dot I + L\tfrac{1}{C} I = L\dot V$$</p>
+    <p class="why">Look at the last two terms. We need them to become $V_L$ and $\dot V_L$, but $V_L = L\dot I$ &mdash; and the terms here contain $I$ and $\dot I$, one derivative short. So differentiate again.</p>
+  </div>
+  <div class="step">
+    <p class="why">Differentiate every term once more.</p>
+    <p>$$L\ddot V_L + LR\ddot I + L\tfrac{1}{C}\dot I = L\ddot V$$</p>
+  </div>
+  <div class="step">
+    <p class="why">Now the substitutions land exactly. Since $V_L = L\dot I$, we also have $\dot V_L = L\ddot I$. Group the constants so the $L$ sits next to the $I$-derivative:</p>
+    <p>$$LR\ddot I = R\,(L\ddot I) = R\,\dot V_L,\qquad \tfrac{L}{C}\dot I = \tfrac{1}{C}(L\dot I) = \tfrac{1}{C} V_L$$</p>
+  </div>
+  <div class="step">
+    <p class="why">Put them back in:</p>
+    <p>$$L\ddot V_L + R\dot V_L + \tfrac{1}{C} V_L = L\ddot V$$</p>
+    <p class="why">So the boxes are: coefficient of $\dot V_L$ is <b>R</b>, coefficient of $V_L$ is <b>1/C</b>, and the operator acting on $V$ is <b>L*D^2</b>.</p>
+  </div>
+</div>
+
+<!-- ---------------- TRACK C ---------------- -->
+<div data-track="C" data-title="the capacitor voltage &mdash; second homework box, shortest route">
+  <div class="step">
+    <p class="why">This time do <em>not</em> differentiate first. Start from the plain loop law.</p>
+    <p>$$V_L + V_R + V_C = V$$</p>
+    <p class="why">Reason: $V_C$ already sits one derivative <em>behind</em> $I$, so the substitutions will supply the derivatives for free.</p>
+  </div>
+  <div class="step">
+    <p class="why">Our target carries the constant $1/C$ (from $\dot V_C = I/C$), so multiply through by $1/C$.</p>
+    <p>$$\tfrac{V_L}{C} + \tfrac{V_R}{C} + \tfrac{V_C}{C} = \tfrac{1}{C}V$$</p>
+  </div>
+  <div class="step">
+    <p class="why">Substitute $V_L = L\dot I$ and $V_R = RI$.</p>
+    <p>$$L\tfrac{\dot I}{C} + R\tfrac{I}{C} + \tfrac{1}{C}V_C = \tfrac{1}{C}V$$</p>
+  </div>
+  <div class="step">
+    <p class="why">Here is the payoff. The capacitor law says $I/C = \dot V_C$; differentiating it gives $\dot I / C = \ddot V_C$. Both pieces are already sitting there.</p>
+    <p>$$\tfrac{I}{C} = \dot V_C,\qquad \tfrac{\dot I}{C} = \ddot V_C$$</p>
+  </div>
+  <div class="step">
+    <p class="why">Substitute and you are done &mdash; no second differentiation needed anywhere.</p>
+    <p>$$L\ddot V_C + R\dot V_C + \tfrac{1}{C} V_C = \tfrac{1}{C} V$$</p>
+    <p class="why">Boxes: <b>R</b>, <b>1/C</b>, and the right-hand side <b>1/C</b> times $V$ &mdash; no derivative on the input at all.</p>
+  </div>
+</div>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const COL = {src:'#e0832f', res:'#1a9a8f', ind:'#3a63cf', cap:'#c03a52', cur:'#8a56c9',
+             ink:'#1e2340', muted:'#666e94', line:'#dde3f3', act:'#6d5cbe'};
+const fmt = (x,d=2) => (Math.abs(x)<5e-4?0:x).toFixed(d);
+
+/* ---------- canvas helper ---------- */
+function setup(cv){
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  const r = cv.getBoundingClientRect();
+  const w = Math.max(60, Math.round(r.width)), h = Math.max(60, Math.round(r.height));
+  if(cv.width !== w*dpr || cv.height !== h*dpr){ cv.width = w*dpr; cv.height = h*dpr; }
+  const g = cv.getContext('2d');
+  g.setTransform(dpr,0,0,dpr,0,0);
+  g.clearRect(0,0,w,h);
+  return {g,w,h};
+}
+function axes(g,x0,y0,w,h,yMax,label){
+  g.strokeStyle=COL.line; g.lineWidth=1;
+  g.beginPath(); g.moveTo(x0,y0+h/2); g.lineTo(x0+w,y0+h/2); g.stroke();
+  g.beginPath(); g.moveTo(x0,y0); g.lineTo(x0,y0+h); g.stroke();
+  if(label){ g.fillStyle=COL.muted; g.font='11px ui-sans-serif,system-ui'; g.fillText(label,x0+5,y0+11); }
+}
+
+/* ================= TABS ================= */
+const views = {};
+$$('.view').forEach(v => views[v.dataset.view]=v);
+let current = 'defs';
+$$('#tabs button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    $$('#tabs button').forEach(x=>x.setAttribute('aria-selected', x===b?'true':'false'));
+    Object.values(views).forEach(v=>v.classList.remove('on'));
+    views[b.dataset.view].classList.add('on');
+    current = b.dataset.view;
+    closeOverlay();
+    requestAnimationFrame(()=>{ resizeAll(); });
+  });
+});
+
+/* ================= FLOATING EXPLANATION ================= */
+const overlay = $('#overlay');
+function openOverlay(){
+  const src = ESRC['src-'+current];
+  if(!src) return;
+  $('#o_title').innerHTML = src.title || 'Walk-through';
+  $('#o_body').innerHTML = src.html;
+  overlay.classList.add('on');
+  if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([$('#o_body')]);
+}
+function closeOverlay(){ overlay.classList.remove('on'); }
+$('#explainBtn').addEventListener('click', ()=> overlay.classList.contains('on')?closeOverlay():openOverlay());
+$('#o_close').addEventListener('click', closeOverlay);
+$('#o_newtab').addEventListener('click', ()=>{
+  const src = ESRC['src-'+current];
+  const css = '<style>body{font-family:Georgia,serif;max-width:44em;margin:3em auto;padding:0 1.4em;'
+    +'line-height:1.65;color:#1e2340;background:#fbfaff}h1{font-size:1.4em}h3{margin:1.4em 0 .3em}'
+    +'.note{background:#f3f1ff;border-left:3px solid #6d5cbe;padding:.7em 1em;border-radius:0 8px 8px 0}'
+    +'.tag{font-family:system-ui;font-size:.75em;border:1px solid #ddd;border-radius:5px;padding:1px 5px}</style>';
+  const mj = '<script>window.MathJax={tex:{inlineMath:[["$","$"]],displayMath:[["$$","$$"]]}};<'+'/script>'
+    +'<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async><'+'/script>';
+  const doc = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+src.title
+    +'</title>'+css+mj+'</head><body><h1>'+src.title+'</h1>'+src.html+'</body></html>';
+  const url = URL.createObjectURL(new Blob([doc],{type:'text/html'}));
+  window.open(url,'_blank');
+  closeOverlay();
+});
+
+/* ================= VIEW 1: PARTS ================= */
+const P = {w:2,R:1,L:1,C:1,t:0};
+['w','R','L','C'].forEach(k=>{
+  const el = $('#p_'+k);
+  el.addEventListener('input',()=>{ P[k]=+el.value; drawParts(); });
+});
+function partsLabels(){
+  $('#p_wv').textContent = fmt(P.w,2)+' rad/s';
+  $('#p_Rv').textContent = fmt(P.R,2)+' \u03A9';
+  $('#p_Lv').textContent = fmt(P.L,2)+' H';
+  $('#p_Cv').textContent = fmt(P.C,2)+' F';
+}
+function drawParts(){
+  partsLabels();
+  const cv = $('#partsCanvas'); const {g,w,h} = setup(cv);
+  const padL = 54, padR = 10, padT = 6, padB = 6;
+  const rowH = (h-padT-padB)/3, plotW = w-padL-padR;
+  const peakR = P.R, peakL = P.w*P.L, peakC = 1/(P.w*P.C);
+  const yMax = Math.max(peakR, peakL, peakC, 1.2)*1.12;
+  const Tend = 10, N = 260;
+  const rows = [
+    {name:'resistor', sym:'V_R = R I', col:COL.res, peak:peakR,
+     f:t=>P.R*Math.cos(P.w*t), note:'in step with the current'},
+    {name:'inductor', sym:'V_L = L dI/dt', col:COL.ind, peak:peakL,
+     f:t=>-P.L*P.w*Math.sin(P.w*t), note:'peaks a quarter cycle early'},
+    {name:'capacitor', sym:'V_C = (1/C) \u222B I dt', col:COL.cap, peak:peakC,
+     f:t=>Math.sin(P.w*t)/(P.C*P.w), note:'peaks a quarter cycle late'}
+  ];
+  rows.forEach((r,i)=>{
+    const y0 = padT + i*rowH, mid = y0 + rowH/2;
+    const sc = (rowH/2-8)/yMax;
+    axes(g,padL,y0,plotW,rowH,yMax,'');
+    // current (shared)
+    g.strokeStyle = COL.cur; g.lineWidth = 1.4; g.setLineDash([4,3]); g.beginPath();
+    for(let k=0;k<=N;k++){ const t=Tend*k/N, x=padL+plotW*k/N, y=mid-Math.cos(P.w*t)*sc;
+      k?g.lineTo(x,y):g.moveTo(x,y); }
+    g.stroke(); g.setLineDash([]);
+    // voltage
+    g.strokeStyle = r.col; g.lineWidth = 2.4; g.beginPath();
+    for(let k=0;k<=N;k++){ const t=Tend*k/N, x=padL+plotW*k/N, y=mid-r.f(t)*sc;
+      k?g.lineTo(x,y):g.moveTo(x,y); }
+    g.stroke();
+    // moving cursor
+    const tc = P.t % Tend, xc = padL+plotW*tc/Tend;
+    g.strokeStyle='rgba(109,92,190,.35)'; g.lineWidth=1; g.beginPath();
+    g.moveTo(xc,y0+2); g.lineTo(xc,y0+rowH-2); g.stroke();
+    g.fillStyle=r.col; g.beginPath(); g.arc(xc, mid-r.f(tc)*sc, 4, 0, 7); g.fill();
+    g.fillStyle=COL.cur; g.beginPath(); g.arc(xc, mid-Math.cos(P.w*tc)*sc, 3, 0, 7); g.fill();
+    // labels
+    g.fillStyle=r.col; g.font='600 12px ui-sans-serif,system-ui'; g.fillText(r.name, 4, mid-6);
+    g.fillStyle=COL.muted; g.font='10.5px ui-sans-serif,system-ui';
+    g.fillText('peak '+fmt(r.peak,2), 4, mid+9);
+    g.fillText(r.note, padL+6, y0+12);
+  });
+  // panel
+  const tc = P.t % Tend, I = Math.cos(P.w*tc);
+  $('#partsCalc').innerHTML =
+   blk('cI','I(t)','cos(\u03C9t) = cos('+fmt(P.w,2)+'\u00D7'+fmt(tc,2)+')', I, 'A')
+  +blk('cR','V<sub>R</sub>','R \u00D7 I = '+fmt(P.R,2)+' \u00D7 '+fmt(I,3), P.R*I, 'V')
+  +blk('cL','V<sub>L</sub>','L \u00D7 dI/dt = '+fmt(P.L,2)+' \u00D7 ('+fmt(-P.w*Math.sin(P.w*tc),3)+')', -P.L*P.w*Math.sin(P.w*tc), 'V')
+  +blk('cC','V<sub>C</sub>','(1/C) \u00D7 \u222BI dt = (1/'+fmt(P.C,2)+') \u00D7 '+fmt(Math.sin(P.w*tc)/P.w,3), Math.sin(P.w*tc)/(P.C*P.w), 'V')
+  +'<div class="blk"><div class="nm">peak heights</div><div class="work">R = '+fmt(P.R,2)
+   +' &nbsp;|&nbsp; \u03C9L = '+fmt(P.w*P.L,2)+' &nbsp;|&nbsp; 1/(\u03C9C) = '+fmt(1/(P.w*P.C),2)
+   +'</div><div class="work">The coil and the capacitor trade places as \u03C9 changes. They match at \u03C9 = 1/\u221A(LC) = '
+   +fmt(1/Math.sqrt(P.L*P.C),2)+' rad/s.</div></div>';
+}
+function blk(cls,name,work,val,unit){
+  return '<div class="blk"><div class="nm"><span class="swatch '+cls+'"></span>'+name
+    +' <span class="val">= '+fmt(val,3)+' '+unit+'</span></div><div class="work">'+work+'</div></div>';
+}
+
+/* ================= VIEW 2: CIRCUIT ================= */
+const S = {R:0.6,L:1,C:0.25,w:2,A:1, I:0, Vc:0, t:0, phase:0, lastRec:-1, hist:[]};
+['R','L','C','w','A'].forEach(k=>{
+  const el = $('#c_'+k);
+  el.addEventListener('input',()=>{ S[k]=+el.value; circLabels(); });
+});
+function circLabels(){
+  $('#c_Rv').textContent = fmt(S.R,2)+' \u03A9';
+  $('#c_Lv').textContent = fmt(S.L,2)+' H';
+  $('#c_Cv').textContent = fmt(S.C,2)+' F';
+  $('#c_wv').textContent = fmt(S.w,2)+' rad/s';
+  $('#c_Av').textContent = fmt(S.A,1)+' V';
+  const w0 = 1/Math.sqrt(S.L*S.C);
+  $('#c_res').innerHTML = 'resonance at \u03C9\u2080 = 1/\u221A(LC) = <b>'+fmt(w0,2)+'</b> rad/s';
+}
+$('#c_reset').addEventListener('click',()=>{ S.I=0;S.Vc=0;S.t=0;S.lastRec=-1;S.hist=[]; });
+$('#c_tune').addEventListener('click',()=>{
+  S.w = Math.min(6, Math.max(0.1, 1/Math.sqrt(S.L*S.C)));
+  $('#c_w').value = S.w; circLabels(); S.hist=[];
+});
+function deriv(I,Vc,t){
+  const V = S.A*Math.cos(S.w*t);
+  return [ (V - S.R*I - Vc)/S.L, I/S.C ];
+}
+function stepSim(dt){
+  const [k1a,k1b] = deriv(S.I, S.Vc, S.t);
+  const [k2a,k2b] = deriv(S.I+dt/2*k1a, S.Vc+dt/2*k1b, S.t+dt/2);
+  const [k3a,k3b] = deriv(S.I+dt/2*k2a, S.Vc+dt/2*k2b, S.t+dt/2);
+  const [k4a,k4b] = deriv(S.I+dt*k3a,  S.Vc+dt*k3b,  S.t+dt);
+  S.I  += dt/6*(k1a+2*k2a+2*k3a+k4a);
+  S.Vc += dt/6*(k1b+2*k2b+2*k3b+k4b);
+  S.t  += dt;
+}
+function record(push){
+  const V = S.A*Math.cos(S.w*S.t), VR = S.R*S.I, VL = V - VR - S.Vc;
+  if(push && S.t - S.lastRec >= 0.008){
+    S.lastRec = S.t;
+    S.hist.push([S.t,V,VR,VL,S.Vc]);
+    while(S.hist.length && S.hist[0][0] < S.t-13) S.hist.shift();
+  }
+  return {V,VR,VL,VC:S.Vc};
+}
+function drawCircuit(v){
+  const cv = $('#circCanvas'); const {g,w,h} = setup(cv);
+  const s = Math.min(w/310, h/265); const ox = (w-310*s)/2, oy = (h-265*s)/2;
+  g.save(); g.translate(ox,oy); g.scale(s,s);
+  const L=75,Rr=255,T=55,B=215;
+  g.lineCap='round'; g.lineJoin='round';
+  g.strokeStyle='#2a2f4d'; g.lineWidth=2;
+  // wires with gaps
+  g.beginPath();
+  g.moveTo(L,B); g.lineTo(L,152);            // bottom-left up to source
+  g.moveTo(L,108); g.lineTo(L,T);            // source up to corner
+  g.lineTo(135,T);                            // top to resistor
+  g.moveTo(195,T); g.lineTo(Rr,T);           // resistor to corner
+  g.lineTo(Rr,105);                           // down to coil
+  g.moveTo(Rr,165); g.lineTo(Rr,B);          // coil to corner
+  g.lineTo(168,B);                            // bottom to cap
+  g.moveTo(152,B); g.lineTo(L,B);
+  g.stroke();
+  // resistor zigzag
+  g.strokeStyle=COL.res; g.lineWidth=2.4; g.beginPath();
+  const zx=135, zw=60, n=7; g.moveTo(zx,T);
+  for(let i=0;i<n;i++){ g.lineTo(zx+zw*(i+0.5)/n, T + (i%2?9:-9)); }
+  g.lineTo(zx+zw,T); g.stroke();
+  // inductor coils
+  g.strokeStyle=COL.ind; g.beginPath();
+  for(let i=0;i<4;i++){ g.arc(Rr, 117+i*15, 8, -Math.PI/2, Math.PI/2); }
+  g.stroke();
+  // capacitor plates
+  g.strokeStyle=COL.cap; g.lineWidth=2.8; g.beginPath();
+  g.moveTo(152,B-12); g.lineTo(152,B+12); g.moveTo(168,B-12); g.lineTo(168,B+12); g.stroke();
+  // source
+  g.fillStyle='#dff0fa'; g.strokeStyle=COL.src; g.lineWidth=2.2;
+  g.beginPath(); g.arc(L,130,22,0,7); g.fill(); g.stroke();
+  g.fillStyle=COL.src; g.font='italic 600 13px Georgia,serif'; g.textAlign='center';
+  g.fillText('V(t)',L,135);
+  // current arrow
+  const dir = S.I>=0?1:-1;
+  g.strokeStyle=COL.cur; g.lineWidth=2; g.beginPath();
+  g.moveTo(46,145); g.lineTo(46,105); g.stroke();
+  g.beginPath();
+  if(dir>0){ g.moveTo(41,112); g.lineTo(46,103); g.lineTo(51,112); }
+  else { g.moveTo(41,138); g.lineTo(46,147); g.lineTo(51,138); }
+  g.stroke();
+  g.fillStyle=COL.cur; g.font='italic 600 13px Georgia,serif'; g.textAlign='right';
+  g.fillText('I',40,130);
+  // moving charge dots
+  const pts=[[L,B],[L,T],[Rr,T],[Rr,B],[L,B]];
+  const segs=[], lens=[]; let tot=0;
+  for(let i=0;i<pts.length-1;i++){ const dx=pts[i+1][0]-pts[i][0], dy=pts[i+1][1]-pts[i][1];
+    const l=Math.hypot(dx,dy); segs.push([pts[i],dx/l,dy/l,l]); lens.push(tot); tot+=l; }
+  const nd=26;
+  g.fillStyle=COL.cur;
+  for(let i=0;i<nd;i++){
+    let d=((i/nd)*tot + S.phase) % tot; if(d<0) d+=tot;
+    let si=0; while(si<segs.length-1 && d>lens[si]+segs[si][3]) si++;
+    const [p0,ux,uy] = segs[si]; const dd = d-lens[si];
+    const r = 1.6+2.6*Math.min(1,Math.abs(S.I)/1.4);
+    g.globalAlpha = 0.25+0.6*Math.min(1,Math.abs(S.I)/1.4);
+    g.beginPath(); g.arc(p0[0]+ux*dd, p0[1]+uy*dd, r, 0, 7); g.fill();
+  }
+  g.globalAlpha=1;
+  // component labels with live values
+  g.textAlign='center'; g.font='italic 600 13px Georgia,serif';
+  g.fillStyle=COL.res; g.fillText('R',165,T-16);
+  g.fillStyle=COL.ind; g.fillText('L',Rr+22,148);
+  g.fillStyle=COL.cap; g.fillText('C',160,B+30);
+  g.font='11px ui-sans-serif,system-ui';
+  g.fillStyle=COL.res; g.fillText(fmt(v.VR,2)+' V',165,T-30);
+  g.textAlign='left'; g.fillStyle=COL.ind; g.fillText(fmt(v.VL,2)+' V',Rr+14,164);
+  g.textAlign='center'; g.fillStyle=COL.cap; g.fillText(fmt(v.VC,2)+' V',160,B+44);
+  g.fillStyle=COL.src; g.fillText(fmt(v.V,2)+' V',L,172);
+  g.restore();
+}
+function drawTrace(v){
+  const cv = $('#traceCanvas'); const {g,w,h} = setup(cv);
+  const padL=34,padR=8,padT=18,padB=16;
+  const pw=w-padL-padR, ph=h-padT-padB;
+  let mx=0.6; for(const r of S.hist) for(let i=1;i<5;i++) mx=Math.max(mx,Math.abs(r[i]));
+  mx*=1.1;
+  const mid=padT+ph/2, sc=(ph/2)/mx;
+  g.strokeStyle=COL.line; g.lineWidth=1;
+  g.beginPath(); g.moveTo(padL,mid); g.lineTo(padL+pw,mid); g.stroke();
+  g.beginPath(); g.moveTo(padL,padT); g.lineTo(padL,padT+ph); g.stroke();
+  g.fillStyle=COL.muted; g.font='10px ui-sans-serif,system-ui'; g.textAlign='right';
+  g.fillText(fmt(mx,1),padL-4,padT+8); g.fillText('0',padL-4,mid+3);
+  g.fillText('-'+fmt(mx,1),padL-4,padT+ph);
+  g.textAlign='left';
+  const W=12; let t1,t0;
+  if(S.t < W){ t0=0; t1=W; } else { t1=S.t; t0=t1-W; }
+  const series=[[1,COL.src,'V'],[2,COL.res,'V_R'],[3,COL.ind,'V_L'],[4,COL.cap,'V_C']];
+  series.forEach(([idx,col],si)=>{
+    g.strokeStyle=col; g.lineWidth= idx===2?2.4:1.5; g.globalAlpha= idx===2?1:0.8;
+    g.beginPath(); let started=false;
+    for(const r of S.hist){ const x=padL+pw*(r[0]-t0)/(t1-t0), y=mid-r[idx]*sc;
+      started?g.lineTo(x,y):(g.moveTo(x,y),started=true); }
+    g.stroke(); g.globalAlpha=1;
+  });
+  // legend
+  g.font='10.5px ui-sans-serif,system-ui'; let lx=padL+4;
+  [['V',COL.src],['V_R (speaker)',COL.res],['V_L',COL.ind],['V_C',COL.cap]].forEach(([t,c])=>{
+    g.fillStyle=c; g.fillRect(lx,padT-12,8,3); g.fillText(t,lx+11,padT-8);
+    lx += g.measureText(t).width+26;
+  });
+  g.fillStyle=COL.muted; g.textAlign='right';
+  g.fillText('last '+W+' s', w-padR, h-3);
+}
+function circPanel(v){
+  const V=v.V, dI=(V - S.R*S.I - S.Vc)/S.L;
+  const sum = v.VL+v.VR+v.VC;
+  $('#circCalc').innerHTML =
+   '<div class="blk"><div class="nm">time <span class="val">t = '+fmt(S.t, SPD.rate<0.05?4:2)+' s</span></div></div>'
+  +blk('cS','V(t)','A cos(\u03C9t) = '+fmt(S.A,1)+' \u00D7 cos('+fmt(S.w,2)+'\u00D7'+fmt(S.t,2)+')', V,'V')
+  +blk('cI','I(t)','integrated state variable', S.I,'A')
+  +blk('cR','V<sub>R</sub>','R \u00D7 I = '+fmt(S.R,2)+' \u00D7 '+fmt(S.I,3), v.VR,'V')
+  +blk('cC','V<sub>C</sub>','integrated state variable (dV<sub>C</sub>/dt = I/C = '+fmt(S.I/S.C,3)+' V/s)', v.VC,'V')
+  +'<div class="blk"><div class="nm"><span class="swatch cI"></span>dI/dt <span class="val">= '+fmt(dI,3)+' A/s</span></div>'
+  +'<div class="work">(V \u2212 V<sub>R</sub> \u2212 V<sub>C</sub>)/L = ('+fmt(V,2)+' \u2212 '+fmt(v.VR,2)+' \u2212 '+fmt(v.VC,2)+') / '+fmt(S.L,2)+'</div></div>'
+  +blk('cL','V<sub>L</sub>','L \u00D7 dI/dt = '+fmt(S.L,2)+' \u00D7 '+fmt(dI,3), v.VL,'V')
+  +'<div class="blk"><div class="nm">Kirchhoff check</div><div class="work">V<sub>L</sub> + V<sub>R</sub> + V<sub>C</sub> = '
+  +fmt(v.VL,3)+' + '+fmt(v.VR,3)+' + '+fmt(v.VC,3)+' = <b>'+fmt(sum,3)+'</b> &nbsp;vs&nbsp; V = <b>'+fmt(V,3)+'</b></div></div>'
+  +'<div class="blk"><div class="nm">the ODE this obeys</div><div class="work">L V\u0308<sub>R</sub> + R V\u0307<sub>R</sub> + (1/C) V<sub>R</sub> = R V\u0307<br>'
+  +fmt(S.L,2)+' V\u0308<sub>R</sub> + '+fmt(S.R,2)+' V\u0307<sub>R</sub> + '+fmt(1/S.C,2)+' V<sub>R</sub> = '+fmt(S.R,2)+' V\u0307</div></div>';
+}
+
+/* ================= VIEW 3: DERIVATION ================= */
+const DEFS = {};
+const tracks = {};
+$$('#derive-src > div[data-track]').forEach(d=>{
+  tracks[d.dataset.track] = {title:d.dataset.title,
+    steps:Array.from(d.querySelectorAll('.step')).map(s=>s.outerHTML)};
+});
+const ESRC = {};
+$$('div[id^="src-"]').forEach(d=>{ ESRC[d.id] = {title:d.dataset.title, html:d.innerHTML}; });
+$$('div[id^="def-"]').forEach(d=>{ DEFS[d.id] = {title:d.dataset.title, html:d.innerHTML}; });
+$$('.hidden').forEach(d=>d.remove());
+let curTrack='R', curStep=0;
+function renderDerive(){
+  const tr = tracks[curTrack];
+  $('#d_title').innerHTML = tr.title;
+  const host = $('#d_steps');
+  host.innerHTML = tr.steps.slice(0, curStep+1).join('');
+  Array.from(host.children).forEach(c=>c.classList.add('on'));
+  const dots = $('#d_dots'); dots.innerHTML='';
+  tr.steps.forEach((_,i)=>{
+    const b=document.createElement('button'); b.className='dot';
+    b.setAttribute('aria-current', i===curStep?'true':'false');
+    b.setAttribute('aria-label','step '+(i+1));
+    b.addEventListener('click',()=>{curStep=i;renderDerive();});
+    dots.appendChild(b);
+  });
+  $('#d_next').textContent = curStep>=tr.steps.length-1 ? 'Start over' : 'Next step';
+  if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([host]);
+}
+window.addEventListener('load',()=>{ setTimeout(renderDerive, 400); });
+$$('.view[data-view="derive"] .pill[data-track]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    $$('.view[data-view="derive"] .pill[data-track]').forEach(x=>x.setAttribute('aria-pressed', x===b?'true':'false'));
+    curTrack=b.dataset.track; curStep=0; renderDerive();
+    $('.view[data-view="derive"] .scroll').scrollTop=0;
+  });
+});
+$('#d_next').addEventListener('click',()=>{
+  curStep = curStep>=tracks[curTrack].steps.length-1 ? 0 : curStep+1; renderDerive();
+});
+$('#d_prev').addEventListener('click',()=>{ curStep=Math.max(0,curStep-1); renderDerive(); });
+
+/* ================= VIEW 4: TUNING ================= */
+const T = {C:100, L:250, R:400};
+const STATIONS = [[620,'news'],[790,'talk'],[1010,'sport'],[1230,'jazz'],[1490,'rock']];
+['C','L','R'].forEach(k=>{
+  const el=$('#t_'+k); el.addEventListener('input',()=>{T[k]=+el.value; drawTune();});
+});
+function gainAt(fkHz){
+  const w = 2*Math.PI*fkHz*1000, L=T.L*1e-6, C=T.C*1e-12;
+  return T.R/Math.hypot(T.R, w*L - 1/(w*C));
+}
+function f0kHz(){ return 1/(2*Math.PI*Math.sqrt(T.L*1e-6*T.C*1e-12))/1000; }
+function drawTune(){
+  $('#t_Cv').textContent = T.C+' pF';
+  $('#t_Lv').textContent = T.L+' \u00B5H';
+  $('#t_Rv').textContent = T.R+' \u03A9';
+  const cv=$('#tuneCanvas'); const {g,w,h}=setup(cv);
+  const padL=40,padR=12,padT=18,padB=38;
+  const topH=(h-padT-padB)*0.62, gapH=14, botH=(h-padT-padB)-topH-gapH;
+  const pw=w-padL-padR;
+  const f1=520,f2=1720;
+  const X=f=>padL+pw*(f-f1)/(f2-f1);
+  // ---- top: gain curve ----
+  g.strokeStyle=COL.line; g.lineWidth=1;
+  g.beginPath(); g.moveTo(padL,padT); g.lineTo(padL,padT+topH); g.lineTo(padL+pw,padT+topH); g.stroke();
+  g.fillStyle=COL.muted; g.font='10px ui-sans-serif,system-ui'; g.textAlign='right';
+  g.fillText('1.0',padL-4,padT+6); g.fillText('0',padL-4,padT+topH);
+  g.textAlign='left'; g.fillText('loudness of the speaker, |V_R / V|',padL+6,padT+10);
+  g.strokeStyle=COL.res; g.lineWidth=2.4; g.beginPath();
+  for(let i=0;i<=400;i++){ const f=f1+(f2-f1)*i/400, x=X(f), y=padT+topH-gainAt(f)*topH;
+    i?g.lineTo(x,y):g.moveTo(x,y); }
+  g.stroke();
+  // stations
+  let best=null;
+  STATIONS.forEach(([f,nm])=>{ const gg=gainAt(f); if(!best||gg>best[1]) best=[f,gg,nm]; });
+  STATIONS.forEach(([f,nm])=>{
+    const gg=gainAt(f), x=X(f), y=padT+topH-gg*topH;
+    const hot = best && f===best[0] && gg>0.25;
+    g.strokeStyle = hot?COL.act:'#c3c9dd'; g.lineWidth= hot?2.5:1.4;
+    g.beginPath(); g.moveTo(x,padT+topH); g.lineTo(x,y); g.stroke();
+    g.fillStyle = hot?COL.act:'#c3c9dd'; g.beginPath(); g.arc(x,y,hot?4.5:3,0,7); g.fill();
+    g.textAlign='center'; g.font=(hot?'600 ':'')+'10px ui-sans-serif,system-ui';
+    g.fillStyle = hot?COL.act:COL.muted;
+    g.fillText(nm+' '+f, x, padT+topH+12);
+  });
+  // dial pointer
+  const fr=f0kHz();
+  if(fr>f1&&fr<f2){ const x=X(fr);
+    g.strokeStyle=COL.src; g.lineWidth=1.6; g.setLineDash([5,4]);
+    g.beginPath(); g.moveTo(x,padT); g.lineTo(x,padT+topH); g.stroke(); g.setLineDash([]);
+    g.fillStyle=COL.src; g.textAlign='center'; g.font='600 10.5px ui-sans-serif,system-ui';
+    g.fillText('dial: '+fmt(fr,0)+' kHz', x, padT-5);
+  }
+  // ---- bottom: reactances ----
+  const by=padT+topH+gapH+14;
+  g.strokeStyle=COL.line; g.lineWidth=1;
+  g.beginPath(); g.moveTo(padL,by); g.lineTo(padL,by+botH); g.lineTo(padL+pw,by+botH); g.stroke();
+  const yM = 2.8*Math.sqrt(T.L*1e-6/(T.C*1e-12));
+  const Y=v=>by+botH-Math.min(v,yM)/yM*botH;
+  [['ind',COL.ind,f=>2*Math.PI*f*1000*T.L*1e-6],
+   ['cap',COL.cap,f=>1/(2*Math.PI*f*1000*T.C*1e-12)],
+   ['res',COL.res,()=>T.R]].forEach(([k,c,fn])=>{
+    g.strokeStyle=c; g.lineWidth= k==='res'?1.4:2; g.beginPath();
+    for(let i=0;i<=300;i++){ const f=f1+(f2-f1)*i/300, x=X(f), y=Y(fn(f));
+      i?g.lineTo(x,y):g.moveTo(x,y); }
+    g.stroke();
+  });
+  g.fillStyle=COL.muted; g.font='10px ui-sans-serif,system-ui'; g.textAlign='left';
+  g.fillText('how hard each part is to push, in ohms',padL+6,by+11);
+  g.fillStyle=COL.ind; g.fillText('\u03C9L',padL+pw-58,by+24);
+  g.fillStyle=COL.cap; g.fillText('1/\u03C9C',padL+pw-28,by+24);
+  if(fr>f1&&fr<f2){ const x=X(fr);
+    g.strokeStyle=COL.src; g.setLineDash([5,4]); g.lineWidth=1.4;
+    g.beginPath(); g.moveTo(x,by); g.lineTo(x,by+botH); g.stroke(); g.setLineDash([]);
+    g.fillStyle=COL.src; g.textAlign='center'; g.font='10px ui-sans-serif,system-ui';
+    g.fillText('they cross here', x, by+botH+13);
+  }
+  // panel
+  const w0=2*Math.PI*fr*1000, Q=(1/T.R)*Math.sqrt(T.L*1e-6/(T.C*1e-12));
+  const bw = fr/Q;
+  let rows='';
+  STATIONS.forEach(([f,nm])=>{
+    const gg=gainAt(f);
+    rows += '<div class="work">'+nm+' ('+f+' kHz): loudness '+(gg*100).toFixed(1)+'%'
+      + (best&&f===best[0]&&gg>0.25?' &larr; you are hearing this one':'')+'</div>';
+  });
+  $('#tuneCalc').innerHTML =
+   '<div class="blk"><div class="nm">tuned frequency <span class="val">'+fmt(fr,0)+' kHz</span></div>'
+   +'<div class="work">\u03C9\u2080 = 1/\u221A(LC) = 1/\u221A('+T.L+'e-6 \u00D7 '+T.C+'e-12) = '+w0.toExponential(3)+' rad/s</div>'
+   +'<div class="work">f\u2080 = \u03C9\u2080/2\u03C0 = '+fmt(fr,1)+' kHz</div></div>'
+  +'<div class="blk"><div class="nm">sharpness <span class="val">Q = '+fmt(Q,1)+'</span></div>'
+   +'<div class="work">Q = (1/R)\u221A(L/C) = (1/'+T.R+')\u00D7\u221A('+T.L+'e-6 / '+T.C+'e-12)</div>'
+   +'<div class="work">half-power width \u2248 f\u2080/Q = '+fmt(bw,1)+' kHz</div></div>'
+  +'<div class="blk"><div class="nm">what reaches the speaker</div>'+rows+'</div>';
+}
+
+
+/* ================= SPEED / PAUSE (shared by every animated tab) ================= */
+const SPD = {rate:1, paused:false};
+function fmtRate(r){
+  if(r >= 1) return r.toFixed(2)+'\u00D7 real time';
+  if(r >= 0.1) return (r*100).toFixed(0)+'% speed';
+  if(r >= 0.01) return (r*100).toFixed(1)+'% speed';
+  return (r*100).toFixed(2)+'% speed';
+}
+function syncSpeed(){
+  $$('.spd').forEach(el=>{ el.value = Math.log10(SPD.rate); });
+  $$('.spdv').forEach(o=>{ o.textContent = fmtRate(SPD.rate); });
+  $$('[data-play]').forEach(b=>{ b.textContent = SPD.paused ? 'Play' : 'Pause';
+    b.classList.toggle('primary', !SPD.paused); });
+  $$('[data-spd]').forEach(b=>{
+    b.setAttribute('aria-pressed', Math.abs(+b.dataset.spd - SPD.rate) < 1e-9 ? 'true':'false'); });
+}
+document.addEventListener('input', e=>{
+  if(e.target.classList && e.target.classList.contains('spd')){
+    SPD.rate = Math.pow(10, +e.target.value); syncSpeed();
+  }
+});
+document.addEventListener('click', e=>{
+  const b = e.target.closest && e.target.closest('[data-play],[data-spd]');
+  if(!b) return;
+  if(b.hasAttribute('data-play')) SPD.paused = !SPD.paused;
+  else { SPD.rate = +b.dataset.spd; }   // changing speed never resumes a paused animation
+  syncSpeed();
+});
+
+/* ================= VIEW 0: DEFINITIONS ================= */
+const D = {term:'charge', t:0, crossed:0, lastX:0};
+function renderDef(){
+  const d = DEFS['def-'+D.term]; if(!d) return;
+  $('#defTitle').textContent = d.title;
+  $('#defText').innerHTML = d.html;
+  $('#defHead').firstChild.nodeValue = DEFHEAD[D.term];
+  if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([$('#defText')]);
+}
+const DEFHEAD = {
+  charge:'Charge is the stuff \u2014 here it is sitting still',
+  current:'Current is that same stuff, moving',
+  voltage:'Voltage is height: one lift, three descents',
+  resistor:'The resistor answers the current instantly',
+  inductor:'The coil answers only when the current changes',
+  capacitor:'The capacitor answers to the running total'
+};
+$$('#defPills button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    $$('#defPills button').forEach(x=>x.setAttribute('aria-pressed', x===b?'true':'false'));
+    D.term = b.dataset.term; D.t = 0; D.crossed = 0; renderDef(); drawDef();
+    const sc = $('.view[data-view="defs"] .scroll'); if(sc) sc.scrollTop = 0;
+  });
+});
+let CURSC = 1;
+function stage(g,w,h,LW,LH){
+  const sc = Math.min(w/LW, h/LH, 2.3);
+  CURSC = sc;
+  g.save(); g.translate((w-LW*sc)/2, (h-LH*sc)/2); g.scale(sc,sc); return sc;
+}
+function cap(g,txt,x,y,col,size,align){
+  g.fillStyle = col||COL.muted; g.font = ((size||11)/CURSC)+'px ui-sans-serif,system-ui';
+  g.textAlign = align||'left'; g.fillText(txt,x,y);
+}
+function wireBox(g){
+  g.fillStyle='#f3f6fd'; g.strokeStyle='#c9d2ea'; g.lineWidth=1.4;
+  g.beginPath(); g.roundRect(28,74,284,58,10); g.fill(); g.stroke();
+  g.fillStyle='#cfd6ea';
+  for(let i=0;i<11;i++) for(let j=0;j<2;j++){
+    g.beginPath(); g.arc(45+i*24, 92+j*24, 3.2, 0, 7); g.fill();
+  }
+}
+function miniPlot(g,x,y,w,h,series,phase,note){
+  g.strokeStyle=COL.line; g.lineWidth=1;
+  g.beginPath(); g.moveTo(x,y+h/2); g.lineTo(x+w,y+h/2); g.stroke();
+  let mx=0.2; series.forEach(sr=>{ for(let k=0;k<=60;k++) mx=Math.max(mx,Math.abs(sr.f(k/60*Math.PI*4))); });
+  const sc=(h/2-4)/mx;
+  series.forEach(sr=>{
+    g.strokeStyle=sr.col; g.lineWidth=sr.lw||2; g.beginPath();
+    for(let k=0;k<=180;k++){ const u=k/180*Math.PI*4, px=x+w*k/180, py=y+h/2-sr.f(u)*sc;
+      k?g.lineTo(px,py):g.moveTo(px,py); }
+    g.stroke();
+  });
+  const u=((phase)%(Math.PI*4)+Math.PI*4)%(Math.PI*4), px=x+w*u/(Math.PI*4);
+  g.strokeStyle='rgba(109,92,190,.3)'; g.lineWidth=1;
+  g.beginPath(); g.moveTo(px,y); g.lineTo(px,y+h); g.stroke();
+  series.forEach(sr=>{ g.fillStyle=sr.col; g.beginPath(); g.arc(px, y+h/2-sr.f(u)*sc, 3.6,0,7); g.fill(); });
+  let lx=x+2;
+  series.forEach(sr=>{ g.fillStyle=sr.col; g.fillRect(lx,y-9,8,3);
+    cap(g,sr.name,lx+11,y-5,sr.col,10.5); lx+=g.measureText(sr.name).width+26; });
+  if(note) cap(g,note,x+w,y+h+12,COL.muted,10.5,'right');
+}
+function drawDef(){
+  const cv=$('#defCanvas'); const {g,w,h}=setup(cv);
+  const LW=340, LH=212; stage(g,w,h,LW,LH);
+  const t=D.t, W=1.6;
+  if(D.term==='charge'){
+    wireBox(g);
+    g.fillStyle=COL.cur;
+    for(let i=0;i<16;i++){
+      const bx=40+i*17.5, by=103+Math.sin(i*2.3)*14;
+      const jx=Math.sin(t*3+i)*1.8, jy=Math.cos(t*3.7+i*1.7)*1.8;
+      g.beginPath(); g.arc(bx+jx,by+jy,5,0,7); g.fill();
+      g.strokeStyle='#fff'; g.lineWidth=1.3;
+      g.beginPath(); g.moveTo(bx+jx-2.2,by+jy); g.lineTo(bx+jx+2.2,by+jy); g.stroke();
+    }
+    cap(g,'a copper wire, hugely magnified',28,64,COL.muted,11.5);
+    cap(g,'\u2014  mobile electrons (charge)',28,158,COL.cur,11.5);
+    cap(g,'\u2022  fixed metal ions, they never move',28,175,'#9aa4c4',11.5);
+    cap(g,'Q  \u00b7  coulombs  \u00b7  1 C \u2248 6.24 \u00d7 10\u00b9\u2078 electrons',28,196,COL.ink,13.5);
+    if(CURSC>1.45) cap(g,'no net motion here \u2014 that would be current',312,64,COL.muted,11,'right');
+  }
+  else if(D.term==='current'){
+    wireBox(g);
+    const v=26, span=284, x0=28;
+    g.fillStyle=COL.cur;
+    for(let i=0;i<16;i++){
+      let bx=((40+i*17.5 - x0 + v*t) % span + span) % span + x0;
+      const by=103+Math.sin(i*2.3)*14;
+      g.beginPath(); g.arc(bx,by,5,0,7); g.fill();
+      g.strokeStyle='#fff'; g.lineWidth=1.3;
+      g.beginPath(); g.moveTo(bx-2.2,by); g.lineTo(bx+2.2,by); g.stroke();
+    }
+    g.strokeStyle=COL.act; g.lineWidth=1.6; g.setLineDash([4,3]);
+    g.beginPath(); g.moveTo(196,66); g.lineTo(196,140); g.stroke(); g.setLineDash([]);
+    cap(g,'count what crosses this line',196,60,COL.act,11,'center');
+    g.strokeStyle=COL.cur; g.lineWidth=2;
+    g.beginPath(); g.moveTo(250,158); g.lineTo(292,158); g.moveTo(285,153); g.lineTo(292,158);
+    g.lineTo(285,163); g.stroke();
+    cap(g,'flow',250,152,COL.cur,11);
+    const n=Math.floor(v*t/17.5);
+    cap(g,'charges counted: '+n+'   over '+t.toFixed(1)+' s',28,158,COL.ink,13.5);
+    cap(g,'I = \u0394Q/\u0394t \u2248 '+(t>0.3?(n/t).toFixed(2):'\u2013')+' per second',28,176,COL.cur,13.5);
+    cap(g,'I  \u00b7  amperes  \u00b7  1 A = 1 coulomb every second',28,197,COL.ink,13.5);
+  }
+  else if(D.term==='voltage'){
+    const gy=[[40,176],[64,176],[64,54],[112,54],[112,96],[178,96],[178,128],[242,128],[242,176],[306,176]];
+    g.strokeStyle='#b9c2dd'; g.lineWidth=1; g.setLineDash([3,3]);
+    g.beginPath(); g.moveTo(28,176); g.lineTo(312,176); g.stroke();
+    g.beginPath(); g.moveTo(28,54); g.lineTo(312,54); g.stroke(); g.setLineDash([]);
+    cap(g,'high energy',28,50,COL.muted,10.5);
+    cap(g,'ground',28,188,COL.muted,10.5);
+    const segs=[[0,'#8f9ab8'],[1,COL.src],[2,'#8f9ab8'],[3,COL.res],[4,'#8f9ab8'],[5,COL.ind],[6,'#8f9ab8'],[7,COL.cap],[8,'#8f9ab8']];
+    segs.forEach(([i,c])=>{ g.strokeStyle=c; g.lineWidth=2.4; g.beginPath();
+      g.moveTo(gy[i][0],gy[i][1]); g.lineTo(gy[i+1][0],gy[i+1][1]); g.stroke(); });
+    cap(g,'gain V(t)',60,116,COL.src,11.5,'right');
+    cap(g,'drop V_R',118,77,COL.res,11.5);
+    cap(g,'drop V_L',184,114,COL.ind,11.5);
+    cap(g,'drop V_C',248,154,COL.cap,11.5);
+    let tot=0; const lens=[];
+    for(let i=0;i<gy.length-1;i++){ const l=Math.hypot(gy[i+1][0]-gy[i][0],gy[i+1][1]-gy[i][1]);
+      lens.push(tot); tot+=l; }
+    let dpos=(t*46)%tot; let si=0;
+    while(si<lens.length-1 && dpos>lens[si+1]) si++;
+    const seg=[gy[si],gy[si+1]], sl=Math.hypot(seg[1][0]-seg[0][0],seg[1][1]-seg[0][1]);
+    const u=(dpos-lens[si])/sl;
+    const px=seg[0][0]+(seg[1][0]-seg[0][0])*u, py=seg[0][1]+(seg[1][1]-seg[0][1])*u;
+    g.fillStyle=COL.cur; g.beginPath(); g.arc(px,py,6,0,7); g.fill();
+    g.strokeStyle='#fff'; g.lineWidth=1.4;
+    g.beginPath(); g.moveTo(px-2.6,py); g.lineTo(px+2.6,py); g.stroke();
+    cap(g,'height = voltage  \u00b7  volts = joules per coulomb',28,26,COL.ink,13.5);
+    cap(g,'one charge, carried once around the loop',28,40,COL.muted,11);
+    cap(g,'total climb = total descent    \u2192    V = V_L + V_R + V_C',312,196,COL.ink,12,'right');
+  }
+  else if(D.term==='resistor'){
+    g.fillStyle='#f3f6fd'; g.strokeStyle='#c9d2ea'; g.lineWidth=1.4;
+    g.beginPath();
+    g.moveTo(28,44); g.lineTo(126,44); g.quadraticCurveTo(160,44,160,62);
+    g.lineTo(180,62); g.quadraticCurveTo(180,44,214,44); g.lineTo(312,44);
+    g.lineTo(312,104); g.lineTo(214,104); g.quadraticCurveTo(180,104,180,86);
+    g.lineTo(160,86); g.quadraticCurveTo(160,104,126,104); g.lineTo(28,104); g.closePath();
+    g.fill(); g.stroke();
+    const I=Math.sin(W*t);
+    g.fillStyle=COL.cur;
+    for(let i=0;i<14;i++){
+      const ph=(i/14+ (Math.cos(W*t)-1)/(W)*0.09)%1;
+      const bx=32+((ph%1)+1)%1*276;
+      const narrow = bx>150&&bx<190;
+      const by=74+Math.sin(i*2.1+t)*(narrow?7:20);
+      g.globalAlpha=0.85; g.beginPath(); g.arc(bx,by,4,0,7); g.fill();
+    }
+    g.globalAlpha=1;
+    g.strokeStyle='#e6a06a'; g.lineWidth=1.6;
+    for(let k=0;k<3;k++){ g.beginPath();
+      for(let x=0;x<=26;x++) { const yy=30-k*0+Math.sin(x/3+t*4+k)*3;
+        x?g.lineTo(158+k*10+x*0.6, yy):g.moveTo(158+k*10, yy); }
+      g.stroke(); }
+    cap(g,'energy leaves here as heat \u2014 or, here, as sound',312,26,'#c07a3a',11,'right');
+    cap(g,'a narrow channel: the charges have to fight through',28,122,COL.muted,11);
+    miniPlot(g,40,150,250,44,[
+      {name:'I', col:COL.cur, f:u=>Math.sin(u), lw:1.6},
+      {name:'V_R = R I', col:COL.res, f:u=>1.4*Math.sin(u), lw:2.4}
+    ], W*t, 'exactly in step \u2014 no memory, no delay');
+  }
+  else if(D.term==='inductor'){
+    const I=Math.sin(W*t), dI=W*Math.cos(W*t);
+    const mag=Math.min(1,Math.abs(I));
+    for(let k=3;k>=1;k--){
+      g.strokeStyle='rgba(58,99,207,'+(0.07+0.13*mag)+')'; g.lineWidth=1.5;
+      g.beginPath(); g.ellipse(170,74,26+k*20,16+k*13,0,0,7); g.stroke();
+    }
+    g.strokeStyle='#2a2f4d'; g.lineWidth=2;
+    g.beginPath(); g.moveTo(40,74); g.lineTo(110,74); g.moveTo(230,74); g.lineTo(300,74); g.stroke();
+    g.strokeStyle=COL.ind; g.lineWidth=2.2; g.beginPath();
+    for(let i=0;i<5;i++) g.arc(118+i*24,74,12,Math.PI,0);
+    g.stroke();
+    const n=8;
+    for(let i=0;i<n;i++){
+      let x=40+(((i/n*260) + (1-Math.cos(W*t))/W*34)%260);
+      g.fillStyle=COL.cur; g.globalAlpha=0.3+0.6*Math.min(1,Math.abs(I)*1.4);
+      g.beginPath(); g.arc(40+((x-40)%260),74,3.4,0,7); g.fill();
+    }
+    g.globalAlpha=1;
+    cap(g,'magnetic field \u2014 grows and collapses with the current',170,24,COL.ind,11,'center');
+    cap(g,'field strength now: '+(Math.abs(I)*100).toFixed(0)+'%',170,116,COL.muted,11,'center');
+    miniPlot(g,40,150,250,44,[
+      {name:'I', col:COL.cur, f:u=>Math.sin(u), lw:1.6},
+      {name:'V_L = L dI/dt', col:COL.ind, f:u=>1.4*Math.cos(u), lw:2.4}
+    ], W*t, 'V_L is zero exactly where I is flat');
+  }
+  else if(D.term==='capacitor'){
+    const I=Math.sin(W*t), Vc=-Math.cos(W*t);
+    g.strokeStyle='#2a2f4d'; g.lineWidth=2;
+    g.beginPath(); g.moveTo(40,74); g.lineTo(150,74); g.moveTo(190,74); g.lineTo(300,74); g.stroke();
+    g.strokeStyle=COL.cap; g.lineWidth=2.6;
+    g.beginPath(); g.moveTo(150,40); g.lineTo(150,108); g.moveTo(190,40); g.lineTo(190,108); g.stroke();
+    const nl=Math.round(Math.abs(Vc)*6);
+    g.strokeStyle='rgba(192,58,82,.45)'; g.lineWidth=1.2;
+    for(let k=0;k<nl;k++){ const yy=46+k*(62/Math.max(1,nl-1||1));
+      g.beginPath(); g.moveTo(153,yy); g.lineTo(187,yy); g.stroke(); }
+    const q=Math.round(Math.abs(Vc)*6);
+    for(let k=0;k<q;k++){
+      const yy=48+k*10;
+      g.fillStyle = Vc>0?COL.cur:'#d98ba0';
+      g.beginPath(); g.arc(145,yy,3.6,0,7); g.fill();
+      g.fillStyle = Vc>0?'#d98ba0':COL.cur;
+      g.beginPath(); g.arc(195,yy,3.6,0,7); g.fill();
+    }
+    const n=7;
+    for(let i=0;i<n;i++){
+      let d=(((i/n*220) + (1-Math.cos(W*t))/W*30)%220+220)%220;
+      const x = d<110 ? 40+d : 190+(d-110);
+      g.fillStyle=COL.cur; g.globalAlpha=0.3+0.6*Math.min(1,Math.abs(I)*1.4);
+      g.beginPath(); g.arc(x,74,3.4,0,7); g.fill();
+    }
+    g.globalAlpha=1;
+    cap(g,'no charge crosses the gap \u2014 it piles up on the plates',170,24,COL.cap,11,'center');
+    cap(g,'stored charge now: '+(Math.abs(Vc)*100).toFixed(0)+'%   (Q = C V_C)',170,128,COL.muted,11,'center');
+    miniPlot(g,40,152,250,44,[
+      {name:'I', col:COL.cur, f:u=>Math.sin(u), lw:1.6},
+      {name:'V_C = (1/C)\u222BI dt', col:COL.cap, f:u=>-1.4*Math.cos(u), lw:2.4}
+    ], W*t, 'V_C is the running total of I');
+  }
+  g.restore();
+}
+
+/* ================= MAIN LOOP ================= */
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(0.05,(now-last)/1000); last=now;
+  const eff = SPD.paused ? 0 : dt*SPD.rate;
+  if(current==='defs'){ D.t += eff; drawDef(); }
+  else if(current==='parts'){ P.t += eff; drawParts(); }
+  else if(current==='circuit'){
+    if(eff > 0){
+      const n = Math.min(80, Math.max(2, Math.round(eff/0.0025)));
+      for(let i=0;i<n;i++){ stepSim(eff/n); record(true); }
+      S.phase = S.phase + S.I*eff*55;
+    }
+    const v = record(false);
+    drawCircuit(v); drawTrace(v); circPanel(v);
+  }
+  else if(current==='tune'){ /* static, redrawn on input */ }
+  requestAnimationFrame(frame);
+}
+function resizeAll(){
+  if(current==='defs') drawDef();
+  if(current==='parts') drawParts();
+  if(current==='tune') drawTune();
+}
+window.addEventListener('resize', ()=>requestAnimationFrame(resizeAll));
+window.addEventListener('orientationchange', ()=>setTimeout(resizeAll,250));
+
+partsLabels(); circLabels(); renderDerive(); renderDef(); syncSpeed(); drawParts(); drawTune(); drawDef();
+requestAnimationFrame(frame);
+})();
+</script>
+
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beats — an interactive companion</title>
+<style>
+:root{
+  --body:#E4E7EB;          /* instrument body */
+  --body-2:#D7DBE1;
+  --panel:#F5F6F8;
+  --screen:#FFFFFF;
+  --ink:#14171C;
+  --ink-2:#4E555F;
+  --rule:#BFC5CD;
+  --rule-2:#DDE1E6;
+  --green:#147A14;
+  --mag:#C2158C;
+  --blue:#1A1AD8;
+  --gray:#7A8089;
+  --sans: "Helvetica Neue", Helvetica, Arial, "Segoe UI", system-ui, sans-serif;
+  --serif: Charter, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--body);
+  color:var(--ink);
+  font-family:var(--serif);
+  font-size:17px;
+  line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:0 18px 80px}
+
+/* ---------- masthead ---------- */
+.masthead{padding:34px 0 18px;border-bottom:1px solid var(--rule)}
+.wordmark{
+  font-family:var(--sans);font-weight:700;font-size:13px;letter-spacing:.34em;
+  text-transform:uppercase;color:var(--mag);margin:0 0 10px
+}
+.masthead h1{
+  font-family:var(--serif);font-weight:400;font-size:clamp(28px,4.4vw,44px);
+  line-height:1.14;margin:0 0 10px;letter-spacing:-.01em
+}
+.masthead h1 em{font-style:italic;color:var(--mag)}
+.masthead p{margin:0;max-width:none;width:100%;color:var(--ink-2);font-size:16px;line-height:1.45}
+
+/* ---------- tabs ---------- */
+nav.tabs{
+  position:sticky;top:0;z-index:20;background:var(--body);
+  border-bottom:1px solid var(--rule);
+  display:flex;gap:2px;overflow-x:auto;scrollbar-width:thin;
+  margin-bottom:26px
+}
+nav.tabs button{
+  appearance:none;background:none;border:0;border-bottom:2px solid transparent;
+  font-family:var(--sans);font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;
+  font-weight:600;color:var(--ink-2);padding:13px 13px 10px;cursor:pointer;white-space:nowrap
+}
+nav.tabs button .idx{font-family:var(--mono);font-size:10px;color:var(--gray);margin-right:7px}
+nav.tabs button:hover{color:var(--ink)}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--mag)}
+nav.tabs button:focus-visible{outline:2px solid var(--mag);outline-offset:-2px}
+
+.tabpanel{display:none}
+.tabpanel.active{display:block;animation:fade .22s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---------- prose ---------- */
+h2.sec{
+  font-family:var(--sans);font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+  font-weight:700;color:var(--ink);margin:38px 0 4px;padding-bottom:6px;border-bottom:1px solid var(--rule)
+}
+h2.sec:first-child{margin-top:8px}
+h3{font-family:var(--serif);font-weight:600;font-size:20px;margin:26px 0 6px}
+p{margin:11px 0;max-width:none;line-height:1.55}
+ul,ol{max-width:none;padding-left:22px;line-height:1.55}
+li{margin:7px 0}
+.lede{font-size:19px;color:var(--ink-2);max-width:none;line-height:1.45}
+small,.small{font-size:14.5px;color:var(--ink-2)}
+
+/* ---------- instrument panel ---------- */
+.instrument{
+  background:var(--body-2);
+  border:1px solid var(--rule);
+  border-radius:3px;
+  padding:16px 18px 18px;
+  box-shadow:inset 0 1px 0 #fff;
+}
+.inst-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:14px}
+.inst-title{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.28em;text-transform:uppercase}
+.linkish{
+  appearance:none;background:none;border:0;cursor:pointer;color:#0F7FB5;
+  font-family:var(--sans);font-size:12.5px;font-weight:600;letter-spacing:.04em;padding:2px 0
+}
+.linkish:hover{text-decoration:underline}
+.help{
+  background:var(--panel);border:1px solid var(--rule-2);border-left:3px solid var(--mag);
+  padding:12px 16px;margin:0 0 16px;font-size:15.5px
+}
+.help p{margin:8px 0;max-width:none}
+.screen-label{font-family:var(--sans);font-size:13px;font-weight:700;line-height:1.45;margin:0 0 4px;padding-left:2px}
+canvas.screen{
+  display:block;width:100%;background:var(--screen);
+  border:1px solid var(--rule);border-radius:2px;touch-action:none
+}
+.controls-row{
+  display:flex;align-items:center;gap:22px;flex-wrap:wrap;
+  padding:12px 4px 14px;border-bottom:1px dashed var(--rule);margin-bottom:14px
+}
+.chk{font-family:var(--sans);font-size:13.5px;font-weight:600;display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+.chk input{width:15px;height:15px;accent-color:var(--mag);cursor:pointer}
+.readout{margin-left:auto;display:flex;gap:24px;font-family:var(--mono);font-size:13px}
+.readout b{font-family:var(--sans);font-weight:700;color:var(--ink-2)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* sliders */
+.sliders{display:grid;gap:10px;margin-top:16px}
+.sl{display:grid;grid-template-columns:26px 1fr 74px;align-items:center;gap:12px}
+.sl .sym{font-family:var(--serif);font-style:italic;font-size:19px;color:var(--mag);text-align:right}
+.sl .val{font-family:var(--mono);font-size:14px;color:var(--mag);font-variant-numeric:tabular-nums}
+.sl .track{position:relative}
+.sl .ends{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:var(--gray);margin-top:-3px}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;margin:0
+}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:var(--gray);border-radius:2px}
+input[type=range]::-moz-range-track{height:3px;background:var(--gray);border-radius:2px}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:0;height:0;margin-top:-6px;
+  border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:13px solid #3A3F47
+}
+input[type=range]::-moz-range-thumb{
+  width:0;height:0;border:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:13px solid #3A3F47
+}
+input[type=range]:focus-visible{outline:2px solid var(--mag);outline-offset:4px}
+
+.facts{
+  margin-top:16px;border-top:1px solid var(--rule);padding-top:12px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px 20px
+}
+.fact{font-size:14px;line-height:1.4}
+.fact .k{font-family:var(--sans);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--gray);display:block}
+.fact .v{font-family:var(--mono);font-size:14.5px;font-variant-numeric:tabular-nums}
+.btn{
+  appearance:none;font-family:var(--sans);font-size:11.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+  background:#3A3F47;color:#fff;border:0;border-radius:2px;padding:8px 14px;cursor:pointer
+}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+.btn:hover{opacity:.88}
+.btn:focus-visible{outline:2px solid var(--mag);outline-offset:2px}
+
+/* ---------- demo blocks in explainer tabs ---------- */
+.demo{
+  background:var(--panel);border:1px solid var(--rule);border-radius:3px;
+  padding:16px 18px;margin:22px 0
+}
+.demo .demo-title{
+  font-family:var(--sans);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  font-weight:700;color:var(--gray);margin:0 0 12px
+}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:760px){.grid2{grid-template-columns:1fr}.sl{grid-template-columns:22px 1fr 66px}}
+
+/* worked-number ledger */
+.ledger{width:100%;border-collapse:collapse;margin:12px 0;font-size:14.5px}
+.ledger th{
+  font-family:var(--sans);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--gray);text-align:left;font-weight:700;padding:4px 10px 4px 0;border-bottom:1px solid var(--rule)
+}
+.ledger td{padding:5px 10px 5px 0;border-bottom:1px solid var(--rule-2);vertical-align:top}
+.ledger td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* math */
+.m{font-family:var(--serif);font-style:italic}
+.eq{
+  font-family:var(--serif);font-size:18px;text-align:center;margin:18px 0;line-height:2.1
+}
+.eq.left{text-align:left;padding-left:6px}
+.frac{display:inline-flex;flex-direction:column;vertical-align:-0.48em;text-align:center;margin:0 .2em}
+.frac .n2{border-bottom:1px solid currentColor;padding:0 .3em;line-height:1.25}
+.frac .d2{padding:0 .3em;line-height:1.25}
+.rad{border-top:1px solid currentColor;padding:0 .2em 0 .1em}
+.step{
+  border-left:3px solid var(--rule);padding:2px 0 2px 16px;margin:18px 0
+}
+.step .stepno{
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--mag);
+  text-transform:uppercase;display:block;margin-bottom:2px
+}
+.c-green{color:var(--green)} .c-mag{color:var(--mag)} .c-blue{color:var(--blue)} .c-gray{color:var(--gray)}
+.chip{
+  font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums;
+  background:#fff;border:1px solid var(--rule);border-radius:2px;padding:1px 5px;white-space:nowrap
+}
+.chip.mag{color:var(--mag);border-color:#E7BEDA}
+.chip.blue{color:var(--blue);border-color:#C3C3F0}
+.chip.green{color:var(--green);border-color:#BEDCBE}
+pre.code{
+  background:#20242B;color:#E6E9ED;font-family:var(--mono);font-size:13px;line-height:1.65;
+  padding:16px 18px;border-radius:3px;overflow-x:auto;margin:18px 0
+}
+pre.code .cm{color:#8C97A5}
+pre.code .kw{color:#E08AC8}
+footer.foot{margin-top:56px;padding-top:18px;border-top:1px solid var(--rule);font-size:14px;color:var(--ink-2)}
+@media (prefers-reduced-motion:reduce){.tabpanel.active{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <div class="wordmark">18.03 &nbsp;·&nbsp; Mathlet companion</div>
+  <h1>Two sine waves, added together, produce a <em>slow pulse</em>.</h1>
+  <p>Tab 1 is the instrument: drag the sliders and watch the sum change. The tabs after it take the same picture apart, one idea at a time, with the arithmetic written out at every step.</p>
+</header>
+
+<nav class="tabs" role="tablist" id="tabbar">
+  <button role="tab" data-tab="app"      aria-selected="true"><span class="idx">01</span>Beats</button>
+  <button role="tab" data-tab="wave"     aria-selected="false"><span class="idx">02</span>One wave</button>
+  <button role="tab" data-tab="add"      aria-selected="false"><span class="idx">03</span>Adding them</button>
+  <button role="tab" data-tab="why"      aria-selected="false"><span class="idx">04</span>Why beats appear</button>
+  <button role="tab" data-tab="env"      aria-selected="false"><span class="idx">05</span>The envelope</button>
+  <button role="tab" data-tab="draw"     aria-selected="false"><span class="idx">06</span>How it's drawn</button>
+</nav>
+
+<main>
+
+<!-- ============================== TAB 1 : THE APP ============================== -->
+<section class="tabpanel active" id="tab-app">
+  <div class="instrument">
+    <div class="inst-head">
+      <span class="inst-title">Beats</span>
+      <button class="linkish" id="helpToggle" aria-expanded="false">+ help</button>
+    </div>
+    <div class="help" id="helpBox" hidden>
+      <p>The lower screen shows <span class="c-green"><span class="m">f</span>(<span class="m">t</span>) = sin <span class="m">t</span></span> in green and <span class="c-mag"><span class="m">g</span>(<span class="m">t</span>) = <span class="m">A</span> sin(<span class="m">ωt</span> − <span class="m">φ</span>)</span> in magenta. The upper screen shows their sum, in blue.</p>
+      <p>Drag the <span class="m">ω</span>, <span class="m">A</span> or <span class="m">φ</span> slider to change the circular frequency, the amplitude, or the phase lag of the second wave.</p>
+      <p>Move the pointer over the upper screen and its coordinates appear at the right. <b>Zoom</b> switches the <span class="m">t</span> range between [0, 20π] and [0, 60π]. <b>Envelope</b> draws the curve that bounds the sum; it is derived in tab 5.</p>
+      <p class="small">This panel reproduces the <i>Beats</i> mathlet by H. Hohn and H. Miller (© 2001), written here from scratch in HTML and vanilla JavaScript.</p>
+    </div>
+
+    <div class="screen-label"><span class="c-blue">x</span> = <span class="c-green">f(t)</span> + <span class="c-mag">g(t)</span></div>
+    <canvas id="cvSum" class="screen" style="height:236px"></canvas>
+
+    <div class="controls-row">
+      <label class="chk"><input type="checkbox" id="zoomChk"> Zoom</label>
+      <label class="chk"><input type="checkbox" id="envChk"> Envelope</label>
+      <div class="readout">
+        <div><b>t =</b> <span id="roT">&nbsp;</span></div>
+        <div><b>x =</b> <span id="roX">&nbsp;</span></div>
+      </div>
+    </div>
+
+    <div class="screen-label"><span class="c-mag">g(t) = A sin(ωt − φ)</span><br><span class="c-green">f(t) = sin(t)</span></div>
+    <canvas id="cvParts" class="screen" style="height:206px"></canvas>
+
+    <div class="sliders">
+      <div class="sl">
+        <span class="sym">ω</span>
+        <div class="track"><input type="range" id="sW" min="0" max="2" step="0.001" value="1.770"><div class="ends"><span>0</span><span>2</span></div></div>
+        <span class="val" id="vW">1.770</span>
+      </div>
+      <div class="sl">
+        <span class="sym">A</span>
+        <div class="track"><input type="range" id="sA" min="0" max="1" step="0.01" value="1"><div class="ends"><span>0</span><span>1</span></div></div>
+        <span class="val" id="vA">1.00</span>
+      </div>
+      <div class="sl">
+        <span class="sym">φ</span>
+        <div class="track"><input type="range" id="sP" min="0" max="2" step="0.01" value="1.13"><div class="ends"><span>0</span><span>2</span></div></div>
+        <span class="val" id="vP">1.13</span>
+      </div>
+    </div>
+
+    <div class="facts" id="facts">
+      <div class="fact"><span class="k">Period of g</span><span class="v" id="fPer">—</span></div>
+      <div class="fact"><span class="k">Phase shift (right)</span><span class="v" id="fShift">—</span></div>
+      <div class="fact"><span class="k">Beat period</span><span class="v" id="fBeat">—</span></div>
+      <div class="fact"><span class="k">Envelope max / min</span><span class="v" id="fEnv">—</span></div>
+    </div>
+    <div style="margin-top:14px"><button class="btn ghost" id="resetBtn">Reset sliders</button></div>
+  </div>
+
+  <h2 class="sec">What you are looking at</h2>
+  <p>Two pure tones are playing. The green one never changes: it is <span class="m">sin t</span>, one full oscillation every <span class="chip">2π ≈ 6.283</span> units of time. The magenta one is yours to tune. When its frequency <span class="m">ω</span> sits close to 1, the two waves drift slowly in and out of step, and their sum swells and fades. That slow swelling is the beat — the thing a piano tuner listens for.</p>
+  <p>Everything on this screen is arithmetic you could do by hand at any single instant <span class="m">t</span>: evaluate the green wave, evaluate the magenta wave, add the two numbers. The blue curve is that sum, done again at every pixel. The remaining tabs work through why the result looks the way it does.</p>
+</section>
+
+<!-- ============================== TAB 2 : ONE WAVE ============================== -->
+<section class="tabpanel" id="tab-wave">
+  <h2 class="sec">02 — One wave and its three knobs</h2>
+  <p class="lede">Before adding anything, get comfortable with what <span class="m">A</span>, <span class="m">ω</span> and <span class="m">φ</span> each do to a single sine wave.</p>
+
+  <p>Start from the plainest possible wave, the green one in the instrument:</p>
+  <div class="eq"><span class="m">f</span>(<span class="m">t</span>) = sin(<span class="m">t</span>)</div>
+  <p>It leaves 0 heading upward at <span class="m">t</span> = 0, peaks at <span class="chip">t = π/2 ≈ 1.571</span> with value 1, returns to 0 at <span class="chip">t = π ≈ 3.142</span>, bottoms out at −1, and is back where it started at <span class="chip">t = 2π ≈ 6.283</span>. That repeat distance is its <b>period</b>.</p>
+
+  <p>The magenta wave is the same shape with three modifications:</p>
+  <div class="eq"><span class="m">g</span>(<span class="m">t</span>) = <span class="m">A</span> sin(<span class="m">ωt</span> − <span class="m">φ</span>)</div>
+
+  <div class="step">
+    <span class="stepno">Knob 1 — amplitude A</span>
+    <p style="margin-top:4px"><span class="m">A</span> multiplies the whole wave, so the peaks sit at <span class="m">A</span> and the troughs at −<span class="m">A</span>. It stretches the picture vertically and does nothing to the timing. At <span class="m">A</span> = 0 the magenta wave disappears entirely.</p>
+  </div>
+  <div class="step">
+    <span class="stepno">Knob 2 — circular frequency ω</span>
+    <p style="margin-top:4px">Inside the sine, <span class="m">t</span> has been replaced by <span class="m">ωt</span>, so the clock runs <span class="m">ω</span> times faster. A full cycle now takes</p>
+    <div class="eq left">period = <span class="frac"><span class="n2">2π</span><span class="d2"><span class="m">ω</span></span></span> &nbsp;— at <span class="m">ω</span> = 1.770 that is <span class="chip">2π / 1.770 = 3.550</span>, about <span class="chip">1.130π</span>.</div>
+    <p>So the magenta wave fits roughly 1.77 oscillations into every one of the green wave's. Bigger <span class="m">ω</span> means a tighter, faster wave.</p>
+  </div>
+  <div class="step">
+    <span class="stepno">Knob 3 — phase lag φ</span>
+    <p style="margin-top:4px">Subtracting <span class="m">φ</span> delays the wave. Factor the <span class="m">ω</span> out to see by how much:</p>
+    <div class="eq left"><span class="m">A</span> sin(<span class="m">ωt</span> − <span class="m">φ</span>) = <span class="m">A</span> sin<big>(</big><span class="m">ω</span><big>(</big><span class="m">t</span> − <span class="frac"><span class="n2"><span class="m">φ</span></span><span class="d2"><span class="m">ω</span></span></span><big>)</big><big>)</big></div>
+    <p>The whole wave slides <b>right</b> by <span class="m">φ</span>/<span class="m">ω</span> in time. With <span class="m">φ</span> = 1.13 and <span class="m">ω</span> = 1.770 that is <span class="chip">1.13 / 1.770 = 0.638</span> — a small nudge, about a fifth of the magenta wave's own period. Note that <span class="m">φ</span> is measured in radians of the wave's own angle, so the same <span class="m">φ</span> produces a smaller time shift when <span class="m">ω</span> is large.</p>
+  </div>
+
+  <div class="demo">
+    <p class="demo-title">Try it — green is fixed, magenta is yours</p>
+    <canvas id="cvWave" class="screen" style="height:210px"></canvas>
+    <div class="sliders" style="margin-top:14px">
+      <div class="sl"><span class="sym">ω</span><div class="track"><input type="range" id="w_W" min="0.05" max="3" step="0.01" value="1.77"><div class="ends"><span>0.05</span><span>3</span></div></div><span class="val" id="w_vW">1.77</span></div>
+      <div class="sl"><span class="sym">A</span><div class="track"><input type="range" id="w_A" min="0" max="1" step="0.01" value="1"><div class="ends"><span>0</span><span>1</span></div></div><span class="val" id="w_vA">1.00</span></div>
+      <div class="sl"><span class="sym">φ</span><div class="track"><input type="range" id="w_P" min="0" max="6.28" step="0.01" value="1.13"><div class="ends"><span>0</span><span>6.28</span></div></div><span class="val" id="w_vP">1.13</span></div>
+      <div class="sl"><span class="sym">t</span><div class="track"><input type="range" id="w_T" min="0" max="18.85" step="0.01" value="2"><div class="ends"><span>0</span><span>6π</span></div></div><span class="val" id="w_vT">2.00</span></div>
+    </div>
+    <p class="small" style="margin-top:10px">The dots mark the value of each wave at the chosen instant <span class="m">t</span>; the two small triangles on the axis mark the magenta wave's first upward zero crossing (at <span class="m">φ</span>/<span class="m">ω</span>) and its first peak.</p>
+    <table class="ledger">
+      <tr><th style="width:46%">Step</th><th>Value now</th></tr>
+      <tr><td>the instant <span class="m">t</span></td><td class="n" id="w_r0">—</td></tr>
+      <tr><td>multiply by <span class="m">ω</span> &nbsp;→&nbsp; <span class="m">ωt</span></td><td class="n" id="w_r1">—</td></tr>
+      <tr><td>subtract <span class="m">φ</span> &nbsp;→&nbsp; <span class="m">ωt</span> − <span class="m">φ</span></td><td class="n" id="w_r2">—</td></tr>
+      <tr><td>take the sine</td><td class="n" id="w_r3">—</td></tr>
+      <tr><td>multiply by <span class="m">A</span> &nbsp;→&nbsp; <span class="c-mag"><span class="m">g</span>(<span class="m">t</span>)</span></td><td class="n" id="w_r4">—</td></tr>
+      <tr><td>for comparison, <span class="c-green">sin <span class="m">t</span></span></td><td class="n" id="w_r5">—</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============================== TAB 3 : ADDING ============================== -->
+<section class="tabpanel" id="tab-add">
+  <h2 class="sec">03 — Adding the two waves</h2>
+  <p class="lede">Superposition is the least mysterious step in the whole picture: at each instant, add the two heights.</p>
+
+  <div class="eq"><span class="c-blue"><span class="m">x</span>(<span class="m">t</span>)</span> = <span class="c-green">sin(<span class="m">t</span>)</span> + <span class="c-mag"><span class="m">A</span> sin(<span class="m">ωt</span> − <span class="m">φ</span>)</span></div>
+
+  <p>There is no interaction between the waves and no hidden rule. Pick <span class="m">t</span> = 2.00 with the default settings and do it by hand:</p>
+  <table class="ledger">
+    <tr><th style="width:46%">Quantity</th><th>Arithmetic</th></tr>
+    <tr><td><span class="c-green">sin(2.00)</span></td><td class="n">= 0.909</td></tr>
+    <tr><td><span class="c-mag">sin(1.770 × 2.00 − 1.13)</span></td><td class="n">= sin(2.410) = 0.668</td></tr>
+    <tr><td><span class="c-blue">x(2.00)</span></td><td class="n">= 0.909 + 0.668 = 1.577</td></tr>
+  </table>
+  <p>Repeat that at a few thousand closely spaced values of <span class="m">t</span>, join the dots, and you have the blue curve.</p>
+
+  <div class="demo">
+    <p class="demo-title">Drag the instant — watch one addition happen</p>
+    <canvas id="cvAddParts" class="screen" style="height:180px"></canvas>
+    <div style="height:8px"></div>
+    <canvas id="cvAddSum" class="screen" style="height:180px"></canvas>
+    <div class="sliders" style="margin-top:14px">
+      <div class="sl"><span class="sym">t</span><div class="track"><input type="range" id="a_T" min="0" max="31.4" step="0.01" value="2"><div class="ends"><span>0</span><span>10π</span></div></div><span class="val" id="a_vT">2.00</span></div>
+      <div class="sl"><span class="sym">ω</span><div class="track"><input type="range" id="a_W" min="0" max="2" step="0.001" value="1.77"><div class="ends"><span>0</span><span>2</span></div></div><span class="val" id="a_vW">1.770</span></div>
+      <div class="sl"><span class="sym">A</span><div class="track"><input type="range" id="a_A" min="0" max="1" step="0.01" value="1"><div class="ends"><span>0</span><span>1</span></div></div><span class="val" id="a_vA">1.00</span></div>
+      <div class="sl"><span class="sym">φ</span><div class="track"><input type="range" id="a_P" min="0" max="2" step="0.01" value="1.13"><div class="ends"><span>0</span><span>2</span></div></div><span class="val" id="a_vP">1.13</span></div>
+    </div>
+    <table class="ledger">
+      <tr><th style="width:46%">At the marked instant</th><th>Value</th></tr>
+      <tr><td><span class="c-green">f(t) = sin t</span></td><td class="n" id="a_rf">—</td></tr>
+      <tr><td><span class="c-mag">g(t) = A sin(ωt − φ)</span></td><td class="n" id="a_rg">—</td></tr>
+      <tr><td><span class="c-blue">x(t) = f(t) + g(t)</span></td><td class="n" id="a_rx">—</td></tr>
+      <tr><td>angle between the two waves, <span class="m">δ</span> = (<span class="m">ω</span>−1)<span class="m">t</span> − <span class="m">φ</span>, folded into [−π, π]</td><td class="n" id="a_rd">—</td></tr>
+    </table>
+    <p class="small">When <span class="m">δ</span> is near 0 the waves are momentarily in step and reinforce; near ±π they oppose and cancel. That single number is the whole story of the beat, and tab 5 turns it into a formula.</p>
+  </div>
+
+  <h3>The special case that explains everything else</h3>
+  <p>Set <span class="m">ω</span> = 1 exactly in the demo above. The sum stops pulsing and becomes a plain sine wave of fixed height. That is not a coincidence:</p>
+  <div class="eq">sin <span class="m">t</span> + <span class="m">A</span> sin(<span class="m">t</span> − <span class="m">φ</span>) = <span class="m">C</span> sin(<span class="m">t</span> + <span class="m">ψ</span>), &nbsp;&nbsp; <span class="m">C</span> = √<span class="rad">1 + <span class="m">A</span>² + 2<span class="m">A</span> cos <span class="m">φ</span></span></div>
+  <p>Two waves of the <em>same</em> frequency always add up to a third wave of that same frequency; only the height and the timing change. With <span class="m">A</span> = 1 and <span class="m">φ</span> = 1.13, <span class="chip">C = √(2 + 2cos 1.13) = 1.689</span> — a fixed height, no beating.</p>
+  <p>Beats only exist because <span class="m">ω</span> ≠ 1. And keep that formula for <span class="m">C</span> in view: in tab 5 the identical expression comes back with <span class="m">φ</span> replaced by a slowly turning angle, and <em>that</em> is the envelope.</p>
+</section>
+
+<!-- ============================== TAB 4 : WHY BEATS ============================== -->
+<section class="tabpanel" id="tab-why">
+  <h2 class="sec">04 — Why a slow pulse appears</h2>
+  <p class="lede">One trigonometric identity converts "two fast waves added" into "one fast wave, slowly amplitude-modulated". Take <span class="m">A</span> = 1 here; tab 5 handles the general case.</p>
+
+  <p>The identity is the sum-to-product rule. It comes straight from the angle-addition formula:</p>
+  <div class="eq left">sin(<span class="m">u</span> + <span class="m">v</span>) = sin <span class="m">u</span> cos <span class="m">v</span> + cos <span class="m">u</span> sin <span class="m">v</span></div>
+  <div class="eq left">sin(<span class="m">u</span> − <span class="m">v</span>) = sin <span class="m">u</span> cos <span class="m">v</span> − cos <span class="m">u</span> sin <span class="m">v</span></div>
+  <p>Add those two lines; the <span class="m">cos u sin v</span> terms cancel:</p>
+  <div class="eq">sin(<span class="m">u</span>+<span class="m">v</span>) + sin(<span class="m">u</span>−<span class="m">v</span>) = 2 sin <span class="m">u</span> cos <span class="m">v</span></div>
+
+  <p>Now match this to our sum, whose two angles are <span class="m">α</span> = <span class="m">t</span> and <span class="m">β</span> = <span class="m">ωt</span> − <span class="m">φ</span>. Solving <span class="m">α</span> = <span class="m">u</span>+<span class="m">v</span>, <span class="m">β</span> = <span class="m">u</span>−<span class="m">v</span> gives the half-sum and half-difference:</p>
+  <div class="eq"><span class="m">u</span> = <span class="frac"><span class="n2"><span class="m">α</span>+<span class="m">β</span></span><span class="d2">2</span></span> = <span class="frac"><span class="n2">(1+<span class="m">ω</span>)<span class="m">t</span> − <span class="m">φ</span></span><span class="d2">2</span></span>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <span class="m">v</span> = <span class="frac"><span class="n2"><span class="m">α</span>−<span class="m">β</span></span><span class="d2">2</span></span> = <span class="frac"><span class="n2">(1−<span class="m">ω</span>)<span class="m">t</span> + <span class="m">φ</span></span><span class="d2">2</span></span></div>
+
+  <div class="eq" style="font-size:19px;margin-top:22px">
+    <span class="c-blue"><span class="m">x</span>(<span class="m">t</span>)</span> = <span class="c-gray">2 cos<big>(</big><span class="frac"><span class="n2">(1−<span class="m">ω</span>)<span class="m">t</span> + <span class="m">φ</span></span><span class="d2">2</span></span><big>)</big></span> · <span class="c-blue">sin<big>(</big><span class="frac"><span class="n2">(1+<span class="m">ω</span>)<span class="m">t</span> − <span class="m">φ</span></span><span class="d2">2</span></span><big>)</big></span>
+  </div>
+
+  <p>This is exact — no approximation anywhere. It says the sum is a product of two pieces, and their speeds are what matter:</p>
+  <ul>
+    <li>The <span class="c-blue">sine factor</span> runs at the <b>average</b> frequency (1+<span class="m">ω</span>)/2. At <span class="m">ω</span> = 1.770 that is <span class="chip">1.385</span>, so its period is <span class="chip">2π/1.385 = 4.537</span>. This is the fast wiggle you see filling the blue curve.</li>
+    <li>The <span class="c-gray">cosine factor</span> runs at <b>half the difference</b>, |1−<span class="m">ω</span>|/2 = <span class="chip">0.385</span>. It changes so slowly that over one fast wiggle it is nearly constant, so it acts as a slowly varying amplitude.</li>
+  </ul>
+
+  <h3>How long is one beat?</h3>
+  <p>The ear (and the eye) responds to the <em>size</em> of the amplitude, not its sign, so the relevant quantity is |2 cos(·)|. A cosine has period 2π, but its absolute value repeats twice as often. The slow factor's argument advances at rate |1−<span class="m">ω</span>|/2, so:</p>
+  <div class="eq">beat period = <span class="frac"><span class="n2">2π</span><span class="d2">|1 − <span class="m">ω</span>|</span></span> &nbsp;=&nbsp; <span class="chip">2π / 0.770 = 8.16 ≈ 2.60π</span> at the default settings.</div>
+  <p>Two consequences worth holding onto. As <span class="m">ω</span> → 1 the beat period blows up: the waves take forever to drift apart, and over a 20π window you may see no pulsing at all. As <span class="m">ω</span> moves far from 1, the beat period shrinks until the "slow" factor is no longer slow compared with the wiggle, and the sum just looks like a complicated periodic mess rather than a throbbing tone.</p>
+  <p>The nodes — the instants where the sum momentarily vanishes — are where the cosine factor is zero, which happens when its argument equals π/2 plus a multiple of π. With <span class="m">ω</span> = 1.770 and <span class="m">φ</span> = 1.13 the first one lands at <span class="chip">t = 5.548 ≈ 1.77π</span>, and the rest follow every <span class="chip">8.16</span>.</p>
+
+  <div class="demo">
+    <p class="demo-title">Turn ω and watch the two factors separate</p>
+    <canvas id="cvWhy" class="screen" style="height:240px"></canvas>
+    <div class="sliders" style="margin-top:14px">
+      <div class="sl"><span class="sym">ω</span><div class="track"><input type="range" id="y_W" min="0.5" max="1.5" step="0.001" value="1.1"><div class="ends"><span>0.5</span><span>1.5</span></div></div><span class="val" id="y_vW">1.100</span></div>
+      <div class="sl"><span class="sym">φ</span><div class="track"><input type="range" id="y_P" min="0" max="6.28" step="0.01" value="0"><div class="ends"><span>0</span><span>2π</span></div></div><span class="val" id="y_vP">0.00</span></div>
+    </div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:6px">
+      <label class="chk"><input type="checkbox" id="y_showEnv" checked> Slow factor (envelope)</label>
+      <label class="chk"><input type="checkbox" id="y_showFast"> Fast factor alone</label>
+    </div>
+    <div class="facts" style="border-top:1px solid var(--rule-2)">
+      <div class="fact"><span class="k">Fast period</span><span class="v" id="y_fFast">—</span></div>
+      <div class="fact"><span class="k">Beat period</span><span class="v" id="y_fBeat">—</span></div>
+      <div class="fact"><span class="k">Beats in this window</span><span class="v" id="y_fN">—</span></div>
+      <div class="fact"><span class="k">Wiggles per beat</span><span class="v" id="y_fRatio">—</span></div>
+    </div>
+    <p class="small">Set <span class="m">ω</span> = 1.000 and the envelope flattens into a horizontal line — no beat. Push it to 1.5 and the "beat" becomes as fast as the wiggle, and the description stops being useful.</p>
+  </div>
+</section>
+
+<!-- ============================== TAB 5 : ENVELOPE ============================== -->
+<section class="tabpanel" id="tab-env">
+  <h2 class="sec">05 — The envelope, for any A and φ</h2>
+  <p class="lede">When <span class="m">A</span> ≠ 1 the neat product formula fails, because the two waves no longer cancel completely. Rotating arrows give the general answer in four steps.</p>
+
+  <p>The trick is to treat each sine as the vertical shadow of a rotating arrow. Since <span class="m">e</span><sup><span class="m">iθ</span></sup> = cos <span class="m">θ</span> + <span class="m">i</span> sin <span class="m">θ</span>, the imaginary part of <span class="m">e</span><sup><span class="m">iθ</span></sup> is sin <span class="m">θ</span>. So:</p>
+
+  <div class="step">
+    <span class="stepno">Step 1 — write the sum as one shadow</span>
+    <div class="eq left"><span class="m">x</span>(<span class="m">t</span>) = Im<big>[</big> <span class="c-green"><span class="m">e</span><sup><span class="m">it</span></sup></span> + <span class="c-mag"><span class="m">A e</span><sup><span class="m">i</span>(<span class="m">ωt</span>−<span class="m">φ</span>)</sup></span> <big>]</big></div>
+    <p>Two arrows: a unit arrow turning at rate 1, and an arrow of length <span class="m">A</span> turning at rate <span class="m">ω</span>, starting <span class="m">φ</span> radians behind. Lay them tip to tail; the sum's shadow on the vertical axis is <span class="m">x</span>(<span class="m">t</span>).</p>
+  </div>
+
+  <div class="step">
+    <span class="stepno">Step 2 — factor out the average rotation</span>
+    <p style="margin-top:4px">Both arrows share a common turning. Pull out the average phase <span class="m">Φ</span> = ((1+<span class="m">ω</span>)<span class="m">t</span> − <span class="m">φ</span>)/2 and let <span class="m">ψ</span> = ((1−<span class="m">ω</span>)<span class="m">t</span> + <span class="m">φ</span>)/2 be the half-difference — the same two quantities as in tab 4:</p>
+    <div class="eq left"><span class="m">e</span><sup><span class="m">it</span></sup> + <span class="m">A e</span><sup><span class="m">i</span>(<span class="m">ωt</span>−<span class="m">φ</span>)</sup> = <span class="m">e</span><sup><span class="m">i</span><span class="m">Φ</span></sup> <big>[</big> <span class="m">e</span><sup><span class="m">iψ</span></sup> + <span class="m">A e</span><sup>−<span class="m">iψ</span></sup> <big>]</big></div>
+  </div>
+
+  <div class="step">
+    <span class="stepno">Step 3 — the bracket is a slowly changing complex number</span>
+    <p style="margin-top:4px">Expand it into real and imaginary parts:</p>
+    <div class="eq left"><span class="m">e</span><sup><span class="m">iψ</span></sup> + <span class="m">A e</span><sup>−<span class="m">iψ</span></sup> = (1+<span class="m">A</span>) cos <span class="m">ψ</span> + <span class="m">i</span> (1−<span class="m">A</span>) sin <span class="m">ψ</span></div>
+    <p>Its length <span class="m">R</span> and angle <span class="m">θ</span> are</p>
+    <div class="eq left"><span class="m">R</span>² = (1+<span class="m">A</span>)² cos²<span class="m">ψ</span> + (1−<span class="m">A</span>)² sin²<span class="m">ψ</span> = 1 + <span class="m">A</span>² + 2<span class="m">A</span> cos 2<span class="m">ψ</span>,&nbsp;&nbsp; tan <span class="m">θ</span> = <span class="frac"><span class="n2">1−<span class="m">A</span></span><span class="d2">1+<span class="m">A</span></span></span> tan <span class="m">ψ</span></div>
+    <p class="small">The middle step uses cos²<span class="m">ψ</span> − sin²<span class="m">ψ</span> = cos 2<span class="m">ψ</span>, and 2<span class="m">ψ</span> = (1−<span class="m">ω</span>)<span class="m">t</span> + <span class="m">φ</span>.</p>
+  </div>
+
+  <div class="step">
+    <span class="stepno">Step 4 — read off the envelope</span>
+    <p style="margin-top:4px">Taking the imaginary part of <span class="m">R e</span><sup><span class="m">i</span>(<span class="m">Φ</span>+<span class="m">θ</span>)</sup>:</p>
+    <div class="eq left"><span class="c-blue"><span class="m">x</span>(<span class="m">t</span>)</span> = <span class="c-gray"><span class="m">R</span>(<span class="m">t</span>)</span> sin<big>(</big><span class="m">Φ</span>(<span class="m">t</span>) + <span class="m">θ</span>(<span class="m">t</span>)<big>)</big>, &nbsp;&nbsp;&nbsp; <span class="c-gray"><span class="m">R</span>(<span class="m">t</span>) = √<span class="rad">1 + <span class="m">A</span>² + 2<span class="m">A</span> cos<big>(</big>(1−<span class="m">ω</span>)<span class="m">t</span> + <span class="m">φ</span><big>)</big></span></span></div>
+  </div>
+
+  <p>Because a sine never exceeds 1 in size, |<span class="m">x</span>(<span class="m">t</span>)| ≤ <span class="m">R</span>(<span class="m">t</span>) always, with equality whenever the fast sine happens to hit ±1. That is exactly what "envelope" means, and it is what the <b>Envelope</b> checkbox in tab 1 draws, as ±<span class="m">R</span>.</p>
+
+  <p>The formula is just the law of cosines for a triangle with sides 1 and <span class="m">A</span>. The angle between the two arrows is <span class="m">δ</span>(<span class="m">t</span>) = (<span class="m">ω</span>−1)<span class="m">t</span> − <span class="m">φ</span>, and it creeps around once every beat period. So:</p>
+  <table class="ledger">
+    <tr><th style="width:40%">When the arrows are…</th><th>The envelope is…</th><th>At A = 1</th></tr>
+    <tr><td>aligned (<span class="m">δ</span> = 0)</td><td class="n">R = 1 + A &nbsp; (largest)</td><td class="n">2.00</td></tr>
+    <tr><td>opposed (<span class="m">δ</span> = π)</td><td class="n">R = |1 − A| &nbsp; (smallest)</td><td class="n">0.00</td></tr>
+    <tr><td>at right angles</td><td class="n">R = √(1 + A²)</td><td class="n">1.414</td></tr>
+  </table>
+  <p>This also explains something you can check in tab 1: with <span class="m">A</span> = 0.5 the sum never quite dies away, because the shorter arrow cannot cancel the longer one — the envelope's minimum is <span class="chip">|1 − 0.5| = 0.5</span>. Full cancellation, and the dramatic nodes in the original picture, require <span class="m">A</span> = 1. Setting <span class="m">A</span> = 0 makes <span class="m">R</span> = 1 constant: one wave, no beat.</p>
+  <p>Finally, note where <span class="m">φ</span> went. It appears inside <span class="m">R</span> only as an additive shift of the slow angle, so changing <span class="m">φ</span> slides the whole envelope left or right without changing its shape or its period. Changing <span class="m">ω</span>, by contrast, changes how fast <span class="m">δ</span> turns, and so changes the beat period itself.</p>
+
+  <div class="demo">
+    <p class="demo-title">The two arrows and the curve they trace</p>
+    <div class="grid2">
+      <div><canvas id="cvPhasor" class="screen" style="height:330px"></canvas></div>
+      <div><canvas id="cvEnvTime" class="screen" style="height:330px"></canvas></div>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;margin-top:14px;flex-wrap:wrap">
+      <button class="btn" id="e_play">Play</button>
+      <button class="btn ghost" id="e_reset">Back to t = 0</button>
+    </div>
+    <div class="sliders" style="margin-top:12px">
+      <div class="sl"><span class="sym">t</span><div class="track"><input type="range" id="e_T" min="0" max="62.83" step="0.01" value="0"><div class="ends"><span>0</span><span>20π</span></div></div><span class="val" id="e_vT">0.00</span></div>
+      <div class="sl"><span class="sym">ω</span><div class="track"><input type="range" id="e_W" min="0" max="2" step="0.001" value="1.77"><div class="ends"><span>0</span><span>2</span></div></div><span class="val" id="e_vW">1.770</span></div>
+      <div class="sl"><span class="sym">A</span><div class="track"><input type="range" id="e_A" min="0" max="1" step="0.01" value="1"><div class="ends"><span>0</span><span>1</span></div></div><span class="val" id="e_vA">1.00</span></div>
+      <div class="sl"><span class="sym">φ</span><div class="track"><input type="range" id="e_P" min="0" max="2" step="0.01" value="1.13"><div class="ends"><span>0</span><span>2</span></div></div><span class="val" id="e_vP">1.13</span></div>
+    </div>
+    <table class="ledger">
+      <tr><th style="width:46%">Quantity at this instant</th><th>Value</th></tr>
+      <tr><td>angle between the arrows, <span class="m">δ</span> = (<span class="m">ω</span>−1)<span class="m">t</span> − <span class="m">φ</span></td><td class="n" id="e_rd">—</td></tr>
+      <tr><td>1 + <span class="m">A</span>² + 2<span class="m">A</span> cos <span class="m">δ</span></td><td class="n" id="e_rr2">—</td></tr>
+      <tr><td>envelope <span class="c-gray">R = √(that)</span></td><td class="n" id="e_rr">—</td></tr>
+      <tr><td>sum <span class="c-blue">x(t)</span>, the vertical shadow</td><td class="n" id="e_rx">—</td></tr>
+      <tr><td>check: <span class="c-green">sin t</span> + <span class="c-mag">A sin(ωt − φ)</span></td><td class="n" id="e_rchk">—</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============================== TAB 6 : DRAWING ============================== -->
+<section class="tabpanel" id="tab-draw">
+  <h2 class="sec">06 — How the picture actually gets drawn</h2>
+  <p class="lede">A canvas knows nothing about <span class="m">t</span> or <span class="m">x</span>. Every curve here is a few thousand short line segments, placed by two linear maps.</p>
+
+  <h3>The plotting rectangle</h3>
+  <p>Each screen reserves a margin for the axis labels; what is left is the plotting rectangle. For the top screen in tab 1, right now on your display:</p>
+  <table class="ledger">
+    <tr><th style="width:46%">Measurement</th><th>Value</th></tr>
+    <tr><td>canvas size in CSS pixels</td><td class="n" id="d_size">—</td></tr>
+    <tr><td>device pixel ratio</td><td class="n" id="d_dpr">—</td></tr>
+    <tr><td>backing store in device pixels</td><td class="n" id="d_backing">—</td></tr>
+    <tr><td>plot rectangle (width × height)</td><td class="n" id="d_rect">—</td></tr>
+    <tr><td>t range shown</td><td class="n" id="d_trange">—</td></tr>
+  </table>
+  <p class="small">The canvas is allocated at the device resolution and then scaled back down, so lines stay crisp on high-density screens. All the arithmetic below is done in CSS pixels; the scaling happens once, in the transform.</p>
+
+  <h3>Time to horizontal position</h3>
+  <p>The map is a straight proportion: how far along the <span class="m">t</span> range you are is how far across the rectangle you go.</p>
+  <div class="eq">px = <span class="m">L</span> + <span class="frac"><span class="n2"><span class="m">t</span> − <span class="m">t</span><sub>min</sub></span><span class="d2"><span class="m">t</span><sub>max</sub> − <span class="m">t</span><sub>min</sub></span></span> · <span class="m">W</span></div>
+  <p id="d_worked1" class="small">—</p>
+
+  <h3>Value to vertical position</h3>
+  <p>The same idea, flipped, because canvas <span class="m">y</span> grows downward. With the vertical range fixed at [−2, 2]:</p>
+  <div class="eq">py = <span class="m">T</span> + <span class="frac"><span class="n2"><span class="m">x</span><sub>max</sub> − <span class="m">x</span></span><span class="d2"><span class="m">x</span><sub>max</sub> − <span class="m">x</span><sub>min</sub></span></span> · <span class="m">H</span></div>
+  <p id="d_worked2" class="small">—</p>
+  <p>The vertical range is deliberately fixed at ±2 and never rescaled — that is why turning <span class="m">A</span> down makes the sum visibly shrink inside the frame instead of the axes zooming to fit it.</p>
+
+  <h3>The pointer readout, running the map backwards</h3>
+  <p>The <span class="m">t</span> = and <span class="m">x</span> = fields in tab 1 report the pointer's own position, not the curve's value. The code takes the mouse coordinates relative to the canvas and inverts the two formulas above:</p>
+  <div class="eq left"><span class="m">t</span> = <span class="m">t</span><sub>min</sub> + <span class="frac"><span class="n2">px − <span class="m">L</span></span><span class="d2"><span class="m">W</span></span></span>(<span class="m">t</span><sub>max</sub> − <span class="m">t</span><sub>min</sub>) &nbsp;&nbsp;&nbsp;&nbsp; <span class="m">x</span> = <span class="m">x</span><sub>max</sub> − <span class="frac"><span class="n2">py − <span class="m">T</span></span><span class="d2"><span class="m">H</span></span></span>(<span class="m">x</span><sub>max</sub> − <span class="m">x</span><sub>min</sub>)</div>
+  <p>The result is printed in units of π, which is why the readout says something like <span class="chip">t = 13.24π</span>: the raw number 41.59 is divided by π before display. The same <span class="m">t</span> then draws the vertical guide line on both screens.</p>
+
+  <h3>Sampling: how many points is enough?</h3>
+  <p>The curve is drawn by stepping through <span class="m">N</span> evenly spaced values of <span class="m">t</span>, computing the function at each, and calling <span class="chip">lineTo</span>. Too few points and the fast wiggle is missed entirely — the drawn curve then shows a slow ripple that is not in the function at all. That is aliasing, the same effect that makes wagon wheels spin backwards on film.</p>
+  <p>The demand comes from the fastest thing on screen. For the sum, the fast factor has period 2π/((1+<span class="m">ω</span>)/2). Over a window of 60π at <span class="m">ω</span> = 1.77 that is about <span class="chip">41</span> full wiggles; with fewer than a few points per wiggle the picture is fiction. The instrument uses roughly three samples per horizontal pixel, so it is drawing well past what the display can resolve.</p>
+
+  <div class="demo">
+    <p class="demo-title">Starve the sampler and watch the curve lie to you</p>
+    <canvas id="cvAlias" class="screen" style="height:210px"></canvas>
+    <div class="sliders" style="margin-top:14px">
+      <div class="sl"><span class="sym">N</span><div class="track"><input type="range" id="d_N" min="8" max="1200" step="1" value="60"><div class="ends"><span>8</span><span>1200</span></div></div><span class="val" id="d_vN">60</span></div>
+    </div>
+    <label class="chk" style="margin-top:4px"><input type="checkbox" id="d_dots" checked> Show the sample points</label>
+    <div class="facts" style="border-top:1px solid var(--rule-2)">
+      <div class="fact"><span class="k">Samples</span><span class="v" id="d_f1">—</span></div>
+      <div class="fact"><span class="k">Spacing in t</span><span class="v" id="d_f2">—</span></div>
+      <div class="fact"><span class="k">Samples per fast wiggle</span><span class="v" id="d_f3">—</span></div>
+      <div class="fact"><span class="k">Verdict</span><span class="v" id="d_f4">—</span></div>
+    </div>
+    <p class="small">The faint grey curve is the truth (drawn with thousands of points); the blue one is what <span class="m">N</span> samples produce. Below about four samples per wiggle the blue curve invents a shape of its own.</p>
+  </div>
+
+  <h3>The whole render, in outline</h3>
+  <pre class="code"><span class="cm">// 1. size the backing store for the display</span>
+dpr = window.devicePixelRatio;
+canvas.width  = cssWidth  * dpr;
+canvas.height = cssHeight * dpr;
+ctx.setTransform(dpr, 0, 0, dpr, 0, 0);   <span class="cm">// now think in CSS pixels</span>
+
+<span class="cm">// 2. frame: white plot rect, tick marks, the t axis at x = 0</span>
+drawFrame();
+
+<span class="cm">// 3. one path per curve, clipped to the rect</span>
+<span class="kw">const</span> N = Math.round(plotWidth * 3);
+ctx.beginPath();
+<span class="kw">for</span> (<span class="kw">let</span> i = 0; i &lt;= N; i++) {
+  <span class="kw">const</span> t = tmin + (tmax - tmin) * i / N;
+  <span class="kw">const</span> x = Math.sin(t) + A * Math.sin(w * t - phi);
+  i ? ctx.lineTo(tx(t), ty(x)) : ctx.moveTo(tx(t), ty(x));
+}
+ctx.stroke();
+
+<span class="cm">// 4. optional envelope, same loop with R(t) and -R(t)</span>
+<span class="cm">// 5. pointer guide line, drawn last so it sits on top</span></pre>
+  <p>Every slider does the same thing: change one number in the state object, then run this whole routine again from scratch. There is no incremental redraw and no animation loop in tab 1 — a full repaint at 60 frames a second is cheap for a few thousand line segments, which is why dragging feels continuous.</p>
+</section>
+
+</main>
+
+<footer class="foot">
+  Built as a study companion for the MIT 18.03 <i>Beats</i> mathlet (original applet © 2001 H. Hohn and H. Miller). This version is independent HTML and vanilla JavaScript — no libraries, no network calls. Save the file and it works offline.
+</footer>
+</div>
+
+<script>
+"use strict";
+const PI = Math.PI, TAU = 2*PI;
+const C = { green:"#147A14", mag:"#C2158C", blue:"#1A1AD8", gray:"#8A9099", axis:"#5A6069", rule:"#C9CDD4", guide:"#B9BEC6" };
+
+const fmtPi = v => (v/PI).toFixed(2) + "\u03C0";
+const nf = (v,d=2) => (Object.is(v,-0)?0:v).toFixed(d);
+const $ = id => document.getElementById(id);
+
+/* ---------------- plotting engine ---------------- */
+class Plot {
+  constructor(canvas, opts){
+    this.cv = canvas;
+    this.ctx = canvas.getContext("2d");
+    this.o = Object.assign({
+      tmin:0, tmax:20*PI, ymin:-2, ymax:2,
+      yticks:[-2,-1,0,1,2], majorPi:10, minorPi:2,
+      pad:{l:34,r:26,t:14,b:26}, xLabels:true, tLabel:true
+    }, opts||{});
+    this.ok = false;
+  }
+  setRange(tmax){ this.o.tmax = tmax; }
+  resize(){
+    const dpr = window.devicePixelRatio || 1;
+    const w = this.cv.clientWidth, h = this.cv.clientHeight;
+    if (!w || !h) { this.ok = false; return false; }
+    this.cv.width = Math.round(w*dpr); this.cv.height = Math.round(h*dpr);
+    this.ctx.setTransform(dpr,0,0,dpr,0,0);
+    this.W = w; this.H = h;
+    const p = this.o.pad;
+    this.L = p.l; this.T = p.t;
+    this.PW = w - p.l - p.r; this.PH = h - p.t - p.b;
+    this.ok = true; return true;
+  }
+  tx(t){ return this.L + (t - this.o.tmin)/(this.o.tmax - this.o.tmin) * this.PW; }
+  ty(y){ return this.T + (this.o.ymax - y)/(this.o.ymax - this.o.ymin) * this.PH; }
+  invT(px){ return this.o.tmin + (px - this.L)/this.PW * (this.o.tmax - this.o.tmin); }
+  invY(py){ return this.o.ymax - (py - this.T)/this.PH * (this.o.ymax - this.o.ymin); }
+  frame(){
+    const c = this.ctx;
+    c.clearRect(0,0,this.W,this.H);
+    c.fillStyle = "#fff"; c.fillRect(this.L, this.T, this.PW, this.PH);
+    c.strokeStyle = C.rule; c.lineWidth = 1;
+    c.strokeRect(this.L+0.5, this.T+0.5, this.PW-1, this.PH-1);
+    c.font = "11px ui-monospace, Menlo, monospace";
+    c.fillStyle = "#333";
+    // y ticks
+    c.textAlign = "right"; c.textBaseline = "middle";
+    for (const y of this.o.yticks){
+      const py = this.ty(y);
+      c.fillText(String(y), this.L - 7, py);
+      c.strokeStyle = C.rule; c.beginPath();
+      c.moveTo(this.L-3, py+0.5); c.lineTo(this.L, py+0.5); c.stroke();
+    }
+    // x ticks
+    const majors = this.o.majorPi*PI, minors = this.o.minorPi*PI;
+    c.strokeStyle = C.rule;
+    for (let t = this.o.tmin; t <= this.o.tmax + 1e-9; t += minors){
+      const px = Math.round(this.tx(t))+0.5;
+      c.beginPath(); c.moveTo(px, this.T+this.PH); c.lineTo(px, this.T+this.PH+3); c.stroke();
+    }
+    if (this.o.xLabels){
+      c.textAlign = "center"; c.textBaseline = "top"; c.fillStyle = "#333";
+      c.font = "bold 11.5px ui-monospace, Menlo, monospace";
+      for (let t = this.o.tmin; t <= this.o.tmax + 1e-9; t += majors){
+        const px = this.tx(t);
+        c.beginPath(); c.strokeStyle="#7A8089"; c.moveTo(px+0.5, this.T+this.PH); c.lineTo(px+0.5, this.T+this.PH+5); c.stroke();
+        c.fillText(Math.round(t/PI) + "\u03C0", Math.min(Math.max(px, this.L+10), this.L+this.PW-10), this.T+this.PH+8);
+      }
+    }
+    // zero axis with arrow
+    const y0 = Math.round(this.ty(0))+0.5;
+    c.strokeStyle = C.axis; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(this.L, y0); c.lineTo(this.L+this.PW+14, y0); c.stroke();
+    c.beginPath(); c.moveTo(this.L+this.PW+20, y0); c.lineTo(this.L+this.PW+12, y0-3.5); c.lineTo(this.L+this.PW+12, y0+3.5); c.closePath();
+    c.fillStyle = C.axis; c.fill();
+    if (this.o.tLabel){
+      c.font = "italic 13px Georgia, serif"; c.textAlign="left"; c.textBaseline="middle";
+      c.fillText("t", this.L+this.PW+24, y0);
+    }
+    // small vertical arrow at left
+    c.strokeStyle = C.axis; c.beginPath();
+    c.moveTo(this.L+0.5, this.T+this.PH); c.lineTo(this.L+0.5, this.T-8); c.stroke();
+    c.beginPath(); c.moveTo(this.L+0.5, this.T-13); c.lineTo(this.L-3, this.T-6); c.lineTo(this.L+4, this.T-6); c.closePath(); c.fill();
+  }
+  clipOn(){ const c=this.ctx; c.save(); c.beginPath(); c.rect(this.L, this.T, this.PW, this.PH); c.clip(); }
+  clipOff(){ this.ctx.restore(); }
+  curve(fn, color, lw, dash, samples){
+    const c = this.ctx; this.clipOn();
+    const N = samples || Math.max(300, Math.round(this.PW*3));
+    c.beginPath();
+    for (let i=0;i<=N;i++){
+      const t = this.o.tmin + (this.o.tmax-this.o.tmin)*i/N;
+      const px = this.tx(t), py = this.ty(fn(t));
+      i ? c.lineTo(px,py) : c.moveTo(px,py);
+    }
+    c.strokeStyle = color; c.lineWidth = lw||1.8;
+    c.setLineDash(dash||[]); c.lineJoin="round";
+    c.stroke(); c.setLineDash([]);
+    this.clipOff();
+  }
+  dots(fn, color, N){
+    const c=this.ctx; this.clipOn(); c.fillStyle=color;
+    for (let i=0;i<=N;i++){
+      const t = this.o.tmin + (this.o.tmax-this.o.tmin)*i/N;
+      c.beginPath(); c.arc(this.tx(t), this.ty(fn(t)), 2, 0, TAU); c.fill();
+    }
+    this.clipOff();
+  }
+  vline(t, color, dash){
+    const c=this.ctx; this.clipOn();
+    c.strokeStyle = color||C.guide; c.lineWidth=1; c.setLineDash(dash||[]);
+    const px = Math.round(this.tx(t))+0.5;
+    c.beginPath(); c.moveTo(px, this.T); c.lineTo(px, this.T+this.PH); c.stroke();
+    c.setLineDash([]); this.clipOff();
+  }
+  point(t, y, color, r){
+    const c=this.ctx; this.clipOn();
+    c.fillStyle=color; c.beginPath(); c.arc(this.tx(t), this.ty(y), r||4.5, 0, TAU); c.fill();
+    c.strokeStyle="#fff"; c.lineWidth=1.4; c.stroke();
+    this.clipOff();
+  }
+  marker(t, color){ // small triangle on the zero axis
+    const c=this.ctx; this.clipOn();
+    const px=this.tx(t), py=this.ty(0);
+    c.fillStyle=color; c.beginPath();
+    c.moveTo(px, py-1); c.lineTo(px-4, py+7); c.lineTo(px+4, py+7); c.closePath(); c.fill();
+    this.clipOff();
+  }
+  label(txt, t, y, color, align){
+    const c=this.ctx; c.save();
+    c.font="600 11.5px Helvetica, Arial, sans-serif"; c.fillStyle=color;
+    c.textAlign=align||"left"; c.textBaseline="bottom";
+    c.fillText(txt, this.tx(t), this.ty(y)); c.restore();
+  }
+}
+
+/* ---------------- shared math ---------------- */
+const wf  = t => Math.sin(t);
+const wg  = (t,A,w,p) => A*Math.sin(w*t - p);
+const wsum= (t,A,w,p) => wf(t) + wg(t,A,w,p);
+const wenv= (t,A,w,p) => Math.sqrt(Math.max(0, 1 + A*A + 2*A*Math.cos((1-w)*t + p)));
+const wrapPi = a => { let x = (a + PI) % TAU; if (x < 0) x += TAU; return x - PI; };
+
+/* ================= TAB 1 : the instrument ================= */
+const app = (()=>{
+  const st = { A:1, w:1.77, p:1.13, zoom:false, env:false, hover:null };
+  const pSum = new Plot($("cvSum"),   {tmax:60*PI, majorPi:10, minorPi:5});
+  const pPar = new Plot($("cvParts"), {tmax:60*PI, majorPi:10, minorPi:5});
+
+  function tmax(){ return (st.zoom ? 20 : 60)*PI; }
+  function draw(){
+    const tm = tmax();
+    pSum.setRange(tm); pPar.setRange(tm);
+    const minor = st.zoom ? 2 : 5;
+    pSum.o.minorPi = minor; pPar.o.minorPi = minor;
+    if (!pSum.resize() || !pPar.resize()) return;
+    pSum.frame();
+    if (st.env){
+      pSum.curve(t=>  wenv(t,st.A,st.w,st.p), C.gray, 1.4);
+      pSum.curve(t=> -wenv(t,st.A,st.w,st.p), C.gray, 1.4);
+    }
+    pSum.curve(t=> wsum(t,st.A,st.w,st.p), C.blue, 1.7);
+    pPar.frame();
+    pPar.curve(t=> wg(t,st.A,st.w,st.p), C.mag, 1.6);
+    pPar.curve(t=> wf(t), C.green, 1.6);
+    if (st.hover !== null){
+      pSum.vline(st.hover.t, C.guide);
+      pPar.vline(st.hover.t, C.guide);
+    }
+    facts();
+  }
+  function facts(){
+    const per = st.w > 0 ? TAU/st.w : Infinity;
+    $("fPer").textContent   = st.w>0 ? nf(per,3)+"  ("+nf(per/PI,3)+"\u03C0)" : "\u221E";
+    $("fShift").textContent = st.w>0 ? nf(st.p/st.w,3) : "\u2014";
+    const d = Math.abs(1-st.w);
+    $("fBeat").textContent  = d>1e-6 ? nf(TAU/d,2)+"  ("+nf(TAU/d/PI,2)+"\u03C0)" : "no beat (\u03C9 = 1)";
+    $("fEnv").textContent   = nf(1+st.A,2) + " / " + nf(Math.abs(1-st.A),2);
+  }
+  function sync(){
+    $("vW").textContent = nf(st.w,3);
+    $("vA").textContent = nf(st.A,2);
+    $("vP").textContent = nf(st.p,2);
+    draw();
+  }
+  $("sW").addEventListener("input", e=>{ st.w = +e.target.value; sync(); });
+  $("sA").addEventListener("input", e=>{ st.A = +e.target.value; sync(); });
+  $("sP").addEventListener("input", e=>{ st.p = +e.target.value; sync(); });
+  $("zoomChk").addEventListener("change", e=>{ st.zoom = e.target.checked; st.hover=null; $("roT").textContent="\u00A0"; $("roX").textContent="\u00A0"; draw(); });
+  $("envChk").addEventListener("change",  e=>{ st.env  = e.target.checked; draw(); });
+  $("resetBtn").addEventListener("click", ()=>{
+    st.w=1.77; st.A=1; st.p=1.13; st.zoom=false; st.env=false; st.hover=null;
+    $("sW").value=1.77; $("sA").value=1; $("sP").value=1.13;
+    $("zoomChk").checked=false; $("envChk").checked=false;
+    $("roT").textContent="\u00A0"; $("roX").textContent="\u00A0";
+    sync();
+  });
+  $("helpToggle").addEventListener("click", e=>{
+    const box = $("helpBox"), open = box.hasAttribute("hidden");
+    if (open){ box.removeAttribute("hidden"); e.target.textContent="\u2212 help"; }
+    else { box.setAttribute("hidden",""); e.target.textContent="+ help"; }
+    e.target.setAttribute("aria-expanded", String(open));
+    draw();
+  });
+  function pointer(ev){
+    const r = pSum.cv.getBoundingClientRect();
+    const px = ev.clientX - r.left, py = ev.clientY - r.top;
+    if (px < pSum.L || px > pSum.L+pSum.PW || py < pSum.T || py > pSum.T+pSum.PH){
+      st.hover = null; $("roT").textContent="\u00A0"; $("roX").textContent="\u00A0"; draw(); return;
+    }
+    st.hover = { t: pSum.invT(px), x: pSum.invY(py) };
+    $("roT").textContent = fmtPi(st.hover.t);
+    $("roX").textContent = nf(st.hover.x,2);
+    draw();
+  }
+  pSum.cv.addEventListener("mousemove", pointer);
+  pSum.cv.addEventListener("mouseleave", ()=>{ st.hover=null; $("roT").textContent="\u00A0"; $("roX").textContent="\u00A0"; draw(); });
+  pSum.cv.addEventListener("touchmove", e=>{ if(e.touches[0]){ pointer(e.touches[0]); e.preventDefault(); } }, {passive:false});
+  return { draw, sync, plot:pSum, st, tmax };
+})();
+
+/* ================= TAB 2 : one wave ================= */
+const waveTab = (()=>{
+  const p = new Plot($("cvWave"), {tmax:6*PI, majorPi:2, minorPi:1});
+  const S = ()=>({ w:+$("w_W").value, A:+$("w_A").value, ph:+$("w_P").value, t:+$("w_T").value });
+  function draw(){
+    if (!p.resize()) return;
+    const s = S();
+    p.frame();
+    p.curve(t=> wf(t), C.green, 1.6);
+    p.curve(t=> wg(t,s.A,s.w,s.ph), C.mag, 2);
+    if (s.w > 0.02){
+      p.marker(s.ph/s.w, C.mag);
+      p.point((s.ph + PI/2)/s.w, s.A, C.mag, 3);
+    }
+    p.vline(s.t, C.guide, [4,3]);
+    p.point(s.t, wf(s.t), C.green);
+    p.point(s.t, wg(s.t,s.A,s.w,s.ph), C.mag);
+    const ang = s.w*s.t, ang2 = ang - s.ph;
+    $("w_vW").textContent = nf(s.w,2);
+    $("w_vA").textContent = nf(s.A,2);
+    $("w_vP").textContent = nf(s.ph,2);
+    $("w_vT").textContent = nf(s.t,2);
+    $("w_r0").textContent = nf(s.t,3) + "   (" + nf(s.t/PI,3) + "\u03C0)";
+    $("w_r1").textContent = nf(s.w,2) + " \u00D7 " + nf(s.t,3) + " = " + nf(ang,3);
+    $("w_r2").textContent = nf(ang,3) + " \u2212 " + nf(s.ph,2) + " = " + nf(ang2,3);
+    $("w_r3").textContent = "sin(" + nf(ang2,3) + ") = " + nf(Math.sin(ang2),4);
+    $("w_r4").textContent = nf(s.A,2) + " \u00D7 " + nf(Math.sin(ang2),4) + " = " + nf(wg(s.t,s.A,s.w,s.ph),4);
+    $("w_r5").textContent = nf(wf(s.t),4);
+  }
+  ["w_W","w_A","w_P","w_T"].forEach(id=> $(id).addEventListener("input", draw));
+  return { draw };
+})();
+
+/* ================= TAB 3 : adding ================= */
+const addTab = (()=>{
+  const pp = new Plot($("cvAddParts"), {tmax:10*PI, majorPi:2, minorPi:1});
+  const ps = new Plot($("cvAddSum"),   {tmax:10*PI, majorPi:2, minorPi:1});
+  const S = ()=>({ t:+$("a_T").value, w:+$("a_W").value, A:+$("a_A").value, ph:+$("a_P").value });
+  function draw(){
+    if (!pp.resize() || !ps.resize()) return;
+    const s = S();
+    pp.frame();
+    pp.curve(t=> wg(t,s.A,s.w,s.ph), C.mag, 1.6);
+    pp.curve(t=> wf(t), C.green, 1.6);
+    pp.vline(s.t, C.guide, [4,3]);
+    const fv = wf(s.t), gv = wg(s.t,s.A,s.w,s.ph);
+    // stems showing the two heights
+    const c = pp.ctx; pp.clipOn();
+    c.strokeStyle = C.green; c.lineWidth = 3; c.beginPath();
+    c.moveTo(pp.tx(s.t)-3, pp.ty(0)); c.lineTo(pp.tx(s.t)-3, pp.ty(fv)); c.stroke();
+    c.strokeStyle = C.mag; c.beginPath();
+    c.moveTo(pp.tx(s.t)+3, pp.ty(0)); c.lineTo(pp.tx(s.t)+3, pp.ty(gv)); c.stroke();
+    pp.clipOff();
+    pp.point(s.t, fv, C.green); pp.point(s.t, gv, C.mag);
+
+    ps.frame();
+    ps.curve(t=> wsum(t,s.A,s.w,s.ph), C.blue, 1.7);
+    ps.vline(s.t, C.guide, [4,3]);
+    const c2 = ps.ctx; ps.clipOn();
+    c2.strokeStyle = C.green; c2.lineWidth = 3; c2.beginPath();
+    c2.moveTo(ps.tx(s.t), ps.ty(0)); c2.lineTo(ps.tx(s.t), ps.ty(fv)); c2.stroke();
+    c2.strokeStyle = C.mag; c2.beginPath();
+    c2.moveTo(ps.tx(s.t), ps.ty(fv)); c2.lineTo(ps.tx(s.t), ps.ty(fv+gv)); c2.stroke();
+    ps.clipOff();
+    ps.point(s.t, fv+gv, C.blue);
+
+    $("a_vT").textContent = nf(s.t,2);
+    $("a_vW").textContent = nf(s.w,3);
+    $("a_vA").textContent = nf(s.A,2);
+    $("a_vP").textContent = nf(s.ph,2);
+    $("a_rf").textContent = nf(fv,4);
+    $("a_rg").textContent = nf(gv,4);
+    $("a_rx").textContent = nf(fv,4) + "  +  " + nf(gv,4) + "  =  " + nf(fv+gv,4);
+    const d = wrapPi((s.w-1)*s.t - s.ph);
+    $("a_rd").textContent = nf(d,3) + " rad  (" + nf(d*180/PI,1) + "\u00B0)";
+  }
+  ["a_T","a_W","a_A","a_P"].forEach(id=> $(id).addEventListener("input", draw));
+  return { draw };
+})();
+
+/* ================= TAB 4 : why beats ================= */
+const whyTab = (()=>{
+  const p = new Plot($("cvWhy"), {tmax:20*PI, majorPi:5, minorPi:1});
+  function draw(){
+    if (!p.resize()) return;
+    const w = +$("y_W").value, ph = +$("y_P").value;
+    const A = 1;
+    p.frame();
+    if ($("y_showEnv").checked){
+      p.curve(t=>  2*Math.abs(Math.cos(((1-w)*t+ph)/2)), C.gray, 1.4);
+      p.curve(t=> -2*Math.abs(Math.cos(((1-w)*t+ph)/2)), C.gray, 1.4);
+    }
+    if ($("y_showFast").checked){
+      p.curve(t=> 2*Math.sin(((1+w)*t-ph)/2), "#C9C9F2", 1.3);
+    }
+    p.curve(t=> wsum(t,A,w,ph), C.blue, 1.6);
+    const fast = TAU/((1+w)/2), d = Math.abs(1-w);
+    $("y_vW").textContent = nf(w,3);
+    $("y_vP").textContent = nf(ph,2);
+    $("y_fFast").textContent = nf(fast,3) + "  (" + nf(fast/PI,2) + "\u03C0)";
+    if (d < 1e-6){
+      $("y_fBeat").textContent = "\u221E";
+      $("y_fN").textContent = "0";
+      $("y_fRatio").textContent = "\u221E";
+    } else {
+      const beat = TAU/d;
+      $("y_fBeat").textContent  = nf(beat,3) + "  (" + nf(beat/PI,2) + "\u03C0)";
+      $("y_fN").textContent     = nf(20*PI/beat,2);
+      $("y_fRatio").textContent = nf(beat/fast,2);
+    }
+  }
+  ["y_W","y_P"].forEach(id=> $(id).addEventListener("input", draw));
+  ["y_showEnv","y_showFast"].forEach(id=> $(id).addEventListener("change", draw));
+  return { draw };
+})();
+
+/* ================= TAB 5 : envelope + phasors ================= */
+const envTab = (()=>{
+  const pt = new Plot($("cvEnvTime"), {tmax:20*PI, majorPi:5, minorPi:1, pad:{l:32,r:22,t:14,b:26}});
+  const cv = $("cvPhasor"), cx = cv.getContext("2d");
+  let playing = false, raf = null, last = 0;
+  const S = ()=>({ t:+$("e_T").value, w:+$("e_W").value, A:+$("e_A").value, ph:+$("e_P").value });
+
+  function drawPhasor(s){
+    const dpr = window.devicePixelRatio||1;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (!w || !h) return;
+    cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+    cx.setTransform(dpr,0,0,dpr,0,0);
+    cx.clearRect(0,0,w,h);
+    cx.fillStyle = "#fff"; cx.fillRect(0,0,w,h);
+    cx.strokeStyle = C.rule; cx.strokeRect(0.5,0.5,w-1,h-1);
+    const ox = w/2, oy = h/2, sc = (Math.min(w,h)/2 - 26)/2.1;
+    const X = u => ox + u*sc, Y = v => oy - v*sc;
+    // axes
+    cx.strokeStyle = "#E2E5E9"; cx.lineWidth = 1;
+    cx.beginPath(); cx.moveTo(10,oy); cx.lineTo(w-10,oy); cx.moveTo(ox,10); cx.lineTo(ox,h-10); cx.stroke();
+    // bounding circles
+    const Rmax = 1+s.A, Rmin = Math.abs(1-s.A);
+    cx.setLineDash([4,4]); cx.strokeStyle = C.gray;
+    cx.beginPath(); cx.arc(ox,oy,Rmax*sc,0,TAU); cx.stroke();
+    if (Rmin > 0.02){ cx.beginPath(); cx.arc(ox,oy,Rmin*sc,0,TAU); cx.stroke(); }
+    cx.setLineDash([]);
+    // arrows
+    const a1 = { x:Math.cos(s.t), y:Math.sin(s.t) };
+    const th2 = s.w*s.t - s.ph;
+    const a2 = { x:s.A*Math.cos(th2), y:s.A*Math.sin(th2) };
+    const sum = { x:a1.x+a2.x, y:a1.y+a2.y };
+    const arrow = (x0,y0,x1,y1,col,lw)=>{
+      cx.strokeStyle=col; cx.fillStyle=col; cx.lineWidth=lw;
+      cx.beginPath(); cx.moveTo(X(x0),Y(y0)); cx.lineTo(X(x1),Y(y1)); cx.stroke();
+      const ang = Math.atan2(Y(y1)-Y(y0), X(x1)-X(x0)), L=8;
+      cx.beginPath();
+      cx.moveTo(X(x1),Y(y1));
+      cx.lineTo(X(x1)-L*Math.cos(ang-0.4), Y(y1)-L*Math.sin(ang-0.4));
+      cx.lineTo(X(x1)-L*Math.cos(ang+0.4), Y(y1)-L*Math.sin(ang+0.4));
+      cx.closePath(); cx.fill();
+    };
+    arrow(0,0,a1.x,a1.y,C.green,2);
+    arrow(a1.x,a1.y,sum.x,sum.y,C.mag,2);
+    arrow(0,0,sum.x,sum.y,C.blue,2.4);
+    // shadow on the vertical axis
+    cx.setLineDash([3,3]); cx.strokeStyle=C.blue; cx.lineWidth=1;
+    cx.beginPath(); cx.moveTo(X(sum.x),Y(sum.y)); cx.lineTo(X(0),Y(sum.y)); cx.stroke();
+    cx.setLineDash([]);
+    cx.fillStyle=C.blue; cx.beginPath(); cx.arc(X(0),Y(sum.y),4,0,TAU); cx.fill();
+    // labels
+    cx.font="600 11px Helvetica, Arial, sans-serif";
+    cx.fillStyle=C.blue; cx.textAlign="left";
+    cx.fillText("x(t) = " + nf(sum.y,3), X(0)+8, Y(sum.y)-7);
+    cx.fillStyle=C.gray; cx.textAlign="center";
+    cx.fillText("R = " + nf(Math.hypot(sum.x,sum.y),3), ox, 16);
+  }
+
+  function drawTime(s){
+    if (!pt.resize()) return;
+    pt.frame();
+    pt.curve(t=>  wenv(t,s.A,s.w,s.ph), C.gray, 1.3);
+    pt.curve(t=> -wenv(t,s.A,s.w,s.ph), C.gray, 1.3);
+    pt.curve(t=> wsum(t,s.A,s.w,s.ph), C.blue, 1.5);
+    pt.vline(s.t, C.guide, [4,3]);
+    pt.point(s.t, wsum(s.t,s.A,s.w,s.ph), C.blue);
+  }
+
+  function draw(){
+    const s = S();
+    drawPhasor(s); drawTime(s);
+    const d = wrapPi((s.w-1)*s.t - s.ph);
+    const r2 = 1 + s.A*s.A + 2*s.A*Math.cos(d);
+    $("e_vT").textContent = nf(s.t,2);
+    $("e_vW").textContent = nf(s.w,3);
+    $("e_vA").textContent = nf(s.A,2);
+    $("e_vP").textContent = nf(s.ph,2);
+    $("e_rd").textContent = nf(d,3) + " rad  (" + nf(d*180/PI,1) + "\u00B0)";
+    $("e_rr2").textContent = "1 + " + nf(s.A*s.A,3) + " + " + nf(2*s.A*Math.cos(d),3) + " = " + nf(r2,4);
+    $("e_rr").textContent  = nf(Math.sqrt(Math.max(0,r2)),4);
+    $("e_rx").textContent  = nf(wsum(s.t,s.A,s.w,s.ph),4);
+    $("e_rchk").textContent = nf(wf(s.t),3) + " + " + nf(wg(s.t,s.A,s.w,s.ph),3) + " = " + nf(wsum(s.t,s.A,s.w,s.ph),4);
+  }
+  function tick(now){
+    if (!playing) return;
+    const dt = last ? Math.min(0.05,(now-last)/1000) : 0; last = now;
+    let t = +$("e_T").value + dt*3;
+    if (t > 20*PI) t = 0;
+    $("e_T").value = t; draw();
+    raf = requestAnimationFrame(tick);
+  }
+  $("e_play").addEventListener("click", e=>{
+    playing = !playing; last = 0;
+    e.target.textContent = playing ? "Pause" : "Play";
+    if (playing) raf = requestAnimationFrame(tick); else if (raf) cancelAnimationFrame(raf);
+  });
+  $("e_reset").addEventListener("click", ()=>{ $("e_T").value = 0; draw(); });
+  ["e_T","e_W","e_A","e_P"].forEach(id=> $(id).addEventListener("input", draw));
+  function stop(){ if (playing){ playing=false; $("e_play").textContent="Play"; if(raf) cancelAnimationFrame(raf);} }
+  return { draw, stop };
+})();
+
+/* ================= TAB 6 : drawing ================= */
+const drawTab = (()=>{
+  const p = new Plot($("cvAlias"), {tmax:20*PI, majorPi:5, minorPi:1});
+  const F = t => Math.sin(t) + Math.sin(1.77*t - 1.13);
+  function draw(){
+    // live measurements from the tab-1 plot
+    const q = app.plot;
+    if (q.ok){
+      const dpr = window.devicePixelRatio || 1;
+      $("d_size").textContent    = Math.round(q.W) + " \u00D7 " + Math.round(q.H) + " px";
+      $("d_dpr").textContent     = String(dpr);
+      $("d_backing").textContent = q.cv.width + " \u00D7 " + q.cv.height + " px";
+      $("d_rect").textContent    = Math.round(q.PW) + " \u00D7 " + Math.round(q.PH) + " px, top-left at (" + q.L + ", " + q.T + ")";
+      $("d_trange").textContent  = "[0, " + Math.round(q.o.tmax/PI) + "\u03C0]  =  [0, " + nf(q.o.tmax,2) + "]";
+      const tEx = 10*PI;
+      $("d_worked1").textContent =
+        "Worked example: with t = 10\u03C0 = " + nf(tEx,2) + " and the range [0, " + nf(q.o.tmax,2) +
+        "], the fraction is " + nf(tEx/q.o.tmax,4) + ", so px = " + q.L + " + " + nf(tEx/q.o.tmax,4) +
+        " \u00D7 " + Math.round(q.PW) + " = " + nf(q.tx(tEx),1) + " pixels from the left edge of the canvas.";
+      $("d_worked2").textContent =
+        "Worked example: x = 1.577 sits (2 \u2212 1.577) / 4 = " + nf((2-1.577)/4,4) +
+        " of the way down the rectangle, so py = " + q.T + " + " + nf((2-1.577)/4,4) + " \u00D7 " +
+        Math.round(q.PH) + " = " + nf(q.ty(1.577),1) + ". One unit of x is worth " + nf(q.PH/4,2) + " pixels.";
+    }
+    if (!p.resize()) return;
+    const N = +$("d_N").value;
+    p.frame();
+    p.curve(F, "#D6D9DE", 1.2);
+    p.curve(F, C.blue, 1.6, null, N);
+    if ($("d_dots").checked && N <= 300) p.dots(F, "#8A2E70", N);
+    const fastPeriod = TAU/((1+1.77)/2);
+    const spacing = 20*PI/N;
+    const per = fastPeriod/spacing;
+    $("d_vN").textContent = String(N);
+    $("d_f1").textContent = String(N);
+    $("d_f2").textContent = nf(spacing,4);
+    $("d_f3").textContent = nf(per,2);
+    $("d_f4").textContent = per < 2 ? "aliased \u2014 fiction" : per < 4 ? "jagged, unreliable" : per < 10 ? "readable" : "faithful";
+  }
+  ["d_N"].forEach(id=> $(id).addEventListener("input", draw));
+  $("d_dots").addEventListener("change", draw);
+  return { draw };
+})();
+
+/* ================= tab switching ================= */
+const tabs = { app: ()=>app.draw(), wave: ()=>waveTab.draw(), add: ()=>addTab.draw(),
+               why: ()=>whyTab.draw(), env: ()=>envTab.draw(), draw: ()=>drawTab.draw() };
+let current = "app";
+document.querySelectorAll("#tabbar button").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const name = btn.dataset.tab;
+    if (name === current) return;
+    if (current === "env") envTab.stop();
+    document.querySelectorAll("#tabbar button").forEach(b=> b.setAttribute("aria-selected", String(b===btn)));
+    document.querySelectorAll(".tabpanel").forEach(s=> s.classList.remove("active"));
+    $("tab-"+name).classList.add("active");
+    current = name;
+    requestAnimationFrame(()=> tabs[name]());
+  });
+});
+
+/* initial paint + resize handling */
+function paintAll(){ tabs[current](); }
+app.sync();
+["wave","add","why","env","draw"].forEach(()=>{});
+let rz;
+window.addEventListener("resize", ()=>{ clearTimeout(rz); rz = setTimeout(paintAll, 120); });
+// prime every panel once so first switch is instant
+requestAnimationFrame(()=>{
+  const active = $("tab-"+current);
+  document.querySelectorAll(".tabpanel").forEach(s=>{
+    if (s !== active){ s.style.display="block"; }
+  });
+  waveTab.draw(); addTab.draw(); whyTab.draw(); envTab.draw(); drawTab.draw();
+  document.querySelectorAll(".tabpanel").forEach(s=>{ if (s !== active) s.style.display=""; });
+  app.draw();
+});
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

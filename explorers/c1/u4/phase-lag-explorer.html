@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase Lag Explorer</title>
+<style>
+  :root{
+    --bg:#eef2fb; --card:#ffffff; --shadow:0 10px 26px rgba(124,58,237,.12);
+    --input:#f97316; --input-soft:#ffedd5;
+    --output:#0d9488; --output-soft:#ccfbf1;
+    --action:#7c3aed; --action-soft:#ede9fe;
+    --ink:#1e293b; --muted:#64748b; --ref:#94a3b8; --line:#e2e8f0;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:18px 16px 60px;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto}
+  h1{font-size:22px;margin:4px 2px 2px;font-weight:700}
+  .sub{color:var(--muted);font-size:13px;margin:0 2px 14px;line-height:1.5}
+  .tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .tab-btn{border:0;cursor:pointer;padding:9px 15px;border-radius:999px;background:var(--card);
+    color:var(--action);font-weight:600;font-size:13.5px;box-shadow:var(--shadow)}
+  .tab-btn.active{background:var(--action);color:#fff}
+  .tab{display:none}.tab.show{display:block}
+  .layout{display:grid;grid-template-columns:286px 1fr;gap:16px;align-items:start}
+  @media(max-width:900px){.layout{grid-template-columns:1fr}}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;margin-bottom:14px}
+  .card:last-child{margin-bottom:0}
+  .card h2{font-size:13px;margin:0 0 10px;letter-spacing:.02em;color:var(--muted);text-transform:uppercase}
+  .card h2 span{text-transform:none;letter-spacing:0;font-weight:500}
+  .stick{position:sticky;top:10px}
+  @media(max-width:900px){.stick{position:static}}
+  .ctl{margin-bottom:13px}
+  .ctl label{display:flex;justify-content:space-between;gap:10px;font-size:13px;font-weight:600;margin-bottom:4px}
+  .ctl .val{color:var(--input);font-variant-numeric:tabular-nums}
+  .ctl .sub2{font-size:11px;color:var(--muted);font-weight:500;margin-top:3px;line-height:1.35}
+  input[type=range]{width:100%;accent-color:var(--input);height:22px}
+  input[type=range].act{accent-color:var(--action)}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .btn{border:0;cursor:pointer;border-radius:10px;padding:8px 13px;font-weight:600;font-size:13px;
+    background:var(--action-soft);color:var(--action)}
+  .btn.primary{background:var(--action);color:#fff}
+  .chk{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;margin-top:7px;color:var(--muted);cursor:pointer}
+  .chk input{accent-color:var(--action);width:15px;height:15px}
+  canvas{width:100%;display:block}
+  .legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:8px;font-size:12px;color:var(--muted)}
+  .legend b{color:var(--ink);font-weight:600}
+  .chip{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:10px}
+  .tile{background:#f8fafc;border-radius:10px;padding:9px 11px}
+  .tile .name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--muted)}
+  .tile .calc{font-size:13.5px;margin:4px 0;line-height:1.55;font-variant-numeric:tabular-nums}
+  .tile .calc .out{color:var(--output);font-weight:700;background:var(--output-soft);border-radius:6px;padding:0 5px}
+  .tile .calc .in{color:var(--input);font-weight:700}
+  .tile .why{font-size:11.5px;color:var(--muted);line-height:1.4}
+  .eq{font-size:15px;text-align:center;background:var(--action-soft);border-radius:10px;padding:9px;margin:6px 0 10px}
+  .eq .in{color:var(--input);font-weight:700} .eq .out{color:var(--output);font-weight:700}
+  .prose{font-size:13.5px;line-height:1.62}
+  .prose p{margin:9px 0}
+  .prose b{font-weight:700}
+  .note{background:var(--output-soft);border-left:3px solid var(--output);border-radius:8px;padding:8px 11px;margin:9px 0;font-size:13px;line-height:1.55}
+  .warn{background:var(--input-soft);border-left:3px solid var(--input);border-radius:8px;padding:8px 11px;margin:9px 0;font-size:13px;line-height:1.55}
+  .hint{font-size:11.5px;color:var(--action);font-weight:600;margin-top:6px}
+  .morebtn{border:0;cursor:pointer;background:var(--action-soft);color:var(--action);
+    font-weight:700;font-size:11.5px;border-radius:999px;padding:4px 11px;margin:6px 6px 0 0}
+  .morebtn:hover{background:var(--action);color:#fff}
+  table.cmp{width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0}
+  table.cmp th,table.cmp td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+  table.cmp th{color:var(--muted);font-weight:600}
+  table.cmp tr.hi td{background:var(--action-soft);font-weight:700}
+  sup,sub{font-size:.72em}
+  .backdrop{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;z-index:100;
+    align-items:center;justify-content:center;padding:22px}
+  .backdrop.show{display:flex}
+  .modal{background:var(--card);border-radius:16px;box-shadow:0 24px 60px rgba(15,23,42,.35);
+    width:min(700px,100%);max-height:min(84vh,780px);display:flex;flex-direction:column;overflow:hidden}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:13px 18px;border-bottom:1px solid var(--line);flex:none}
+  .modal-head h3{margin:0;font-size:14.5px;color:var(--action);text-transform:uppercase;letter-spacing:.03em}
+  .modal-x{border:0;cursor:pointer;background:var(--action-soft);color:var(--action);
+    font-weight:700;font-size:16px;line-height:1;border-radius:999px;width:30px;height:30px;flex:none}
+  .modal-body{overflow-y:auto;padding:15px 18px;font-size:13.5px;line-height:1.62;-webkit-overflow-scrolling:touch}
+  .modal-body h4{margin:14px 0 5px;font-size:12.5px;color:var(--action);text-transform:uppercase;letter-spacing:.03em}
+  .modal-body h4:first-child{margin-top:0}
+  .modal-body p{margin:8px 0}
+  .modal-body .step{background:#f8fafc;border-left:3px solid var(--action);border-radius:6px;
+    padding:8px 11px;margin:8px 0;font-variant-numeric:tabular-nums}
+  .modal-body .num{color:var(--output);font-weight:700;background:var(--output-soft);border-radius:5px;padding:0 4px}
+  .modal-foot{padding:11px 18px;border-top:1px solid var(--line);flex:none;display:flex;justify-content:flex-end}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Phase Lag Explorer</h1>
+  <p class="sub">Phase lag <b>φ</b> is how far behind the <b style="color:var(--input)">input</b> the <b style="color:var(--output)">output</b> runs, measured as a fraction of one cycle. Every tab shows the same idea in a different physical system: drag the sliders, press play, and watch the two curves separate.</p>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="tabHost"></div>
+</div>
+
+<div class="backdrop" id="backdrop">
+  <div class="modal">
+    <div class="modal-head"><h3 id="modalTitle"></h3><button class="modal-x" id="modalX">&times;</button></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot"><button class="btn primary" id="modalClose">Close</button></div>
+  </div>
+</div>
+
+<script>
+(function () {
+'use strict';
+const TAU = 2 * Math.PI, PI = Math.PI;
+const C = { in:'#f97316', inSoft:'#ffedd5', out:'#0d9488', outSoft:'#ccfbf1', act:'#7c3aed',
+            ink:'#1e293b', mut:'#64748b', ref:'#94a3b8', grid:'#e8edf7', line:'#e2e8f0' };
+const F = (v, d = 2) => (isFinite(v) ? v.toFixed(d) : '—');
+const deg = r => F(r * 180 / PI, 1) + '°';
+const $ = id => document.getElementById(id);
+
+/* ============================ canvas helpers ============================ */
+function fit(cv) {
+  const dpr = Math.min(2.5, window.devicePixelRatio || 1);
+  const w = cv.el.clientWidth || 600;
+  cv.w = w; cv.h = cv.hCss;
+  cv.el.width = Math.round(w * dpr); cv.el.height = Math.round(cv.hCss * dpr);
+  cv.el.style.height = cv.hCss + 'px';
+  cv.x.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+function canvas(el, hCss) {
+  const cv = { el, x: el.getContext('2d'), hCss, w:0, h:0 };
+  fit(cv); return cv;
+}
+function line(x, a, b, c, d, col, lw, dash) {
+  x.save(); x.strokeStyle = col; x.lineWidth = lw || 1; if (dash) x.setLineDash(dash);
+  x.beginPath(); x.moveTo(a, b); x.lineTo(c, d); x.stroke(); x.restore();
+}
+function dot(x, cx, cy, r, fill, stroke) {
+  x.beginPath(); x.arc(cx, cy, r, 0, TAU);
+  if (fill) { x.fillStyle = fill; x.fill(); }
+  if (stroke) { x.strokeStyle = stroke; x.lineWidth = 2; x.stroke(); }
+}
+function rrect(x, a, b, w, h, r) {
+  r = Math.max(0, Math.min(r, w / 2, h / 2));
+  x.beginPath(); x.moveTo(a + r, b);
+  x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r);
+  x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath();
+}
+function txt(x, s, px, py, o) {
+  o = o || {};
+  x.font = (o.italic ? 'italic ' : '') + (o.weight || 400) + ' ' + (o.size || 12) + 'px ' +
+           '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+  x.textAlign = o.align || 'left'; x.textBaseline = o.base || 'alphabetic';
+  if (o.halo) { x.lineWidth = 3.5; x.lineJoin = 'round'; x.strokeStyle = 'rgba(255,255,255,.92)'; x.strokeText(s, px, py); }
+  x.fillStyle = o.color || C.ink; x.fillText(s, px, py);
+}
+function arrowhead(x, px, py, ang, col, size) {
+  size = size || 7;
+  x.save(); x.fillStyle = col; x.beginPath(); x.moveTo(px, py);
+  x.lineTo(px - size * Math.cos(ang - 0.4), py - size * Math.sin(ang - 0.4));
+  x.lineTo(px - size * Math.cos(ang + 0.4), py - size * Math.sin(ang + 0.4));
+  x.closePath(); x.fill(); x.restore();
+}
+function headline(x, W, H, parts) {
+  const nar = W < 520;
+  if (!nar) { txt(x, parts.join('   ·   '), W / 2, H - 12, { align:'center', size:12.5, weight:600, color:C.act }); return; }
+  const half = Math.ceil(parts.length / 2);
+  txt(x, parts.slice(0, half).join(' · '), W / 2, H - 26, { align:'center', size:11, weight:600, color:C.act });
+  txt(x, parts.slice(half).join(' · '), W / 2, H - 11, { align:'center', size:11, weight:600, color:C.act });
+}
+function hatch(x, a, b, w, h, col) {
+  x.save(); x.beginPath(); x.rect(a, b, w, h); x.clip();
+  x.strokeStyle = col; x.lineWidth = 1;
+  for (let k = -h; k < w + h; k += 7) line(x, a + k, b + h, a + k + h, b, col, 1);
+  x.restore();
+}
+
+/* ======================= shared: the two-wave picture ======================= */
+/* Draws input cos(wt) and output g*cos(wt - phi) over `cycles` cycles,
+   with the lag between one pair of peaks marked and measured.            */
+function drawWaves(cv, st, opt) {
+  const x = cv.x, W = cv.w, H = cv.h; x.clearRect(0, 0, W, H);
+  const L = 46, R = 16, T = 26, B = 40, pw = W - L - R, ph = H - T - B;
+  if (pw < 60 || ph < 40) return;
+  const w = st.w, g = opt.gain, phi = opt.phi;
+  const per = TAU / w, span = per * (opt.cycles || 2.6);
+  const ymax = Math.max(1, g) * 1.18;
+  const X = t => L + t / span * pw, Y = v => T + ph / 2 - v / ymax * (ph / 2);
+
+  for (const f of [-1, -0.5, 0.5, 1]) line(x, L, Y(f * ymax / 1.18), L + pw, Y(f * ymax / 1.18), C.grid, 1);
+  line(x, L, Y(0), L + pw, Y(0), C.ref, 1);
+  txt(x, '+1', L - 7, Y(1), { align:'right', base:'middle', size:11, color:C.mut });
+  txt(x, '0', L - 7, Y(0), { align:'right', base:'middle', size:11, color:C.mut });
+  txt(x, '−1', L - 7, Y(-1), { align:'right', base:'middle', size:11, color:C.mut });
+
+  /* period ticks along the bottom */
+  for (let n = 0; n * per <= span + 1e-9; n++) {
+    const px = X(n * per);
+    line(x, px, T, px, T + ph, C.grid, 1, [3, 4]);
+    txt(x, n === 0 ? '0' : (n === 1 ? 'T' : n + 'T'), px, T + ph + 14, { align:'center', size:11, color:C.mut, weight:600 });
+  }
+  txt(x, 'time →', L + pw, T + ph + 30, { align:'right', size:11, color:C.mut });
+  txt(x, 'one cycle T = ' + F(per, 2) + ' s', L, T + ph + 30, { size:11, color:C.mut });
+
+  /* curves */
+  const plot = (fn, col, lw) => {
+    x.strokeStyle = col; x.lineWidth = lw; x.beginPath();
+    for (let i = 0; i <= 500; i++) { const t = span * i / 500; const a = X(t), b = Y(fn(t)); i ? x.lineTo(a, b) : x.moveTo(a, b); }
+    x.stroke();
+  };
+  const fin = t => Math.cos(w * t), fout = t => g * Math.cos(w * t - phi);
+  plot(fin, C.in, 2.6); plot(fout, C.out, 2.6);
+
+  /* the lag, marked between the 2nd input peak and the matching output peak */
+  const tin = per, tout = tin + phi / w;
+  if (tout <= span && tout >= 0) {
+    const yBar = T + ph - 14;
+    line(x, X(tin), Y(1), X(tin), yBar + 6, C.in, 1.5, [4, 3]);
+    line(x, X(tout), Y(g), X(tout), yBar + 6, C.out, 1.5, [4, 3]);
+    dot(x, X(tin), Y(1), 4.5, C.in, '#fff'); dot(x, X(tout), Y(g), 4.5, C.out, '#fff');
+    if (Math.abs(phi) > 1e-3) {
+      const a = Math.min(X(tin), X(tout)), b2 = Math.max(X(tin), X(tout));
+      x.fillStyle = 'rgba(124,58,237,.13)'; x.fillRect(a, T, b2 - a, ph);
+      line(x, a, yBar, b2, yBar, C.act, 2);
+      arrowhead(x, b2, yBar, 0, C.act); arrowhead(x, a, yBar, PI, C.act);
+      const nar = W < 520;
+      const lab = nar ? 'lag ' + F(Math.abs(phi) / w, 2) + ' s = ' + F(Math.abs(phi) / TAU, 2) + ' cyc'
+                      : 'lag = ' + F(Math.abs(phi) / w, 2) + ' s = ' + F(Math.abs(phi) / TAU, 3) + ' of a cycle';
+      txt(x, lab, (a + b2) / 2, yBar - 7, { align:'center', size: nar ? 10.5 : 11.5, weight:700, color:C.act, halo:true });
+    } else {
+      txt(x, 'peaks line up: no lag', X(tin), yBar - 7, { align:'center', size:11.5, weight:700, color:C.act, halo:true });
+    }
+  }
+
+  /* now-marker */
+  const tn = st.t % span;
+  line(x, X(tn), T, X(tn), T + ph, 'rgba(100,116,139,.45)', 1);
+  dot(x, X(tn), Y(fin(tn)), 5, C.in, '#fff');
+  dot(x, X(tn), Y(fout(tn)), 5, C.out, '#fff');
+
+  txt(x, opt.inName, L, 14, { size:12, weight:700, color:C.in });
+  txt(x, opt.outName, L + pw, 14, { size:12, weight:700, color:C.out, align:'right' });
+  if (opt.trueGain && opt.trueGain > g + 1e-6) {
+    const nar2 = W < 620;
+    txt(x, nar2 ? 'output shrunk to fit (gain ' + F(opt.trueGain, 1) + ')'
+                : 'output shrunk ×' + F(g / opt.trueGain, 2) + ' to fit — true gain ' + F(opt.trueGain, 1) + '. Timing is unaffected.',
+        L + pw / 2, nar2 ? 26 : 14, { align:'center', size:10.5, color:C.act, weight:600, halo:true });
+  }
+}
+
+/* ======================= shared: the two-phasor picture ======================= */
+function drawPhasors(cv, st, opt) {
+  const x = cv.x, W = cv.w, H = cv.h; x.clearRect(0, 0, W, H);
+  const nar = W < 470;
+  const cx = nar ? W / 2 : W * 0.42, cy = nar ? H / 2 - 12 : H / 2 + 4;
+  const R = nar ? Math.min(W * 0.36, H / 2 - 40) : Math.min(W * 0.3, H / 2 - 26);
+  if (R < 20) return;
+  const g = opt.gain, phi = opt.phi, th = st.w * st.t;
+  const sc = R / Math.max(1, g);
+  line(x, cx - R - 12, cy, cx + R + 12, cy, C.ref, 1);
+  line(x, cx, cy - R - 10, cx, cy + R + 10, C.grid, 1);
+  x.setLineDash([3, 4]); x.lineWidth = 1;
+  x.strokeStyle = 'rgba(249,115,22,.5)'; x.beginPath(); x.arc(cx, cy, sc, 0, TAU); x.stroke();
+  x.strokeStyle = 'rgba(13,148,136,.5)'; x.beginPath(); x.arc(cx, cy, Math.max(2, g * sc), 0, TAU); x.stroke();
+  x.setLineDash([]);
+
+  const ix = cx + sc * Math.cos(th), iy = cy - sc * Math.sin(th);
+  const ox = cx + g * sc * Math.cos(th - phi), oy = cy - g * sc * Math.sin(th - phi);
+  const ra = Math.max(14, Math.min(sc, g * sc) * 0.5);
+  if (Math.abs(phi) > 1e-3) {
+    x.strokeStyle = C.act; x.lineWidth = 2.5;
+    x.beginPath(); x.arc(cx, cy, ra, -th, -th + phi, phi < 0); x.stroke();
+    const mA = th - phi / 2;
+    txt(x, 'φ', cx + (ra + 11) * Math.cos(mA), cy - (ra + 11) * Math.sin(mA),
+        { align:'center', base:'middle', size:15, weight:700, color:C.act, italic:true, halo:true });
+  }
+  line(x, ix, iy, ix, cy, C.in, 1.2, [2, 3]);
+  line(x, ox, oy, ox, cy, C.out, 1.2, [2, 3]);
+  x.lineWidth = 3.5; x.strokeStyle = C.in; line(x, cx, cy, ix, iy, C.in, 3.5);
+  x.strokeStyle = C.out; line(x, cx, cy, ox, oy, C.out, 3.5);
+  dot(x, ix, iy, 5, C.in, '#fff'); dot(x, ox, oy, 5, C.out, '#fff');
+  dot(x, ix, cy, 4, C.in); dot(x, ox, cy, 4, C.out);
+  dot(x, cx, cy, 3, C.ink);
+
+  if (nar) {
+    txt(x, 'φ = ' + deg(phi), W / 2, H - 22, { align:'center', size:15, weight:700, color:C.act });
+    txt(x, 'both spin at ω — the gap never changes', W / 2, H - 6, { align:'center', size:10.5, color:C.mut });
+  } else {
+    const tx0 = Math.min(W - 8, cx + R + 22);
+    txt(x, 'Both arrows spin at the same', tx0, cy - 34, { size:11.5, color:C.mut });
+    txt(x, 'rate ω. The angle between', tx0, cy - 19, { size:11.5, color:C.mut });
+    txt(x, 'them never changes:', tx0, cy - 4, { size:11.5, color:C.mut });
+    txt(x, 'φ = ' + deg(phi), tx0, cy + 16, { size:15, weight:700, color:C.act });
+    txt(x, 'shadows on the line', tx0, cy + 36, { size:11.5, color:C.mut });
+    txt(x, 'are the two waves', tx0, cy + 51, { size:11.5, color:C.mut });
+  }
+}
+
+/* ============================ modal ============================ */
+const MODALS = {};
+function openModal(key) {
+  const m = MODALS[key]; if (!m) return;
+  $('modalTitle').textContent = m.title; $('modalBody').innerHTML = m.body;
+  $('backdrop').classList.add('show');
+}
+function closeModal() { $('backdrop').classList.remove('show'); }
+$('modalX').addEventListener('click', closeModal);
+$('modalClose').addEventListener('click', closeModal);
+$('backdrop').addEventListener('click', e => { if (e.target === $('backdrop')) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* ============================ tab machinery ============================ */
+const TABS = [];
+function addTab(cfg) { TABS.push(cfg); }
+
+/* builds the standard "one system" tab and returns its controller */
+function buildSystem(cfg) {
+  const host = document.createElement('div');
+  host.className = 'tab'; host.id = 'tab_' + cfg.id;
+  const ctlHTML = cfg.params.map(p =>
+    '<div class="ctl"><label><span>' + p.label + '</span><span class="val" id="v_' + cfg.id + '_' + p.key + '"></span></label>' +
+    '<input type="range" id="s_' + cfg.id + '_' + p.key + '" min="' + p.min + '" max="' + p.max + '" step="' + p.step + '" value="' + p.val + '"' +
+    (p.act ? ' class="act"' : '') + '>' +
+    (p.sub ? '<div class="sub2">' + p.sub + '</div>' : '') + '</div>').join('');
+
+  host.innerHTML =
+    '<div class="layout">' +
+      '<div><div class="card stick"><h2>Controls</h2>' + ctlHTML +
+        '<div class="row" style="margin-top:4px"><button class="btn primary" id="play_' + cfg.id + '">Pause</button>' +
+        '<button class="btn" id="reset_' + cfg.id + '">Restart</button></div>' +
+        '<div class="ctl" style="margin-top:12px"><label><span>slow motion</span><span class="val" id="v_' + cfg.id + '_speed"></span></label>' +
+        '<input type="range" class="act" id="s_' + cfg.id + '_speed" min="0.1" max="1.5" step="0.05" value="0.5"></div>' +
+        '<label class="chk"><input type="checkbox" id="ph_' + cfg.id + '" checked> show rotating arrows</label>' +
+        '<div class="hint">' + cfg.hint + '</div>' +
+      '</div></div>' +
+      '<div>' +
+        '<div class="card"><h2>' + cfg.physTitle + '</h2><canvas id="c_' + cfg.id + '_phys"></canvas>' +
+          '<div class="legend"><span><i class="chip" style="background:var(--input)"></i><b>input</b> ' + cfg.inName + '</span>' +
+          '<span><i class="chip" style="background:var(--output)"></i><b>output</b> ' + cfg.outName + '</span></div></div>' +
+        '<div class="card"><h2>The same motion as two waves <span>— the purple band is the lag</span></h2>' +
+          '<canvas id="c_' + cfg.id + '_wave"></canvas></div>' +
+        '<div class="card" id="phbox_' + cfg.id + '"><h2>Rotating arrows <span>— φ is the fixed angle between them</span></h2>' +
+          '<canvas id="c_' + cfg.id + '_ph"></canvas></div>' +
+        '<div class="card"><h2>How φ is computed here</h2><div class="eq">' + cfg.eq + '</div>' +
+          '<div class="tiles" id="tiles_' + cfg.id + '"></div></div>' +
+        '<div class="card"><h2>What it means</h2><div class="prose" id="interp_' + cfg.id + '"></div>' +
+          cfg.more.map(k => '<button class="morebtn" data-modal="' + k + '">' + MODALS[k].btn + '</button>').join('') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  $('tabHost').appendChild(host);
+
+  const st = { t:0, playing:true, speed:0.5, phasors:true };
+  cfg.params.forEach(p => { st[p.key] = p.val; });
+
+  const cvPhys = canvas($('c_' + cfg.id + '_phys'), cfg.physH || 250);
+  const cvWave = canvas($('c_' + cfg.id + '_wave'), 250);
+  const cvPh = canvas($('c_' + cfg.id + '_ph'), 190);
+
+  function refreshLabels() {
+    cfg.params.forEach(p => { $('v_' + cfg.id + '_' + p.key).textContent = p.fmt(st[p.key]); });
+    $('v_' + cfg.id + '_speed').textContent = F(st.speed, 2) + '×';
+  }
+  cfg.params.forEach(p => {
+    $('s_' + cfg.id + '_' + p.key).addEventListener('input', e => {
+      st[p.key] = +e.target.value; refreshLabels(); draw();
+    });
+  });
+  $('s_' + cfg.id + '_speed').addEventListener('input', e => { st.speed = +e.target.value; refreshLabels(); });
+  $('play_' + cfg.id).addEventListener('click', e => {
+    st.playing = !st.playing; e.target.textContent = st.playing ? 'Pause' : 'Play';
+  });
+  $('reset_' + cfg.id).addEventListener('click', () => { st.t = 0; draw(); });
+  $('ph_' + cfg.id).addEventListener('change', e => {
+    st.phasors = e.target.checked;
+    $('phbox_' + cfg.id).style.display = st.phasors ? '' : 'none';
+  });
+  host.querySelectorAll('[data-modal]').forEach(b => b.addEventListener('click', () => openModal(b.dataset.modal)));
+
+  const GCAP = 2.2;
+  function draw() {
+    const r = cfg.resp(st);                     // { gain, phi, extra... }
+    r.gDraw = Math.min(r.gain, GCAP);           // drawn size only; φ is never touched
+    cfg.drawPhys(cvPhys, st, r);
+    drawWaves(cvWave, st, { gain:r.gDraw, trueGain:r.gain, phi:r.phi,
+                            inName:cfg.inName, outName:cfg.outName, cycles:cfg.cycles || 2.6 });
+    if (st.phasors) drawPhasors(cvPh, st, { gain:r.gDraw, phi:r.phi });
+    $('tiles_' + cfg.id).innerHTML = cfg.tiles(st, r);
+    $('interp_' + cfg.id).innerHTML = cfg.interp(st, r);
+  }
+  function resize() { fit(cvPhys); fit(cvWave); fit(cvPh); draw(); }
+  refreshLabels();
+  return { host, st, draw, resize,
+    tick(dt) { if (st.playing) { st.t += dt * st.speed; draw(); } } };
+}
+
+/* ============================ modal texts ============================ */
+MODALS.whyAngle = { btn:'Why measure a delay as an angle?', title:'Seconds vs radians',
+  body:'<h4>The problem with seconds</h4>' +
+  '<p>Suppose I tell you the output is 0.1 s behind the input. Is that a lot? You cannot say, because it depends on how long a cycle lasts.</p>' +
+  '<div class="step">If one cycle takes 6.28 s, then 0.1 s is <span class="num">1.6%</span> of a cycle — the two curves look almost on top of each other.<br>' +
+  'If one cycle takes 0.2 s, then 0.1 s is <span class="num">half</span> a cycle — the output is doing the exact opposite of the input.</div>' +
+  '<p>Same 0.1 s, completely different physical behaviour.</p>' +
+  '<h4>The fix</h4>' +
+  '<p>Measure the delay as a fraction of one cycle instead. Then call one whole cycle 2π radians, so:</p>' +
+  '<div class="step">φ = (fraction of a cycle) × 2π<br>time lag = φ / ω = (φ/2π) × T</div>' +
+  '<p>A quarter-cycle delay is φ = π/2 = 90°, whether the cycle takes 2 seconds or 2 hours. That is the sense in which φ is the speed-independent number.</p>' +
+  '<h4>Careful</h4>' +
+  '<p>φ is <b>not</b> a constant of the system. Change ω and φ changes too — that is exactly what the phase curve plots. What φ does not depend on is your choice of time unit, or the overall speed scale of the system. Two systems, one a thousand times faster than the other, driven at the same fraction of their natural frequency, have the <b>same φ</b> and wildly different time lags.</p>' };
+
+MODALS.whyLag = { btn:'Why is there any delay at all?', title:'Where lag comes from',
+  body:'<h4>Instant systems have no lag</h4>' +
+  '<p>If the output were simply a constant times the input, output = 3 × input say, the two curves would peak at the same moment. Zero lag. Lag appears only when the system resists sudden change.</p>' +
+  '<h4>Two sources of resistance</h4>' +
+  '<p><b>Storage.</b> A mass stores momentum, a capacitor stores charge, a house stores heat. Storage cannot change instantly, so the output is always catching up with the input.</p>' +
+  '<p><b>Dissipation.</b> A dashpot, a resistor, heat leaking through a wall. These oppose motion in proportion to how fast you go, which pushes the response later still.</p>' +
+  '<h4>In the algebra</h4>' +
+  '<p>Every derivative in the equation becomes a factor of <i>i</i>ω when you feed in e<sup>iωt</sup>, and <i>i</i> is what points off the real axis. No derivatives means no imaginary part, means arg G = 0, means no lag. Each derivative term adds a piece of imaginary part, which tilts G off the axis and creates lag.</p>' +
+  '<div class="step">ẋ term → adds <i>i</i>bω → tilts G → lag appears<br>ẍ term → adds −mω² → real, but it flips sign past resonance → pushes lag toward 180°</div>' +
+  '<p>This is why the undamped oscillator (no ẋ term) can only have lag 0 or 180°, with nothing in between.</p>' };
+
+MODALS.quarter = { btn:'What is special about 90°?', title:'The quarter-cycle lag',
+  body:'<h4>What 90° looks like</h4>' +
+  '<p>At φ = 90° the output is a quarter cycle behind. When the input is at its peak, the output is passing through zero — moving at its fastest.</p>' +
+  '<p>Concretely, with input cos(ωt) the output is cos(ωt − 90°) = sin(ωt). Peak input meets zero output; zero input meets peak output. They are perfectly interleaved.</p>' +
+  '<h4>Why it marks resonance</h4>' +
+  '<p>For a spring-mass-dashpot, φ = 90° happens exactly when k − mω² = 0, that is when ω = ω₀ = √(k/m), the natural frequency. At that frequency the spring force and the inertia force cancel each other completely, and the only thing left opposing the drive is the dashpot.</p>' +
+  '<div class="step">Below ω₀: spring dominates → lag under 90°<br>At ω₀: they cancel → lag exactly 90°, amplitude largest<br>Above ω₀: inertia dominates → lag over 90°, heading to 180°</div>' +
+  '<h4>Why the push is most effective there</h4>' +
+  '<p>With a 90° lag the force is at its maximum exactly when the mass is moving fastest, so the force is always pushing in the direction of travel. That is the most efficient way to pump energy in — the same trick as pushing a child on a swing at the moment they pass through the bottom.</p>' };
+
+MODALS.leadlag = { btn:'Can the output ever be early?', title:'Lead vs lag',
+  body:'<h4>Negative φ means lead</h4>' +
+  '<p>Nothing in the mathematics forbids φ &lt; 0. Then the output peaks <i>before</i> the input does, and we call it a phase lead.</p>' +
+  '<h4>Is that time travel?</h4>' +
+  '<p>No. Both signals are eternal sine waves with no beginning, so "before" is meaningless in the causal sense — you cannot tell whether the output peak belongs to the input peak just before it or the one just after. A lead of 90° and a lag of 270° are the same picture.</p>' +
+  '<p>Lead happens in systems whose response depends on the <i>rate</i> of the input rather than its level. A differentiator is the extreme case: if input = cos(ωt), then its derivative is −ω sin(ωt) = ω cos(ωt + 90°), a 90° lead.</p>' +
+  '<h4>A real one</h4>' +
+  '<p>The car suspension tab has a bω term in the numerator of its gain, coming from the damper reacting to road <i>velocity</i>. That numerator term subtracts from the lag, so a suspension always lags less than a spring-only system would, and at some frequencies the effect is strong enough to matter.</p>' };
+
+MODALS.measure = { btn:'How would you measure φ in a lab?', title:'Measuring phase lag',
+  body:'<h4>The stopwatch method</h4>' +
+  '<p>Record both signals. Find one peak of the input and the nearest following peak of the output, and measure the gap Δt in seconds. Measure the period T separately. Then:</p>' +
+  '<div class="step">φ = 2π × Δt / T&nbsp;&nbsp;(radians)&nbsp;&nbsp;or&nbsp;&nbsp;φ = 360° × Δt / T</div>' +
+  '<p>Example: Δt = <span class="num">0.25 s</span>, T = <span class="num">2 s</span> → φ = 360 × 0.25 / 2 = <span class="num">45°</span>.</p>' +
+  '<h4>The zero-crossing method</h4>' +
+  '<p>Peaks are flat and hard to locate precisely. Zero crossings are steep, so timing those is far more accurate. Use crossings going the same direction (both upward) and apply the same formula.</p>' +
+  '<h4>The Lissajous method</h4>' +
+  '<p>Plot output against input, with no time axis at all. You get an ellipse. If φ = 0 the ellipse collapses to a straight line; at φ = 90° it opens into an upright ellipse. The ratio of the ellipse height at the centre to its maximum height is sin φ.</p>' +
+  '<p>This is how it was done on analogue oscilloscopes, and it is why the phase-plane picture in a vibration app is an ellipse rather than a line.</p>' };
+
+MODALS.transient = { btn:'Does the lag apply right from the start?', title:'Steady state only',
+  body:'<h4>Two parts to any response</h4>' +
+  '<p>The full solution of a driven system is <b>transient + steady state</b>. Everything about gain and phase lag describes the steady state only: the eternal sine wave the system settles into.</p>' +
+  '<h4>The early motion is messier</h4>' +
+  '<p>Right after you start shaking, the system also rings at its own natural frequency. During that stretch the output is not a clean sine wave at all, and the idea of "the lag" does not yet apply.</p>' +
+  '<div class="step">transient size ∝ e<sup>−bt/2m</sup> — it fades on a timescale set by damping, not by the drive.</div>' +
+  '<h4>Why we still care</h4>' +
+  '<p>Because the transient dies and the steady state does not. For anything running continuously — a bridge in wind, a filter in a radio, a suspension on a motorway — the steady state is what you live with. These animations show the steady state from t = 0 onward, as if the shaking had been going on forever.</p>' };
+
+/* ============================ TAB 1: what is phase lag ============================ */
+(function () {
+  const host = document.createElement('div');
+  host.className = 'tab show'; host.id = 'tab_basics';
+  host.innerHTML =
+    '<div class="layout">' +
+      '<div><div class="card stick"><h2>Controls</h2>' +
+        '<div class="ctl"><label><span>phase lag φ</span><span class="val" id="v_b_phi"></span></label>' +
+        '<input type="range" id="s_b_phi" min="0" max="180" step="1" value="60">' +
+        '<div class="sub2">How far behind the output runs, as a fraction of one cycle.</div></div>' +
+        '<div class="ctl"><label><span>frequency ω</span><span class="val" id="v_b_w"></span></label>' +
+        '<input type="range" id="s_b_w" min="0.3" max="3" step="0.05" value="1">' +
+        '<div class="sub2">How fast both of them oscillate.</div></div>' +
+        '<div class="ctl"><label><span>output size g</span><span class="val" id="v_b_g"></span></label>' +
+        '<input type="range" id="s_b_g" min="0.2" max="1.6" step="0.05" value="1">' +
+        '<div class="sub2">Size is a separate question from lag — change it and the lag stays put.</div></div>' +
+        '<div class="row"><button class="btn primary" id="b_play">Pause</button><button class="btn" id="b_reset">Restart</button></div>' +
+        '<div class="ctl" style="margin-top:12px"><label><span>slow motion</span><span class="val" id="v_b_speed"></span></label>' +
+        '<input type="range" class="act" id="s_b_speed" min="0.1" max="1.5" step="0.05" value="0.5"></div>' +
+        '<div class="row" style="margin-top:6px">' +
+          '<button class="btn" data-set="0">φ = 0°</button><button class="btn" data-set="45">45°</button>' +
+          '<button class="btn" data-set="90">90°</button><button class="btn" data-set="180">180°</button></div>' +
+        '<div class="hint">Start here: set φ = 0, watch the dots move together, then slide φ up.</div>' +
+      '</div></div>' +
+      '<div>' +
+        '<div class="card"><h2>Two dots on two rails <span>— same rhythm, one runs late</span></h2>' +
+          '<canvas id="c_b_phys"></canvas>' +
+          '<div class="legend"><span><i class="chip" style="background:var(--input)"></i><b>input</b> cos(ωt)</span>' +
+          '<span><i class="chip" style="background:var(--output)"></i><b>output</b> g·cos(ωt − φ)</span>' +
+          '<span><i class="chip" style="background:var(--action)"></i>the gap between them</span></div></div>' +
+        '<div class="card"><h2>The same motion as two waves</h2><canvas id="c_b_wave"></canvas></div>' +
+        '<div class="card"><h2>Rotating arrows <span>— φ is the fixed angle between them</span></h2><canvas id="c_b_ph"></canvas></div>' +
+        '<div class="card"><h2>The same lag, four ways</h2><div class="tiles" id="tiles_b"></div></div>' +
+        '<div class="card"><h2>What phase lag is</h2><div class="prose" id="interp_b"></div>' +
+          '<button class="morebtn" data-modal="whyAngle">Why measure a delay as an angle?</button>' +
+          '<button class="morebtn" data-modal="whyLag">Why is there any delay at all?</button>' +
+          '<button class="morebtn" data-modal="measure">How would you measure φ in a lab?</button>' +
+          '<button class="morebtn" data-modal="leadlag">Can the output ever be early?</button></div>' +
+      '</div>' +
+    '</div>';
+  $('tabHost').appendChild(host);
+
+  const st = { t:0, playing:true, speed:0.5, phiDeg:60, w:1, g:1 };
+  const cvP = canvas($('c_b_phys'), 230), cvW = canvas($('c_b_wave'), 250), cvH = canvas($('c_b_ph'), 190);
+
+  function drawPhys(cv) {
+    const x = cv.x, W = cv.w, H = cv.h; x.clearRect(0, 0, W, H);
+    const phi = st.phiDeg * PI / 180, w = st.w, th = w * st.t;
+    const cx = W / 2, amp = Math.min(W * 0.33, 150), y1 = 62, y2 = 150;
+    const u = Math.cos(th), o = st.g * Math.cos(th - phi);
+    /* rails */
+    [[y1, C.in, 'input'], [y2, C.out, 'output']].forEach(([y, col, nm]) => {
+      line(x, cx - amp, y, cx + amp, y, C.line, 3);
+      for (const f of [-1, 0, 1]) line(x, cx + f * amp, y - 5, cx + f * amp, y + 5, C.ref, 1);
+      txt(x, nm, cx - amp - 8, y + 4, { align:'right', size:12, weight:700, color:col });
+    });
+    const px = cx + u * amp, qx = cx + o * amp;
+    /* trails */
+    x.save(); x.globalAlpha = .25;
+    for (let i = 1; i <= 14; i++) {
+      const tt = th - i * 0.07;
+      dot(x, cx + Math.cos(tt) * amp, y1, 5 - i * 0.25, C.in);
+      dot(x, cx + st.g * Math.cos(tt - phi) * amp, y2, 5 - i * 0.25, C.out);
+    }
+    x.restore();
+    /* the vertical gap line */
+    line(x, px, y1, px, y2, 'rgba(249,115,22,.35)', 1.5, [4, 3]);
+    line(x, qx, y2, qx, y1, 'rgba(13,148,136,.35)', 1.5, [4, 3]);
+    if (Math.abs(px - qx) > 2) {
+      const my = (y1 + y2) / 2;
+      line(x, Math.min(px, qx), my, Math.max(px, qx), my, C.act, 2.5);
+      arrowhead(x, Math.max(px, qx), my, 0, C.act); arrowhead(x, Math.min(px, qx), my, PI, C.act);
+    }
+    dot(x, px, y1, 10, C.in, '#fff'); dot(x, qx, y2, 10, C.out, '#fff');
+    /* running commentary */
+    const near = Math.abs(u - 1) < 0.02;
+    let msg;
+    if (st.phiDeg === 0) msg = 'φ = 0: the two dots move as one. There is no lag.';
+    else if (st.phiDeg === 180) msg = 'φ = 180°: whenever one dot goes right, the other goes left.';
+    else msg = 'The teal dot repeats whatever the orange dot did ' + F(phi / w, 2) + ' s ago.';
+    const nar = W < 520;
+    txt(x, msg, cx, H - 40, { align:'center', size: nar ? 11 : 13, weight:600, color:C.act });
+    txt(x, nar ? 'input ' + F(u) + '   ·   output ' + F(o)
+               : 'input now = ' + F(u) + '   ·   output now = ' + F(o) +
+                 '   ·   output = input from ' + F(phi / w, 2) + ' s ago',
+        cx, H - 18, { align:'center', size:11.5, color:C.mut });
+    if (near) { x.save(); x.globalAlpha = .5; dot(x, cx + amp, y1, 14, null, C.in); x.restore(); }
+  }
+  function tiles() {
+    const phi = st.phiDeg * PI / 180, per = TAU / st.w;
+    return '' +
+    '<div class="tile"><div class="name">as an angle</div><div class="calc"><span class="out">' + F(phi, 3) + ' rad</span> = <span class="out">' + st.phiDeg + '°</span></div>' +
+      '<div class="why">This is φ. It is the number quoted in textbooks and drawn on phase plots.</div></div>' +
+    '<div class="tile"><div class="name">as a fraction of a cycle</div><div class="calc">' + st.phiDeg + '/360 = <span class="out">' + F(st.phiDeg / 360, 3) + '</span> of a cycle</div>' +
+      '<div class="why">The most intuitive form: what share of one full oscillation the output is behind by.</div></div>' +
+    '<div class="tile"><div class="name">as a time</div><div class="calc">φ/ω = ' + F(phi, 3) + '/' + F(st.w) + ' = <span class="out">' + F(phi / st.w, 3) + ' s</span></div>' +
+      '<div class="why">What a stopwatch would read between the two peaks. Changes when ω changes.</div></div>' +
+    '<div class="tile"><div class="name">the period, for comparison</div><div class="calc">T = 2π/ω = <span class="out">' + F(per, 3) + ' s</span></div>' +
+      '<div class="why">Lag ÷ period = ' + F(phi / st.w, 3) + '/' + F(per, 3) + ' = ' + F(st.phiDeg / 360, 3) + ', the fraction again.</div></div>';
+  }
+  function interp() {
+    const d = st.phiDeg, phi = d * PI / 180;
+    let para;
+    if (d === 0) para = '<p><b>φ = 0: in phase.</b> Both dots reach the right-hand end at the same instant. The output is just a scaled copy of the input, with no delay.</p>';
+    else if (d < 45) para = '<p><b>φ = ' + d + '°: slightly behind.</b> The output is lagging by only ' + F(d / 360, 3) + ' of a cycle, so the two curves still look nearly aligned. Small lags like this happen when a system is driven far more slowly than it can respond.</p>';
+    else if (d < 89) para = '<p><b>φ = ' + d + '°: clearly behind.</b> You can now see the teal dot trailing the orange one by an obvious margin — ' + F(d / 360, 3) + ' of a cycle, or ' + F(phi / st.w, 2) + ' s at this frequency.</p>';
+    else if (d <= 91) para = '<p><b>φ = 90°: a quarter cycle behind.</b> Look at the moment the orange dot is at its far right — the teal dot is passing through the middle, moving as fast as it ever does. This is the special value that marks resonance in a spring-mass system.</p>';
+    else if (d < 179) para = '<p><b>φ = ' + d + '°: more than a quarter cycle.</b> The output is now mostly moving against the input. Past 90°, a system is being driven faster than it can comfortably follow.</p>';
+    else para = '<p><b>φ = 180°: exactly out of phase.</b> The output is a mirror image: whenever the input goes right, the output goes left. Note it is still the same rhythm — only the timing is flipped.</p>';
+    return para +
+      '<p>Three things are worth separating carefully:</p>' +
+      '<div class="note"><b>Same frequency.</b> Both curves oscillate at ω = ' + F(st.w) + ' rad/s. Phase lag never changes the rhythm, only the timing. This is a feature of linear systems: sine in, sine out, at the same frequency.</div>' +
+      '<div class="note"><b>Size is separate.</b> The output size g = ' + F(st.g) + ' is the gain, an independent quantity. Drag the g slider and the lag does not budge; drag φ and the size does not budge.</div>' +
+      '<div class="warn"><b>Lag is between input and output of one system</b> — the force and the motion it causes, not two unrelated waves. The delay exists because the system takes time to react.</div>' +
+      '<p>In the rotating-arrow picture, φ is simply the fixed angle between the two arrows. Both spin at ω, so the gap never opens or closes. Their shadows on the horizontal line are exactly the two waves.</p>';
+  }
+  function draw() {
+    $('v_b_phi').textContent = st.phiDeg + '° = ' + F(st.phiDeg / 360, 3) + ' cycle';
+    $('v_b_w').textContent = F(st.w) + ' rad/s';
+    $('v_b_g').textContent = F(st.g);
+    $('v_b_speed').textContent = F(st.speed, 2) + '×';
+    drawPhys(cvP);
+    drawWaves(cvW, st, { gain:st.g, phi:st.phiDeg * PI / 180, inName:'input cos(ωt)', outName:'output g·cos(ωt − φ)', cycles:2.6 });
+    drawPhasors(cvH, st, { gain:st.g, phi:st.phiDeg * PI / 180 });
+    $('tiles_b').innerHTML = tiles();
+    $('interp_b').innerHTML = interp();
+  }
+  $('s_b_phi').addEventListener('input', e => { st.phiDeg = +e.target.value; draw(); });
+  $('s_b_w').addEventListener('input', e => { st.w = +e.target.value; draw(); });
+  $('s_b_g').addEventListener('input', e => { st.g = +e.target.value; draw(); });
+  $('s_b_speed').addEventListener('input', e => { st.speed = +e.target.value; draw(); });
+  $('b_play').addEventListener('click', e => { st.playing = !st.playing; e.target.textContent = st.playing ? 'Pause' : 'Play'; });
+  $('b_reset').addEventListener('click', () => { st.t = 0; draw(); });
+  host.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () => {
+    st.phiDeg = +b.dataset.set; $('s_b_phi').value = st.phiDeg; draw();
+  }));
+  host.querySelectorAll('[data-modal]').forEach(b => b.addEventListener('click', () => openModal(b.dataset.modal)));
+
+  addTab({ id:'basics', name:'1 · What phase lag is', host,
+    ctrl:{ draw, resize(){ fit(cvP); fit(cvW); fit(cvH); draw(); },
+           tick(dt){ if (st.playing) { st.t += dt * st.speed; draw(); } } } });
+})();
+
+/* ============================ TAB 2: phase vs time ============================ */
+(function () {
+  const host = document.createElement('div');
+  host.className = 'tab'; host.id = 'tab_units';
+  host.innerHTML =
+    '<div class="layout">' +
+      '<div><div class="card stick"><h2>Controls</h2>' +
+        '<div class="ctl"><label><span>phase lag φ (both rows)</span><span class="val" id="v_u_phi"></span></label>' +
+        '<input type="range" id="s_u_phi" min="0" max="180" step="1" value="90"></div>' +
+        '<div class="ctl"><label><span>ω of the slow system</span><span class="val" id="v_u_w1"></span></label>' +
+        '<input type="range" id="s_u_w1" min="0.3" max="2" step="0.05" value="0.5"></div>' +
+        '<div class="ctl"><label><span>ω of the fast system</span><span class="val" id="v_u_w2"></span></label>' +
+        '<input type="range" id="s_u_w2" min="2" max="12" step="0.1" value="6"></div>' +
+        '<div class="row"><button class="btn primary" id="u_play">Pause</button><button class="btn" id="u_reset">Restart</button></div>' +
+        '<div class="ctl" style="margin-top:12px"><label><span>slow motion</span><span class="val" id="v_u_speed"></span></label>' +
+        '<input type="range" class="act" id="s_u_speed" min="0.1" max="1.5" step="0.05" value="0.45"></div>' +
+        '<div class="hint">Both rows always have the same φ. Watch how differently their stopwatch readings behave.</div>' +
+      '</div></div>' +
+      '<div>' +
+        '<div class="card"><h2>Two systems, same φ, different speeds</h2><canvas id="c_u_wave"></canvas>' +
+          '<div class="legend"><span><i class="chip" style="background:var(--input)"></i>input</span>' +
+          '<span><i class="chip" style="background:var(--output)"></i>output</span>' +
+          '<span><i class="chip" style="background:var(--action)"></i>the lag, drawn to scale</span></div></div>' +
+        '<div class="card"><h2>The numbers</h2><div class="tiles" id="tiles_u"></div></div>' +
+        '<div class="card"><h2>Fix the seconds instead, and the meaning falls apart</h2>' +
+          '<div class="prose" id="fixed_u"></div></div>' +
+        '<div class="card"><h2>What this tab is showing</h2><div class="prose" id="interp_u"></div>' +
+          '<button class="morebtn" data-modal="whyAngle">Why measure a delay as an angle?</button>' +
+          '<button class="morebtn" data-modal="measure">How would you measure φ in a lab?</button></div>' +
+      '</div>' +
+    '</div>';
+  $('tabHost').appendChild(host);
+
+  const st = { t:0, playing:true, speed:0.45, phiDeg:90, w1:0.5, w2:6 };
+  const cv = canvas($('c_u_wave'), 330);
+
+  function rowPlot(x, X0, Y0, pw, ph, w, phi, label) {
+    const per = TAU / w, span = per * 2.4;
+    const X = t => X0 + t / span * pw, Y = v => Y0 + ph / 2 - v * (ph / 2 - 12);
+    line(x, X0, Y(0), X0 + pw, Y(0), C.ref, 1);
+    for (let n = 0; n * per <= span + 1e-9; n++) {
+      line(x, X(n * per), Y0, X(n * per), Y0 + ph, C.grid, 1, [3, 4]);
+      txt(x, n === 0 ? '0' : (n === 1 ? 'T' : n + 'T'), X(n * per), Y0 + ph + 12, { align:'center', size:10.5, color:C.mut });
+    }
+    const plot = (fn, col) => {
+      x.strokeStyle = col; x.lineWidth = 2.4; x.beginPath();
+      for (let i = 0; i <= 400; i++) { const t = span * i / 400; const a = X(t), b = Y(fn(t)); i ? x.lineTo(a, b) : x.moveTo(a, b); }
+      x.stroke();
+    };
+    plot(t => Math.cos(w * t), C.in); plot(t => Math.cos(w * t - phi), C.out);
+    const tin = per, tout = tin + phi / w;
+    const a = X(tin), b = X(tout), yBar = Y0 + ph - 10;
+    if (b - a > 1) {
+      x.fillStyle = 'rgba(124,58,237,.13)'; x.fillRect(a, Y0, b - a, ph);
+      line(x, a, yBar, b, yBar, C.act, 2);
+      arrowhead(x, b, yBar, 0, C.act); arrowhead(x, a, yBar, PI, C.act);
+      txt(x, F(phi / w, 3) + ' s', (a + b) / 2, yBar - 6, { align:'center', size:11.5, weight:700, color:C.act, halo:true });
+    }
+    line(x, a, Y(1), a, yBar, C.in, 1.2, [3, 3]);
+    line(x, b, Y(1), b, yBar, C.out, 1.2, [3, 3]);
+    const tn = st.t % span;
+    dot(x, X(tn), Y(Math.cos(w * tn)), 4.5, C.in, '#fff');
+    dot(x, X(tn), Y(Math.cos(w * tn - phi)), 4.5, C.out, '#fff');
+    txt(x, label, X0, Y0 - 6, { size:12, weight:700, color:C.ink });
+    txt(x, 'one cycle T = ' + F(per, 2) + ' s', X0 + pw, Y0 - 6, { size:11, color:C.mut, align:'right' });
+  }
+  function draw() {
+    const x = cv.x, W = cv.w, H = cv.h; x.clearRect(0, 0, W, H);
+    const phi = st.phiDeg * PI / 180;
+    const L = 18, R = 14, pw = W - L - R, ph = (H - 70) / 2;
+    rowPlot(x, L, 22, pw, ph, st.w1, phi, 'SLOW system, ω = ' + F(st.w1));
+    rowPlot(x, L, 22 + ph + 36, pw, ph, st.w2, phi, 'FAST system, ω = ' + F(st.w2));
+    $('v_u_phi').textContent = st.phiDeg + '° = ' + F(st.phiDeg / 360, 3) + ' cycle';
+    $('v_u_w1').textContent = F(st.w1) + ' rad/s';
+    $('v_u_w2').textContent = F(st.w2) + ' rad/s';
+    $('v_u_speed').textContent = F(st.speed, 2) + '×';
+    const l1 = phi / st.w1, l2 = phi / st.w2;
+    $('tiles_u').innerHTML =
+      '<div class="tile"><div class="name">slow system</div><div class="calc">T = <span class="out">' + F(TAU / st.w1, 2) + ' s</span><br>lag = φ/ω = <span class="out">' + F(l1, 3) + ' s</span></div>' +
+        '<div class="why">' + F(l1, 3) + ' ÷ ' + F(TAU / st.w1, 2) + ' = ' + F(st.phiDeg / 360, 3) + ' of a cycle</div></div>' +
+      '<div class="tile"><div class="name">fast system</div><div class="calc">T = <span class="out">' + F(TAU / st.w2, 3) + ' s</span><br>lag = φ/ω = <span class="out">' + F(l2, 3) + ' s</span></div>' +
+        '<div class="why">' + F(l2, 3) + ' ÷ ' + F(TAU / st.w2, 3) + ' = ' + F(st.phiDeg / 360, 3) + ' of a cycle</div></div>' +
+      '<div class="tile"><div class="name">ratio of the two time lags</div><div class="calc"><span class="out">' + F(l1 / Math.max(l2, 1e-9), 1) + '×</span></div>' +
+        '<div class="why">The seconds differ by this factor…</div></div>' +
+      '<div class="tile"><div class="name">ratio of the two phase lags</div><div class="calc"><span class="out">1.0×</span> — identical</div>' +
+        '<div class="why">…while φ = ' + st.phiDeg + '° describes both rows equally well.</div></div>';
+    const rows = [[1, 6.28], [10, 0.628], [31.4, 0.2]].map(([w, T]) => {
+      const p = 0.1 * w;
+      return '<tr><td>' + F(w, 1) + '</td><td>' + F(T, 2) + ' s</td><td>' + F(0.1 / T, 3) + '</td><td>' + F(p * 180 / PI, 0) + '°</td></tr>';
+    }).join('');
+    $('fixed_u').innerHTML =
+      '<p>Now imagine the delay is pinned at <b>0.1 s</b> in every case and only the frequency changes:</p>' +
+      '<table class="cmp"><tr><th>ω</th><th>period T</th><th>0.1 s as a fraction of T</th><th>φ</th></tr>' + rows + '</table>' +
+      '<p>All three are "0.1 seconds late", yet the last one is the output moving <b>exactly opposite</b> to the input while the first is essentially in step. The seconds figure alone tells you nothing about the behaviour.</p>';
+    $('interp_u').innerHTML =
+      '<p>Both rows above are set to the same φ = ' + st.phiDeg + '°. In both, the output is ' + F(st.phiDeg / 360, 3) + ' of a cycle behind, and the purple band occupies the same <i>share</i> of each row even though the rows run at different speeds.</p>' +
+      '<div class="note"><b>What φ is independent of.</b> The time unit and the overall speed of the system. Two devices, one a thousand times faster than the other, can have identical phase behaviour.</div>' +
+      '<div class="warn"><b>What φ is not independent of.</b> The driving frequency of a given system. Change ω on any of the system tabs and φ changes — that curve of φ against ω is precisely what a phase plot draws. The claim here is narrower: φ is the unit-free way to state a delay.</div>' +
+      '<p>This is why engineering data is published as φ against ω, not as seconds against ω. A phase curve for a second-order system with damping ratio ζ applies to a pendulum, a bridge and a radio filter alike, with periods ranging from hours to microseconds.</p>';
+  }
+  $('s_u_phi').addEventListener('input', e => { st.phiDeg = +e.target.value; draw(); });
+  $('s_u_w1').addEventListener('input', e => { st.w1 = +e.target.value; draw(); });
+  $('s_u_w2').addEventListener('input', e => { st.w2 = +e.target.value; draw(); });
+  $('s_u_speed').addEventListener('input', e => { st.speed = +e.target.value; draw(); });
+  $('u_play').addEventListener('click', e => { st.playing = !st.playing; e.target.textContent = st.playing ? 'Pause' : 'Play'; });
+  $('u_reset').addEventListener('click', () => { st.t = 0; draw(); });
+  host.querySelectorAll('[data-modal]').forEach(b => b.addEventListener('click', () => openModal(b.dataset.modal)));
+  addTab({ id:'units', name:'2 · Phase vs seconds', host,
+    ctrl:{ draw, resize(){ fit(cv); draw(); }, tick(dt){ if (st.playing) { st.t += dt * st.speed; draw(); } } } });
+})();
+
+/* ============================ SYSTEM TABS ============================ */
+
+/* ---- 3. spring–mass–dashpot ---- */
+addTab({ id:'spring', name:'3 · Spring–mass–dashpot', sys:buildSystem({
+  id:'spring',
+  inName:'plunger cos(ωt)', outName:'mass x(t)',
+  physTitle:'A mass on a spring, shaken through the spring',
+  physH:250, cycles:2.6,
+  eq:'x″ + b x′ + k x = k·cos(ωt) &nbsp;→&nbsp; φ = arg[(k − ω²) + i bω]',
+  hint:'Set b small, then sweep ω through ω₀ and watch φ sweep through 90°.',
+  params:[
+    { key:'k', label:'spring k', min:0.2, max:6, step:0.05, val:2, fmt:v => F(v) + '  (ω₀ = ' + F(Math.sqrt(v)) + ')', sub:'Stiffer spring → higher natural frequency ω₀ = √k.' },
+    { key:'b', label:'damping b', min:0.05, max:3, step:0.05, val:0.6, fmt:v => F(v), sub:'The dashpot. With b = 0 there would be no lag except a jump from 0° to 180°.' },
+    { key:'w', label:'driving ω', min:0.1, max:4, step:0.02, val:1, fmt:v => F(v) + ' rad/s', sub:'How fast you shake the plunger.', act:true }
+  ],
+  resp(st) {
+    const re = st.k - st.w * st.w, im = st.b * st.w;
+    return { gain: st.k / Math.hypot(re, im), phi: Math.atan2(im, re), re, im, w0: Math.sqrt(st.k) };
+  },
+  drawPhys(cv, st, r) {
+    const x = cv.x, W = cv.w, H = cv.h; x.clearRect(0, 0, W, H);
+    const th = st.w * st.t, u = Math.cos(th), xo = r.gain * Math.cos(th - r.phi), xd = r.gDraw * Math.cos(th - r.phi);
+    const cy = H * 0.42, mw = 54, mh = 46;
+    const wallL = 14, wallR = W - 14, xp0 = W * 0.22, xm0 = W * 0.6;
+    const gd = Math.max(1, r.gDraw);
+    const sc = Math.min(34, (xm0 - xp0 - mw / 2 - 34) / (1 + gd), (wallR - xm0 - mw / 2 - 46) / gd);
+    const gy = cy + mh / 2;
+    hatch(x, 0, gy, W, 8, '#cbd5e1');
+    line(x, 0, gy, W, gy, C.ref, 2);
+    hatch(x, 0, cy - mh, wallL, gy - (cy - mh), '#cbd5e1');
+    hatch(x, wallR, cy - mh, 14, gy - (cy - mh), '#cbd5e1');
+    line(x, xp0, cy - mh, xp0, gy, C.line, 1, [3, 3]);
+    line(x, xm0, cy - mh, xm0, gy, C.line, 1, [3, 3]);
+    txt(x, 'rest', xp0, gy + 18, { align:'center', size:10.5, color:C.mut });
+    txt(x, 'rest', xm0, gy + 18, { align:'center', size:10.5, color:C.mut });
+    const xp = xp0 + u * sc, xm = xm0 + xd * sc, mL = xm - mw / 2, mR = xm + mw / 2;
+    line(x, wallL, cy, xp, cy, '#94a3b8', 4);
+    rrect(x, xp - 4, cy - mh * 0.45, 8, mh * 0.9, 3); x.fillStyle = C.in; x.fill();
+    /* spring */
+    x.save(); x.strokeStyle = '#64748b'; x.lineWidth = 2; x.beginPath();
+    const a0 = xp + 4, a1 = mL, seg = (a1 - a0 - 12) / 16;
+    x.moveTo(a0, cy); x.lineTo(a0 + 6, cy);
+    for (let i = 0; i < 16; i++) x.lineTo(a0 + 6 + seg * (i + 0.5), cy + (i % 2 ? 9 : -9));
+    x.lineTo(a1 - 6, cy); x.lineTo(a1, cy); x.stroke(); x.restore();
+    /* dashpot */
+    const cyl = xm0 + mw / 2 + 26, ch = 11;
+    x.fillStyle = '#f1f5f9'; x.fillRect(cyl, cy - ch, wallR - cyl, 2 * ch);
+    line(x, cyl, cy - ch, wallR, cy - ch, '#475569', 2); line(x, cyl, cy + ch, wallR, cy + ch, '#475569', 2);
+    const head = mR + 24;
+    line(x, mR, cy, head, cy, '#475569', 2); line(x, head, cy - ch + 3, head, cy + ch - 3, '#475569', 4);
+    rrect(x, mL, cy - mh / 2, mw, mh, 8); x.fillStyle = C.out; x.fill();
+    txt(x, 'm', xm, cy + 6, { align:'center', size:19, weight:700, color:'#fff', italic:true });
+    txt(x, 'cos ωt = ' + F(u), xp, cy - mh * 0.45 - 9, { align:'center', size:11.5, weight:700, color:C.in, halo:true });
+    txt(x, 'x = ' + F(xo), xm, cy - mh / 2 - 9, { align:'center', size:11.5, weight:700, color:C.out, halo:true });
+    txt(x, 'spring k', (xp + mL) / 2, cy + 24, { align:'center', size:10.5, color:C.mut });
+    txt(x, 'dashpot b', (mR + wallR) / 2, cy + ch + 14, { align:'center', size:10.5, color:C.mut });
+    /* headline */
+    const rel = st.w / r.w0;
+    headline(x, W, H, ['ω/ω₀ = ' + F(rel), 'φ = ' + deg(r.phi), 'mass peaks ' + F(r.phi / st.w, 2) + ' s after the plunger']);
+  },
+  tiles(st, r) {
+    return '' +
+    '<div class="tile"><div class="name">the complex number</div><div class="calc">(k − ω²) + i bω<br>= (' + F(r.re) + ') + (' + F(r.im) + ') i</div>' +
+      '<div class="why">Real part from spring and inertia, imaginary part from the dashpot.</div></div>' +
+    '<div class="tile"><div class="name">phase lag</div><div class="calc">φ = arg[…] = <span class="out">' + deg(r.phi) + '</span></div>' +
+      '<div class="why">The angle that arrow makes. No imaginary part would mean no lag.</div></div>' +
+    '<div class="tile"><div class="name">as a time</div><div class="calc">φ/ω = ' + F(r.phi, 3) + '/' + F(st.w) + ' = <span class="out">' + F(r.phi / st.w, 3) + ' s</span></div>' +
+      '<div class="why">Period T = ' + F(TAU / st.w, 2) + ' s, so that is ' + F(r.phi / TAU, 3) + ' of a cycle.</div></div>' +
+    '<div class="tile"><div class="name">gain, for comparison</div><div class="calc">k/|…| = <span class="out">' + F(r.gain, 3) + '</span></div>' +
+      '<div class="why">Size of the response. A separate question from timing.</div></div>';
+  },
+  interp(st, r) {
+    const rel = st.w / r.w0;
+    let p;
+    if (rel < 0.55) p = '<p><b>Driving slowly (ω/ω₀ = ' + F(rel) + ').</b> The mass has plenty of time to follow the plunger, so it stays nearly in step: φ = ' + deg(r.phi) + '. In the limit ω → 0 you are just pushing the mass slowly back and forth and the lag vanishes.</p>';
+    else if (rel < 1.4) p = '<p><b>Near resonance (ω/ω₀ = ' + F(rel) + ').</b> The lag is ' + deg(r.phi) + ', close to a quarter cycle. At exactly ω = ω₀ the spring force and the inertia force cancel, the real part (k − ω²) is zero, the arrow points straight up, and φ is exactly 90°. That is also where the response is biggest.</p>';
+    else p = '<p><b>Driving fast (ω/ω₀ = ' + F(rel) + ').</b> The plunger reverses before the heavy mass can respond, so the mass is always heading the wrong way: φ = ' + deg(r.phi) + ', climbing toward 180°. The mass is being left behind by more than a quarter cycle.</p>';
+    return p +
+      '<div class="note"><b>Where the lag comes from.</b> The mass stores momentum and the dashpot resists motion. Neither can react instantly, so the response is always late. Set b very small and the transition from 0° to 180° becomes almost a jump at ω₀; raise b and it becomes a gentle slope.</div>' +
+      '<p>Notice that φ depends on the ratio ω/ω₀ and on the damping, not on the absolute size of k. Double k and quadruple ω² together and nothing changes.</p>';
+  },
+  more:['quarter', 'whyLag', 'transient']
+}) });
+
+/* ---- 4. rotating wheel ---- */
+addTab({ id:'wheel', name:'4 · Rotating wheel', sys:buildSystem({
+  id:'wheel',
+  inName:'shadow of peg A', outName:'shadow of peg B',
+  physTitle:'Two pegs on one wheel — φ is literally the angle between them',
+  physH:290, cycles:2.6,
+  eq:'peg B sits φ behind peg A on the rim &nbsp;→&nbsp; its shadow is cos(ωt − φ)',
+  hint:'This is the picture behind every other tab: φ is an angle on a circle.',
+  params:[
+    { key:'phiDeg', label:'angle between the pegs φ', min:0, max:180, step:1, val:70, fmt:v => v + '° = ' + F(v / 360, 3) + ' turn', sub:'Bolt peg B further round the rim and the lag grows.' },
+    { key:'w', label:'spin rate ω', min:0.2, max:3, step:0.02, val:1, fmt:v => F(v) + ' rad/s', sub:'Spin faster and the same angle takes less time to cover.', act:true }
+  ],
+  resp(st) { return { gain:1, phi: st.phiDeg * PI / 180 }; },
+  drawPhys(cv, st, r) {
+    const x = cv.x, W = cv.w, H = cv.h; x.clearRect(0, 0, W, H);
+    const th = st.w * st.t, phi = r.phi;
+    const R = Math.min(W * 0.2, (H - 120) / 2, 95), cx = W * 0.3, cy = 26 + R;
+    const railY1 = cy + R + 34, railY2 = railY1 + 30;
+    x.beginPath(); x.arc(cx, cy, R, 0, TAU); x.fillStyle = '#f8fafc'; x.fill();
+    x.lineWidth = 4; x.strokeStyle = '#475569'; x.stroke();
+    x.strokeStyle = '#e2e8f0'; x.lineWidth = 2;
+    for (let i = 0; i < 6; i++) { const a = th + i * PI / 3; line(x, cx, cy, cx + R * Math.cos(a), cy - R * Math.sin(a), '#e2e8f0', 2); }
+    /* the angle between the pegs */
+    const ra = R * 0.42;
+    if (phi > 0.02) {
+      x.strokeStyle = C.act; x.lineWidth = 3;
+      x.beginPath(); x.arc(cx, cy, ra, -th, -th + phi, false); x.stroke();
+      const mA = th - phi / 2;
+      txt(x, 'φ = ' + st.phiDeg + '°', cx + (ra + 16) * Math.cos(mA), cy - (ra + 16) * Math.sin(mA),
+          { align:'center', base:'middle', size:12.5, weight:700, color:C.act, halo:true });
+    }
+    const ax = cx + R * Math.cos(th), ay = cy - R * Math.sin(th);
+    const bx = cx + R * Math.cos(th - phi), by = cy - R * Math.sin(th - phi);
+    line(x, cx, cy, ax, ay, C.in, 3.5); line(x, cx, cy, bx, by, C.out, 3.5);
+    dot(x, cx, cy, 5, C.ink);
+    line(x, ax, ay, ax, railY1, C.in, 1.4, [3, 4]);
+    line(x, bx, by, bx, railY2, C.out, 1.4, [3, 4]);
+    dot(x, ax, ay, 8, C.in, '#fff'); dot(x, bx, by, 8, C.out, '#fff');
+    txt(x, 'A', ax + 12, ay - 8, { size:13, weight:700, color:C.in });
+    txt(x, 'B', bx + 12, by - 8, { size:13, weight:700, color:C.out });
+    /* rails */
+    [[railY1, C.in, 'cos(ωt)'], [railY2, C.out, 'cos(ωt − φ)']].forEach(([y, col, nm]) => {
+      line(x, cx - R, y, cx + R, y, C.line, 3);
+      for (const f of [-1, 0, 1]) line(x, cx + f * R, y - 4, cx + f * R, y + 4, C.ref, 1);
+      txt(x, nm, cx - R - 8, y + 4, { align:'right', size:11, weight:700, color:col });
+    });
+    rrect(x, ax - 10, railY1 - 6, 20, 12, 4); x.fillStyle = C.in; x.fill();
+    rrect(x, bx - 10, railY2 - 6, 20, 12, 4); x.fillStyle = C.out; x.fill();
+    /* explanation column */
+    const nar = W < 560;
+    const tx0 = nar ? 10 : Math.min(W - 10, cx + R + 30), ty0 = 40;
+    if (nar) {
+      txt(x, 'peg A at ωt = ' + F(th % TAU, 2) + ' rad   ·   peg B at ωt − φ = ' + F((th - phi) % TAU, 2) + ' rad',
+          W / 2, H - 30, { align:'center', size:11, color:C.mut });
+      txt(x, 'gap φ = ' + st.phiDeg + '° → B trails A by ' + F(phi / st.w, 2) + ' s',
+          W / 2, H - 12, { align:'center', size:12.5, weight:700, color:C.act });
+      return;
+    }
+    const rows = [
+      ['peg A is at angle', 'ωt = ' + F(th % TAU, 2) + ' rad'],
+      ['peg B is at angle', 'ωt − φ = ' + F((th - phi) % TAU, 2) + ' rad'],
+      ['the gap never changes', 'φ = ' + F(phi, 3) + ' rad = ' + st.phiDeg + '°'],
+      ['B reaches the top of the', 'rail ' + F(phi / st.w, 2) + ' s after A'],
+      ['because the wheel covers', F(st.w) + ' rad every second']
+    ];
+    rows.forEach((row, i) => {
+      txt(x, row[0], tx0, ty0 + i * 34, { size:11.5, color:C.mut });
+      txt(x, row[1], tx0, ty0 + i * 34 + 15, { size:13, weight:700, color:i === 2 ? C.act : C.ink });
+    });
+  },
+  tiles(st, r) {
+    return '' +
+    '<div class="tile"><div class="name">φ as an angle</div><div class="calc"><span class="out">' + st.phiDeg + '°</span> = ' + F(r.phi, 3) + ' rad</div>' +
+      '<div class="why">You can see it: the physical angle between the two pegs.</div></div>' +
+    '<div class="tile"><div class="name">φ as a fraction of a turn</div><div class="calc">' + st.phiDeg + '/360 = <span class="out">' + F(st.phiDeg / 360, 3) + '</span></div>' +
+      '<div class="why">One turn of the wheel = one cycle of each shadow.</div></div>' +
+    '<div class="tile"><div class="name">time for the wheel to cover φ</div><div class="calc">φ/ω = ' + F(r.phi, 3) + '/' + F(st.w) + ' = <span class="out">' + F(r.phi / st.w, 3) + ' s</span></div>' +
+      '<div class="why">Spin twice as fast and this halves — but the pegs have not moved.</div></div>' +
+    '<div class="tile"><div class="name">one full turn</div><div class="calc">T = 2π/ω = <span class="out">' + F(TAU / st.w, 3) + ' s</span></div>' +
+      '<div class="why">Lag ÷ T = ' + F(st.phiDeg / 360, 3) + ', matching the fraction above.</div></div>';
+  },
+  interp(st) {
+    return '<p>This is the cleanest possible picture of phase lag, because here φ is <b>a real angle you can see</b>. Peg B is bolted to the rim φ degrees behind peg A. Their shadows on the two rails are the input and output waves.</p>' +
+      '<div class="note"><b>The gap is fixed; the time it represents is not.</b> Drag the spin slider without touching φ. The pegs stay exactly where they are, but the readout for the time lag changes, because the wheel now takes less time to carry B round to where A was. Angle: fixed. Seconds: not fixed.</div>' +
+      '<p>Every other tab reduces to this. In a spring-mass system nothing is literally rotating, but the complex number (k − ω²) + ibω <i>is</i> an arrow in a plane, and the lag is its angle — exactly the angle you see here between the pegs.</p>' +
+      (st.phiDeg === 0 ? '<div class="warn">At φ = 0 the pegs sit on top of each other and the two shadows are identical: no lag.</div>' : '') +
+      (st.phiDeg >= 179 ? '<div class="warn">At φ = 180° the pegs are on opposite ends of a diameter, so when one shadow is at the far right the other is at the far left: perfectly out of phase.</div>' : '') +
+      '<p>Reading it as a clock: if peg A is a minute hand and peg B trails it by ' + st.phiDeg + '°, then B always shows the time A showed ' + F((st.phiDeg * PI / 180) / st.w, 2) + ' seconds ago.</p>';
+  },
+  more:['whyAngle', 'leadlag']
+}) });
+
+/* ---- 5. car suspension ---- */
+addTab({ id:'car', name:'5 · Wheel suspension', sys:buildSystem({
+  id:'car',
+  inName:'road height', outName:'car body height',
+  physTitle:'A quarter-car driving over a wavy road',
+  physH:280, cycles:2.6,
+  eq:'m x″ + b(x′ − y′) + k(x − y) = 0 &nbsp;→&nbsp; φ = arg[k − mω² + i bω] − arg[k + i bω]',
+  hint:'Drive fast (large ω) and the body stops following the road — that is the suspension working.',
+  params:[
+    { key:'k', label:'spring k', min:1, max:24, step:0.2, val:9, fmt:v => F(v, 1) + '  (ω₀ = ' + F(Math.sqrt(v)) + ')', sub:'Stiffer springs → sportier, harsher ride.' },
+    { key:'b', label:'shock absorber b', min:0.2, max:8, step:0.1, val:1.6, fmt:v => F(v, 1), sub:'Worn shocks = small b. Try it and watch the body bounce.' },
+    { key:'w', label:'bump frequency ω', min:0.2, max:9, step:0.05, val:2, fmt:v => F(v) + ' rad/s', sub:'Set by your speed and the spacing of the bumps.', act:true }
+  ],
+  resp(st) {
+    const m = 1, nre = st.k, nim = st.b * st.w;
+    const dre = st.k - m * st.w * st.w, dim = st.b * st.w;
+    const gain = Math.hypot(nre, nim) / Math.hypot(dre, dim);
+    const phi = Math.atan2(dim, dre) - Math.atan2(nim, nre);
+    return { gain, phi, dre, dim, nim, w0:Math.sqrt(st.k) };
+  },
+  drawPhys(cv, st, r) {
+    const x = cv.x, W = cv.w, H = cv.h; x.clearRect(0, 0, W, H);
+    const th = st.w * st.t, road = Math.cos(th), body = r.gain * Math.cos(th - r.phi), bodyD = r.gDraw * Math.cos(th - r.phi);
+    const sc = Math.min(26, (H * 0.17) / Math.max(1, r.gDraw));
+    const roadY = H * 0.72, carX = W * 0.42, wheelR = 20;
+    /* the road: a sine surface scrolling right to left */
+    const lam = Math.max(60, W / 2.4);
+    /* the road is a moving wave whose height at the wheel is cos(wt) */
+    x.beginPath();
+    for (let px = 0; px <= W; px += 2) {
+      const u = (px - carX) / lam;                 // cycles ahead of the wheel
+      const yy = roadY - sc * Math.cos(th + u * TAU);
+      px ? x.lineTo(px, yy) : x.moveTo(px, yy);
+    }
+    x.lineTo(W, H); x.lineTo(0, H); x.closePath();
+    x.fillStyle = '#dbe3f0'; x.fill();
+    x.beginPath();
+    for (let px = 0; px <= W; px += 2) {
+      const u = (px - carX) / lam, yy = roadY - sc * Math.cos(th + u * TAU);
+      px ? x.lineTo(px, yy) : x.moveTo(px, yy);
+    }
+    x.strokeStyle = C.in; x.lineWidth = 3; x.stroke();
+    const wy = roadY - sc * road - wheelR;
+    const byy = wy - 62 - sc * (bodyD - road);
+    /* suspension */
+    x.save(); x.strokeStyle = '#64748b'; x.lineWidth = 2; x.beginPath();
+    const sx = carX - 16, y0 = byy + 26, y1 = wy;
+    x.moveTo(sx, y0);
+    for (let i = 0; i < 10; i++) x.lineTo(sx + (i % 2 ? 8 : -8), y0 + (y1 - y0) * (i + 0.5) / 10);
+    x.lineTo(sx, y1); x.stroke(); x.restore();
+    const dx = carX + 16;
+    x.fillStyle = '#eef2f8'; x.fillRect(dx - 7, (y0 + y1) / 2 - 4, 14, y1 - (y0 + y1) / 2 + 4);
+    line(x, dx, y0, dx, (y0 + y1) / 2 + 6, '#475569', 3);
+    line(x, dx - 7, (y0 + y1) / 2 - 4, dx - 7, y1, '#475569', 2);
+    line(x, dx + 7, (y0 + y1) / 2 - 4, dx + 7, y1, '#475569', 2);
+    /* body */
+    rrect(x, carX - 74, byy - 4, 148, 30, 7); x.fillStyle = C.out; x.fill();
+    rrect(x, carX - 44, byy - 24, 84, 22, 6); x.fillStyle = '#14b8a6'; x.fill();
+    /* wheel */
+    dot(x, carX, wy, wheelR, '#334155'); dot(x, carX, wy, wheelR * 0.42, '#94a3b8');
+    for (let i = 0; i < 5; i++) { const a = -th * 2 + i * TAU / 5; line(x, carX, wy, carX + wheelR * 0.8 * Math.cos(a), wy + wheelR * 0.8 * Math.sin(a), '#64748b', 2); }
+    /* reference levels + labels */
+    line(x, 0, roadY, W, roadY, C.line, 1, [4, 4]);
+    line(x, carX, wy, carX, roadY - sc * road, C.in, 1, [2, 3]);
+    txt(x, 'road = ' + F(road), carX + wheelR + 8, roadY - sc * road + 4, { size:11.5, weight:700, color:C.in, halo:true });
+    txt(x, 'body = ' + F(body), carX + 80, byy + 12, { size:11.5, weight:700, color:C.out, halo:true });
+    headline(x, W, H, ['φ = ' + deg(r.phi), 'gain = ' + F(r.gain, 2), 'body follows the road ' + F(r.phi / st.w, 2) + ' s late']);
+    if (W >= 560) txt(x, 'suspension: spring k and shock absorber b', carX + 96, (y0 + y1) / 2, { size:10.5, color:C.mut });
+  },
+  tiles(st, r) {
+    return '' +
+    '<div class="tile"><div class="name">lag from the denominator</div><div class="calc">arg[(' + F(r.dre) + ') + (' + F(r.dim) + ')i] = <span class="out">' + deg(Math.atan2(r.dim, r.dre)) + '</span></div>' +
+      '<div class="why">The car body resisting: mass and damping make it late.</div></div>' +
+    '<div class="tile"><div class="name">lead from the numerator</div><div class="calc">arg[(' + F(st.k, 1) + ') + (' + F(r.nim) + ')i] = <span class="out">' + deg(Math.atan2(r.nim, st.k)) + '</span></div>' +
+      '<div class="why">The shock absorber reacts to road <i>speed</i>, which pulls the response earlier.</div></div>' +
+    '<div class="tile"><div class="name">net phase lag</div><div class="calc">' + deg(Math.atan2(r.dim, r.dre)) + ' − ' + deg(Math.atan2(r.nim, st.k)) + ' = <span class="out">' + deg(r.phi) + '</span></div>' +
+      '<div class="why">Denominator angles subtract, numerator angles add — the quotient rule for arg.</div></div>' +
+    '<div class="tile"><div class="name">as a time, and the gain</div><div class="calc">φ/ω = <span class="out">' + F(r.phi / st.w, 3) + ' s</span><br>gain = <span class="out">' + F(r.gain, 3) + '</span></div>' +
+      '<div class="why">Gain under 1 means the cabin moves less than the road.</div></div>';
+  },
+  interp(st, r) {
+    const rel = st.w / r.w0;
+    let p;
+    if (rel < 0.6) p = '<p><b>Slow, gentle undulations (ω/ω₀ = ' + F(rel) + ').</b> The body tracks the road almost exactly: gain ' + F(r.gain, 2) + ', lag only ' + deg(r.phi) + '. Driving slowly over a long hill, the whole car simply rides up and over it.</p>';
+    else if (rel < 1.5) p = '<p><b>Near the body\'s natural frequency (ω/ω₀ = ' + F(rel) + ').</b> Gain ' + F(r.gain, 2) + ' — the cabin can move <i>more</i> than the road does, which is the wallowing feeling on a road with regularly spaced dips. The lag is ' + deg(r.phi) + '.</p>';
+    else p = '<p><b>Fast, closely spaced bumps (ω/ω₀ = ' + F(rel) + ').</b> Gain has dropped to ' + F(r.gain, 2) + ': the wheel moves but the cabin barely does. That is the suspension doing its job — the body cannot respond quickly enough, and lags by ' + deg(r.phi) + '.</p>';
+    return p +
+      '<div class="note"><b>Why the lag is useful here.</b> A large lag at high frequency is not a defect; it means the body has stopped trying to follow. Isolation and lag arrive together: the same inertia that makes the response small also makes it late.</div>' +
+      '<div class="warn"><b>Try worn shocks.</b> Drop b to its minimum and set ω near ω₀ = ' + F(r.w0) + '. Gain climbs steeply and the body keeps bouncing after each bump — the reason garages test dampers by pushing down on a corner of the car.</div>' +
+      '<p>Note the structure of the formula: this system has a bω term in the <i>numerator</i> as well as the denominator, because the damper pushes on the body according to how fast the road is rising, not just how high it is. Numerator angles subtract from the lag, which is why a real suspension lags less than a pure spring-mass system would.</p>';
+  },
+  more:['whyLag', 'leadlag', 'transient']
+}) });
+
+/* ---- 6. RC low-pass filter ---- */
+addTab({ id:'rc', name:'6 · RC circuit', sys:buildSystem({
+  id:'rc',
+  inName:'input voltage', outName:'capacitor voltage',
+  physTitle:'A resistor and a capacitor — the classic low-pass filter',
+  physH:250, cycles:2.6,
+  eq:'RC·V_out′ + V_out = V_in &nbsp;→&nbsp; φ = arg[1 + iωRC] = arctan(ωRC)',
+  hint:'This is the same mathematics as the house tab, in electrical clothing.',
+  params:[
+    { key:'tau', label:'time constant RC', min:0.05, max:3, step:0.01, val:0.5, fmt:v => F(v) + ' s', sub:'How long the capacitor takes to charge. Bigger RC = slower circuit.' },
+    { key:'w', label:'signal frequency ω', min:0.2, max:10, step:0.05, val:2, fmt:v => F(v) + ' rad/s', sub:'How fast the input voltage wiggles.', act:true }
+  ],
+  resp(st) { const wt = st.w * st.tau; return { gain: 1 / Math.hypot(1, wt), phi: Math.atan(wt), wt }; },
+  drawPhys(cv, st, r) {
+    const x = cv.x, W = cv.w, H = cv.h; x.clearRect(0, 0, W, H);
+    const th = st.w * st.t, vin = Math.cos(th), vout = r.gDraw * Math.cos(th - r.phi);
+    const L = W * 0.12, R2 = W * 0.72, topY = H * 0.26, botY = H * 0.66;
+    x.strokeStyle = '#475569'; x.lineWidth = 2.5;
+    /* source */
+    dot(x, L, (topY + botY) / 2, 22, '#fff', '#475569');
+    txt(x, '~', L, (topY + botY) / 2 + 8, { align:'center', size:24, weight:700, color:C.in });
+    line(x, L, (topY + botY) / 2 - 22, L, topY, '#475569', 2.5);
+    line(x, L, (topY + botY) / 2 + 22, L, botY, '#475569', 2.5);
+    line(x, L, topY, W * 0.34, topY, '#475569', 2.5);
+    /* resistor */
+    const rx0 = W * 0.34, rx1 = W * 0.52;
+    x.beginPath(); x.moveTo(rx0, topY);
+    for (let i = 0; i < 6; i++) x.lineTo(rx0 + (rx1 - rx0) * (i + 0.5) / 6, topY + (i % 2 ? 9 : -9));
+    x.lineTo(rx1, topY); x.strokeStyle = '#475569'; x.lineWidth = 2.5; x.stroke();
+    txt(x, 'R', (rx0 + rx1) / 2, topY - 16, { align:'center', size:13, weight:700, color:C.mut });
+    line(x, rx1, topY, R2, topY, '#475569', 2.5);
+    line(x, L, botY, R2, botY, '#475569', 2.5);
+    /* capacitor */
+    const capY = (topY + botY) / 2;
+    line(x, R2, topY, R2, capY - 8, '#475569', 2.5);
+    line(x, R2, capY + 8, R2, botY, '#475569', 2.5);
+    line(x, R2 - 20, capY - 8, R2 + 20, capY - 8, '#475569', 4);
+    line(x, R2 - 20, capY + 8, R2 + 20, capY + 8, '#475569', 4);
+    txt(x, 'C', R2 + 28, capY + 5, { size:13, weight:700, color:C.mut });
+    /* charge shading on the plates */
+    const q = Math.max(-1, Math.min(1, vout / Math.max(r.gain, 1e-6)));
+    x.globalAlpha = Math.abs(q) * 0.75;
+    x.fillStyle = q >= 0 ? C.out : '#ef4444';
+    x.fillRect(R2 - 20, capY - 14, 40, 6); x.fillRect(R2 - 20, capY + 8, 40, 6);
+    x.globalAlpha = 1;
+    /* moving charges along the wire */
+    const flow = -r.gain * st.w * Math.sin(th - r.phi);
+    for (let i = 0; i < 9; i++) {
+      const f = ((i / 9) + (st.t * flow * 0.08 % 1) + 1) % 1;
+      dot(x, L + f * (R2 - L), topY, 3, 'rgba(249,115,22,.75)');
+    }
+    /* meters */
+    const bar = (cx0, v, col, label) => {
+      const bw = W < 520 ? 16 : 24, bh = W < 520 ? 72 : 96, cy0 = 34;
+      x.strokeStyle = C.line; x.lineWidth = 1; x.strokeRect(cx0 - bw / 2, cy0, bw, bh);
+      line(x, cx0 - bw / 2, cy0 + bh / 2, cx0 + bw / 2, cy0 + bh / 2, C.ref, 1);
+      const hh = Math.max(-1, Math.min(1, v)) * (bh / 2 - 3);
+      x.fillStyle = col; x.fillRect(cx0 - bw / 2 + 3, cy0 + bh / 2 - Math.max(hh, 0), bw - 6, Math.abs(hh));
+      txt(x, label, cx0, cy0 + bh + 14, { align:'center', size:11, weight:700, color:col });
+      txt(x, F(v), cx0, cy0 - 5, { align:'center', size:11.5, weight:700, color:col });
+    };
+    bar(W * 0.87, vin, C.in, 'V in'); bar(W * 0.955, vout, C.out, 'V out');
+    headline(x, W, H, ['ωRC = ' + F(r.wt), 'φ = ' + deg(r.phi), 'V_out peaks ' + F(r.phi / st.w, 3) + ' s after V_in']);
+  },
+  tiles(st, r) {
+    return '' +
+    '<div class="tile"><div class="name">the only number that matters</div><div class="calc">ωRC = ' + F(st.w) + ' × ' + F(st.tau) + ' = <span class="out">' + F(r.wt, 3) + '</span></div>' +
+      '<div class="why">Signal speed compared with circuit speed. Everything depends on this ratio.</div></div>' +
+    '<div class="tile"><div class="name">phase lag</div><div class="calc">arctan(' + F(r.wt, 3) + ') = <span class="out">' + deg(r.phi) + '</span></div>' +
+      '<div class="why">Always between 0° and 90° — never more, because there is only one derivative.</div></div>' +
+    '<div class="tile"><div class="name">gain</div><div class="calc">1/√(1 + ' + F(r.wt * r.wt, 3) + ') = <span class="out">' + F(r.gain, 3) + '</span></div>' +
+      '<div class="why">At ωRC = 1 this is 0.707, the textbook cutoff frequency.</div></div>' +
+    '<div class="tile"><div class="name">as a time</div><div class="calc">φ/ω = <span class="out">' + F(r.phi / st.w, 4) + ' s</span></div>' +
+      '<div class="why">Period T = ' + F(TAU / st.w, 3) + ' s, so ' + F(r.phi / TAU, 3) + ' of a cycle.</div></div>';
+  },
+  interp(st, r) {
+    let p;
+    if (r.wt < 0.5) p = '<p><b>ωRC = ' + F(r.wt) + ', a slow signal.</b> The capacitor has time to charge fully on each swing, so the output tracks the input closely: gain ' + F(r.gain, 2) + ', lag only ' + deg(r.phi) + '.</p>';
+    else if (r.wt < 2) p = '<p><b>ωRC = ' + F(r.wt) + ', around the cutoff.</b> At ωRC = 1 exactly, gain is 0.707 and the lag is exactly 45°. This is the corner frequency that defines the filter.</p>';
+    else p = '<p><b>ωRC = ' + F(r.wt) + ', a fast signal.</b> The input reverses before the capacitor can charge, so the output is small (gain ' + F(r.gain, 2) + ') and nearly a quarter cycle late (' + deg(r.phi) + '). This is what makes it a low-pass filter: fast wiggles are removed.</p>';
+    return p +
+      '<div class="note"><b>Why the lag can never exceed 90°.</b> The equation has only one derivative, so its complex form 1 + iωRC always has a positive real part of 1. An arrow with a positive real part can never point past straight up. Compare the spring tab, where the ω² term can make the real part negative and push the lag past 90° toward 180°.</div>' +
+      '<p>The capacitor voltage depends on <i>accumulated</i> charge, and accumulation is integration, and integration always lags. That is the physical reason a lag exists at all here.</p>' +
+      '<p>Watch the plate shading: the capacitor reaches its fullest charge some time after the source reaches its peak voltage. The gap you see is the lag.</p>';
+  },
+  more:['whyLag', 'quarter', 'measure']
+}) });
+
+/* ---- 7. house temperature ---- */
+addTab({ id:'house', name:'7 · House temperature', sys:buildSystem({
+  id:'house',
+  inName:'outside temperature', outName:'inside temperature',
+  physTitle:'A house in weather that swings every day',
+  physH:265, cycles:2.6,
+  eq:'y′ + k y = k·cos(ωt) &nbsp;→&nbsp; φ = arg[k + iω] = arctan(ω/k)',
+  hint:'Thick walls (small k) means the inside peaks hours after the outside does.',
+  params:[
+    { key:'k', label:'wall leak rate k', min:0.15, max:5, step:0.05, val:1, fmt:v => F(v), sub:'Big k = thin, leaky walls that track the weather quickly.' },
+    { key:'w', label:'weather frequency ω', min:0.2, max:6, step:0.05, val:1.5, fmt:v => F(v) + ' rad/s', sub:'How fast the outside temperature cycles.', act:true }
+  ],
+  resp(st) { return { gain: st.k / Math.hypot(st.k, st.w), phi: Math.atan2(st.w, st.k), ratio: st.w / st.k }; },
+  drawPhys(cv, st, r) {
+    const x = cv.x, W = cv.w, H = cv.h; x.clearRect(0, 0, W, H);
+    const th = st.w * st.t, out = Math.cos(th), inn = r.gDraw * Math.cos(th - r.phi);
+    const tint = (v, a) => { const f = Math.max(-1, Math.min(1, v)); const c = f < 0 ? [96, 145, 232] : [226, 100, 66];
+      return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + (a * Math.abs(f) + 0.06) + ')'; };
+    x.fillStyle = tint(out, 0.3); x.fillRect(0, 0, W, H);
+    const cx = W * 0.46, cy = H * 0.52, R = Math.min(W * 0.22, H * 0.34);
+    x.setLineDash([3, 5]); x.strokeStyle = 'rgba(71,85,105,.3)'; x.lineWidth = 1.2;
+    x.beginPath(); x.arc(cx, cy, R, 0, TAU); x.stroke();
+    line(x, cx - R - 10, cy, cx + R + 10, cy, 'rgba(71,85,105,.35)', 1.2, [6, 4]); x.setLineDash([]);
+    /* ground + house */
+    const hb = cy + R * 0.62, hw = Math.min(W * 0.2, 120), hh = 58;
+    x.fillStyle = 'rgba(134,168,116,.85)'; x.fillRect(0, hb, W, H - hb);
+    const wall = Math.max(3, Math.min(14, 13 / Math.sqrt(st.k)));
+    x.fillStyle = '#8b93ab'; x.fillRect(cx - hw / 2, hb - hh, hw, hh);
+    x.fillStyle = tint(inn, 0.75); x.fillRect(cx - hw / 2 + wall, hb - hh + wall, hw - 2 * wall, hh - wall);
+    x.beginPath(); x.moveTo(cx - hw / 2 - 9, hb - hh); x.lineTo(cx, hb - hh - 26); x.lineTo(cx + hw / 2 + 9, hb - hh); x.closePath();
+    x.fillStyle = '#64748b'; x.fill();
+    txt(x, 'inside ' + F(inn), cx, hb - hh / 2 + 4, { align:'center', size:12, weight:700, color:'#0b6e68', halo:true });
+    txt(x, 'walls: k = ' + F(st.k), cx, hb + 16, { align:'center', size:10.5, color:'#1e293b' });
+    /* sun */
+    const sx = cx + R * Math.sin(th), sy = cy - R * Math.cos(th);
+    line(x, sx, sy, sx, cy, C.in, 1.6, [3, 3]);
+    if (out >= 0) {
+      x.strokeStyle = '#f59e0b'; x.lineWidth = 2;
+      for (let i = 0; i < 8; i++) { const a = i * PI / 4 + th; line(x, sx + 13 * Math.cos(a), sy + 13 * Math.sin(a), sx + 19 * Math.cos(a), sy + 19 * Math.sin(a), '#f59e0b', 2); }
+      dot(x, sx, sy, 10, '#fbbf24', '#f59e0b');
+    } else { dot(x, sx, sy, 10, '#f1f5f9', '#94a3b8'); dot(x, sx - 3, sy - 2, 2.2, '#cbd5e1'); }
+    txt(x, 'sun height = outside temp = ' + F(out), 10, 18, { size:11.5, weight:700, color:C.in, halo:true });
+    /* thermometers */
+    const thermo = (px, v, col, lab) => {
+      const top = 40, bot = H - 52, bulb = 9;
+      rrect(x, px - 6, top, 12, bot - top - bulb, 6); x.fillStyle = '#fff'; x.fill();
+      x.strokeStyle = col; x.lineWidth = 2; x.stroke();
+      const lvl = top + 5 + (1 - (Math.max(-1, Math.min(1, v)) + 1) / 2) * (bot - top - bulb - 10);
+      x.fillStyle = tint(v, 0.95); x.fillRect(px - 3, lvl, 6, bot - bulb - lvl);
+      dot(x, px, bot - bulb, bulb, tint(v, 0.95), col);
+      txt(x, lab, px, bot + 12, { align:'center', size:10.5, weight:700, color:col });
+    };
+    thermo(20, out, C.in, 'out'); thermo(W - 20, inn, C.out, 'in');
+    headline(x, W, H, ['ω/k = ' + F(r.ratio), 'φ = ' + deg(r.phi), 'inside peaks ' + F(r.phi / st.w, 2) + ' later']);
+  },
+  tiles(st, r) {
+    return '' +
+    '<div class="tile"><div class="name">the ratio that decides everything</div><div class="calc">ω/k = ' + F(st.w) + '/' + F(st.k) + ' = <span class="out">' + F(r.ratio, 3) + '</span></div>' +
+      '<div class="why">Weather speed compared with how fast heat leaks through the walls.</div></div>' +
+    '<div class="tile"><div class="name">phase lag</div><div class="calc">arctan(' + F(r.ratio, 3) + ') = <span class="out">' + deg(r.phi) + '</span></div>' +
+      '<div class="why">The angle of the arrow k + iω. Between 0° and 90°, never beyond.</div></div>' +
+    '<div class="tile"><div class="name">gain</div><div class="calc">k/√(k² + ω²) = <span class="out">' + F(r.gain, 3) + '</span></div>' +
+      '<div class="why">The inside swings only this fraction of the outside swing.</div></div>' +
+    '<div class="tile"><div class="name">as a time</div><div class="calc">φ/ω = <span class="out">' + F(r.phi / st.w, 3) + '</span> of your time unit</div>' +
+      '<div class="why">If one cycle is a day, that is ' + F(r.phi / TAU * 24, 1) + ' hours.</div></div>';
+  },
+  interp(st, r) {
+    let p;
+    if (r.ratio < 0.5) p = '<p><b>ω/k = ' + F(r.ratio) + ': thin walls, slow weather.</b> Heat crosses the walls faster than the weather changes, so the inside follows the outside closely — gain ' + F(r.gain, 2) + ', lag only ' + deg(r.phi) + '. A tent, or a long seasonal swing.</p>';
+    else if (r.ratio < 2) p = '<p><b>ω/k = ' + F(r.ratio) + ': comparable rates.</b> The inside swings ' + F(r.gain * 100, 0) + '% as much as the outside and peaks ' + deg(r.phi) + ' later. At ω = k exactly, the lag is 45° and the gain is 0.707.</p>';
+    else p = '<p><b>ω/k = ' + F(r.ratio) + ': thick walls, fast weather.</b> The walls smooth the swings almost away (gain ' + F(r.gain, 2) + ') and the inside peaks nearly a quarter cycle late, ' + deg(r.phi) + '.</p>';
+    return p +
+      '<div class="note"><b>A real example.</b> A stone building on a hot day is coolest in the early afternoon and warmest in the evening, long after the sun has peaked. Reading one cycle as 24 hours, the current lag of ' + deg(r.phi) + ' is about <b>' + F(r.phi / TAU * 24, 1) + ' hours</b>. This is exactly why old thick-walled houses feel comfortable without air conditioning.</div>' +
+      '<p>Watch the wall thickness in the picture: it is drawn from k, so making the walls thicker (smaller k) both shrinks the inside swing and pushes it later. Isolation and lag come together, just as in the suspension.</p>' +
+      '<p>Mathematically this is identical to the RC circuit tab, with k playing the role of 1/RC. Two completely different pieces of physics, one equation, one phase-lag formula.</p>';
+  },
+  more:['whyLag', 'quarter', 'transient']
+}) });
+
+/* ============================ wire up tabs ============================ */
+const tabsEl = $('tabs');
+TABS.forEach((tab, i) => {
+  const b = document.createElement('button');
+  b.className = 'tab-btn' + (i === 0 ? ' active' : '');
+  b.textContent = tab.name || (tab.sys && tab.sys.host.id);
+  b.addEventListener('click', () => activate(i));
+  tabsEl.appendChild(b);
+  tab.btn = b;
+  tab.el = tab.host || tab.sys.host;
+  tab.ctl = tab.ctrl || tab.sys;
+});
+let active = 0;
+function activate(i) {
+  active = i;
+  TABS.forEach((t, j) => {
+    t.btn.classList.toggle('active', i === j);
+    t.el.classList.toggle('show', i === j);
+  });
+  TABS[i].ctl.resize();
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+window.addEventListener('resize', () => { TABS[active].ctl.resize(); });
+
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  TABS[active].ctl.tick(dt);
+  requestAnimationFrame(loop);
+}
+TABS.forEach(t => t.ctl.draw());
+setTimeout(() => TABS[0].ctl.resize(), 30);
+requestAnimationFrame(loop);
+})();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

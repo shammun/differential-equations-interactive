@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forced Damped Vibrations</title>
+<style>
+  html, body { margin:0; height:100%; overflow:hidden; background:#f5f5f5; font-family:"Open Sans","Segoe UI",Helvetica,Arial,sans-serif; color:#555; }
+  #wrap  { position:relative; width:100%; height:100vh; height:100dvh; overflow:hidden; }
+  #stage { position:absolute; left:0; top:0; width:1080px; height:806px; transform-origin:0 0; }
+
+  #bar   { position:relative; height:40px; }
+  #title { position:absolute; left:10px; top:10px; font-weight:700; font-size:18px; color:#4a4a4a; }
+  #explBtn { position:absolute; left:392px; top:10px; font-weight:700; font-size:18px; color:#1a9cd8; cursor:pointer; user-select:none; }
+  #helpBtn { position:absolute; left:962px; top:10px; font-weight:700; font-size:18px; color:#1a9cd8; cursor:pointer; user-select:none; }
+  #help  { display:none; position:absolute; left:0; top:40px; width:1080px; height:766px; box-sizing:border-box; overflow-y:auto; z-index:6;
+           background:#f5f5f5; padding:2px 16px 14px 10px; font-size:14px; line-height:1.5; color:#333; }
+  #help p { margin:0 0 12px; max-width:900px; }
+  #help i { font-family:"Times New Roman",Times,serif; }
+
+  #app   { position:relative; height:766px; }
+  canvas { position:absolute; display:block; touch-action:none; }
+  .lbl, .ro { position:absolute; font-weight:700; font-size:16px; color:#555; white-space:nowrap; line-height:22px; }
+  .eqn { position:absolute; font-weight:700; font-size:17px; color:#e0451c; white-space:nowrap; }
+  .green { color:#1a8f1a; } .blue { color:#1a1aff; } .red { color:#e0451c; }
+  #btn { position:absolute; font:700 14px "Open Sans","Segoe UI",Arial,sans-serif; color:#555;
+         background:#fff; border:1px solid #aaa; border-radius:3px; width:38px; height:25px; padding:0; cursor:pointer; }
+  #btn:focus-visible { outline:2px solid #1a9cd8; }
+  .chk { position:absolute; display:flex; align-items:center; gap:9px; font-weight:700; font-size:16px; color:#555; cursor:pointer; user-select:none; line-height:22px; }
+  .chk .bx { width:13px; height:13px; border:2px solid #444; background:#fff; box-sizing:border-box; flex:0 0 auto; }
+  .chk.on .bx { background:#555; border-color:#555; }
+  .chk.g.on .bx { background:#1a8f1a; border-color:#1a8f1a; } .chk.g { color:#1a8f1a; }
+  .chk.b.on .bx { background:#1a1aff; border-color:#1a1aff; } .chk.b { color:#1a1aff; }
+  .chk.r.on .bx { background:#e0451c; border-color:#e0451c; } .chk.r { color:#e0451c; }
+  .chk input { position:absolute; opacity:0; width:0; height:0; }
+
+  #expl  { display:none; position:absolute; left:430px; top:52px; width:630px; height:690px; box-sizing:border-box; z-index:30;
+           background:#fff; border:1px solid #c9c9c9; border-radius:5px; box-shadow:0 6px 26px rgba(0,0,0,.28);
+           font-size:12.4px; line-height:1.36; color:#333; flex-direction:column;
+           overflow:hidden; resize:both; min-width:300px; min-height:90px; max-width:1070px; }
+  #expl.open { display:flex; }
+  #expl.min { height:auto !important; min-height:0; resize:none; }
+  #explBar { flex:0 0 auto; display:flex; align-items:center; gap:6px; padding:5px 8px; background:#e9edf3; border-bottom:1px solid #d5d5d5;
+             border-radius:5px 5px 0 0; cursor:move; user-select:none; font-weight:700; font-size:13px; color:#4a4a4a; touch-action:none; }
+  #expl.min #explBar { border-bottom:none; border-radius:5px; }
+  #explBar .sp { flex:1; }
+  #explBar .ib { width:20px; height:20px; border:1px solid #999; border-radius:3px; background:#fff; text-align:center; line-height:18px;
+                 font-size:14px; cursor:pointer; color:#444; }
+  #explBar .ib:hover { background:#1a9cd8; color:#fff; border-color:#1a9cd8; }
+  #explBody { flex:1 1 auto; overflow-y:auto; padding:7px 11px 9px; column-width:270px; column-gap:16px; column-rule:1px solid #e5e5e5; }
+  #expl.min #explBody { display:none; }
+  #expl h3 { margin:6px 0 1px; font-size:12.8px; color:#4a4a4a; break-after:avoid; }
+  #expl h3:first-child { margin-top:0; }
+  #expl p { margin:0 0 3px; }
+  #expl .eq { font-family:"Times New Roman",Times,serif; font-size:13.6px; }
+  #expl .g { color:#1a8f1a; font-weight:700; } #expl .b { color:#1a1aff; font-weight:700; } #expl .o { color:#e0451c; font-weight:700; }
+  #expl .n { font-weight:700; color:#222; }
+  #expl .box { background:#f3f6fb; border-left:3px solid #1a9cd8; padding:3px 7px; margin:3px 0; break-inside:avoid; }
+  #expl .hint { color:#777; font-style:italic; }
+  .hid { display:none !important; }
+</style>
+</head>
+<body>
+<div id="wrap">
+<div id="stage">
+  <div id="bar">
+    <div id="title">FORCED DAMPED VIBRATIONS</div>
+    <div id="explBtn" role="button" tabindex="0">+ explanation</div>
+    <div id="helpBtn" role="button" tabindex="0">+ help</div>
+  </div>
+
+  <div id="help">
+    <p>The graphing window at upper right displays solutions of the differential equation <i>m</i><i>ẍ</i> + <i>b</i><i>ẋ</i> + <i>kx</i> = <i>A</i>cos(<i>ωt</i>) or its associated homogeneous equation.</p>
+    <p>Three buttons at lower right toggle display of the steady state solution (in green), the solution with the given initial condition (in orange), and the corresponding transient (in blue). Rolling the cursor over that window creates crosshairs and a readout of <i>t</i> and <i>x</i>.</p>
+    <p>The time value is set using the slider under the window. The [&gt;&gt;] key starts an animation; while running it reads [||]. At the end of the run it reads [&lt;&lt;], which resets <i>t</i> to 0.</p>
+    <p>Sliders control the values of the parameters <i>m</i>, <i>b</i>, <i>k</i>, <i>A</i> and <i>ω</i>. The slider to the right of <i>A</i> sets the length of the time axis, from 0 to 100<i>π</i>.</p>
+    <p>At the upper left is a window displaying velocity against position. The state at <i>t</i> = 0 is controlled by dragging the orange diamond, or by grabbing the sliders along the left and lower edges of the window.</p>
+    <p>The phase plane trajectory is toggled by the [Show trajectory] button, and a line connecting the two graphs is toggled by the [Relate diagrams] button.</p>
+    <p>A slider at upper left controls a zoom feature in <i>x</i> and <i>ẋ</i>: the maximal displayed values of <i>x</i> and <i>ẋ</i> are read out to the right of the slider.</p>
+    <p>The [+ explanation] key opens a floating panel that computes and interprets every displayed quantity for the current parameter values. It floats above the app without changing the layout, can be dragged by its title bar, resized from its lower right corner, minimized, closed, or sent to a separate live tab.</p>
+    <p>Re-implementation in HTML/JavaScript of the MIT Mathlet "Forced Damped Vibrations" (original © 2008 H. Hohn, H. Miller and J.-M. Claus).</p>
+  </div>
+
+  <div id="app">
+    <label class="chk" id="trajChk" style="left:106px;top:58px"><input type="checkbox"><span class="bx"></span>Show trajectory</label>
+    <label class="chk" id="relChk"  style="left:516px;top:58px"><input type="checkbox"><span class="bx"></span>Relate diagrams</label>
+
+    <canvas id="zsl" style="left:78px;top:96px"></canvas>
+    <div class="ro" id="zro" style="left:392px;top:122px">1.00</div>
+
+    <div class="ro" id="vro" style="left:40px;top:154px">0.0000</div>
+    <canvas id="vsl" style="left:62px;top:172px"></canvas>
+    <canvas id="phase" style="left:96px;top:172px"></canvas>
+    <canvas id="xsl" style="left:130px;top:470px"></canvas>
+    <div class="ro" id="xro" style="left:398px;top:492px">0.5000</div>
+
+    <div class="lbl" style="left:82px;top:552px">m</div>
+    <canvas id="msl" style="left:104px;top:538px"></canvas>
+    <div class="ro" id="mro" style="left:382px;top:552px">1.00</div>
+    <div class="lbl" style="left:88px;top:610px">b</div>
+    <canvas id="bsl" style="left:104px;top:596px"></canvas>
+    <div class="ro" id="bro" style="left:382px;top:610px">1.00</div>
+    <div class="lbl" style="left:88px;top:668px">k</div>
+    <canvas id="ksl" style="left:104px;top:654px"></canvas>
+    <div class="ro" id="kro" style="left:382px;top:668px">1.00</div>
+
+    <div class="eqn" id="eqn" style="left:616px;top:108px">m x&#776; + b x&#775; + k x = A cos(&omega;t)</div>
+    <canvas id="graph" style="left:470px;top:136px"></canvas>
+
+    <div class="lbl" style="left:480px;top:474px">t</div>
+    <canvas id="tsl" style="left:496px;top:476px"></canvas>
+    <div class="ro" id="tro" style="left:1000px;top:474px">0.0</div>
+    <button id="btn" type="button" style="left:500px;top:504px">&gt;&gt;</button>
+    <div class="ro" id="tread" style="left:640px;top:503px">t =</div>
+    <div class="ro" id="xread" style="left:760px;top:503px">x =</div>
+
+    <div class="lbl" style="left:478px;top:610px">A</div>
+    <canvas id="asl" style="left:498px;top:596px"></canvas>
+    <div class="ro" id="aro" style="left:660px;top:610px">1.00</div>
+    <canvas id="rsl" style="left:706px;top:596px"></canvas>
+    <div class="ro" id="rro" style="left:1000px;top:610px">18.8</div>
+
+    <div class="lbl" style="left:478px;top:668px">&omega;</div>
+    <canvas id="wsl" style="left:498px;top:654px"></canvas>
+    <div class="ro" id="wro" style="left:790px;top:668px">1.00</div>
+
+    <label class="chk g" id="ssChk"  style="left:500px;top:722px"><input type="checkbox"><span class="bx"></span>Steady state</label>
+    <label class="chk b" id="trChk"  style="left:690px;top:722px"><input type="checkbox"><span class="bx"></span>Transient</label>
+    <label class="chk r" id="solChk" style="left:860px;top:722px"><input type="checkbox" checked><span class="bx"></span>Solution</label>
+  </div>
+
+  <div id="expl"><div id="explBar"><span>Explanation &amp; interpretation</span><span class="sp"></span><span class="ib" id="explTab" title="Open in a new tab">&#8599;</span><span class="ib" id="explMin" title="Minimize">&#8211;</span><span class="ib" id="explClose" title="Close">&#215;</span></div><div id="explBody"></div></div>
+</div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const PI = Math.PI;
+  const FONT = '"Open Sans","Segoe UI",Helvetica,Arial,sans-serif';
+  const C = { green:'#1a8f1a', blue:'#1a1aff', orange:'#e0451c', pale:'#f2907c', gray:'#888',
+              text:'#555', traj:'#c4c4c4', grid:'#e2e2e2' };
+  const $ = id => document.getElementById(id);
+
+  const S = { m:1, b:1, k:1, A:1, w:1, x0:0.5, v0:0, zoom:1, tmax:6 * PI, t:0,
+              traj:false, rel:false, ss:false, tr:false, sol:true };
+  const anim = { state:'idle', last:0 };
+  let hover = null, suppress = false;
+
+  // ---------- model: x = steady state + transient, both in closed form ----------
+  function model() {
+    const mE = Math.max(S.m, 0.02), b = S.b, k = S.k, w = S.w;
+    const pr = k - mE * w * w, pi = b * w, den = Math.hypot(pr, pi);
+    let As = den < 1e-9 ? 0 : S.A / den, phi = Math.atan2(pi, pr);
+    if (!isFinite(As) || As > 5e3) As = 5e3;
+    const ss = t => As * Math.cos(w * t - phi), ssv = t => -As * w * Math.sin(w * t - phi);
+    const X0 = S.x0 - ss(0), V0 = S.v0 - ssv(0);
+    const disc = b * b - 4 * mE * k;
+    let tr, trv, kind, r1, r2, alpha, wd;
+    if (disc > 1e-10) {
+      kind = 'over';
+      const sq = Math.sqrt(disc);
+      r1 = (-b + sq) / (2 * mE); r2 = (-b - sq) / (2 * mE);
+      const c1 = (V0 - r2 * X0) / (r1 - r2), c2 = X0 - c1;
+      tr = t => c1 * Math.exp(r1 * t) + c2 * Math.exp(r2 * t);
+      trv = t => c1 * r1 * Math.exp(r1 * t) + c2 * r2 * Math.exp(r2 * t);
+    } else if (disc > -1e-10) {
+      kind = 'crit';
+      r1 = r2 = -b / (2 * mE);
+      const c1 = X0, c2 = V0 - r1 * X0;
+      tr = t => (c1 + c2 * t) * Math.exp(r1 * t);
+      trv = t => (c2 + r1 * (c1 + c2 * t)) * Math.exp(r1 * t);
+    } else {
+      kind = 'under';
+      alpha = -b / (2 * mE); wd = Math.sqrt(4 * mE * k - b * b) / (2 * mE);
+      const c1 = X0, c2 = (V0 - alpha * X0) / wd;
+      tr = t => Math.exp(alpha * t) * (c1 * Math.cos(wd * t) + c2 * Math.sin(wd * t));
+      trv = t => Math.exp(alpha * t) * ((alpha * c1 + wd * c2) * Math.cos(wd * t) + (alpha * c2 - wd * c1) * Math.sin(wd * t));
+    }
+    return { mE, As, phi, ss, ssv, tr, trv, X0, V0, kind, r1, r2, alpha, wd, disc,
+             w0: Math.sqrt(k / mE), zeta: b / (2 * Math.sqrt(Math.max(mE * k, 1e-12))),
+             x: t => ss(t) + tr(t), v: t => ssv(t) + trv(t) };
+  }
+
+  // ---------- canvas helpers ----------
+  function mk(id, w, h) {
+    const c = $(id), d = window.devicePixelRatio || 1;
+    c.width = w * d; c.height = h * d; c.style.width = w + 'px'; c.style.height = h + 'px';
+    const x = c.getContext('2d'); x.scale(d, d);
+    return { c, x, w, h };
+  }
+  function pos(cv, e) {
+    const r = cv.c.getBoundingClientRect();
+    return { x: (e.clientX - r.left) * cv.w / r.width, y: (e.clientY - r.top) * cv.h / r.height };
+  }
+  function line(x, x1, y1, x2, y2, col, lw, dash) {
+    x.save(); x.strokeStyle = col; x.lineWidth = lw || 1; if (dash) x.setLineDash(dash);
+    x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.stroke(); x.restore();
+  }
+  function arrow(x, x1, y1, x2, y2) {
+    line(x, x1, y1, x2, y2, C.gray, 1);
+    const a = Math.atan2(y2 - y1, x2 - x1);
+    x.save(); x.fillStyle = C.gray; x.beginPath(); x.moveTo(x2, y2);
+    x.lineTo(x2 - 7 * Math.cos(a - 0.4), y2 - 7 * Math.sin(a - 0.4));
+    x.lineTo(x2 - 7 * Math.cos(a + 0.4), y2 - 7 * Math.sin(a + 0.4)); x.closePath(); x.fill(); x.restore();
+  }
+  function diamond(x, cx, cy, r, col) {
+    x.beginPath(); x.moveTo(cx, cy - r); x.lineTo(cx + r, cy); x.lineTo(cx, cy + r); x.lineTo(cx - r, cy);
+    x.closePath(); x.fillStyle = col; x.fill();
+  }
+  function text(x, s, px, py, o) {
+    o = o || {};
+    x.fillStyle = o.color || C.text; x.font = (o.bold ? '700 ' : '') + (o.size || 13) + 'px ' + FONT;
+    x.textAlign = o.align || 'center'; x.textBaseline = o.base || 'middle'; x.fillText(s, px, py);
+  }
+
+  // ---------- sliders ----------
+  class Slider {
+    constructor(cv, o) {
+      this.cv = cv; this.min = o.min; this.max = o.max; this.value = o.value; this.vert = !!o.vert;
+      this.p0 = o.p0; this.p1 = o.p1; this.ax = o.axis; this.ticks = o.ticks || []; this.minor = o.minor || 0;
+      this.fmt = o.fmt; this.tickFmt = o.tickFmt || o.fmt; this.labels = o.labels !== false;
+      this.onChange = o.onChange; this.ro = o.readout; this.drag = false;
+      const c = cv.c;
+      c.addEventListener('pointerdown', e => { this.drag = true; c.setPointerCapture(e.pointerId); this.fromEvent(e); });
+      c.addEventListener('pointermove', e => { if (this.drag) this.fromEvent(e); });
+      const up = () => { this.drag = false; };
+      c.addEventListener('pointerup', up); c.addEventListener('pointercancel', up);
+      this.draw();
+    }
+    px(v) { return this.p0 + (v - this.min) / (this.max - this.min) * (this.p1 - this.p0); }
+    fromEvent(e) {
+      const p = pos(this.cv, e), c = this.vert ? p.y : p.x;
+      let v = this.min + (c - this.p0) / (this.p1 - this.p0) * (this.max - this.min);
+      this.set(Math.max(this.min, Math.min(this.max, v)), true);
+    }
+    set(v, fire) {
+      this.value = v; if (this.ro) this.ro.textContent = this.fmt(v); this.draw();
+      if (fire && this.onChange) this.onChange(v);
+    }
+    draw() {
+      const x = this.cv.x, a = this.ax; x.clearRect(0, 0, this.cv.w, this.cv.h);
+      const A = (p, q) => this.vert ? [q, p] : [p, q];
+      let s = A(this.p0, a), e2 = A(this.p1, a); line(x, s[0], s[1], e2[0], e2[1], C.gray, 1);
+      if (this.minor) for (let v = this.min; v <= this.max + 1e-9; v += this.minor) {
+        const p = this.px(v), u = A(p, a - 3), w2 = A(p, a); line(x, u[0], u[1], w2[0], w2[1], C.gray, 1);
+      }
+      for (const v of this.ticks) {
+        const p = this.px(v), u = A(p, a - 6), w2 = A(p, a); line(x, u[0], u[1], w2[0], w2[1], C.gray, 1);
+        if (this.labels) { const L = A(p, a - 14); text(x, this.tickFmt(v), L[0], L[1], { bold:true, size:13 }); }
+      }
+      const h = this.px(this.value);
+      x.save(); x.translate.apply(x, this.vert ? [a, h] : [h, a]);
+      if (this.vert) x.rotate(-PI / 2);
+      x.beginPath(); x.moveTo(0, -1); x.lineTo(-5, 9); x.lineTo(5, 9); x.closePath();
+      x.fillStyle = '#d9d9d9'; x.fill(); x.strokeStyle = '#444'; x.lineWidth = 1; x.stroke();
+      x.beginPath(); x.moveTo(0, 9); x.lineTo(0, 13); x.strokeStyle = '#444'; x.stroke();
+      x.restore();
+    }
+  }
+
+  const f1 = v => v.toFixed(1), f2 = v => v.toFixed(2), f4 = v => v.toFixed(4);
+  const axLab = v => Math.abs(v) < 1e-12 ? '0' : (Math.abs(v) >= 1 ? v.toFixed(1) : (Math.abs(v) >= 0.01 ? v.toFixed(2) : v.toExponential(0)));
+  const phLab = v => { const n = v / PI; return n === 0 ? '0' : (n === 1 ? 'π' : Math.round(n) + 'π'); };
+
+  const phase = mk('phase', 300, 300), gr = mk('graph', 530, 330);
+  const zsl = mk('zsl', 340, 40), vsl = mk('vsl', 30, 270), xsl = mk('xsl', 264, 34);
+  const msl = mk('msl', 270, 40), bsl = mk('bsl', 270, 40), ksl = mk('ksl', 270, 40);
+  const tsl = mk('tsl', 500, 30), asl = mk('asl', 152, 40), rsl = mk('rsl', 280, 40), wsl = mk('wsl', 280, 40);
+
+  // zoom slider is logarithmic: position is log10(value)
+  const zS = new Slider(zsl, { min:-2, max:1, value:0, p0:14, p1:296, axis:26, ticks:[-2,-1,0,1], minor:0,
+    fmt: v => f2(Math.pow(10, v)), tickFmt: v => Math.pow(10, v).toFixed(2), readout:$('zro'),
+    onChange: v => { S.zoom = Math.pow(10, v); syncICSliders(); redraw(); } });
+  const vS = new Slider(vsl, { min:0, max:0, value:0, p0:12, p1:256, axis:22, vert:true, labels:false, fmt:f4, readout:$('vro'),
+    onChange: v => { S.v0 = v; redraw(); } });
+  const xS = new Slider(xsl, { min:0, max:0, value:0, p0:10, p1:254, axis:12, labels:false, fmt:f4, readout:$('xro'),
+    onChange: v => { S.x0 = v; redraw(); } });
+  const mS = new Slider(msl, { min:0, max:2, value:1, p0:14, p1:256, axis:27, ticks:[0,0.5,1,1.5,2], minor:0.1,
+    fmt:f2, tickFmt:f1, readout:$('mro'), onChange: v => { S.m = v; redraw(); } });
+  const bS = new Slider(bsl, { min:0, max:2, value:1, p0:14, p1:256, axis:27, ticks:[0,0.5,1,1.5,2], minor:0.1,
+    fmt:f2, tickFmt:f1, readout:$('bro'), onChange: v => { S.b = v; redraw(); } });
+  const kS = new Slider(ksl, { min:0, max:4, value:1, p0:14, p1:256, axis:27, ticks:[0,1,2,3,4], minor:0.25,
+    fmt:f2, tickFmt: v => String(v), readout:$('kro'), onChange: v => { S.k = v; redraw(); } });
+  const tS = new Slider(tsl, { min:0, max:S.tmax, value:0, p0:8, p1:490, axis:14, minor:PI / 2, labels:false, fmt:f1, readout:$('tro'),
+    onChange: v => { S.t = v; if (anim.state !== 'idle') { anim.state = 'idle'; $('btn').textContent = '>>'; } redraw(); } });
+  const aS = new Slider(asl, { min:0, max:1, value:1, p0:10, p1:142, axis:27, ticks:[0,1], minor:0.1,
+    fmt:f2, tickFmt: v => String(v), readout:$('aro'), onChange: v => { S.A = v; redraw(); } });
+  const rS = new Slider(rsl, { min:0, max:100 * PI, value:6 * PI, p0:14, p1:266, axis:27,
+    ticks:[0,25 * PI,50 * PI,75 * PI,100 * PI], minor:0,
+    fmt: v => Math.max(v, 2 * PI).toFixed(1), tickFmt: phLab, readout:$('rro'),
+    onChange: v => { const tv = Math.max(v, 2 * PI); S.tmax = tv; tS.max = tv;
+                     if (S.t > tv) S.t = tv; tS.set(S.t, false); tS.draw(); redraw(); } });
+  const wS = new Slider(wsl, { min:0, max:2, value:1, p0:14, p1:266, axis:27, ticks:[0,1,2], minor:0.1,
+    fmt:f2, tickFmt: v => String(v), readout:$('wro'), onChange: v => { S.w = v; redraw(); } });
+  // the 0 tick of the time-range slider sits left of its minimum, so draw the label manually
+  rS.tickFmt = phLab;
+
+  function syncICSliders() {
+    const z = S.zoom;
+    xS.min = -z; xS.max = z; xS.value = Math.max(-z, Math.min(z, S.x0)); xS.ro.textContent = f4(S.x0); xS.draw();
+    vS.min = z; vS.max = -z; vS.value = Math.max(-z, Math.min(z, S.v0)); vS.ro.textContent = f4(S.v0); vS.draw();
+  }
+
+  // ---------- phase plane ----------
+  const P = { x0:44, x1:288, y0:12, y1:256 };
+  const pxx = (v, z) => (P.x0 + P.x1) / 2 + v / z * (P.x1 - P.x0) / 2;
+  const pyy = (v, z) => (P.y0 + P.y1) / 2 - v / z * (P.y1 - P.y0) / 2;
+  function drawPhase(M) {
+    const x = phase.x, z = S.zoom; x.clearRect(0, 0, phase.w, phase.h);
+    x.fillStyle = '#fff'; x.fillRect(P.x0, P.y0, P.x1 - P.x0, P.y1 - P.y0);
+    for (const f of [-1, -0.5, 0.5, 1]) {
+      line(x, pxx(f * z, z), P.y0, pxx(f * z, z), P.y1, C.grid, 1);
+      line(x, P.x0, pyy(f * z, z), P.x1, pyy(f * z, z), C.grid, 1);
+    }
+    x.strokeStyle = '#ccc'; x.lineWidth = 1; x.strokeRect(P.x0, P.y0, P.x1 - P.x0, P.y1 - P.y0);
+    arrow(x, P.x0, pyy(0, z), P.x1 + 12, pyy(0, z));
+    arrow(x, pxx(0, z), P.y1, pxx(0, z), P.y0 - 10);
+    text(x, 'x', P.x1 + 22, pyy(0, z), { bold:true, size:15 });
+    text(x, 'ẋ', pxx(0, z) + 2, P.y0 - 20, { bold:true, size:15 });
+    for (const f of [-1, -0.5, 0, 0.5, 1]) {
+      text(x, axLab(f * z), P.x0 - 6, pyy(f * z, z), { bold:true, size:12.5, align:'right' });
+      text(x, axLab(f * z), pxx(f * z, z), P.y1 + 14, { bold:true, size:12.5 });
+    }
+    x.save(); x.beginPath(); x.rect(P.x0, P.y0, P.x1 - P.x0, P.y1 - P.y0); x.clip();
+    if (S.rel) line(x, pxx(M.x(S.t), z), P.y0, pxx(M.x(S.t), z), P.y1, C.pale, 1.5);
+    if (S.traj) {                                   // whole trajectory, faint
+      const N = 3000; x.strokeStyle = C.traj; x.lineWidth = 1; x.beginPath();
+      for (let i = 0; i <= N; i++) {
+        const t = S.tmax * i / N, p = pxx(M.x(t), z), q = pyy(M.v(t), z);
+        i ? x.lineTo(p, q) : x.moveTo(p, q);
+      }
+      x.stroke();
+    }
+    const N2 = 1400, upto = Math.max(1, Math.round(N2 * S.t / S.tmax));   // path travelled so far
+    x.strokeStyle = C.orange; x.lineWidth = 2; x.beginPath();
+    for (let i = 0; i <= upto; i++) {
+      const t = S.t * i / upto, p = pxx(M.x(t), z), q = pyy(M.v(t), z);
+      i ? x.lineTo(p, q) : x.moveTo(p, q);
+    }
+    x.stroke();
+    line(x, pxx(0, z), pyy(0, z), pxx(S.x0, z), pyy(S.v0, z), C.orange, 2);
+    diamond(x, pxx(S.x0, z), pyy(S.v0, z), 5, C.orange);
+    if (S.t > 1e-9) diamond(x, pxx(M.x(S.t), z), pyy(M.v(S.t), z), 5, '#8a2b12');
+    x.restore();
+  }
+  (function () {                                    // drag the initial condition
+    let d = false;
+    const grab = e => {
+      const p = pos(phase, e), z = S.zoom;
+      S.x0 = Math.max(-z, Math.min(z, (p.x - (P.x0 + P.x1) / 2) / ((P.x1 - P.x0) / 2) * z));
+      S.v0 = Math.max(-z, Math.min(z, ((P.y0 + P.y1) / 2 - p.y) / ((P.y1 - P.y0) / 2) * z));
+      syncICSliders(); redraw();
+    };
+    phase.c.addEventListener('pointerdown', e => { d = true; phase.c.setPointerCapture(e.pointerId); grab(e); });
+    phase.c.addEventListener('pointermove', e => { if (d) grab(e); });
+    const up = () => { d = false; };
+    phase.c.addEventListener('pointerup', up); phase.c.addEventListener('pointercancel', up);
+  })();
+
+  // ---------- graphing window ----------
+  const G = { x0:38, x1:508, y0:20, y1:268 };
+  const gx = t => G.x0 + t / S.tmax * (G.x1 - G.x0);
+  const gy = (v, z) => (G.y0 + G.y1) / 2 - v / z * (G.y1 - G.y0) / 2;
+  function drawGraph(M) {
+    const x = gr.x, z = S.zoom; x.clearRect(0, 0, gr.w, gr.h);
+    x.fillStyle = '#fff'; x.fillRect(G.x0, G.y0, G.x1 - G.x0, G.y1 - G.y0);
+    for (const f of [-1, -0.5, 0.5, 1]) line(x, G.x0, gy(f * z, z), G.x1, gy(f * z, z), C.grid, 1);
+    const nPi = Math.round(S.tmax / PI), stepPi = Math.max(1, Math.ceil(nPi / 8));
+    for (let n = stepPi; n <= nPi; n += stepPi) line(x, gx(n * PI), G.y0, gx(n * PI), G.y1, C.grid, 1);
+    x.strokeStyle = '#ccc'; x.lineWidth = 1; x.strokeRect(G.x0, G.y0, G.x1 - G.x0, G.y1 - G.y0);
+    arrow(x, G.x0, G.y1, G.x0, G.y0 - 10); arrow(x, G.x0, gy(0, z), G.x1 + 14, gy(0, z));
+    text(x, 'x', G.x0 + 4, G.y0 - 20, { bold:true, size:15 });
+    text(x, 't', G.x1 + 24, gy(0, z), { bold:true, size:15 });
+    for (const f of [-1, -0.5, 0, 0.5, 1]) {
+      line(x, G.x0 - 4, gy(f * z, z), G.x0, gy(f * z, z), C.gray);
+      text(x, axLab(f * z), G.x0 - 8, gy(f * z, z), { bold:true, size:12.5, align:'right' });
+    }
+    for (let n = 0; n <= nPi; n += stepPi) {
+      line(x, gx(n * PI), G.y1, gx(n * PI), G.y1 + 4, C.gray);
+      text(x, phLab(n * PI), gx(n * PI), G.y1 + 15, { bold:true, size:13 });
+    }
+    x.save(); x.beginPath(); x.rect(G.x0, G.y0, G.x1 - G.x0, G.y1 - G.y0); x.clip();
+    if (S.rel) line(x, G.x0, gy(M.x(S.t), z), G.x1, gy(M.x(S.t), z), C.pale, 1.5);
+    const N = 1600;
+    const curve = (fn, col) => {
+      x.strokeStyle = col; x.lineWidth = 2.2; x.beginPath();
+      for (let i = 0; i <= N; i++) {
+        const t = S.tmax * i / N, p = gx(t), q = gy(fn(t), z);
+        i ? x.lineTo(p, q) : x.moveTo(p, q);
+      }
+      x.stroke();
+    };
+    if (S.ss) curve(M.ss, C.green);
+    if (S.tr) curve(M.tr, C.blue);
+    if (S.sol) curve(M.x, C.orange);
+    if (S.t > 1e-9 || S.sol) {
+      const px = gx(S.t);
+      if (S.sol) diamond(x, px, gy(M.x(S.t), z), 5, C.orange);
+      if (S.ss) diamond(x, px, gy(M.ss(S.t), z), 5, C.green);
+      if (S.tr) diamond(x, px, gy(M.tr(S.t), z), 5, C.blue);
+      if (S.t > 1e-9) line(x, px, G.y0, px, G.y1, '#bbb', 1);
+    }
+    if (hover && !suppress) { line(x, G.x0, hover.py, G.x1, hover.py, '#666', 1); line(x, hover.px, G.y0, hover.px, G.y1, '#666', 1); }
+    x.restore();
+  }
+  gr.c.addEventListener('pointermove', e => {
+    const p = pos(gr, e);
+    if (p.x >= G.x0 && p.x <= G.x1 && p.y >= G.y0 && p.y <= G.y1) {
+      hover = { px:p.x, py:p.y, t:(p.x - G.x0) / (G.x1 - G.x0) * S.tmax,
+                x:((G.y0 + G.y1) / 2 - p.y) / ((G.y1 - G.y0) / 2) * S.zoom };
+      $('tread').textContent = 't = ' + hover.t.toFixed(2); $('xread').textContent = 'x = ' + hover.x.toFixed(3);
+    } else { hover = null; $('tread').textContent = 't ='; $('xread').textContent = 'x ='; }
+    redraw();
+  });
+  gr.c.addEventListener('pointerleave', () => { hover = null; suppress = false; $('tread').textContent = 't ='; $('xread').textContent = 'x ='; redraw(); });
+  gr.c.addEventListener('pointerdown', () => { suppress = true; redraw(); });
+  gr.c.addEventListener('pointerup', () => { suppress = false; redraw(); });
+
+  // ---------- explanation text ----------
+  function explain(M) {
+    const n = v => '<span class="n">' + v + '</span>';
+    const A = M.As, phi = M.phi, w = S.w, z = M.zeta;
+    const per = w > 1e-9 ? 2 * PI / w : Infinity;
+    const lag = w > 1e-9 ? phi / w : 0;
+    const half = M.kind === 'under' ? Math.log(2) / (-M.alpha) : (M.kind === 'crit' ? Math.log(2) / (-M.r1) : Math.log(2) / (-Math.max(M.r1, M.r2)));
+    const xNow = M.x(S.t), ssNow = M.ss(S.t), trNow = M.tr(S.t);
+    let regime, rtxt;
+    if (S.b < 1e-9) { regime = 'undamped (ζ = 0)'; rtxt = 'roots ± i ω<sub>0</sub> — the transient never dies away'; }
+    else if (M.kind === 'under') { regime = 'underdamped (ζ = ' + z.toFixed(3) + ' &lt; 1)'; rtxt = 'roots ' + M.alpha.toFixed(3) + ' ± ' + M.wd.toFixed(3) + ' i — the transient oscillates while it decays'; }
+    else if (M.kind === 'crit') { regime = 'critically damped (ζ = 1)'; rtxt = 'double root ' + M.r1.toFixed(3) + ' — fastest decay without oscillation'; }
+    else { regime = 'overdamped (ζ = ' + z.toFixed(3) + ' &gt; 1)'; rtxt = 'roots ' + M.r1.toFixed(3) + ' and ' + M.r2.toFixed(3) + ' — two pure decays, no oscillation'; }
+    const resPeak = M.zeta < 0.7071 && S.b > 1e-9 ? M.w0 * Math.sqrt(1 - 2 * z * z) : null;
+    let interp;
+    if (S.A < 1e-9) interp = 'The drive is switched off (A = 0), so the whole motion is the transient. It decays from the initial state you set in the phase plane and nothing is left.';
+    else if (w < 1e-9) interp = 'ω = 0 makes the drive a constant force A. The steady state is the fixed offset A/k = ' + (S.k > 1e-9 ? (S.A / S.k).toFixed(3) : '∞') + ', and the transient carries the mass from its initial state to that offset.';
+    else if (w / M.w0 < 0.6) interp = 'You are driving well below resonance (ω/ω<sub>0</sub> = ' + (w / M.w0).toFixed(2) + '). The mass has time to follow the force, so the green curve is close to A/k in size and only slightly behind the drive.';
+    else if (w / M.w0 < 1.45) interp = 'You are near resonance (ω/ω<sub>0</sub> = ' + (w / M.w0).toFixed(2) + '). Each push arrives while the mass is already moving that way, so the green amplitude is large and the lag is close to a quarter period. Lower b to make the peak taller and sharper.';
+    else interp = 'You are driving above resonance (ω/ω<sub>0</sub> = ' + (w / M.w0).toFixed(2) + '). The force reverses before the mass can respond, so the green amplitude is small and the response is heading toward being exactly opposite to the drive (lag → 180°).';
+    return '' +
+      '<h3>The equation</h3>' +
+      '<p class="eq">m ẍ + b ẋ + k x = A cos(ωt)</p>' +
+      '<p>= ' + n(S.m.toFixed(2)) + ' ẍ + ' + n(S.b.toFixed(2)) + ' ẋ + ' + n(S.k.toFixed(2)) + ' x = ' + n(S.A.toFixed(2)) + ' cos(' + S.w.toFixed(2) + ' t)</p>' +
+      (S.m < 0.02 ? '<p class="hint">m is below 0.02; the computation uses m = 0.02 so the equation stays second order.</p>' : '') +
+      '<p>Every solution is <span class="g">steady state</span> + <span class="b">transient</span> = <span class="o">solution</span>. The three checkboxes show them separately.</p>' +
+      '<h3>Natural frequency and damping</h3>' +
+      '<p class="eq">ω<sub>0</sub> = √(k/m) = √(' + S.k.toFixed(2) + '/' + M.mE.toFixed(2) + ') = ' + n(M.w0.toFixed(3)) + ' rad/s</p>' +
+      '<p class="eq">ζ = b / (2√(km)) = ' + S.b.toFixed(2) + ' / ' + (2 * Math.sqrt(M.mE * S.k)).toFixed(3) + ' = ' + n(z.toFixed(3)) + '</p>' +
+      '<p>Regime: ' + n(regime) + '. Characteristic polynomial m s² + b s + k has ' + rtxt + '.</p>' +
+      '<h3>Steady state (green)</h3>' +
+      '<p class="eq">p(iω) = (k − mω²) + i bω</p>' +
+      '<p class="eq">= (' + (S.k - M.mE * w * w).toFixed(3) + ') + (' + (S.b * w).toFixed(3) + ') i</p>' +
+      '<p class="eq">|p(iω)| = ' + Math.hypot(S.k - M.mE * w * w, S.b * w).toFixed(3) + '</p>' +
+      '<div class="box"><p class="eq">amplitude = A / |p(iω)| = ' + S.A.toFixed(2) + ' / ' + Math.hypot(S.k - M.mE * w * w, S.b * w).toFixed(3) + ' = <span class="g">' + A.toFixed(4) + '</span></p>' +
+      '<p class="eq">φ = arg p(iω) = ' + n(phi.toFixed(4)) + ' rad = ' + n((phi * 180 / PI).toFixed(1) + '°') + '</p></div>' +
+      '<p class="eq">x<sub>ss</sub>(t) = ' + A.toFixed(4) + ' cos(' + w.toFixed(2) + ' t − ' + phi.toFixed(4) + ')</p>' +
+      '<p>Gain A/|p| ÷ A = ' + n((A / Math.max(S.A, 1e-12)).toFixed(4)) + ' per unit of drive. Period of the drive P = 2π/ω = ' + n(isFinite(per) ? per.toFixed(3) : '∞') + ', so the response peaks ' + n(lag.toFixed(3)) + ' s after the force does, which is ' + (isFinite(per) ? (phi / (2 * PI)).toFixed(3) : '—') + ' of a period.</p>' +
+      (resPeak ? '<p>Amplitude is largest at ω = ω<sub>0</sub>√(1 − 2ζ²) = ' + n(resPeak.toFixed(3)) + '; try setting the ω slider there.</p>'
+               : '<p>With this much damping there is no resonant peak: amplitude falls steadily as ω grows.</p>') +
+      '<h3>Transient (blue)</h3>' +
+      '<p>The transient is whatever must be added at t = 0 to make the solution start where you put the diamond.</p>' +
+      '<p class="eq">x(0) = ' + n(S.x0.toFixed(4)) + ', ẋ(0) = ' + n(S.v0.toFixed(4)) + '</p>' +
+      '<p class="eq">x<sub>ss</sub>(0) = ' + M.ss(0).toFixed(4) + ', ẋ<sub>ss</sub>(0) = ' + M.ssv(0).toFixed(4) + '</p>' +
+      '<p class="eq">transient(0) = ' + n(M.X0.toFixed(4)) + ', slope = ' + n(M.V0.toFixed(4)) + '</p>' +
+      (S.b < 1e-9 ? '<p>With b = 0 nothing decays: the blue curve keeps its size forever and the orange curve never settles.</p>'
+        : '<p>It dies like e<sup>' + (M.kind === 'under' ? M.alpha.toFixed(3) : Math.max(M.r1, M.r2).toFixed(3)) + ' t</sup>, halving every ' + n(half.toFixed(3)) + ' s. After about ' + n((4.6 * half / Math.log(2) / 1).toFixed(1)) + ' s only 1% is left, and from then on orange sits on top of green.</p>') +
+      '<h3>At the current time</h3>' +
+      '<div class="box"><p class="eq">t = ' + n(S.t.toFixed(3)) + '</p>' +
+      '<p class="eq"><span class="g">x<sub>ss</sub></span> = ' + A.toFixed(4) + ' cos(' + (w * S.t).toFixed(3) + ' − ' + phi.toFixed(3) + ') = ' + n(ssNow.toFixed(4)) + '</p>' +
+      '<p class="eq"><span class="b">transient</span> = ' + n(trNow.toFixed(4)) + '</p>' +
+      '<p class="eq"><span class="o">x</span> = ' + ssNow.toFixed(4) + ' + (' + trNow.toFixed(4) + ') = ' + n(xNow.toFixed(4)) + '</p>' +
+      '<p class="eq">ẋ = ' + n(M.v(S.t).toFixed(4)) + '</p></div>' +
+      '<h3>The two windows</h3>' +
+      '<p>Right: x against t. Left: the same motion drawn as the point (x, ẋ) in the phase plane, so time is not an axis — it is the position along the curve. The orange diamond is the state at t = 0; the dark diamond is the state now.</p>' +
+      '<p>[Show trajectory] draws the whole path in gray. A decaying transient makes it spiral inward; what it spirals onto is the steady state, an ellipse of half-width ' + n(A.toFixed(3)) + ' in x and ' + n((A * w).toFixed(3)) + ' in ẋ.</p>' +
+      '<p>[Relate diagrams] draws the current x as a horizontal line on the graph and a vertical line in the phase plane, so you can see the same number in both.</p>' +
+      '<h3>Interpretation</h3>' +
+      '<p>' + interp + '</p>' +
+      '<p class="hint">Displayed range is ±' + S.zoom.toFixed(2) + ' in both x and ẋ (zoom slider). Time axis runs to ' + S.tmax.toFixed(1) + '.</p>';
+  }
+
+  // ---------- redraw ----------
+  function redraw() {
+    const M = model();
+    drawPhase(M); drawGraph(M);
+    if (PANEL.open && !PANEL.min) $('explBody').innerHTML = explain(M);
+    pushExpl(M);
+  }
+
+  // ---------- animation ----------
+  const SPEED = 3;
+  const btn = $('btn');
+  function step(ts) {
+    if (anim.state !== 'running') return;
+    const dt = Math.min(0.1, (ts - anim.last) / 1000); anim.last = ts;
+    S.t += dt * SPEED * Math.max(1, S.tmax / (6 * PI));
+    if (S.t >= S.tmax) { S.t = S.tmax; anim.state = 'done'; btn.textContent = '<<'; }
+    tS.set(S.t, false); redraw();
+    if (anim.state === 'running') requestAnimationFrame(step);
+  }
+  btn.addEventListener('click', () => {
+    if (anim.state === 'idle') {
+      if (S.t >= S.tmax) S.t = 0;
+      anim.state = 'running'; anim.last = performance.now(); btn.textContent = '||'; requestAnimationFrame(step);
+    } else if (anim.state === 'running') { anim.state = 'idle'; btn.textContent = '>>'; }
+    else { S.t = 0; anim.state = 'idle'; btn.textContent = '>>'; tS.set(0, false); redraw(); }
+  });
+
+  // ---------- checkboxes ----------
+  function wireCheck(id, key) {
+    const lab = $(id), inp = lab.querySelector('input');
+    lab.classList.toggle('on', inp.checked);
+    inp.addEventListener('change', () => { S[key] = inp.checked; lab.classList.toggle('on', inp.checked); redraw(); });
+  }
+  wireCheck('trajChk', 'traj'); wireCheck('relChk', 'rel');
+  wireCheck('ssChk', 'ss'); wireCheck('trChk', 'tr'); wireCheck('solChk', 'sol');
+
+  // ---------- help ----------
+  const helpBtn = $('helpBtn'), help = $('help');
+  function toggleHelp() {
+    const on = help.style.display !== 'block';
+    help.style.display = on ? 'block' : 'none'; helpBtn.textContent = on ? '- help' : '+ help';
+  }
+  helpBtn.addEventListener('click', toggleHelp);
+  helpBtn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleHelp(); } });
+
+  // ---------- floating explanation panel ----------
+  const wrap = $('wrap'), stage = $('stage'), expl = $('expl'), explBtn = $('explBtn');
+  const STAGE_W = 1080, STAGE_H = 806;
+  const PANEL = { open:false, min:false, dragged:false, x:430, y:52, scale:1 };
+  function placePanel() {
+    if (!PANEL.dragged) { PANEL.x = 430; PANEL.y = 52; }
+    expl.style.left = PANEL.x + 'px'; expl.style.top = PANEL.y + 'px';
+  }
+  // the stage size never depends on the panel: the panel floats above the app
+  function fit() {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const s = Math.min(vw / STAGE_W, vh / STAGE_H);
+    PANEL.scale = s;
+    stage.style.transform = 'scale(' + s + ')';
+    stage.style.left = Math.max(0, (vw - STAGE_W * s) / 2) + 'px';
+    stage.style.top = Math.max(0, (vh - STAGE_H * s) / 2) + 'px';
+    wrap.style.height = '100vh';
+    placePanel();
+  }
+  function setPanel(open) {
+    PANEL.open = open; expl.classList.toggle('open', open);
+    explBtn.textContent = (open ? '\u2212 ' : '+ ') + 'explanation';
+    placePanel(); if (open) redraw();
+  }
+  // ---- the same explanation in a separate live tab ----
+  let explWin = null;
+  function pushExpl(M) {
+    if (!explWin || explWin.closed) return;
+    try { const el = explWin.document.getElementById('b'); if (el) el.innerHTML = explain(M || model()); } catch (e) { explWin = null; }
+  }
+  function openExplTab() {
+    if (explWin && !explWin.closed) { explWin.focus(); pushExpl(null); setPanel(false); return; }
+    explWin = window.open('', '_blank');
+    if (!explWin) { alert('The browser blocked the new tab — please allow pop-ups for this page.'); return; }
+    const css = [
+      'html,body{margin:0;height:100%;background:#fff;font-family:"Open Sans","Segoe UI",Helvetica,Arial,sans-serif;color:#333;overflow:hidden}',
+      '#hd{height:36px;box-sizing:border-box;padding:8px 14px;background:#e9edf3;border-bottom:1px solid #d5d5d5;font-weight:700;font-size:14px;color:#4a4a4a}',
+      '#hd span{font-weight:400;color:#777;font-size:12px;margin-left:10px}',
+      '#w{height:calc(100% - 36px);overflow:auto}',
+      '#b{height:100%;box-sizing:border-box;padding:12px 16px;column-width:330px;column-gap:24px;column-fill:auto;column-rule:1px solid #e5e5e5;font-size:14px;line-height:1.42}',
+      'h3{margin:9px 0 2px;font-size:14.5px;color:#4a4a4a;break-after:avoid} h3:first-child{margin-top:0} p{margin:0 0 4px}',
+      '.eq{font-family:"Times New Roman",Times,serif;font-size:15px} .g{color:#1a8f1a;font-weight:700} .b{color:#1a1aff;font-weight:700}',
+      '.o{color:#e0451c;font-weight:700} .n{font-weight:700;color:#222}',
+      '.box{background:#f3f6fb;border-left:3px solid #1a9cd8;padding:4px 8px;margin:4px 0;break-inside:avoid} .hint{color:#777;font-style:italic}'
+    ].join('\n');
+    explWin.document.write('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">' +
+      '<title>Explanation \u2013 Forced Damped Vibrations</title><style>' + css + '</style></head><body>' +
+      '<div id="hd">Forced damped vibrations \u2014 explanation &amp; interpretation<span>live: follows the sliders and animation in the main tab</span></div>' +
+      '<div id="w"><div id="b"></div></div></body></html>');
+    explWin.document.close();
+    pushExpl(null);
+    setPanel(false);                       // the floating panel closes when the tab takes over
+  }
+  $('explTab').addEventListener('click', e => { e.stopPropagation(); openExplTab(); });
+  explBtn.addEventListener('click', () => setPanel(!PANEL.open));
+  explBtn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPanel(!PANEL.open); } });
+  $('explClose').addEventListener('click', e => { e.stopPropagation(); setPanel(false); });
+  $('explMin').addEventListener('click', e => {
+    e.stopPropagation(); PANEL.min = !PANEL.min; expl.classList.toggle('min', PANEL.min);
+    $('explMin').innerHTML = PANEL.min ? '&#9633;' : '&#8211;'; $('explMin').title = PANEL.min ? 'Restore' : 'Minimize';
+    if (!PANEL.min) redraw();
+  });
+  (function () {
+    const bar = $('explBar'); let d = null;
+    bar.addEventListener('pointerdown', e => {
+      if (e.target.classList.contains('ib')) return;
+      d = { x0:e.clientX, y0:e.clientY, px:PANEL.x, py:PANEL.y }; bar.setPointerCapture(e.pointerId);
+    });
+    bar.addEventListener('pointermove', e => {
+      if (!d) return;
+      PANEL.x = Math.max(-120, Math.min(STAGE_W - 90, d.px + (e.clientX - d.x0) / PANEL.scale));
+      PANEL.y = Math.max(0, Math.min(STAGE_H - 30, d.py + (e.clientY - d.y0) / PANEL.scale));
+      PANEL.dragged = true; expl.style.left = PANEL.x + 'px'; expl.style.top = PANEL.y + 'px';
+    });
+    const up = () => { d = null; };
+    bar.addEventListener('pointerup', up); bar.addEventListener('pointercancel', up);
+  })();
+
+  window.addEventListener('resize', fit);
+  syncICSliders(); fit(); redraw();
+})();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

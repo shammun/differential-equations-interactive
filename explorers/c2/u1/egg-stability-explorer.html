@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Soft-boiled egg in ice — why every coefficient must be positive</title>
+<style>
+:root{
+  --bg:#f5f5f5; --panel:#ffffff; --ink:#333; --ink2:#555; --mute:#777; --line:#d5d5d5;
+  --accent:#1a9cd8; --stable:#1f78b4; --neutral:#d68910; --unstable:#c0392b;
+  --goodbg:#e8f4ea; --badbg:#fbeceb; --neubg:#fdf3e1; --grid:#ebebeb; --axis:#8a8a8a; --box:#f3f6fb; --hl:#fff5e6;
+  --sans:"Open Sans","Segoe UI",Helvetica,Arial,sans-serif;
+  --math:"Cambria Math","STIX Two Math",Cambria,Georgia,"Times New Roman",serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1c1e22; --panel:#25282d; --ink:#e3e3e3; --ink2:#c9c9c9; --mute:#9a9ea5; --line:#3b3f46;
+    --accent:#4fb3e8; --stable:#5aa9e0; --neutral:#f0a93a; --unstable:#ef6a5a;
+    --goodbg:#1f3326; --badbg:#3b2424; --neubg:#3a3020; --grid:#30343a; --axis:#8b9099; --box:#262e39; --hl:#3a3222;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1c1e22; --panel:#25282d; --ink:#e3e3e3; --ink2:#c9c9c9; --mute:#9a9ea5; --line:#3b3f46;
+  --accent:#4fb3e8; --stable:#5aa9e0; --neutral:#f0a93a; --unstable:#ef6a5a;
+  --goodbg:#1f3326; --badbg:#3b2424; --neubg:#3a3020; --grid:#30343a; --axis:#8b9099; --box:#262e39; --hl:#3a3222;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{margin:0;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+body{height:100%}
+#wrap{position:relative;width:100%;height:100%;overflow:hidden}
+#stage{position:absolute;left:0;top:0;transform-origin:0 0}
+#stage.land{width:1180px;height:848px}
+#stage.port{width:660px;height:1400px}
+.m{font-family:var(--math);font-style:italic;white-space:nowrap}
+.m sup{font-size:.72em}
+.n{font-style:normal}
+
+#bar{position:absolute;left:0;right:0;top:0;height:44px}
+#title{position:absolute;left:18px;top:11px;font-weight:700;font-size:17px;color:var(--ink)}
+.port #title{font-size:13px;top:14px;left:20px}
+#explBtn{position:absolute;top:11px;right:18px;font-weight:700;font-size:16px;color:var(--accent);cursor:pointer;user-select:none;background:none;border:0;font-family:var(--sans);padding:0}
+.port #explBtn{font-size:14px;top:13px}
+#explBtn:focus-visible{outline:2px solid var(--accent)}
+
+#eq{position:absolute;display:flex;align-items:center;gap:10px;font-size:20px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:0 12px;box-sizing:border-box}
+.land #eq{left:18px;top:48px;width:624px;height:38px}
+.port #eq{left:20px;top:48px;width:620px;height:38px;font-size:18px}
+#eq .tag{font-family:var(--sans);font-size:12px;font-weight:700;padding:2px 8px;border-radius:3px;margin-left:auto;white-space:nowrap}
+.cf{font-style:normal;font-weight:700;padding:0 3px;border-radius:3px}
+.cf.pos{color:#1a8f1a;background:var(--goodbg)} .cf.neg{color:var(--unstable);background:var(--badbg)} .cf.zer{color:var(--mute);background:var(--grid)}
+.tag.stable{background:var(--goodbg);color:var(--stable)} .tag.neutral{background:var(--neubg);color:var(--neutral)} .tag.unstable{background:var(--badbg);color:var(--unstable)}
+
+canvas{position:absolute;display:block;background:var(--panel);border:1px solid var(--line);border-radius:4px;box-sizing:border-box}
+#tC{cursor:crosshair;touch-action:none}
+#mC{cursor:pointer;touch-action:none}
+.land #tC{left:18px;top:90px;width:624px;height:330px}
+.port #tC{left:20px;top:90px;width:620px;height:300px}
+.land #rC{left:656px;top:48px;width:248px;height:238px}
+.land #mC{left:914px;top:48px;width:248px;height:238px}
+.port #rC{left:20px;top:832px;width:305px;height:262px}
+.port #mC{left:335px;top:832px;width:305px;height:262px}
+
+#ctrl{position:absolute;display:flex;flex-direction:column;gap:7px;font-size:12.5px;color:var(--ink2)}
+.land #ctrl{left:18px;top:428px;width:624px;height:412px}
+.port #ctrl{left:20px;top:398px;width:620px;height:430px}
+.grp{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:6px 9px}
+.gh{font-weight:700;color:var(--ink);font-size:12.5px;margin-bottom:3px;display:flex;align-items:center;gap:8px}
+.gh .sub{font-weight:400;color:var(--mute)}
+.row{display:grid;grid-template-columns:168px 1fr 62px 30px;align-items:center;gap:8px;height:26px}
+.row label{font-weight:600;white-space:nowrap}
+.row label .m{font-size:14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px 12px}
+.mini{display:grid;grid-template-columns:auto 1fr 52px;align-items:center;gap:6px;height:26px}
+.mini label{font-weight:600;white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--accent);margin:0}
+input[type=number]{width:100%;box-sizing:border-box;font:600 12.5px var(--sans);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:3px;padding:2px 4px;font-variant-numeric:tabular-nums}
+select{font:600 12.5px var(--sans);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:3px;padding:2px 4px}
+button.b{font:700 12px var(--sans);color:var(--ink2);background:var(--panel);border:1px solid #aaa;border-radius:3px;padding:3px 8px;cursor:pointer;white-space:nowrap}
+button.b:hover{border-color:var(--accent);color:var(--accent)}
+button.b.act{background:var(--accent);border-color:var(--accent);color:#fff}
+button.b:focus-visible,input:focus-visible,select:focus-visible,.chk:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.flip{padding:2px 0 !important;width:30px}
+.presets{display:flex;flex-wrap:wrap;gap:5px}
+.sweep{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.sweep input[type=number]{width:58px}
+.chk{display:inline-flex;align-items:center;gap:5px;font-weight:600;cursor:pointer;user-select:none}
+.chk input{accent-color:var(--accent);margin:0}
+.eggnote{font-size:12px;color:var(--mute);margin-top:2px}
+.eggnote b{color:var(--ink2)}
+.off{opacity:.45}
+
+#calc{position:absolute;background:var(--panel);border:1px solid var(--line);border-radius:4px;box-sizing:border-box;font-size:12.8px;line-height:1.5;display:flex;flex-direction:column;overflow:hidden}
+#ptabs{flex:0 0 auto;display:flex;border-bottom:1px solid var(--line);background:var(--box)}
+#ptabs button{flex:1;font:700 12.5px var(--sans);color:var(--ink2);background:none;border:0;border-bottom:3px solid transparent;padding:7px 6px 5px;cursor:pointer}
+#ptabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);background:var(--panel)}
+#ptabs button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+#calcBody{flex:1 1 auto;overflow-y:auto;padding:8px 12px 12px}
+.lnav{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.lnav .cnt{flex:1;text-align:center;color:var(--mute);font-weight:600;font-size:12px}
+.dots{display:flex;gap:4px;justify-content:center;margin:2px 0 6px}
+.dots span{width:8px;height:8px;border-radius:50%;background:var(--line);cursor:pointer}
+.dots span.on{background:var(--accent)} .dots span.done{background:var(--stable);opacity:.55}
+.pred{border:1px dashed var(--accent);border-radius:4px;padding:6px 9px;margin:6px 0}
+.pred .q{font-weight:700;color:var(--ink);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:4px}
+.opts button{text-align:left;font:600 12.5px var(--sans);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:3px;padding:4px 8px;cursor:pointer}
+.opts button:hover{border-color:var(--accent)}
+.opts button.right{background:var(--goodbg);border-color:#1a8f1a}
+.opts button.wrong{background:var(--badbg);border-color:var(--unstable)}
+.opts button:disabled{cursor:default}
+.notice{background:var(--neubg);border-left:3px solid var(--neutral);padding:3px 8px;margin:5px 0}
+.words{font-size:13.5px;font-weight:600;color:var(--ink)}
+.land #calc{left:656px;top:294px;width:506px;height:546px}
+.port #calc{left:20px;top:1102px;width:620px;height:290px}
+.body h3{margin:10px 0 2px;font-size:13px;color:var(--ink)} .body h3:first-child{margin-top:0}
+.body p{margin:0 0 4px}
+.body .eq{font-family:var(--math);font-size:15px}
+.body .box{background:var(--box);border-left:3px solid var(--accent);padding:3px 8px;margin:4px 0}
+.body .ok{background:var(--goodbg);border-left:3px solid #1a8f1a;padding:3px 8px;margin:4px 0}
+.body .bad{background:var(--badbg);border-left:3px solid var(--unstable);padding:3px 8px;margin:4px 0}
+.body .neu{background:var(--neubg);border-left:3px solid var(--neutral);padding:3px 8px;margin:4px 0}
+.body table{border-collapse:collapse;margin:4px 0;font-size:12px;font-variant-numeric:tabular-nums;width:100%}
+.body td,.body th{border-bottom:1px solid var(--line);padding:2px 6px;text-align:right}
+.body td:first-child,.body th:first-child{text-align:left}
+.body th{color:var(--mute);font-weight:600}
+.body .hint{color:var(--mute);font-style:italic}
+.body tr.cur td{background:var(--hl);font-weight:700}
+
+#expl{display:none;position:absolute;z-index:30;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:5px;box-shadow:0 10px 30px rgba(0,0,0,.25);flex-direction:column;overflow:hidden;resize:both;min-width:280px;min-height:160px}
+#expl.open{display:flex}
+#expl.min{height:auto !important;min-height:0;resize:none}
+#explBar{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--box);border-bottom:1px solid var(--line);font-weight:700;font-size:12.5px;cursor:move;user-select:none;touch-action:none}
+#explBar .spc{flex:1}
+#explBar .ib{width:22px;height:22px;border:1px solid #999;border-radius:3px;background:var(--panel);color:var(--ink);text-align:center;line-height:20px;cursor:pointer;font-size:13px;padding:0;font-family:var(--sans)}
+#explBar .ib:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+#expl.min #explBody{display:none}
+#explBody{flex:1 1 auto;overflow-y:auto;padding:8px 13px 12px;font-size:13px;line-height:1.55}
+#cgBtn{position:absolute;z-index:20;font:700 12px var(--sans);color:#fff;background:var(--accent);border:0;border-radius:12px;padding:4px 11px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.land #cgBtn{left:414px;top:152px} .port #cgBtn{left:410px;top:152px}
+#cgBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+#cgBtn.pulse{animation:pulse 1.4s ease-in-out 4}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(26,156,216,.6)}50%{box-shadow:0 0 0 9px rgba(26,156,216,0)}}
+#cg{display:none;position:absolute;z-index:28;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:5px;box-shadow:0 10px 30px rgba(0,0,0,.25);flex-direction:column;overflow:hidden;resize:both;min-width:280px;min-height:160px}
+#cg.open{display:flex}
+.land #cg{left:18px;top:424px;width:624px;height:418px} .port #cg{left:20px;top:394px;width:620px;height:434px}
+#cgBody table td,#cgBody table th{text-align:left}
+#cgBar{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--box);border-bottom:1px solid var(--line);font-weight:700;font-size:12.5px}
+#cgBar .spc{flex:1}
+#cgBar .ib{width:22px;height:22px;border:1px solid #999;border-radius:3px;background:var(--panel);color:var(--ink);cursor:pointer;font-size:13px;padding:0}
+#cgBody{flex:1 1 auto;overflow-y:auto;padding:8px 13px 12px;font-size:13px;line-height:1.55}
+.swatch{display:inline-block;width:26px;height:0;border-top:3px solid;vertical-align:middle;margin-right:6px}
+@media (prefers-reduced-motion: reduce){ *{scroll-behavior:auto} #cgBtn.pulse{animation:none} }
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage" class="land">
+
+  <div id="bar">
+    <div id="title">Egg in an ice bath: why every coefficient must be positive</div>
+    <button id="explBtn" aria-expanded="false">+ explanation</button>
+  </div>
+
+  <div id="eq" aria-live="polite"></div>
+  <canvas id="tC" aria-label="Egg temperature over time"></canvas>
+  <button id="cgBtn" aria-expanded="false">ⓘ What are the curves?</button>
+  <div id="cg" role="dialog" aria-label="Guide to the curves">
+    <div id="cgBar"><span>Guide to the curves on the plot above (live)</span><span class="spc"></span><button class="ib" id="cgClose" title="Close">&#215;</button></div>
+    <div id="cgBody" class="body"></div>
+  </div>
+
+  <div id="ctrl">
+    <div class="grp">
+      <div class="gh">Coefficients of <span class="m">m T₁″ + p T₁′ + q T₁ = 0</span></div>
+      <div class="row"><label for="s_m"><span class="m">m</span> (in front of <span class="m">T₁″</span>)</label>
+        <input type="range" id="s_m" min="-2" max="2" step="0.1"><input type="number" id="n_m" step="0.1"><button class="b flip" data-k="m" title="Flip the sign of m">±</button></div>
+      <div class="row"><label for="s_p"><span class="m">p</span> (in front of <span class="m">T₁′</span>)</label>
+        <input type="range" id="s_p" min="-12" max="12" step="0.1"><input type="number" id="n_p" step="0.1"><button class="b flip" data-k="p" title="Flip the sign of p">±</button></div>
+      <div class="row"><label for="s_q"><span class="m">q</span> (in front of <span class="m">T₁</span>)</label>
+        <input type="range" id="s_q" min="-12" max="12" step="0.1"><input type="number" id="n_q" step="0.1"><button class="b flip" data-k="q" title="Flip the sign of q">±</button></div>
+    </div>
+
+    <div class="grp" id="eggGrp">
+      <div class="gh">Build <span class="m">p</span> and <span class="m">q</span> from egg physics <span class="sub">(sets m = 1, p = 2a + b, q = ab)</span></div>
+      <div class="two">
+        <div class="mini"><label for="s_a">yolk↔white <span class="m">a</span></label><input type="range" id="s_a" min="0.1" max="4" step="0.1"><input type="number" id="n_a" step="0.1" min="0.1"></div>
+        <div class="mini"><label for="s_b">white↔ice <span class="m">b</span></label><input type="range" id="s_b" min="0" max="4" step="0.1"><input type="number" id="n_b" step="0.1" min="0"></div>
+      </div>
+      <div class="eggnote" id="eggNote"></div>
+    </div>
+
+    <div class="grp">
+      <div class="three">
+        <div class="mini"><label for="s_T10">yolk <span class="m">T₁(0)</span></label><input type="range" id="s_T10" min="-50" max="100" step="1"><input type="number" id="n_T10" step="1"></div>
+        <div class="mini"><label for="s_T20">white <span class="m">T₂(0)</span></label><input type="range" id="s_T20" min="-50" max="100" step="1"><input type="number" id="n_T20" step="1"></div>
+        <div class="mini"><label for="s_tmax">time shown</label><input type="range" id="s_tmax" min="0.5" max="30" step="0.5"><input type="number" id="n_tmax" step="0.5" min="0.5"></div>
+      </div>
+      <div class="eggnote" id="icNote"></div>
+    </div>
+
+    <div class="grp">
+      <div class="sweep">
+        <b style="color:var(--ink)">Sweep</b>
+        <select id="swc" aria-label="Coefficient to sweep"><option value="m">m</option><option value="p" selected>p</option><option value="q">q</option></select>
+        <span>from</span><input type="number" id="swFrom" step="0.5" aria-label="Sweep from">
+        <span>to</span><input type="number" id="swTo" step="0.5" aria-label="Sweep to">
+        <button class="b" id="play">Play sweep</button>
+        <label class="chk"><input type="checkbox" id="fam"> show 9 curves across the range</label>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="presets" id="presets"></div>
+      <div style="display:flex;gap:16px;margin-top:6px;flex-wrap:wrap">
+        <label class="chk"><input type="checkbox" id="pieces" checked> show the pieces <span class="m">c e<sup>rt</sup></span></label>
+        <button class="b" id="playT">▶ Play time (watch the egg)</button>
+        <label class="chk" id="t2wrap"><input type="checkbox" id="showT2" checked> show egg white <span class="m">T₂</span></label>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="rC" aria-label="Roots in the complex plane"></canvas>
+  <canvas id="mC" aria-label="Stability map; click or drag to set p and q"></canvas>
+  <div id="calc"><div id="ptabs" role="tablist">
+    <button role="tab" id="tabL" aria-selected="true">Guided lesson</button>
+    <button role="tab" id="tabC" aria-selected="false">Live calculation</button></div>
+    <div id="calcBody" class="body"></div></div>
+
+  <div id="expl" role="dialog" aria-label="Explanation">
+    <div id="explBar"><span>Why the coefficients must be positive (live)</span><span class="spc"></span>
+      <button class="ib" id="explTab" title="Open in a new tab">&#8599;</button>
+      <button class="ib" id="explMin" title="Minimize">&#8211;</button>
+      <button class="ib" id="explClose" title="Close">&#215;</button></div>
+    <div id="explBody" class="body"></div>
+  </div>
+
+</div></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+
+/* ------------------------------------------------------------------ */
+/* state                                                              */
+/* ------------------------------------------------------------------ */
+var S={m:1,p:7,q:6,a:2,b:3,T10:40,T20:45,y0:40,v0:10,tmax:8,egg:true,
+       swc:'p',swFrom:-3,swTo:9,family:false,playing:false,pieces:true,showT2:true,hover:null};
+var EPS=1e-9;
+
+/* ------------------------------------------------------------------ */
+/* number formatting                                                  */
+/* ------------------------------------------------------------------ */
+function f(x,d){
+  if(d===undefined) d=3;
+  if(!isFinite(x)) return x>0?'∞':(x<0?'−∞':'undefined');
+  if(Math.abs(x)<1e-10) return '0';
+  var ax=Math.abs(x), s;
+  if(ax>=1e5||ax<1e-3){ s=x.toExponential(2).replace('e+',' × 10^').replace('e-',' × 10^-');
+    s=s.replace(/\^(-?\d+)/,function(_,e){return '<sup>'+e.replace('-','−')+'</sup>';}); }
+  else { s=(+x.toFixed(d)).toString(); }
+  return s.replace(/^-/,'−');
+}
+function fs(x,d){ var s=f(x,d); return (x<0?'':'+')+s; }                // signed
+function sp(x,d){ return (x<0?'− ':'+ ')+f(Math.abs(x),d); }
+function par(x,d){ return x<0?'('+f(x,d)+')':f(x,d); }                  // parenthesise negatives
+function cls(x){ return Math.abs(x)<EPS?'zer':(x>0?'pos':'neg'); }
+function pill(x){ return '<span class="cf '+cls(x)+'">'+f(x,2)+'</span>'; }
+function T(s){ return '<span class="m">'+s+'</span>'; }
+function ex(r){ var v=f(r); if(v==='1') v=''; if(v==='−1') v='−'; return 'e<sup>'+v+'t</sup>'; }
+
+/* ------------------------------------------------------------------ */
+/* the mathematics                                                    */
+/* ------------------------------------------------------------------ */
+function rootsOf(m,p,q){
+  if(Math.abs(m)<EPS){
+    if(Math.abs(p)<EPS) return [];
+    return [{re:-q/p,im:0}];
+  }
+  var D=p*p-4*m*q, tol=EPS*Math.max(1,p*p,Math.abs(4*m*q));
+  if(D>tol){ var s=Math.sqrt(D), r1=(-p+s)/(2*m), r2=(-p-s)/(2*m);
+    return r1>=r2?[{re:r1,im:0},{re:r2,im:0}]:[{re:r2,im:0},{re:r1,im:0}]; }
+  if(D<-tol){ var al=-p/(2*m), be=Math.sqrt(-D)/(2*Math.abs(m));
+    return [{re:al,im:be},{re:al,im:-be}]; }
+  return [{re:-p/(2*m),im:0,dbl:true}];
+}
+function term(c,r,t){ if(Math.abs(c)<1e-13) return 0; var v=c*Math.exp(r*t); return v; }
+
+function solve(m,p,q,y0,v0){
+  var o={m:m,p:p,q:q,y0:y0,v0:v0};
+  if(Math.abs(m)<EPS){
+    if(Math.abs(p)<EPS){ o.kind='degen'; o.roots=[]; o.ev=function(){return [0,0];}; o.verdict=Math.abs(q)<EPS?'neutral':'stable'; return o; }
+    var r=-q/p; o.kind='first'; o.r=r; o.roots=[{re:r,im:0}];
+    o.ev=function(t){ var y=term(y0,r,t); return [y,r*y]; };
+  } else {
+    var D=p*p-4*m*q; o.D=D; var rts=rootsOf(m,p,q); o.roots=rts;
+    if(rts.length===2&&rts[0].im===0){
+      var r1=rts[0].re, r2=rts[1].re; o.kind='real'; o.r1=r1; o.r2=r2;
+      o.c2=(v0-r1*y0)/(r2-r1); o.c1=y0-o.c2;
+      o.ev=function(t){ var a=term(o.c1,r1,t), b=term(o.c2,r2,t); return [a+b,r1*a+r2*b]; };
+    } else if(rts.length===2){
+      var al=rts[0].re, be=rts[0].im; o.kind='cplx'; o.al=al; o.be=be; o.c1=y0; o.c2=(v0-al*y0)/be;
+      o.A=Math.hypot(o.c1,o.c2);
+      o.ev=function(t){ var e=Math.exp(al*t), C=Math.cos(be*t), Sn=Math.sin(be*t);
+        return [e*(o.c1*C+o.c2*Sn), e*((al*o.c1+be*o.c2)*C+(al*o.c2-be*o.c1)*Sn)]; };
+    } else {
+      var rr=rts[0].re; o.kind='rep'; o.r=rr; o.c1=y0; o.c2=v0-rr*y0;
+      o.ev=function(t){ var e=Math.exp(rr*t); if(!isFinite(e)) e=Infinity;
+        var y=(o.c1+o.c2*t)*e; return [y,(o.c2+rr*(o.c1+o.c2*t))*e]; };
+    }
+  }
+  var mx=-Infinity; o.roots.forEach(function(z){ mx=Math.max(mx,z.re); }); o.maxRe=mx;
+  if(o.kind==='rep'&&Math.abs(o.r)<1e-9) o.verdict=(Math.abs(o.c2)<1e-12?'neutral':'unstable');
+  else if(mx<-1e-9) o.verdict='stable'; else if(mx>1e-9) o.verdict='unstable'; else o.verdict='neutral';
+  // knife edge: growing mode present but multiplied by zero
+  o.knife=(o.kind==='real'&&o.r1>1e-9&&Math.abs(o.c1)<1e-9*Math.max(1,Math.abs(y0))&&o.r2<-1e-9);
+  if(o.knife) o.verdict='stable';
+  return o;
+}
+function syncIC(){ S.y0=S.T10; S.v0=S.a*(S.T20-S.T10); }
+function current(){ syncIC(); return solve(S.m,S.p,S.q,S.y0,S.v0); }
+function signAll(m,p,q){
+  if(Math.abs(m)<EPS||Math.abs(p)<EPS||Math.abs(q)<EPS) return false;
+  return (m>0&&p>0&&q>0)||(m<0&&p<0&&q<0);
+}
+function verdictWord(v){ return v==='stable'?'settles to 0':(v==='neutral'?'never settles to 0':'runs away'); }
+function colorFor(v){ return v==='stable'?css('--stable'):(v==='neutral'?css('--neutral'):css('--unstable')); }
+
+/* ------------------------------------------------------------------ */
+/* colours from CSS tokens                                            */
+/* ------------------------------------------------------------------ */
+var cssCache={};
+function css(n){ if(!(n in cssCache)) cssCache[n]=getComputedStyle(document.documentElement).getPropertyValue(n).trim(); return cssCache[n]; }
+function alpha(hex,a){ var h=hex.replace('#',''); if(h.length===3) h=h.split('').map(function(c){return c+c;}).join('');
+  var n=parseInt(h,16); return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')'; }
+var mq=window.matchMedia('(prefers-color-scheme: dark)');
+if(mq.addEventListener) mq.addEventListener('change',function(){ cssCache={}; redraw(); });
+
+/* ------------------------------------------------------------------ */
+/* canvases                                                           */
+/* ------------------------------------------------------------------ */
+var tC=$('tC'), rC=$('rC'), mC=$('mC');
+var SCALE=1, CV={};
+function setupCanvas(cv){
+  var w=cv.offsetWidth, h=cv.offsetHeight, d=Math.min(3,(window.devicePixelRatio||1)*Math.max(1,SCALE*1.2));
+  cv.width=Math.round(w*d); cv.height=Math.round(h*d);
+  var c=cv.getContext('2d'); c.setTransform(d,0,0,d,0,0);
+  CV[cv.id]={c:c,w:w,h:h};
+}
+function niceTicks(lo,hi,n){
+  var span=hi-lo; if(!(span>0)) return [lo];
+  var step=Math.pow(10,Math.floor(Math.log10(span/n))), err=span/n/step;
+  if(err>=7.5) step*=10; else if(err>=3.5) step*=5; else if(err>=1.5) step*=2;
+  var out=[]; for(var v=Math.ceil(lo/step)*step; v<=hi+step*1e-6; v+=step) out.push(+v.toFixed(10));
+  return out;
+}
+function tickLabel(v){ var a=Math.abs(v); if(a>=1e4) return v.toExponential(0); return (+v.toFixed(3)).toString().replace('-','−'); }
+
+/* ---------------- time plot ---------------- */
+var TP={};
+function sweepValues(n){ var a=[]; for(var i=0;i<n;i++) a.push(S.swFrom+(S.swTo-S.swFrom)*i/(n-1)); return a; }
+function withCoef(k,v){ var c={m:S.m,p:S.p,q:S.q}; c[k]=v; return c; }
+
+function drawTime(){
+  var g=CV.tC, c=g.c, W=g.w, H=g.h, L=52, R=14, Tp=14, B=30, pw=W-L-R, ph=H-Tp-B;
+  c.clearRect(0,0,W,H);
+  var sol=current(), N=520, tmax=S.tmax, i, t;
+  var curves=[];
+  function sample(s,which){ var a=new Array(N+1); for(i=0;i<=N;i++){ t=tmax*i/N; var e=s.ev(t); a[i]=which===2?(e[0]+e[1]/S.a):e[0]; } return a; }
+  var main=sample(sol,1);
+  var t2=S.showT2?sample(sol,2):null;
+  var fam=[];
+  if(S.family){ sweepValues(9).forEach(function(v){ var k=withCoef(S.swc,v), s=solve(k.m,k.p,k.q,S.y0,S.v0); fam.push({v:v,s:s,y:sample(s,1)}); }); }
+  var base=Math.max(Math.abs(S.T10),Math.abs(S.T20),10), cap=3*base, lo=0, hi=0;
+  function scan(arr){ for(var j=0;j<arr.length;j++){ var y=arr[j]; if(!isFinite(y)) y=y>0?cap:-cap; lo=Math.min(lo,Math.max(-cap,y)); hi=Math.max(hi,Math.min(cap,y)); } }
+  scan(main); if(t2) scan(t2); fam.forEach(function(F){ scan(F.y); });
+  if(hi-lo<1e-9){ hi=1; lo=-1; }
+  var pad=(hi-lo)*0.08; hi+=pad; lo-=pad;
+  var X=function(t){ return L+t/tmax*pw; }, Y=function(y){ return Tp+(hi-y)/(hi-lo)*ph; };
+  TP={L:L,pw:pw,Tp:Tp,ph:ph,X:X,Y:Y,lo:lo,hi:hi,sol:sol,main:main,t2:t2};
+
+  // grid + ticks
+  c.font='11px '+css('--sans'); c.lineWidth=1;
+  var yt=niceTicks(lo,hi,6), xt=niceTicks(0,tmax,8);
+  c.strokeStyle=css('--grid'); c.fillStyle=css('--mute');
+  c.textAlign='right'; c.textBaseline='middle';
+  yt.forEach(function(v){ var y=Y(v); c.beginPath(); c.moveTo(L,y); c.lineTo(L+pw,y); c.stroke(); c.fillText(tickLabel(v),L-6,y); });
+  c.textAlign='center'; c.textBaseline='top';
+  xt.forEach(function(v){ var x=X(v); c.beginPath(); c.moveTo(x,Tp); c.lineTo(x,Tp+ph); c.stroke(); c.fillText(tickLabel(v),x,Tp+ph+5); });
+  c.fillText('time t',L+pw/2,Tp+ph+17);
+  c.save(); c.translate(13,Tp+ph/2); c.rotate(-Math.PI/2); c.fillText('temperature (°C above the ice bath)',0,-6); c.restore();
+  // zero line
+  c.strokeStyle=css('--axis'); c.lineWidth=1.5; c.beginPath(); c.moveTo(L,Y(0)); c.lineTo(L+pw,Y(0)); c.stroke();
+  c.fillStyle=css('--mute'); c.textAlign='left'; c.textBaseline='bottom'; c.fillText('ice-bath temperature (0)',L+6,Y(0)-2);
+
+  c.save(); c.beginPath(); c.rect(L,Tp,pw,ph); c.clip();
+  function poly(arr,col,w,dash){
+    c.strokeStyle=col; c.lineWidth=w; c.setLineDash(dash||[]); c.beginPath(); var pen=false, big=(hi-lo)*20;
+    for(var j=0;j<arr.length;j++){ var y=arr[j]; if(isNaN(y)){ pen=false; continue; }
+      y=Math.max(lo-big,Math.min(hi+big,isFinite(y)?y:(y>0?hi+big:lo-big)));
+      var x=X(tmax*j/N), yy=Y(y); if(pen) c.lineTo(x,yy); else { c.moveTo(x,yy); pen=true; } }
+    c.stroke(); c.setLineDash([]);
+  }
+  fam.forEach(function(F){ poly(F.y,alpha(colorFor(F.s.verdict),0.45),1.4); });
+  if(S.pieces){
+    var pc=alpha(css('--ink2'),0.55);
+    if(sol.kind==='real'){
+      poly(fnArr(function(t){return term(sol.c1,sol.r1,t);}),pc,1.2,[5,4]);
+      poly(fnArr(function(t){return term(sol.c2,sol.r2,t);}),pc,1.2,[2,3]);
+    } else if(sol.kind==='cplx'){
+      poly(fnArr(function(t){return sol.A*Math.exp(sol.al*t);}),pc,1.8,[1.5,4]);
+      poly(fnArr(function(t){return -sol.A*Math.exp(sol.al*t);}),pc,1.8,[1.5,4]);
+    } else if(sol.kind==='rep'){
+      poly(fnArr(function(t){return sol.c1*Math.exp(sol.r*t);}),pc,1.2,[5,4]);
+      poly(fnArr(function(t){return sol.c2*t*Math.exp(sol.r*t);}),pc,1.2,[2,3]);
+    }
+  }
+  if(t2) poly(t2,alpha(css('--accent'),0.8),1.8,[7,4]);
+  poly(main,colorFor(sol.verdict),3);
+  // where T1 touches its envelope: t = (phi + k*pi)/beta
+  if(S.pieces&&sol.kind==='cplx'){
+    var ph0=Math.atan2(sol.c2,sol.c1), k0=Math.ceil(-ph0/Math.PI);
+    c.fillStyle=css('--ink2');
+    for(var kk=k0, cnt=0; cnt<120; kk++, cnt++){ var tt=(ph0+kk*Math.PI)/sol.be; if(tt>tmax) break;
+      var yy=(kk%2===0?1:-1)*sol.A*Math.exp(sol.al*tt); if(yy>hi||yy<lo) continue;
+      c.beginPath(); c.arc(X(tt),Y(yy),3,0,7); c.fill(); }
+  }
+  // hover
+  if(S.hover!==null){
+    var ht=S.hover, hv=sol.ev(ht)[0], hx=X(ht);
+    c.strokeStyle=alpha(css('--ink'),0.35); c.lineWidth=1; c.beginPath(); c.moveTo(hx,Tp); c.lineTo(hx,Tp+ph); c.stroke();
+    if(isFinite(hv)&&hv<=hi&&hv>=lo){ c.fillStyle=colorFor(sol.verdict); c.beginPath(); c.arc(hx,Y(hv),4.5,0,7); c.fill(); }
+  }
+  c.restore();
+  function fnArr(fn){ var a=new Array(N+1); for(var j=0;j<=N;j++) a[j]=fn(tmax*j/N); return a; }
+
+  // the egg itself
+  var te=S.hover===null?0:S.hover, ev=sol.ev(te), T1v=ev[0], T2v=ev[0]+ev[1]/S.a;
+  drawEgg(c,L+pw-62,Tp+ph*0.58,T1v,T2v,te);
+  // leaves-the-chart note
+  var leave=null; for(i=0;i<=N;i++){ var y=main[i]; if(!isFinite(y)||y>hi||y<lo){ leave=tmax*i/N; break; } }
+  c.textAlign='left'; c.textBaseline='top'; c.font='600 11.5px '+css('--sans');
+  var lines=[];
+  if(S.hover!==null){ var e=sol.ev(S.hover); lines.push({t:'t = '+tickLabel(+S.hover.toFixed(2))+'   T₁ = '+plain(e[0])+(t2?'   T₂ = '+plain(e[0]+e[1]/S.a):''),col:css('--ink')}); }
+  if(leave!==null) lines.push({t:'curve leaves the chart at t ≈ '+tickLabel(+leave.toFixed(2)),col:css('--unstable')});
+  lines.forEach(function(Ln,k){ c.fillStyle=css('--panel'); var w=c.measureText(Ln.t).width; c.globalAlpha=0.85; c.fillRect(L+6,Tp+5+k*17,w+8,16); c.globalAlpha=1; c.fillStyle=Ln.col; c.fillText(Ln.t,L+10,Tp+7+k*17); });
+  // legend bottom-right
+  var leg=[['T₁ yolk (solved equation)',colorFor(sol.verdict),[]]];
+  if(t2) leg.push(['T₂ white = T₁ + T₁′/a',alpha(css('--accent'),0.8),[7,4]]);
+  if(S.pieces&&sol.kind!=='first'&&sol.kind!=='degen') leg.push([sol.kind==='cplx'?'envelope ±A·e^(αt) = swing size':'pieces c·e^(rt), sum = T₁',alpha(css('--ink2'),0.6),sol.kind==='cplx'?[1.5,4]:[5,4]]);
+  c.font='11px '+css('--sans'); c.textAlign='left'; c.textBaseline='middle';
+  var lx=L+pw-214, ly=Tp+12;
+  c.fillStyle=css('--panel'); c.globalAlpha=0.88; c.fillRect(lx-6,ly-9,214,leg.length*15+4); c.globalAlpha=1;
+  leg.forEach(function(it,k){ var y=ly+k*15; c.strokeStyle=it[1]; c.lineWidth=2.4; c.setLineDash(it[2]); c.beginPath(); c.moveTo(lx,y); c.lineTo(lx+22,y); c.stroke(); c.setLineDash([]); c.fillStyle=css('--ink2'); c.fillText(it[0],lx+28,y); });
+}
+function tempColor(T){
+  var ref=Math.max(Math.abs(S.T10),Math.abs(S.T20),10), u=T/ref; if(!isFinite(u)) u=u>0?9:-9;
+  var stops=u>=0?[[0,[191,227,247]],[0.5,[245,176,65]],[1,[231,76,60]],[1.6,[110,20,15]]]:[[0,[191,227,247]],[-1,[91,110,225]],[-1.6,[35,30,120]]];
+  var a=Math.min(Math.abs(u),1.6);
+  for(var i=1;i<stops.length;i++){ var s0=stops[i-1], s1=stops[i], x0=Math.abs(s0[0]), x1=Math.abs(s1[0]);
+    if(a<=x1||i===stops.length-1){ var k=Math.max(0,Math.min(1,(a-x0)/(x1-x0))); return 'rgb('+[0,1,2].map(function(j){return Math.round(s0[1][j]+(s1[1][j]-s0[1][j])*k);}).join(',')+')'; } }
+}
+function drawEgg(c,cx,cy,T1,T2,t){
+  c.save();
+  c.fillStyle=alpha(css('--panel'),0.9); c.fillRect(cx-50,cy-60,100,126);
+  c.fillStyle='rgba(120,190,235,0.35)'; c.strokeStyle='rgba(60,140,200,0.8)'; c.lineWidth=1.5;
+  c.beginPath(); c.moveTo(cx-44,cy-26); c.lineTo(cx-38,cy+36); c.quadraticCurveTo(cx,cy+48,cx+38,cy+36); c.lineTo(cx+44,cy-26); c.closePath(); c.fill(); c.stroke();
+  c.fillStyle=tempColor(T2); c.strokeStyle=css('--ink2'); c.lineWidth=1.2;
+  c.beginPath(); c.ellipse(cx,cy+4,24,31,0,0,7); c.fill(); c.stroke();
+  c.fillStyle=tempColor(T1); c.beginPath(); c.arc(cx,cy+8,12,0,7); c.fill(); c.stroke();
+  c.font='600 10.5px '+css('--sans'); c.fillStyle=css('--ink'); c.textAlign='center'; c.textBaseline='top';
+  c.fillText('t = '+(+t.toFixed(2)),cx,cy-57);
+  c.font='10px '+css('--sans'); c.fillStyle=css('--ink2');
+  c.fillText('yolk '+plain(T1)+'°',cx,cy+41);
+  c.fillText('white '+plain(T2)+'°',cx,cy+52);
+  c.restore();
+}
+function plain(x){ if(!isFinite(x)) return x>0?'∞':'−∞'; var a=Math.abs(x); var s=a>=1e5?x.toExponential(2):(+x.toFixed(2)).toString(); return s.replace('-','−'); }
+
+/* ---------------- roots plane ---------------- */
+function drawRoots(){
+  var g=CV.rC, c=g.c, W=g.w, H=g.h; c.clearRect(0,0,W,H);
+  var top=22, pad=8, sz=Math.min(W-2*pad,H-top-pad), cx=W/2, cy=top+(H-top-pad)/2;
+  var rts=rootsOf(S.m,S.p,S.q), R=2;
+  rts.forEach(function(z){ R=Math.max(R,Math.abs(z.re)*1.25,Math.abs(z.im)*1.25); }); R=Math.min(R,12);
+  var loc=[];
+  if(S.family||S.playing){ for(var i=0;i<=160;i++){ var v=S.swFrom+(S.swTo-S.swFrom)*i/160, k=withCoef(S.swc,v); rootsOf(k.m,k.p,k.q).forEach(function(z){ loc.push(z); }); } }
+  var hw=(W-2*pad)/2, hh=(H-top-pad)/2, sc=Math.min(hw,hh)/R;
+  var X=function(x){ return cx+x*sc; }, Y=function(y){ return cy-y*sc; };
+  c.fillStyle=css('--goodbg'); c.fillRect(pad,top,cx-pad,H-top-pad);
+  c.fillStyle=css('--badbg'); c.fillRect(cx,top,W-pad-cx,H-top-pad);
+  c.strokeStyle=css('--axis'); c.lineWidth=1; c.beginPath(); c.moveTo(pad,cy); c.lineTo(W-pad,cy); c.stroke();
+  c.strokeStyle=css('--neutral'); c.lineWidth=2.5; c.beginPath(); c.moveTo(cx,top); c.lineTo(cx,H-pad); c.stroke();
+  c.font='600 11.5px '+css('--sans'); c.fillStyle=css('--ink'); c.textAlign='left'; c.textBaseline='top';
+  c.fillText('Roots r of m r² + p r + q = 0',6,5);
+  c.font='10.5px '+css('--sans'); c.fillStyle=css('--stable'); c.textBaseline='top'; c.fillText('Re r < 0: decays',pad+4,top+4);
+  c.fillStyle=css('--unstable'); c.textAlign='right'; c.fillText('Re r > 0: grows',W-pad-4,top+4);
+  c.fillStyle=css('--mute'); c.textAlign='right'; c.textBaseline='bottom'; c.fillText('Re r',W-pad-3,cy-2);
+  c.textAlign='left'; c.textBaseline='top'; c.fillText('Im r',cx+4,H-pad-14);
+  // unit ticks
+  var st=niceTicks(0,R,3)[1]||1; c.fillStyle=css('--mute'); c.textAlign='center';
+  for(var v=st; v<R; v+=st){ [v,-v].forEach(function(u){ c.fillRect(X(u)-0.5,cy-3,1,6); c.fillText(tickLabel(u),X(u),cy+4); }); }
+  loc.forEach(function(z){ var x=X(Math.max(-R,Math.min(R,z.re))), y=Y(Math.max(-R,Math.min(R,z.im)));
+    c.fillStyle=alpha(z.re<-1e-9?css('--stable'):(z.re>1e-9?css('--unstable'):css('--neutral')),0.5); c.fillRect(x-1.2,y-1.2,2.4,2.4); });
+  rts.forEach(function(z,k){
+    var off=Math.abs(z.re)>R||Math.abs(z.im)>R;
+    var x=X(Math.max(-R*0.97,Math.min(R*0.97,z.re))), y=Y(Math.max(-R*0.97,Math.min(R*0.97,z.im)));
+    var col=z.re<-1e-9?css('--stable'):(z.re>1e-9?css('--unstable'):css('--neutral'));
+    c.fillStyle=col; c.strokeStyle=css('--panel'); c.lineWidth=2; c.beginPath(); c.arc(x,y,6.5,0,7); c.fill(); c.stroke();
+    if(z.dbl){ c.strokeStyle=col; c.lineWidth=1.5; c.beginPath(); c.arc(x,y,10,0,7); c.stroke(); }
+    var lab=(z.im===0? 'r = '+plain(z.re) : plain(z.re)+(z.im>0?' + ':' − ')+plain(Math.abs(z.im))+'i')+(z.dbl?' (×2)':'')+(off?' (off scale)':'');
+    c.font='600 10.5px '+css('--sans'); c.fillStyle=css('--ink'); c.textBaseline='middle';
+    var right=x<cx+10; c.textAlign=right?'left':'right';
+    var ly=y+(z.im===0&&rts.length===2?(k===0?-14:-30):(z.im===0?-14:(z.im>=0?-12:12)));
+    c.fillText(lab,x+(right?9:-9),Math.max(top+20,Math.min(H-pad-8,ly)));
+  });
+  if(!rts.length){ c.fillStyle=css('--ink2'); c.textAlign='center'; c.textBaseline='middle'; c.font='12px '+css('--sans'); c.fillText('m = p = 0: no roots at all',cx,cy-20); }
+}
+
+/* ---------------- p–q stability map ---------------- */
+var MAPR=12, MP={};
+function drawMap(){
+  var g=CV.mC, c=g.c, W=g.w, H=g.h; c.clearRect(0,0,W,H);
+  var top=22, pad=8, L=pad, Tp=top, pw=W-2*pad, ph=H-top-pad-30;
+  var X=function(x){ return L+(x+MAPR)/(2*MAPR)*pw; }, Y=function(y){ return Tp+(MAPR-y)/(2*MAPR)*ph; };
+  MP={L:L,Tp:Tp,pw:pw,ph:ph};
+  c.font='600 11.5px '+css('--sans'); c.fillStyle=css('--ink'); c.textAlign='left'; c.textBaseline='top';
+  c.fillText('Map of (p/m, q/m) — click or drag',6,5);
+  c.fillStyle=css('--badbg'); c.fillRect(L,Tp,pw,ph);
+  c.fillStyle=css('--goodbg'); c.fillRect(X(0),Tp,X(MAPR)-X(0),Y(0)-Tp);
+  c.save(); c.beginPath(); c.rect(L,Tp,pw,ph); c.clip();
+  // axes
+  c.strokeStyle=css('--axis'); c.lineWidth=1; c.beginPath(); c.moveTo(L,Y(0)); c.lineTo(L+pw,Y(0)); c.moveTo(X(0),Tp); c.lineTo(X(0),Tp+ph); c.stroke();
+  // p=0,q>0 : rings forever
+  c.strokeStyle=css('--neutral'); c.lineWidth=3; c.beginPath(); c.moveTo(X(0),Y(0)); c.lineTo(X(0),Tp); c.stroke();
+  // parabola D=0
+  c.strokeStyle=css('--ink2'); c.lineWidth=1.3; c.beginPath();
+  for(var i=0;i<=120;i++){ var x=-MAPR+2*MAPR*i/120, y=x*x/4; if(i) c.lineTo(X(x),Y(y)); else c.moveTo(X(x),Y(y)); } c.stroke();
+  // egg curve q=p^2/8
+  c.strokeStyle=css('--accent'); c.setLineDash([5,4]); c.lineWidth=1.5; c.beginPath();
+  for(i=0;i<=80;i++){ var x2=MAPR*i/80, y2=x2*x2/8; if(i) c.lineTo(X(x2),Y(y2)); else c.moveTo(X(x2),Y(y2)); } c.stroke(); c.setLineDash([]);
+  // region labels
+  c.font='10px '+css('--sans'); c.textAlign='center'; c.textBaseline='middle';
+  c.fillStyle=css('--stable'); c.fillText('decaying',X(4.6),Y(8.4)); c.fillText('wiggles',X(4.6),Y(7.1));
+  c.fillText('smooth',X(8.6),Y(4.4)); c.fillText('decay',X(8.6),Y(3.1));
+  c.fillStyle=css('--unstable'); c.fillText('growing',X(-4.6),Y(8.4)); c.fillText('wiggles',X(-4.6),Y(7.1));
+  c.fillText('smooth',X(-8.6),Y(4.4)); c.fillText('growth',X(-8.6),Y(3.1));
+  c.fillText('q/m < 0: one root > 0',X(0),Y(-5.6)); c.fillText('→ blows up',X(0),Y(-7.4));
+  c.fillStyle=css('--mute'); c.textAlign='right'; c.textBaseline='bottom'; c.fillText('p/m',L+pw-3,Y(0)-2);
+  c.textAlign='right'; c.textBaseline='top'; c.fillText('q/m',X(0)-4,Tp+2);
+  // sweep path
+  if(Math.abs(S.m)>EPS&&(S.family||S.playing)){
+    for(i=0;i<=120;i++){ var v=S.swFrom+(S.swTo-S.swFrom)*i/120, k=withCoef(S.swc,v); if(Math.abs(k.m)<EPS) continue;
+      c.fillStyle=alpha(css('--ink'),0.45); c.fillRect(X(k.p/k.m)-1,Y(k.q/k.m)-1,2,2); }
+  }
+  c.restore();
+  var gy=Tp+ph+9, gx=L+2; c.font='10px '+css('--sans'); c.textAlign='left'; c.textBaseline='middle';
+  function lg(col,w,dash,txt,x,y){ c.strokeStyle=col; c.lineWidth=w; c.setLineDash(dash); c.beginPath(); c.moveTo(x,y); c.lineTo(x+16,y); c.stroke(); c.setLineDash([]); c.fillStyle=css('--ink2'); c.fillText(txt,x+20,y); }
+  lg(css('--neutral'),3,[],'p = 0: rings forever',gx,gy);
+  lg(css('--ink2'),1.3,[],'p² = 4mq',gx+W/2-4,gy);
+  lg(css('--accent'),1.5,[5,4],'real egg (a, b > 0) stays below this',gx,gy+14);
+  if(Math.abs(S.m)<EPS){
+    c.fillStyle=alpha(css('--panel'),0.85); c.fillRect(L,Tp,pw,ph);
+    c.fillStyle=css('--ink'); c.textAlign='center'; c.textBaseline='middle'; c.font='600 11.5px '+css('--sans');
+    c.fillText('m = 0: no T₁″ term,',W/2,Tp+ph/2-9); c.fillText('the map needs m ≠ 0',W/2,Tp+ph/2+9); return;
+  }
+  var px=S.p/S.m, qy=S.q/S.m, cxp=Math.max(-MAPR,Math.min(MAPR,px)), cyq=Math.max(-MAPR,Math.min(MAPR,qy));
+  var sol=current();
+  c.fillStyle=colorFor(sol.verdict); c.strokeStyle=css('--panel'); c.lineWidth=2.5;
+  c.beginPath(); c.arc(X(cxp),Y(cyq),7,0,7); c.fill(); c.stroke();
+  c.strokeStyle=css('--ink'); c.lineWidth=1; c.beginPath(); c.arc(X(cxp),Y(cyq),9.5,0,7); c.stroke();
+}
+function mapPick(e){
+  if(Math.abs(S.m)<EPS) return;
+  var r=mC.getBoundingClientRect(), x=(e.clientX-r.left)/SCALE, y=(e.clientY-r.top)/SCALE;
+  var P=(x-MP.L)/MP.pw*2*MAPR-MAPR, Q=MAPR-(y-MP.Tp)/MP.ph*2*MAPR;
+  P=Math.max(-MAPR,Math.min(MAPR,P)); Q=Math.max(-MAPR,Math.min(MAPR,Q));
+  S.p=round1(P*S.m); S.q=round1(Q*S.m); S.egg=false; update();
+}
+function round1(x){ return Math.round(x*10)/10; }
+
+/* ------------------------------------------------------------------ */
+/* equation strip                                                     */
+/* ------------------------------------------------------------------ */
+function coefHTML(x,first){
+  var s=f(x,2);
+  if(first) return '<span class="cf '+cls(x)+'">'+s+'</span>';
+  return (x<0?' − ':' + ')+'<span class="cf '+cls(x)+'">'+(x<0?f(-x,2):s)+'</span>';
+}
+function eqT1(){ return coefHTML(S.m,true)+' T₁″'+coefHTML(S.p)+' T₁′'+coefHTML(S.q)+' T₁ = 0'; }
+function drawEq(sol){
+  var tag=sol.verdict==='stable'?'stable: T₁, T₂ → 0':(sol.verdict==='neutral'?'neutral: never reaches 0':'unstable: runs away');
+  $('eq').innerHTML='<span class="m">'+eqT1()+'</span><span class="tag '+sol.verdict+'">'+tag+'</span>';
+}
+
+/* ------------------------------------------------------------------ */
+/* live calculation panel                                             */
+/* ------------------------------------------------------------------ */
+function inWords(sol){
+  if(sol.kind==='degen') return 'there is no derivative left, so nothing moves.';
+  if(sol.knife) return 'a growing piece exists, but this exact start cancels it. Any tiny nudge and it blows up.';
+  var cx=sol.kind==='cplx';
+  if(sol.verdict==='stable') return cx?'the yolk temperature T₁ wiggles above and below the ice value, and the wiggles shrink until it rests at 0. T₂ follows.':'every piece shrinks, so the yolk (T₁) and the white (T₂) both cool smoothly to the ice temperature, 0.';
+  if(sol.verdict==='neutral') return cx?'the real part is exactly 0, so T₁ keeps swinging with the same size forever. It never settles.':'one piece is a constant that never shrinks, so T₁ stops at some value other than 0.';
+  return cx?'the real part is positive, so every swing of T₁ is bigger than the last. It runs away.':'one piece grows exponentially, so T₁ runs away to ±∞.';
+}
+function box(v,html){ return '<div class="'+(v==='stable'?'ok':(v==='neutral'?'neu':'bad'))+'">'+html+'</div>'; }
+
+function calcHTML(sol){
+  var m=S.m,p=S.p,q=S.q,a=S.a,y0=S.y0,v0=S.v0,h='';
+  h+='<div class="'+(sol.verdict==='stable'?'ok':(sol.verdict==='neutral'?'neu':'bad'))+' words">In words: '+inWords(sol)+'</div>';
+  h+='<h3>1 · The system, then one equation for T₁</h3>';
+  h+='<p class="eq">T₁′ = a(T₂ − T₁), &nbsp; T₂′ = a(T₁ − T₂) + b(Tₑ − T₂), &nbsp; Tₑ = 0 (ice)</p>';
+  if(S.egg) h+='<p>Solve the first for <span class="m">T₂ = T₁ + T₁′/a</span> and put it in the second. With a = '+f(a)+', b = '+f(b0())+': <span class="m">T₁″ + (2a + b)T₁′ + ab·T₁ = 0</span>, i.e.</p>';
+  else h+='<p class="hint">m, p, q are set by hand here (a “what if”), not from a and b. T₂ is still read from the yolk equation: T₂ = T₁ + T₁′/a with a = '+f(a)+'.</p>';
+  h+='<p class="eq">'+eqT1()+'</p>';
+  h+='<p>Start: <span class="m">T₁(0) = '+f(S.T10)+'</span>, <span class="m">T₂(0) = '+f(S.T20)+'</span>. The yolk equation at t = 0 gives the starting slope <span class="m">T₁′(0) = a(T₂(0) − T₁(0)) = '+f(a)+'·('+f(S.T20)+' − '+par(S.T10)+') = <b>'+f(v0)+'</b></span>.</p>';
+  if(sol.kind==='degen'){
+    h+='<div class="neu">With m = 0 and p = 0 no derivative is left: the equation just says '+f(q)+'·T₁ = 0'+(Math.abs(q)<EPS?', which every function satisfies. Nothing is determined.':', so T₁ must be 0 at every moment.')+'</div>';
+    return h;
+  }
+  if(sol.kind==='first'){
+    var r=sol.r;
+    h+='<h3>2 · m = 0, so it is first order</h3><p>Only one derivative is left: <span class="m">'+f(p)+' T₁′ '+sp(q)+' T₁ = 0</span>, i.e. <span class="m">T₁′ = '+f(r)+' T₁</span>. Try <span class="m">T₁ = e<sup>rt</sup></span>: <span class="m">r = −q/p = '+f(r)+'</span>.</p>';
+    h+='<h3>3 · Fit the start</h3><p class="eq">T₁(t) = '+f(y0)+' '+ex(r)+'</p><p class="hint">A first-order equation accepts only one starting value, so T₁′(0), and with it T₂(0), cannot also be matched. T₂ shown = T₁ + T₁′/a.</p>';
+    h+=longRun(sol); h+=signBox(sol); h+=table(sol); return h;
+  }
+  var P=p/m, Q=q/m;
+  if(Math.abs(m-1)>EPS) h+='<p>Divide by <span class="m">m = '+f(m)+'</span>: <span class="m">T₁″ '+sp(P)+' T₁′ '+sp(Q)+' T₁ = 0</span>. Only these ratios matter.</p>';
+  h+='<h3>2 · Guess T₁ = e<sup>rt</sup> (characteristic equation)</h3>';
+  h+='<p>Then <span class="m">T₁′ = r e<sup>rt</sup></span> and <span class="m">T₁″ = r² e<sup>rt</sup></span>. Every term carries <span class="m">e<sup>rt</sup></span>, which is never 0, so cancel it:</p>';
+  h+='<p class="eq">'+f(m)+' r² '+sp(p)+' r '+sp(q)+' = 0</p>';
+  h+='<h3>3 · Discriminant</h3>';
+  h+='<p class="eq">D = p² − 4mq = '+par(p)+'² − 4·'+par(m)+'·'+par(q)+' = '+f(p*p)+' '+(4*m*q>=0?'− ':'+ ')+f(Math.abs(4*m*q))+' = <b>'+f(sol.D)+'</b></p>';
+  h+='<p>'+(sol.kind==='real'?'D > 0 → two different real roots (no wiggling).':(sol.kind==='cplx'?'D < 0 → a complex pair α ± iβ (wiggling, i.e. oscillation).':'D = 0 → one repeated real root.'))+'</p>';
+  h+='<h3>4 · Roots  r = (−p ± √D) / (2m)</h3>';
+  if(sol.kind==='real') h+='<p class="eq">r₁ = ('+f(-p)+' + '+f(Math.sqrt(sol.D))+') / '+f(2*m)+' = <b>'+f(sol.r1)+'</b>, &nbsp; r₂ = ('+f(-p)+' − '+f(Math.sqrt(sol.D))+') / '+f(2*m)+' = <b>'+f(sol.r2)+'</b></p>';
+  else if(sol.kind==='cplx') h+='<p class="eq">α = −p/(2m) = <b>'+f(sol.al)+'</b>, &nbsp; β = √(−D)/(2|m|) = <b>'+f(sol.be)+'</b> &nbsp;→ r = '+f(sol.al)+' ± '+f(sol.be)+'i</p>';
+  else h+='<p class="eq">r = −p/(2m) = <b>'+f(sol.r)+'</b> (twice)</p>';
+  h+=signBox(sol);
+  h+='<h3>6 · General solution for T₁</h3>';
+  if(sol.kind==='real') h+='<p class="eq">T₁ = c₁'+ex(sol.r1)+' + c₂'+ex(sol.r2)+'</p>';
+  else if(sol.kind==='cplx') h+='<p class="eq">T₁ = e<sup>'+f(sol.al)+'t</sup>(c₁ cos '+f(sol.be)+'t + c₂ sin '+f(sol.be)+'t)</p>';
+  else h+='<p class="eq">T₁ = (c₁ + c₂t)'+ex(sol.r)+'</p>';
+  h+='<h3>7 · T₂ from T₁ (no new constants)</h3>';
+  h+='<p>Solving a separate equation for T₂ would bring two <i>more</i> constants, but the system only has two (two first-order equations → two starting values). So read T₂ straight from the yolk equation:</p>';
+  h+='<p class="eq">T₂ = T₁ + T₁′/a = (T₁′ + '+f(a)+'T₁) / '+f(a)+'</p>';
+  var k1,k2;
+  if(sol.kind==='real'){
+    k1=1+sol.r1/a; k2=1+sol.r2/a;
+    h+='<p>Each piece c e<sup>rt</sup> has derivative r·c e<sup>rt</sup>, so it becomes (1 + r/a)·c e<sup>rt</sup> in T₂:</p>';
+    h+='<p class="eq">T₂ = (1 '+sp(sol.r1/a)+')c₁'+ex(sol.r1)+' + (1 '+sp(sol.r2/a)+')c₂'+ex(sol.r2)+' = '+f(k1)+'c₁'+ex(sol.r1)+' '+sp(k2)+'c₂'+ex(sol.r2)+'</p>';
+  } else if(sol.kind==='cplx'){
+    h+='<p class="hint">Here the derivative mixes cos and sin, so T₂ is again e<sup>αt</sup>(d₁ cos βt + d₂ sin βt), with d₁, d₂ worked out below.</p>';
+  }
+  h+='<h3>8 · Fit the starting temperatures</h3>';
+  if(sol.kind==='real'){
+    h+='<p>t = 0 in T₁: <span class="m">c₁ + c₂ = '+f(S.T10)+'</span></p>';
+    h+='<p>t = 0 in T₂: <span class="m">'+f(k1)+'c₁ '+sp(k2)+'c₂ = '+f(S.T20)+'</span></p>';
+    h+='<p>Substitute c₁ = '+f(S.T10)+' − c₂: <span class="m">'+f(k1*S.T10)+' '+sp(k2-k1)+'c₂ = '+f(S.T20)+'</span> → <span class="m">c₂ = <b>'+f(sol.c2)+'</b></span>, <span class="m">c₁ = <b>'+f(sol.c1)+'</b></span></p>';
+    h+='<div class="box"><span class="eq">T₁(t) = '+f(sol.c1)+ex(sol.r1)+' '+sp(sol.c2)+ex(sol.r2)+'</span><br><span class="eq">T₂(t) = '+f(k1*sol.c1)+ex(sol.r1)+' '+sp(k2*sol.c2)+ex(sol.r2)+'</span></div>';
+  } else if(sol.kind==='cplx'){
+    var d1=sol.c1+(sol.al*sol.c1+sol.be*sol.c2)/a, d2=sol.c2+(sol.al*sol.c2-sol.be*sol.c1)/a;
+    h+='<p>t = 0: <span class="m">c₁ = T₁(0) = '+f(S.T10)+'</span>; &nbsp;<span class="m">T₁′(0) = αc₁ + βc₂ = '+f(v0)+'</span> → <span class="m">c₂ = <b>'+f(sol.c2)+'</b></span></p>';
+    h+='<div class="box"><span class="eq">T₁(t) = e<sup>'+f(sol.al)+'t</sup>('+f(sol.c1)+' cos '+f(sol.be)+'t '+sp(sol.c2)+' sin '+f(sol.be)+'t)</span><br>'+
+       '<span class="eq">T₂(t) = e<sup>'+f(sol.al)+'t</sup>('+f(d1)+' cos '+f(sol.be)+'t '+sp(d2)+' sin '+f(sol.be)+'t)</span></div>';
+    h+='<p>Swing size of T₁: A = √(c₁² + c₂²) = '+f(sol.A)+'; one full wiggle every 2π/β = '+f(2*Math.PI/sol.be)+' time units.</p>';
+    h+='<div class="box"><b>Envelope (grey dotted pair on the plot).</b> Writing c₁ cos βt + c₂ sin βt = A cos(βt − φ) with φ = '+f(Math.atan2(sol.c2,sol.c1))+' rad gives <span class="eq">T₁ = '+f(sol.A)+' e<sup>'+f(sol.al)+'t</sup> cos('+f(sol.be)+'t − '+f(Math.atan2(sol.c2,sol.c1))+')</span>. Since cos stays between −1 and 1, T₁ stays between ±'+f(sol.A)+'e<sup>'+f(sol.al)+'t</sup>: those are the envelope curves. They are not temperatures, just the swing size. T₂ has its own envelope ±'+f(Math.hypot(d1,d2))+'e<sup>'+f(sol.al)+'t</sup> (same e<sup>αt</sup>, not drawn).</div>';
+  } else {
+    h+='<p>c₁ = T₁(0) = '+f(sol.c1)+', &nbsp;c₂ = T₁′(0) − r·T₁(0) = '+f(sol.c2)+'</p>';
+    h+='<div class="box"><span class="eq">T₁(t) = ('+f(sol.c1)+' '+sp(sol.c2)+'t)'+ex(sol.r)+'</span><br><span class="eq">T₂(t) = ('+f(sol.c1+(sol.c2+sol.r*sol.c1)/a)+' '+sp(sol.c2+sol.r*sol.c2/a)+'t)'+ex(sol.r)+'</span></div>';
+  }
+  h+='<p class="hint">Check: T₂(0) = '+f(sol.ev(0)[0]+sol.ev(0)[1]/a,2)+' ✓</p>';
+  h+=longRun(sol); h+=table(sol);
+  return h;
+}
+function b0(){ return S.b; }
+function signBox(sol){
+  var m=S.m,p=S.p,q=S.q,h='<h3>5 · The sign test</h3>';
+  if(sol.kind==='first'){
+    h+='<p>Signs: '+pill(p)+' in front of T₁′, '+pill(q)+' in front of T₁. The root r = −q/p is negative exactly when p and q have the same sign.</p>';
+    return h;
+  }
+  h+='<p>Signs: m '+pill(m)+' &nbsp;p '+pill(p)+' &nbsp;q '+pill(q)+'</p>';
+  var sum=-p/m, prod=q/m;
+  h+='<p>Roots obey <span class="m">r₁ + r₂ = −p/m = '+f(sum)+'</span> and <span class="m">r₁ · r₂ = q/m = '+f(prod)+'</span>.</p>';
+  if(signAll(m,p,q)) h+='<div class="ok">All three coefficients have the same sign. Product &gt; 0 and sum &lt; 0 → both roots sit left of the imaginary axis → decay.</div>';
+  else {
+    var why=[];
+    if(Math.abs(prod)<EPS) why.push('q = 0 makes one root exactly 0 (e<sup>0t</sup> = 1 never shrinks)');
+    else if(prod<0) why.push('product q/m &lt; 0 means the roots have opposite signs, so one is positive');
+    if(Math.abs(sum)<EPS) why.push('p = 0 makes the sum 0, so the real part α = 0: pure oscillation that never shrinks');
+    else if(sum>0&&prod>0) why.push('sum −p/m &gt; 0 with product &gt; 0 puts both roots (or the real part α) on the right');
+    h+='<div class="bad">Signs are not all the same: '+why.join('; ')+'.</div>';
+  }
+  return h;
+}
+function longRun(sol){
+  var h='<h3>9 · Long run: which term wins?</h3>', v=sol.verdict;
+  if(sol.knife) return h+'<div class="neu">The root '+f(sol.r1)+' is positive, but this exact start makes its coefficient c₁ = 0, so the curves happen to decay. It is a knife edge: nudge T₁(0) or T₂(0) by any amount and '+ex(sol.r1)+' comes back and wins.</div>';
+  if(sol.kind==='first'){
+    if(v==='stable') return h+'<div class="ok">r = '+f(sol.r)+' &lt; 0: T₁ halves every ln 2/|r| = '+f(Math.LN2/Math.abs(sol.r))+' time units → T₁ → 0.</div>';
+    if(v==='unstable') return h+'<div class="bad">r = '+f(sol.r)+' &gt; 0: T₁ doubles every '+f(Math.LN2/sol.r)+' time units → runs away.</div>';
+    return h+'<div class="neu">r = 0: T₁ stays at '+f(S.y0)+' forever.</div>';
+  }
+  if(v==='stable'){
+    var slow=sol.maxRe;
+    h+='<div class="ok">Every piece carries a shrinking factor. The slowest is e<sup>'+f(slow)+'t</sup>, which halves every ln 2/'+f(Math.abs(slow))+' = <b>'+f(Math.LN2/Math.abs(slow))+'</b> time units. '+
+      (sol.kind==='cplx'?'The wiggles shrink inside the envelope ±'+f(sol.A)+'e<sup>'+f(sol.al)+'t</sup>. ':'')+
+      'T₂ is built from the same pieces, so <b>T₁ → 0 and T₂ → 0</b>: the whole egg ends at the ice-bath temperature.</div>';
+  } else if(v==='neutral'){
+    if(sol.kind==='cplx') h+='<div class="neu">α = 0, so e<sup>0·t</sup> = 1 never shrinks. T₁ swings between ±'+f(sol.A)+' forever with period '+f(2*Math.PI/sol.be)+'. It never settles.</div>';
+    else if(sol.kind==='real'){ var cz=Math.abs(sol.r1)<1e-9?sol.c1:sol.c2;
+      h+='<div class="neu">One root is 0, so one piece is a constant '+f(cz)+'. The other piece dies away: T₁ settles at <b>'+f(cz)+'</b>, not at 0 (and T₂ = T₁ + T₁′/a settles there too).</div>'; }
+    else h+='<div class="neu">T₁ starts at rest at '+f(S.y0)+' and never changes.</div>';
+  } else {
+    var fast=sol.maxRe;
+    if(sol.kind==='rep'&&Math.abs(sol.r)<1e-9) h+='<div class="bad">Double root at 0: T₁ = '+f(sol.c1)+' '+sp(sol.c2)+'t drifts off in a straight line.</div>';
+    else h+='<div class="bad">A root has real part '+f(fast)+' &gt; 0, so e<sup>'+f(fast)+'t</sup> doubles every ln 2/'+f(fast)+' = <b>'+f(Math.LN2/fast)+'</b> time units. '+
+      (sol.kind==='cplx'?'The wiggles grow instead of dying. ':'')+'T₁ (and T₂) run away to ±∞.</div>';
+  }
+  return h;
+}
+function table(sol){
+  var ts=[0,0.5,1,2,3,5,10], h='<table><tr><th>t</th><th>T₁(t) yolk</th><th>T₂(t) white</th></tr>';
+  function row(t,c){ var e=sol.ev(t); return '<tr'+(c?' class="cur"':'')+'><td>'+t+(c?' (cursor)':'')+'</td><td>'+f(e[0],2)+'</td><td>'+f(e[0]+e[1]/S.a,2)+'</td></tr>'; }
+  ts.forEach(function(t){ h+=row(t,false); });
+  if(S.hover!==null) h+=row(+S.hover.toFixed(3),true);
+  return h+'</table>';
+}
+
+/* ------------------------------------------------------------------ */
+/* guided lesson                                                      */
+/* ------------------------------------------------------------------ */
+var EGG={m:1,p:7,q:6,a:2,b:3,egg:true,T10:40,T20:45,tmax:8};
+function mix(a,b){ var o={}; for(var k in a) o[k]=a[k]; for(k in b) o[k]=b[k]; return o; }
+var ICS={T10:40,T20:45,a:2};
+var LESSON=[
+ {t:'The system from your notes', set:mix(EGG,{pieces:false}),
+  body:'<p>Yolk T₁, white T₂, ice bath Tₑ = 0, with a = 2, b = 3:</p><p class="eq">T₁′ = −2T₁ + 2T₂, &nbsp;&nbsp; T₂′ = 2T₁ − 5T₂</p>'+
+   '<p>Start: <b>T₁(0) = 40</b>, <b>T₂(0) = 45</b> (degrees above the ice). The white is hotter at first: it was nearest the boiling water.</p>',
+  q:'Where will both temperatures end up?', o:['Both at 0, the ice temperature','Both stuck somewhere above 0','Going up and down forever'], c:0,
+  why:'Heat only leaves the egg into the ice, so everything ends at the ice temperature. The maths below shows it: every piece of the answer shrinks.',
+  see:'Solid curve = yolk T₁, dashed = white T₂. Both fall to 0. Press <b>Play time</b> to watch the egg change colour.'},
+ {t:'Eliminate T₂ to get one equation for T₁', set:mix(EGG,{pieces:false}),
+  body:'<p>From the first equation, <span class="m">T₂ = (T₁′ + 2T₁)/2</span>. Put it into the second:</p>'+
+   '<p class="eq">((T₁′ + 2T₁)/2)′ = 2T₁ − 5(T₁′ + 2T₁)/2</p><p>Multiply by 2: <span class="m">T₁″ + 2T₁′ = 4T₁ − 5T₁′ − 10T₁</span>, so</p><p class="eq">T₁″ + 7T₁′ + 6T₁ = 0</p>'+
+   '<p>In letters: 7 = 2a + b and 6 = ab.</p>',
+  q:'Two first-order equations became…', o:['one first-order equation','one second-order equation','two second-order equations'], c:1,
+  why:'Eliminating one unknown from two first-order equations always gives one second-order equation, just as your notes say.',
+  see:'The equation strip above the plot shows 1 T₁″ + 7 T₁′ + 6 T₁ = 0.'},
+ {t:'Characteristic equation: each root is one piece', set:mix(EGG,{pieces:true}),
+  body:'<p>Try <span class="m">T₁ = e<sup>rt</sup></span>: <span class="m">r² + 7r + 6 = 0</span> = <span class="m">(r + 1)(r + 6)</span>, so <span class="m">r = −1, −6</span> and</p><p class="eq">T₁ = c₁e<sup>−t</sup> + c₂e<sup>−6t</sup></p>'+
+   '<table><tr><th>t</th><th>e<sup>−t</sup></th><th>e<sup>−6t</sup></th></tr><tr><td>0</td><td>1</td><td>1</td></tr><tr><td>1</td><td>0.368</td><td>0.0025</td></tr><tr><td>2</td><td>0.135</td><td>0.000006</td></tr></table>',
+  q:'Which piece decides how long the egg takes to cool?', o:['e<sup>−6t</sup>, the fast one','e<sup>−t</sup>, the slow one'], c:1,
+  why:'e<sup>−6t</sup> is practically gone after one time unit. What remains is c₁e<sup>−t</sup>, which halves every ln 2 ≈ 0.69 units. The root closest to the orange axis sets the pace.',
+  see:'The two thin dashed curves are the pieces of T₁. The solid curve is their sum.'},
+ {t:'Get T₂ without two new constants', set:mix(EGG,{pieces:false}),
+  body:'<p>Solving a second-order equation for T₂ separately would give <i>two more</i> constants, but the system only has two. Instead use the boxed formula from your notes:</p>'+
+   '<p class="eq">T₂ = (T₁′ + 2T₁)/2</p><p><span class="m">T₁′ = −c₁e<sup>−t</sup> − 6c₂e<sup>−6t</sup></span>, so <span class="m">T₁′ + 2T₁ = c₁e<sup>−t</sup> − 4c₂e<sup>−6t</sup></span> and</p>'+
+   '<p class="eq">T₂ = ½c₁e<sup>−t</sup> − 2c₂e<sup>−6t</sup></p>',
+  q:'Why is this better than solving a separate equation for T₂?', o:['It is just shorter','It keeps the same two constants, which is all the system allows','T₂ does not need constants'], c:1,
+  why:'Two first-order equations have exactly two free constants (fixed by the two starting temperatures). Reading T₂ from T₁ keeps c₁ and c₂ and adds nothing extra to sort out.',
+  see:'In the Live calculation tab, step 7 does this for whatever settings you choose.'},
+ {t:'Use T₁(0) = 40 and T₂(0) = 45', set:mix(EGG,{pieces:true}),
+  body:'<p>Put t = 0 into both formulas (e<sup>0</sup> = 1):</p><p class="eq">40 = c₁ + c₂, &nbsp;&nbsp; 45 = ½c₁ − 2c₂</p>'+
+   '<p>From the first, c₁ = 40 − c₂. Then 45 = 20 − ½c₂ − 2c₂, so −2.5c₂ = 25 and <b>c₂ = −10</b>, <b>c₁ = 50</b>.</p>'+
+   '<div class="box"><span class="eq">T₁ = 50e<sup>−t</sup> − 10e<sup>−6t</sup></span><br><span class="eq">T₂ = 25e<sup>−t</sup> + 20e<sup>−6t</sup></span></div>'+
+   '<table><tr><th>t</th><th>T₁ yolk</th><th>T₂ white</th></tr><tr><td>0</td><td>40</td><td>45</td></tr><tr><td>1</td><td>18.37</td><td>9.25</td></tr><tr><td>3</td><td>2.49</td><td>1.25</td></tr><tr><td>5</td><td>0.34</td><td>0.17</td></tr></table>',
+  q:'Check the starting slope: T₁′(0) = 2(T₂(0) − T₁(0)) = ?', o:['0','10','−10'], c:1,
+  why:'2(45 − 40) = 10. From the formula: T₁′(0) = −50 + 60 = 10 ✓. It is positive, which leads to the next step.',
+  see:'The Live calculation tab shows the same numbers (c₁ = 50, c₂ = −10) and checks T₂(0) = 45.'},
+ {t:'Why does the yolk warm up at first?', set:mix(EGG,{pieces:false,tmax:0.5}),
+  body:'<p>T₁′(0) = 10 &gt; 0: at the start the white (45°) is hotter than the yolk (40°), so heat flows <i>into</i> the yolk. The time axis is now zoomed to 0 ≤ t ≤ 0.5.</p>',
+  q:'When does the yolk stop warming?', o:['When T₁ = T₂','When T₂ = 0','Never'], c:0,
+  why:'T₁′ = 2(T₂ − T₁), so T₁ peaks when T₁ = T₂: 50e<sup>−t</sup> − 10e<sup>−6t</sup> = 25e<sup>−t</sup> + 20e<sup>−6t</sup> → e<sup>5t</sup> = 1.2 → t = ln 1.2 / 5 ≈ 0.036. The yolk peaks at about 40.18°, then both cool together.',
+  see:'The solid yolk curve rises a little and meets the dashed white curve at t ≈ 0.036. After that the yolk is warmer than the white.'},
+ {t:'Take away the damping (p = 0)', set:mix(ICS,{m:1,p:0,q:6,tmax:12,pieces:true}),
+  body:'<p>Keep 6T₁, delete 7T₁′: <span class="m">T₁″ + 6T₁ = 0</span>. Then <span class="m">r² = −6</span> and <span class="m">r = ±√6 i = ±2.449i</span>. The real part is exactly 0.</p>',
+  q:'Will T₁ settle at 0?', o:['Yes, slowly','No, it swings between about +40 and −40 forever','No, it blows up'], c:1,
+  why:'A real part of 0 means e<sup>0·t</sup> = 1: nothing shrinks. With T₁(0) = 40 and T₁′(0) = 10, T₁ = 40 cos 2.449t + 4.08 sin 2.449t, swing size √(40² + 4.08²) ≈ 40.2, forever. This is what your professor meant: the 7T₁′ term is what kills the swings.',
+  see:'Both root dots sit on the orange axis; the dashed envelope is flat at ±40.2.'},
+ {t:'Why no middle term means endless swinging', set:mix(ICS,{m:1,p:0,q:6,tmax:12,pieces:true}),
+  body:'<p>Read <span class="m">T₁″ = −6T₁</span> as a pull toward 0: above 0 it bends down, below 0 it bends up. At T₁ = 0 the pull vanishes but T₁ is moving fast, so it overshoots. A mass on a spring does the same.</p>'+
+   '<p>Multiply by T₁′: <span class="m">d/dt[½(T₁′)² + 3T₁²] = 0</span>. So E = ½(T₁′)² + 3T₁² is constant: at the start ½·10² + 3·40² = <b>4850</b>.</p>'+
+   '<p>With the middle term, the same trick gives <span class="m">dE/dt = −p(T₁′)²</span>.</p>',
+  q:'With p = 0, can T₁ ever come to rest at 0?', o:['Yes, eventually','No: resting at 0 would need E = 0, but E stays 4850'], c:1,
+  why:'E never changes, so every time T₁′ = 0 (a turning point) we have 3T₁² = 4850, i.e. T₁ = ±40.2. With p &gt; 0, dE/dt = −p(T₁′)² &lt; 0 drains E to 0, so T₁ → 0. With p &lt; 0, E grows and so do the swings.',
+  see:'Hover over the curve: at each peak or trough T₁ ≈ ±40.2. Now drag p slightly above 0 and watch the peaks shrink; drag it below 0 and watch them grow.'},
+ {t:'A little damping back (p = 1)', set:mix(ICS,{m:1,p:1,q:6,tmax:12,pieces:true}),
+  body:'<p><span class="m">r² + r + 6 = 0</span>: D = 1 − 24 = −23, so <span class="m">r = −0.5 ± 2.40i</span>. The real part is now −0.5.</p>',
+  q:'What happens now?', o:['Swings forever at the same size','Swings that shrink to 0','Swings that grow'], c:1,
+  why:'The swing size follows e<sup>−0.5t</sup>, halving every ln 2/0.5 ≈ 1.39 time units. Any p &gt; 0, however small, makes the swings die.',
+  see:'The envelope shrinks toward 0; the dots moved just left of the orange axis.'},
+ {t:'What is the grey dotted “envelope”?', set:mix(ICS,{m:1,p:1,q:6,tmax:12,pieces:true}),
+  body:'<p>Here <span class="m">T₁ = e<sup>−0.5t</sup>(40 cos 2.398t + 12.51 sin 2.398t)</span>. The bracket is a cos/sin mix, and any such mix equals one cosine: <span class="m">A cos(2.398t − φ)</span> with <span class="m">A = √(40² + 12.51²) = 41.91</span>, φ = 0.303.</p>'+
+   '<p class="eq">T₁ = 41.91 e<sup>−0.5t</sup> cos(2.398t − 0.303)</p>'+
+   '<p>A cosine never leaves [−1, 1], so <span class="m">−41.91e<sup>−0.5t</sup> ≤ T₁ ≤ 41.91e<sup>−0.5t</sup></span>. Those two boundary curves are the <b>envelope</b>. E.g. at t = 2 the envelope is ±41.91·e<sup>−1</sup> = ±15.42.</p>',
+  q:'Is the envelope the temperature of some part of the egg?', o:['Yes, the shell','No, it is the largest size T₁’s swing can have at each moment'], c:1,
+  why:'It is a guide line, not a temperature. T₁ touches it once per half-swing (grey dots) and never crosses it. Its shape e<sup>αt</sup> depends only on the real part α: shrinking (α &lt; 0) = stable, flat (α = 0) = swings forever, growing (α &gt; 0) = unstable. T₁ and T₂ are the only temperatures.',
+  see:'The grey dotted curves above and below the solid T₁ curve, and the grey dots where they touch. The blue <b>ⓘ What is the envelope?</b> button on the plot opens the full step-by-step guide with live numbers.'},
+ {t:'Negative damping (p = −1)', set:mix(ICS,{m:1,p:-1,q:6,tmax:8,pieces:true}),
+  body:'<p><span class="m">r² − r + 6 = 0</span> gives <span class="m">r = +0.5 ± 2.40i</span>: same wiggle speed, but the real part flipped sign.</p>',
+  q:'Will the swings shrink or grow?', o:['Shrink','Grow'], c:1,
+  why:'e<sup>+0.5t</sup> doubles every 1.39 time units. A negative p pushes energy in instead of taking it out.',
+  see:'The dots moved into the red half and the envelope opens out.'},
+ {t:'A big p cannot rescue a negative q', set:mix(ICS,{m:1,p:7,q:-6,tmax:5,pieces:true}),
+  body:'<p><span class="m">r² + 7r − 6 = 0</span>: D = 49 + 24 = 73, so <span class="m">r = (−7 ± 8.544)/2 = 0.772</span> or <span class="m">−7.772</span>.</p>',
+  q:'p = 7 is large and positive. Is that enough?', o:['Yes, it cools','No, it blows up'], c:1,
+  why:'The roots multiply to q = −6. A negative product means one root is positive, whatever p is. e<sup>0.772t</sup> wins: T₁ roughly doubles every 0.9 time units.',
+  see:'One dot on each side of the orange axis; the map dot is in the lower red half.'},
+ {t:'q = 0: it stops, but not at 0', set:mix(ICS,{m:1,p:7,q:0,tmax:6,pieces:true}),
+  body:'<p><span class="m">r² + 7r = r(r + 7) = 0</span>, so <span class="m">r = 0</span> or <span class="m">−7</span>. The piece e<sup>0t</sup> = 1 is a constant. Start: T₁(0) = 40, T₁′(0) = 10.</p>',
+  q:'Where does T₁ end up?', o:['At 0','At about 41.4','It blows up'], c:1,
+  why:'c₁ + c₂ = 40 and 0·c₁ − 7c₂ = 10, so c₂ = −1.43 and c₁ = 41.43. T₁ = 41.43 − 1.43e<sup>−7t</sup>: the second piece dies, the constant stays.',
+  see:'A root sits exactly at the origin of the roots figure; the curve flattens out above 0.'},
+ {t:'All negative is fine', set:mix(ICS,{m:-1,p:-7,q:-6,tmax:8,pieces:true}),
+  body:'<p><span class="m">−T₁″ − 7T₁′ − 6T₁ = 0</span> is the egg equation multiplied by −1. Multiplying “= 0” by −1 changes nothing.</p>',
+  q:'Stable or unstable?', o:['Stable','Unstable'], c:0,
+  why:'Same roots, −1 and −6. The precise rule (your note “or all &lt; 0”): <b>all coefficients have the same sign</b>. “Positive” is the usual wording only because we normally make the T₁″ coefficient 1.',
+  see:'The curves are identical to the egg. The map uses p/m and q/m, which are +7 and +6 again.'},
+ {t:'Mixed signs are not fine', set:mix(ICS,{m:-1,p:7,q:6,tmax:3,pieces:true}),
+  body:'<p><span class="m">−T₁″ + 7T₁′ + 6T₁ = 0</span>. Divide by −1: <span class="m">T₁″ − 7T₁′ − 6T₁ = 0</span>, so p = −7 and q = −6.</p>',
+  q:'Stable or unstable?', o:['Stable','Unstable'], c:1,
+  why:'r² − 7r − 6 = 0 gives r = (7 ± √73)/2 = 7.77 or −0.77. The root 7.77 is positive, so it explodes fast. p and q were positive but m was not: the signs disagree.',
+  see:'In the Live calculation tab’s sign test, m is red while p and q are green.'},
+ {t:'Watch the roots cross the line', set:mix(ICS,{m:1,p:-3,q:6,tmax:8,pieces:false,swc:'p',swFrom:-3,swTo:3,family:true,play:true}),
+  body:'<p>p now slides from −3 to 3 while q = 6 stays fixed. Watch the root dots and the red/blue family of curves.</p>',
+  q:'At which p do the roots cross the orange axis?', o:['p = 0','p = 3','p = −6'], c:0,
+  why:'The real part is α = −p/2. It is 0 exactly at p = 0: negative p puts the roots on the right (red curves), positive p on the left (blue curves).',
+  see:'The small dots trace the path of the roots. Press Pause sweep and drag p by hand around 0.'},
+ {t:'Can a real egg ever wiggle?', set:{m:1,p:5,q:2,a:0.5,b:4,egg:true,T10:40,T20:45,tmax:8,pieces:true},
+  body:'<p>For the egg, <span class="m">p = 2a + b</span> and <span class="m">q = ab</span>, so</p><p class="eq">D = (2a + b)² − 4ab = 4a² + 4ab + b² − 4ab = 4a² + b²</p>',
+  q:'Can D be negative for a real egg (a, b &gt; 0)?', o:['Yes, with the right a and b','No, never'], c:1,
+  why:'4a² + b² is a sum of squares, so D &gt; 0 always: two different negative real roots and no ringing. The oscillation remark is about the general equation, not the egg.',
+  see:'Move the a and b sliders: the map dot always stays under the dashed curve.'},
+ {t:'Summary', set:mix(EGG,{pieces:false}),
+  body:'<ol style="margin:0 0 6px;padding-left:18px"><li>Eliminate T₂ → T₁″ + pT₁′ + qT₁ = 0.</li><li>Characteristic equation → roots → T₁ = c₁e<sup>r₁t</sup> + c₂e<sup>r₂t</sup>.</li><li>T₂ = T₁ + T₁′/a (no new constants).</li><li>T₁(0), T₂(0) → c₁, c₂.</li><li>Signs of the coefficients → long-run behaviour.</li></ol>'+
+   '<table><tr><th>signs (m = 1)</th><th>roots</th><th>long run</th></tr>'+
+   '<tr><td>p &gt; 0, q &gt; 0</td><td>both left</td><td>→ 0</td></tr><tr><td>p = 0, q &gt; 0</td><td>on the axis</td><td>swings forever</td></tr>'+
+   '<tr><td>p &lt; 0, q &gt; 0</td><td>both right</td><td>grows</td></tr><tr><td>q &lt; 0</td><td>one each side</td><td>blows up</td></tr><tr><td>q = 0</td><td>0 and −p</td><td>stops at a constant</td></tr></table>'+
+   '<div class="ok">All coefficients the same sign ⇔ both roots on the left ⇔ T₁ and T₂ settle to 0.</div>'+
+   '<p class="hint">This test is complete only for second order. For third order an extra inequality is needed (Routh–Hurwitz).</p>'}
+];
+var LS={i:0,ans:{},tab:'L'};
+function applySet(st){
+  stopPlay(); stopClock(); S.egg=false; S.family=false; S.hover=null;
+  for(var k in st){ if(k!=='play') S[k]=st[k]; }
+  update(); if(st.play) startSweep();
+}
+function lessonHTML(){
+  var L=LESSON[LS.i], a=LS.ans[LS.i], h='';
+  h+='<div class="lnav"><button class="b" data-l="prev"'+(LS.i?'':' disabled')+'>◀ Back</button><span class="cnt">Step '+(LS.i+1)+' of '+LESSON.length+'</span><button class="b" data-l="next"'+(LS.i<LESSON.length-1?'':' disabled')+'>Next ▶</button></div>';
+  h+='<div class="dots">'+LESSON.map(function(_,k){ return '<span data-go="'+k+'" class="'+(k===LS.i?'on':(LS.ans[k]!==undefined?'done':''))+'" title="Step '+(k+1)+'"></span>'; }).join('')+'</div>';
+  h+='<h3>'+L.t+'</h3>'+L.body;
+  if(L.q){
+    h+='<div class="pred"><div class="q">Predict first: '+L.q+'</div><div class="opts">';
+    L.o.forEach(function(o,k){ var c=a===undefined?'':(k===L.c?'right':(k===a?'wrong':''));
+      h+='<button data-o="'+k+'" class="'+c+'"'+(a!==undefined?' disabled':'')+'>'+o+'</button>'; });
+    h+='</div>';
+    if(a!==undefined) h+='<div class="'+(a===L.c?'ok':'bad')+'" style="margin-top:6px">'+(a===L.c?'<b>Right.</b> ':'<b>Not quite.</b> ')+L.why+'</div>';
+    h+='</div>';
+    if(a!==undefined) h+='<div class="notice"><b>What to look at:</b> '+L.see+'</div>';
+    else h+='<p class="hint">Pick an answer. The figures will then switch to this example so you can check.</p>';
+  }
+  h+='<p><button class="b" data-l="set">Set up this example again</button></p>';
+  return h;
+}
+function renderPanel(){
+  var cd=$('calcBody');
+  $('tabL').setAttribute('aria-selected',LS.tab==='L'); $('tabC').setAttribute('aria-selected',LS.tab==='C');
+  if(LS.tab==='C'){ var sc=cd.scrollTop; cd.innerHTML=calcHTML(current()); cd.scrollTop=sc; }
+}
+function showLesson(reset){ var cd=$('calcBody'); cd.innerHTML=lessonHTML(); if(reset) cd.scrollTop=0; }
+$('tabL').addEventListener('click',function(){ LS.tab='L'; renderPanel(); showLesson(true); });
+$('tabC').addEventListener('click',function(){ LS.tab='C'; renderPanel(); });
+$('calcBody').addEventListener('click',function(e){
+  if(LS.tab!=='L') return;
+  var b=e.target.closest('[data-l],[data-o],[data-go]'); if(!b) return;
+  var L=LESSON[LS.i];
+  if(b.hasAttribute('data-go')){ LS.i=+b.getAttribute('data-go'); if(!LESSON[LS.i].q) applySet(LESSON[LS.i].set); showLesson(true); return; }
+  if(b.hasAttribute('data-o')){ LS.ans[LS.i]=+b.getAttribute('data-o'); applySet(L.set); showLesson(false); return; }
+  var act=b.getAttribute('data-l');
+  if(act==='set'){ applySet(L.set); return; }
+  if(act==='prev'&&LS.i>0) LS.i--; if(act==='next'&&LS.i<LESSON.length-1) LS.i++;
+  var N=LESSON[LS.i]; if(!N.q||LS.ans[LS.i]!==undefined) applySet(N.set);
+  showLesson(true);
+});
+
+/* ------------------------------------------------------------------ */
+/* guide to the curves (floating popover over the plot)               */
+/* ------------------------------------------------------------------ */
+function curveGuideHTML(sol){
+  var h='<p><b>Only the two solid/blue curves are temperatures.</b> The grey curves are helper lines that show <i>how</i> T₁ is built or how big its swings are.</p>';
+  h+='<table><tr><th>on the plot</th><th>what it is</th><th>a temperature?</th></tr>'+
+     '<tr><td><span class="swatch" style="border-color:'+colorFor(sol.verdict)+'"></span>solid</td><td>T₁, the yolk: the solution of '+eqT1()+'</td><td>yes</td></tr>'+
+     '<tr><td><span class="swatch" style="border-color:'+css('--accent')+';border-top-style:dashed"></span>blue dashed</td><td>T₂, the white: T₂ = T₁ + T₁′/a</td><td>yes</td></tr>'+
+     '<tr><td><span class="swatch" style="border-color:'+css('--ink2')+';border-top-style:dashed"></span>grey dashed</td><td>real roots: the two <b>pieces</b> c·e<sup>rt</sup> that add up to T₁</td><td>no, building blocks</td></tr>'+
+     '<tr><td><span class="swatch" style="border-color:'+css('--ink2')+';border-top-style:dotted"></span>grey dotted pair</td><td>complex roots: the <b>envelope</b> ±A·e<sup>αt</sup>, the swing size of T₁</td><td>no, a boundary line</td></tr>'+
+     '<tr><td>grey dots</td><td>places where T₁ touches its envelope</td><td>no</td></tr></table>';
+  h+='<p class="hint">Grey curves appear only while “show the pieces” is ticked (below the plot).</p>';
+  if(sol.kind==='cplx'){
+    var phi=Math.atan2(sol.c2,sol.c1), A=sol.A, al=sol.al, be=sol.be;
+    h+='<h3>The envelope, step by step (your current numbers)</h3>';
+    h+='<p><b>1 · Start from T₁.</b> The roots are α ± iβ = '+f(al)+' ± '+f(be)+'i, and the starting temperatures gave</p>';
+    h+='<p class="eq">T₁ = e<sup>'+f(al)+'t</sup>('+f(sol.c1)+' cos '+f(be)+'t '+sp(sol.c2)+' sin '+f(be)+'t)</p>';
+    h+='<p><b>2 · Merge cos and sin into one cosine.</b> Any mix c₁ cos βt + c₂ sin βt equals A cos(βt − φ), with</p>';
+    h+='<p class="eq">A = √(c₁² + c₂²) = √('+f(sol.c1)+'² + '+par(sol.c2)+'²) = <b>'+f(A)+'</b>, &nbsp; φ = atan2(c₂, c₁) = <b>'+f(phi)+'</b> rad</p>';
+    h+='<p class="hint">Check: A cos(βt − φ) = A cos φ · cos βt + A sin φ · sin βt, and A cos φ = c₁, A sin φ = c₂.</p>';
+    h+='<p class="eq">T₁ = '+f(A)+' e<sup>'+f(al)+'t</sup> · cos('+f(be)+'t − '+f(phi)+')</p>';
+    h+='<p><b>3 · Squeeze it.</b> A cosine is always between −1 and +1, so</p>';
+    h+='<p class="eq">−'+f(A)+'e<sup>'+f(al)+'t</sup> ≤ T₁ ≤ +'+f(A)+'e<sup>'+f(al)+'t</sup></p>';
+    h+='<p>These two boundary curves are the <b>envelope</b>. T₁ wiggles inside them and touches them whenever the cosine equals ±1, i.e. at t = (φ + kπ)/β (the grey dots):</p>';
+    h+='<table><tr><th>t</th><th>T₁(t)</th><th>envelope ±A e<sup>αt</sup></th><th></th></tr>';
+    h+='<tr><td>0</td><td>'+f(sol.ev(0)[0],2)+'</td><td>±'+f(A,2)+'</td><td class="hint">start is not a touch point</td></tr>';
+    var k0=Math.ceil(-phi/Math.PI);
+    for(var k=k0,n=0;n<4;k++,n++){ var t=(phi+k*Math.PI)/be; h+='<tr><td>'+f(t,3)+'</td><td>'+f(sol.ev(t)[0],2)+'</td><td>'+(k%2===0?'+':'−')+f(A*Math.exp(al*t),2)+'</td><td class="hint">touch</td></tr>'; }
+    h+='</table>';
+    h+='<p><b>4 · What it tells you.</b> The envelope depends only on the real part α:</p>';
+    h+='<div class="'+(al<-1e-9?'ok':(al>1e-9?'bad':'neu'))+'">Here α = '+f(al)+': the envelope '+(al<-1e-9?'shrinks (halves every '+f(Math.LN2/Math.abs(al))+' time units), so the swings die and T₁ → 0. <b>Stable.</b>':(al>1e-9?'grows (doubles every '+f(Math.LN2/al)+' time units), so the swings get bigger. <b>Unstable.</b>':'is flat at ±'+f(A)+', so T₁ swings forever at the same size. <b>Never settles.</b>'))+'</div>';
+    h+='<p>β only sets how fast T₁ wiggles (one full wiggle every 2π/β = '+f(2*Math.PI/be)+'). So you can judge stability from the envelope alone, which is why the sign of p (α = −p/2m) matters.</p>';
+    var d1=sol.c1+(al*sol.c1+be*sol.c2)/S.a, d2=sol.c2+(al*sol.c2-be*sol.c1)/S.a;
+    h+='<p><b>And T₂?</b> T₂ is built from the same e<sup>αt</sup> cos/sin pieces, so it has its own envelope ±'+f(Math.hypot(d1,d2))+'e<sup>'+f(al)+'t</sup> (not drawn): a different size, the same shrink or growth rate.</p>';
+    h+='<p class="hint">Small detail: when α ≠ 0 the peaks of T₁ sit just <i>before</i> the touch points, because the e<sup>αt</sup> factor is also changing.</p>';
+  } else if(sol.kind==='real'||sol.kind==='rep'){
+    h+='<h3>Right now: the grey dashed curves are the two pieces</h3>';
+    var P1,P2,l1,l2;
+    if(sol.kind==='real'){ P1=function(t){return term(sol.c1,sol.r1,t);}; P2=function(t){return term(sol.c2,sol.r2,t);}; l1=f(sol.c1)+ex(sol.r1); l2=f(sol.c2)+ex(sol.r2); }
+    else { P1=function(t){return sol.c1*Math.exp(sol.r*t);}; P2=function(t){return sol.c2*t*Math.exp(sol.r*t);}; l1=f(sol.c1)+ex(sol.r); l2=f(sol.c2)+'t'+ex(sol.r); }
+    h+='<p>With real roots there is no wiggle, so there is no envelope. Instead the grey curves are the two pieces, and T₁ is simply their sum at every moment:</p>';
+    h+='<table><tr><th>t</th><th>'+l1+'</th><th>'+l2+'</th><th>sum = T₁</th></tr>';
+    [0,0.5,1,2].forEach(function(t){ var a=P1(t), b=P2(t); h+='<tr><td>'+t+'</td><td>'+f(a,2)+'</td><td>'+f(b,2)+'</td><td>'+f(a+b,2)+'</td></tr>'; });
+    h+='</table>';
+    h+='<div class="neu">An <b>envelope</b> appears only when the roots are complex, i.e. when T₁ wiggles. <button class="b" data-cg="p1">Show an example (p = 1)</button> <button class="b" data-cg="p0">Envelope with p = 0</button></div>';
+  } else {
+    h+='<div class="neu">In this first-order case there is only one piece, so no grey curves are drawn. <button class="b" data-cg="p1">Show an envelope example (p = 1)</button></div>';
+  }
+  return h;
+}
+var CG={open:false,seen:false};
+function refreshCG(sol){
+  var btn=$('cgBtn'), cx=sol.kind==='cplx'&&S.pieces;
+  btn.textContent=cx?'ⓘ What is the envelope?':'ⓘ What are the curves?';
+  if(cx&&!CG.seen&&!CG.open) btn.classList.add('pulse'); else btn.classList.remove('pulse');
+  if(CG.open){ var b=$('cgBody'), sc=b.scrollTop; b.innerHTML=curveGuideHTML(sol); b.scrollTop=sc; }
+}
+function setCG(o){ CG.open=o; if(o) CG.seen=true; $('cg').classList.toggle('open',o); $('cgBtn').setAttribute('aria-expanded',o); refreshCG(current()); }
+$('cgBtn').addEventListener('click',function(){ setCG(!CG.open); });
+$('cgClose').addEventListener('click',function(){ setCG(false); });
+$('cgBody').addEventListener('click',function(e){ var b=e.target.closest('[data-cg]'); if(!b) return;
+  applySet(mix(ICS,{m:1,p:b.getAttribute('data-cg')==='p1'?1:0,q:6,tmax:12,pieces:true})); $('cgBody').scrollTop=0; });
+document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&CG.open) setCG(false); });
+
+/* ------------------------------------------------------------------ */
+/* floating explanation                                               */
+/* ------------------------------------------------------------------ */
+function explain(){
+  var sol=current(), h='';
+  h+='<div class="box"><b>Right now:</b> <span class="m">'+eqT1()+'</span>, T₁(0) = '+f(S.T10)+', T₂(0) = '+f(S.T20)+' → roots '+
+     (sol.roots.length?sol.roots.map(function(z){return z.im===0?f(z.re):f(z.re)+(z.im>0?'+':'−')+f(Math.abs(z.im))+'i';}).join(', '):'none')+
+     ' → the egg <b>'+verdictWord(sol.verdict)+'</b>.</div>';
+
+  h+='<h3>Step 0 · The one-line version: T₁′ = −kT₁</h3>';
+  h+='<p>Before two equations, look at one. <span class="m">T₁′ + kT₁ = 0</span> has the answer <span class="m">T₁ = T₁(0) e<sup>−kt</sup></span>. With T₁(0) = 40:</p>';
+  h+='<table><tr><th>t</th><th>k = 2: 40e<sup>−2t</sup></th><th>k = −2: 40e<sup>2t</sup></th></tr>'+
+     '<tr><td>0</td><td>40</td><td>40</td></tr><tr><td>1</td><td>5.41</td><td>295.6</td></tr><tr><td>2</td><td>0.73</td><td>2184</td></tr></table>';
+  h+='<p>One sign decides everything. Written as <span class="m">T₁′ + kT₁ = 0</span>, “the coefficient is positive” means k &gt; 0, i.e. it cools. The second-order rule is the same idea with two roots.</p>';
+
+  h+='<h3>Step 1 · From two equations to one</h3>';
+  h+='<p>Your notes (a = 2, b = 3, ice bath Tₑ = 0):</p><p class="eq">T₁′ = −2T₁ + 2T₂, &nbsp;&nbsp; T₂′ = 2T₁ − 5T₂</p>';
+  h+='<p>First equation → <span class="m">T₂ = (T₁′ + 2T₁)/2</span>. Substituting into the second and multiplying by 2 gives <span class="m">T₁″ + 7T₁′ + 6T₁ = 0</span>, where 7 = 2a + b and 6 = ab.</p>';
+
+  h+='<h3>Step 2 · Solve for T₁, then read off T₂</h3>';
+  h+='<p><span class="m">r² + 7r + 6 = (r + 1)(r + 6) = 0</span> → r = −1, −6 → <span class="m">T₁ = c₁e<sup>−t</sup> + c₂e<sup>−6t</sup></span>.</p>';
+  h+='<p>Then <span class="m">T₂ = (T₁′ + 2T₁)/2 = ½c₁e<sup>−t</sup> − 2c₂e<sup>−6t</sup></span>, with the same two constants (solving separately for T₂ would bring two extra constants the system does not have).</p>';
+  h+='<p>T₁(0) = 40 and T₂(0) = 45 give 40 = c₁ + c₂ and 45 = ½c₁ − 2c₂, so c₂ = −10, c₁ = 50:</p>';
+  h+='<div class="box"><span class="eq">T₁ = 50e<sup>−t</sup> − 10e<sup>−6t</sup></span><br><span class="eq">T₂ = 25e<sup>−t</sup> + 20e<sup>−6t</sup></span></div>';
+  h+='<table><tr><th>t</th><th>T₁ yolk</th><th>T₂ white</th></tr><tr><td>0</td><td>40</td><td>45</td></tr><tr><td>1</td><td>18.37</td><td>9.25</td></tr><tr><td>3</td><td>2.49</td><td>1.25</td></tr><tr><td>5</td><td>0.34</td><td>0.17</td></tr></table>';
+  h+='<p>Both pieces have a negative exponent, so both die, and T₁, T₂ → 0. (The yolk first warms slightly, to about 40.18° at t ≈ 0.036, because the white starts hotter.)</p>';
+
+  h+='<h3>Step 3 · So the real question is: where are the roots?</h3>';
+  h+='<p>Each root r gives a piece <span class="m">e<sup>rt</sup></span>. A real root &lt; 0 shrinks; a real root &gt; 0 grows. A complex pair <span class="m">α ± iβ</span> gives <span class="m">e<sup>αt</sup>(cos βt, sin βt)</span>: a wiggle whose size is e<sup>αt</sup>. Only the real part decides growth.</p>';
+  h+='<div class="box">Stable ⇔ every root has a negative real part (left half of the roots picture).</div>';
+  h+='<h3>Step 3b · The “envelope” (grey dotted curves on the plot)</h3>';
+  h+='<p>When the roots are complex, α ± iβ, the solution is <span class="m">T₁ = e<sup>αt</sup>(c₁ cos βt + c₂ sin βt)</span>. The cos/sin mix can be merged into one cosine, <span class="m">A cos(βt − φ)</span>, with <span class="m">A = √(c₁² + c₂²)</span>. So</p>';
+  h+='<p class="eq">T₁ = A e<sup>αt</sup> cos(βt − φ) &nbsp;⇒&nbsp; −A e<sup>αt</sup> ≤ T₁ ≤ A e<sup>αt</sup></p>';
+  h+='<p>The two curves <span class="m">±A e<sup>αt</sup></span> are the <b>envelope</b>: the boundary that the wiggling T₁ touches but never crosses. With p = 1 (T₁(0) = 40, T₂(0) = 45): A = 41.91, α = −0.5, so the envelope is ±41.91e<sup>−0.5t</sup>, e.g. ±15.42 at t = 2.</p>';
+  h+='<div class="box">The envelope is <b>not</b> a temperature (T₁ and T₂ are the only temperatures). It is the swing size of T₁, and it shows stability at a glance: shrinking envelope (α &lt; 0) → stable; flat (α = 0, the p = 0 case) → swings forever; growing (α &gt; 0) → unstable. With real roots there is no wiggle, and the grey dashed curves are instead the two pieces c₁e<sup>r₁t</sup>, c₂e<sup>r₂t</sup> that add up to T₁.</div>';
+
+  h+='<h3>Step 4 · Why “left half” means p &gt; 0 and q &gt; 0</h3>';
+  h+='<p>Multiply out <span class="m">(r − r₁)(r − r₂) = r² − (r₁ + r₂)r + r₁r₂</span> and compare with <span class="m">r² + pr + q</span>:</p>';
+  h+='<p class="eq">r₁ + r₂ = −p, &nbsp;&nbsp; r₁ · r₂ = q</p><p>Egg check: (−1) + (−6) = −7 ✓, (−1)(−6) = 6 ✓.</p>';
+  h+='<p><b>Real roots.</b> Two negatives multiply to a positive (q &gt; 0) and add to a negative (p &gt; 0).</p>';
+  h+='<p><b>Complex roots α ± iβ.</b> The sum is 2α = −p, so α = −p/2: decays only if p &gt; 0. The product α² + β² is positive automatically.</p>';
+  h+='<p><b>And back again.</b> If p &gt; 0 and q &gt; 0, a positive product means real roots share a sign and a negative sum makes it minus; complex roots have α = −p/2 &lt; 0. The test is exact both ways.</p>';
+
+  h+='<h3>Step 5 · What each broken sign does</h3>';
+  h+='<div class="neu"><b>p = 0 (drop 7T₁′):</b> <span class="m">T₁″ + 6T₁ = 0</span>, r = ±2.449i, α = 0. T₁ = 40 cos 2.449t + 4.08 sin 2.449t swings with size ≈ 40.2 forever. This is what the professor meant: the T₁′ term is the damping, like friction on a spring. Without it the oscillation never shrinks, so T₁ never reaches 0. (Step 5b below shows why.)</div>';
+  h+='<div class="bad"><b>p &lt; 0, e.g. −1:</b> r = 0.5 ± 2.40i. Now α = +0.5, so the swings grow, doubling every ln 2/0.5 ≈ 1.39 time units. A negative p is “anti-friction”: it pumps energy in.</div>';
+  h+='<div class="bad"><b>q &lt; 0, e.g. p = 7, q = −6:</b> r = 0.772, −7.772. The product is negative, so one root must be positive. e<sup>0.772t</sup> blows up without any wiggling. Even a big positive p cannot save it.</div>';
+  h+='<div class="neu"><b>q = 0:</b> one root is 0, so a constant piece survives. T₁ settles at a value other than 0.</div>';
+  h+='<div class="ok"><b>All negative:</b> −T₁″ − 7T₁′ − 6T₁ = 0 is the egg equation multiplied by −1: same roots, still stable. So the precise rule is <b>all coefficients have the same sign</b> (your note: “or all &lt; 0”). “Positive” is the usual wording only because we normally write the T₁″ coefficient as 1.</div><div class="bad"><b>Mixed signs, e.g. −T₁″ + 7T₁′ + 6T₁ = 0:</b> divide by −1 to make the leading coefficient 1: T₁″ − 7T₁′ − 6T₁ = 0. Now p = −7 and q = −6, so roots 7.77 and −0.77, and it blows up. Dividing by m is why the sign of m matters: the test really looks at p/m and q/m.</div>';
+
+  h+='<h3>Step 5b · Why removing the middle term gives endless oscillation</h3>';
+  h+='<p><b>Picture 1: a pull back toward 0.</b> With p = 0 the equation is <span class="m">T₁″ = −6T₁</span>. Read it as “the curve bends toward 0, harder the further away it is”:</p>';
+  h+='<ul style="margin:0 0 6px;padding-left:18px"><li>T₁ &gt; 0 → T₁″ &lt; 0: the slope keeps falling, so T₁ heads down toward 0.</li>'+
+     '<li>At T₁ = 0 the pull is zero, but the slope is not: T₁ is moving fast, so it <i>overshoots</i> below 0.</li>'+
+     '<li>T₁ &lt; 0 → T₁″ &gt; 0: now it is pulled back up, overshoots again… forever.</li></ul>';
+  h+='<p>That is exactly a mass on a spring (T₁″ = −k·T₁). Nothing in the equation slows the motion down, so no swing is ever smaller than the last.</p>';
+  h+='<p><b>Picture 2: a quantity that cannot change (worked numbers).</b> Multiply <span class="m">T₁″ + 6T₁ = 0</span> by <span class="m">T₁′</span>:</p>';
+  h+='<p class="eq">T₁′T₁″ + 6T₁T₁′ = 0 &nbsp;⇔&nbsp; d/dt [ ½(T₁′)² + 3T₁² ] = 0</p>';
+  h+='<p>So <span class="m">E = ½(T₁′)² + 3T₁²</span> (“energy”) never changes. At the start T₁ = 40, T₁′ = 10: E = ½·100 + 3·1600 = <b>4850</b>, forever.</p>';
+  h+='<table><tr><th>moment</th><th>T₁</th><th>T₁′</th><th>E</th></tr>'+
+     '<tr><td>start</td><td>40</td><td>10</td><td>4850</td></tr>'+
+     '<tr><td>crossing 0</td><td>0</td><td>±√9700 ≈ ±98.5</td><td>4850</td></tr>'+
+     '<tr><td>turning point</td><td>±√(4850/3) ≈ ±40.2</td><td>0</td><td>4850</td></tr></table>';
+  h+='<p>For T₁ to settle at 0 we would need E = 0, but E is stuck at 4850. So T₁ must keep reaching ±40.2. It can never stop at 0.</p>';
+  h+='<p><b>Put the middle term back.</b> Multiply <span class="m">T₁″ + pT₁′ + 6T₁ = 0</span> by T₁′ the same way:</p>';
+  h+='<p class="eq">dE/dt = −p·(T₁′)²</p>';
+  h+='<div class="ok">p &gt; 0: dE/dt ≤ 0, energy drains away every moment T₁ moves → T₁ → 0. This is why the professor says the 7T₁′ term is required.</div>';
+  h+='<div class="neu">p = 0: dE/dt = 0 → energy is kept → oscillates forever with the same size.</div>';
+  h+='<div class="bad">p &lt; 0: dE/dt ≥ 0 → energy is pumped in → the swings grow.</div>';
+  h+='<p>And q? Here E = ½(T₁′)² + ½q·T₁². If q &lt; 0 the “spring” pushes <i>away</i> from 0 instead of pulling back, so T₁ runs off no matter how much damping there is.</p>';
+
+  h+='<h3>Step 6 · Can the actual egg oscillate?</h3>';
+  h+='<p>No. With <span class="m">p = 2a + b</span>, <span class="m">q = ab</span>: <span class="m">D = (2a + b)² − 4ab = 4a² + b² &gt; 0</span>. Always two different negative real roots, so smooth cooling. The oscillation remark describes the general equation T₁″ + pT₁′ + qT₁ = 0 (the spring picture), explaining what the T₁′ term is for. On the map, egg settings always land under the dashed curve q = p²/8, far from the wiggly region.</p>';
+
+  h+='<h3>Summary</h3><table><tr><th>signs (m = 1)</th><th>roots</th><th>long run</th></tr>'+
+     '<tr><td>p &gt; 0, q &gt; 0</td><td>both left</td><td>T₁, T₂ → 0</td></tr>'+
+     '<tr><td>p = 0, q &gt; 0</td><td>on the axis ±iβ</td><td>oscillates forever</td></tr>'+
+     '<tr><td>p &lt; 0, q &gt; 0</td><td>both right</td><td>grows (often wiggling)</td></tr>'+
+     '<tr><td>q &lt; 0</td><td>one right, one left</td><td>blows up</td></tr>'+
+     '<tr><td>q = 0</td><td>0 and −p</td><td>stops at a constant</td></tr></table>';
+  h+='<p class="hint">Caution: “all coefficients positive” is enough only for second order. For r³ + a₂r² + a₁r + a₀ you also need a₂a₁ &gt; a₀ (Routh–Hurwitz).</p>';
+  return h;
+}
+
+/* ------------------------------------------------------------------ */
+/* controls                                                           */
+/* ------------------------------------------------------------------ */
+var KEYS=['m','p','q','a','b','T10','T20','tmax'];
+function syncInputs(){
+  KEYS.forEach(function(k){ var s=$('s_'+k), n=$('n_'+k); if(document.activeElement!==n) n.value=+(+S[k]).toFixed(3); s.value=S[k]; });
+  $('eggGrp').classList.toggle('off',!S.egg);
+  syncIC(); $('icNote').innerHTML='Starting slope from the yolk equation: <b>T₁′(0) = a(T₂(0) − T₁(0)) = '+f(S.a)+'·('+f(S.T20)+' − '+par(S.T10)+') = '+f(S.v0)+'</b>';
+  $('eggNote').innerHTML=S.egg?'Linked: <b>p = 2·'+f(S.a)+' + '+f(S.b)+' = '+f(2*S.a+S.b)+'</b>, <b>q = '+f(S.a)+'·'+f(S.b)+' = '+f(S.a*S.b)+'</b>. Moving m, p or q unlinks the egg.':
+    'Not linked: m, p, q were set by hand. Move a or b to rebuild them from egg physics.';
+  $('swc').value=S.swc; if(document.activeElement!==$('swFrom')) $('swFrom').value=S.swFrom; if(document.activeElement!==$('swTo')) $('swTo').value=S.swTo;
+  $('fam').checked=S.family; $('play').textContent=S.playing?'Pause sweep':'Play sweep'; $('play').classList.toggle('act',S.playing);
+  $('pieces').checked=S.pieces; $('showT2').checked=S.showT2;
+}
+function setVal(k,v){
+  if(!isFinite(v)) return;
+  if(k==='a'&&v<0.1) v=0.1; if(k==='b'&&v<0) v=0; if(k==='tmax'&&v<0.5) v=0.5;
+  S[k]=v;
+  if(k==='a'||k==='b'){ S.egg=true; S.m=1; S.p=+(2*S.a+S.b).toFixed(6); S.q=+(S.a*S.b).toFixed(6); }
+  if(k==='m'||k==='p'||k==='q') S.egg=false;
+  update();
+}
+KEYS.forEach(function(k){
+  $('s_'+k).addEventListener('input',function(){ setVal(k,parseFloat(this.value)); });
+  $('n_'+k).addEventListener('input',function(){ var v=parseFloat(this.value); if(this.value!==''&&this.value!=='-') setVal(k,v); });
+  $('n_'+k).addEventListener('change',function(){ syncInputs(); });
+});
+document.querySelectorAll('.flip').forEach(function(b){ b.addEventListener('click',function(){ var k=b.getAttribute('data-k'); setVal(k,-S[k]); }); });
+
+var IC={T10:40,T20:45};
+var PRESETS=[
+  ['Professor\'s egg (a=2, b=3)',{m:1,p:7,q:6,a:2,b:3,egg:true,T10:40,T20:45,tmax:8}],
+  ['Drop the T₁′ term (p = 0)',mix(IC,{m:1,p:0,q:6,tmax:12})],
+  ['Light damping (p = 1)',mix(IC,{m:1,p:1,q:6,tmax:12})],
+  ['Negative p (p = −1)',mix(IC,{m:1,p:-1,q:6,tmax:8})],
+  ['Negative q (q = −6)',mix(IC,{m:1,p:7,q:-6,tmax:5})],
+  ['q = 0',mix(IC,{m:1,p:7,q:0,tmax:6})],
+  ['Critical (p² = 4q)',mix(IC,{m:1,p:4,q:4,tmax:8})],
+  ['All negative (−1, −7, −6)',mix(IC,{m:-1,p:-7,q:-6,tmax:8})],
+  ['Mixed (−1, +7, +6)',mix(IC,{m:-1,p:7,q:6,tmax:4})]
+];
+PRESETS.forEach(function(P){
+  var b=document.createElement('button'); b.className='b'; b.textContent=P[0];
+  b.addEventListener('click',function(){ stopPlay(); stopClock(); S.egg=false; S.family=false; for(var k in P[1]) S[k]=P[1][k]; update(); });
+  $('presets').appendChild(b);
+});
+$('swc').addEventListener('change',function(){ S.swc=this.value;
+  var d={m:[-1.5,1.5],p:[-3,9],q:[-6,9]}[S.swc]; S.swFrom=d[0]; S.swTo=d[1]; update(); });
+$('swFrom').addEventListener('input',function(){ var v=parseFloat(this.value); if(isFinite(v)){ S.swFrom=v; update(); } });
+$('swTo').addEventListener('input',function(){ var v=parseFloat(this.value); if(isFinite(v)){ S.swTo=v; update(); } });
+$('fam').addEventListener('change',function(){ S.family=this.checked; update(); });
+$('pieces').addEventListener('change',function(){ S.pieces=this.checked; update(); });
+$('showT2').addEventListener('change',function(){ S.showT2=this.checked; update(); });
+
+/* sweep animation (ping-pong) */
+var raf=null, dir=1, lastT=0;
+function stopPlay(){ S.playing=false; if(raf) cancelAnimationFrame(raf); raf=null; }
+$('play').addEventListener('click',function(){
+  if(S.playing){ stopPlay(); update(); return; }
+  startSweep();
+});
+function startSweep(){
+  if(S.swTo===S.swFrom) return;
+  S.playing=true; S.egg=false;
+  var lo=Math.min(S.swFrom,S.swTo), hi=Math.max(S.swFrom,S.swTo);
+  if(S[S.swc]<lo||S[S.swc]>hi) S[S.swc]=S.swFrom;
+  dir=S.swTo>S.swFrom?1:-1; lastT=0;
+  var step=function(ts){
+    if(!S.playing) return;
+    if(!lastT) lastT=ts; var dt=Math.min(0.05,(ts-lastT)/1000); lastT=ts;
+    var lo=Math.min(S.swFrom,S.swTo), hi=Math.max(S.swFrom,S.swTo), v=S[S.swc]+dir*(hi-lo)/6*dt;
+    if(v>=hi){ v=hi; dir=-1; } if(v<=lo){ v=lo; dir=1; }
+    S[S.swc]=Math.round(v*1000)/1000; update(); raf=requestAnimationFrame(step);
+  };
+  update(); raf=requestAnimationFrame(step);
+}
+
+/* hover on time plot */
+function hoverAt(e){
+  if(CLK.on) return;
+  var r=tC.getBoundingClientRect(), x=(e.clientX-r.left)/SCALE;
+  var t=(x-TP.L)/TP.pw*S.tmax; S.hover=(t<0||t>S.tmax)?null:t; drawTime(); renderPanel();
+}
+tC.addEventListener('pointermove',hoverAt);
+tC.addEventListener('pointerdown',hoverAt);
+tC.addEventListener('pointerleave',function(){ if(CLK.on) return; S.hover=null; drawTime(); renderPanel(); });
+
+/* play time: moving playhead + egg colours */
+var CLK={on:false,raf:null,last:0};
+function stopClock(){ CLK.on=false; if(CLK.raf) cancelAnimationFrame(CLK.raf); CLK.raf=null; $('playT').textContent='▶ Play time (watch the egg)'; $('playT').classList.remove('act'); }
+$('playT').addEventListener('click',function(){
+  if(CLK.on){ stopClock(); return; }
+  CLK.on=true; CLK.last=0; S.hover=0; $('playT').textContent='❚❚ Pause time'; $('playT').classList.add('act');
+  var step=function(ts){ if(!CLK.on) return; if(!CLK.last) CLK.last=ts; var dt=Math.min(0.05,(ts-CLK.last)/1000); CLK.last=ts;
+    S.hover=Math.min(S.tmax,(S.hover||0)+S.tmax/7*dt); drawTime(); renderPanel();
+    if(S.hover>=S.tmax){ stopClock(); return; } CLK.raf=requestAnimationFrame(step); };
+  CLK.raf=requestAnimationFrame(step);
+});
+
+/* map drag */
+var mapDrag=false;
+mC.addEventListener('pointerdown',function(e){ stopPlay(); mapDrag=true; mC.setPointerCapture(e.pointerId); mapPick(e); });
+mC.addEventListener('pointermove',function(e){ if(mapDrag) mapPick(e); });
+mC.addEventListener('pointerup',function(){ mapDrag=false; });
+mC.addEventListener('pointercancel',function(){ mapDrag=false; });
+
+/* ------------------------------------------------------------------ */
+/* update / redraw                                                    */
+/* ------------------------------------------------------------------ */
+var calcScroll=0;
+function redraw(){
+  var sol=current(); refreshCG(sol);
+  drawEq(sol); drawTime(); drawRoots(); drawMap();
+  renderPanel();
+  refreshExpl();
+}
+function update(){ syncIC(); syncInputs(); redraw(); }
+
+/* ------------------------------------------------------------------ */
+/* stage fit + floating panel                                         */
+/* ------------------------------------------------------------------ */
+var wrap=$('wrap'), stage=$('stage'), expl=$('expl'), explBtn=$('explBtn');
+var STAGE_W=1180, STAGE_H=848;
+var PANEL={open:false,min:false,dragged:false,x:30,y:52,w:500,h:560};
+function placePanel(){
+  if(!PANEL.dragged){ PANEL.x=stage.className==='port'?40:30; PANEL.y=52; }
+  expl.style.left=PANEL.x+'px'; expl.style.top=PANEL.y+'px';
+  if(!expl.style.width){ expl.style.width=PANEL.w+'px'; expl.style.height=PANEL.h+'px'; }
+}
+function fit(){
+  var vw=wrap.clientWidth, vh=wrap.clientHeight, portrait=vw<vh*0.95;
+  stage.className=portrait?'port':'land';
+  STAGE_W=portrait?660:1180; STAGE_H=portrait?1400:848;
+  var s=Math.min(vw/STAGE_W, vh/STAGE_H); SCALE=s;
+  PANEL.w=portrait?580:500; PANEL.h=portrait?760:600;
+  stage.style.transform='scale('+s+')';
+  stage.style.left=Math.max(0,(vw-STAGE_W*s)/2)+'px';
+  stage.style.top=Math.max(0,(vh-STAGE_H*s)/2)+'px';
+  expl.style.width=''; expl.style.height=''; placePanel();
+  [tC,rC,mC].forEach(setupCanvas); redraw();
+}
+function refreshExpl(){ if(PANEL.open&&!PANEL.min) $('explBody').innerHTML=explain(); pushExpl(); }
+function setPanel(open){
+  PANEL.open=open; expl.classList.toggle('open',open);
+  explBtn.textContent=(open?'− ':'+ ')+'explanation'; explBtn.setAttribute('aria-expanded',open);
+  placePanel(); refreshExpl();
+}
+/* The new tab is this same file opened with #explain. It receives the
+   current settings in the address and then follows live changes through
+   a BroadcastChannel. No pop-up writing, no generated pages. */
+var chan=null; try{ chan=new BroadcastChannel('egg-stability-explain'); }catch(e){ chan=null; }
+var STATE_KEYS=['m','p','q','a','b','T10','T20','tmax','egg','hover'];
+function packState(){ var o={}; STATE_KEYS.forEach(function(k){ o[k]=S[k]; }); return o; }
+var tabOpened=false;
+function pushExpl(){ if(tabOpened&&chan) try{ chan.postMessage(packState()); }catch(e){} }
+function openExplTab(){
+  var url=location.href.split('#')[0]+'#explain='+encodeURIComponent(JSON.stringify(packState()));
+  var w=null; try{ w=window.open(url,'egg_explanation'); }catch(e){ w=null; }
+  if(!w){ alert('The browser blocked the new tab. Please allow pop-ups for this page.'); return; }
+  tabOpened=true; setPanel(false);
+}
+$('explTab').addEventListener('click',function(e){ e.stopPropagation(); openExplTab(); });
+explBtn.addEventListener('click',function(){ setPanel(!PANEL.open); });
+$('explClose').addEventListener('click',function(e){ e.stopPropagation(); setPanel(false); });
+$('explMin').addEventListener('click',function(e){
+  e.stopPropagation(); PANEL.min=!PANEL.min; expl.classList.toggle('min',PANEL.min);
+  this.innerHTML=PANEL.min?'&#9633;':'&#8211;'; this.title=PANEL.min?'Restore':'Minimize'; refreshExpl();
+});
+(function(){
+  var bar=$('explBar'), d=null;
+  bar.addEventListener('pointerdown',function(e){ if(e.target.classList.contains('ib')) return;
+    d={x0:e.clientX,y0:e.clientY,px:PANEL.x,py:PANEL.y}; bar.setPointerCapture(e.pointerId); });
+  bar.addEventListener('pointermove',function(e){ if(!d) return;
+    PANEL.x=Math.max(-150,Math.min(STAGE_W-90,d.px+(e.clientX-d.x0)/SCALE));
+    PANEL.y=Math.max(0,Math.min(STAGE_H-30,d.py+(e.clientY-d.y0)/SCALE));
+    PANEL.dragged=true; expl.style.left=PANEL.x+'px'; expl.style.top=PANEL.y+'px'; });
+  var up=function(){ d=null; }; bar.addEventListener('pointerup',up); bar.addEventListener('pointercancel',up);
+})();
+document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&PANEL.open) setPanel(false); });
+
+if(location.hash.indexOf('#explain')===0){
+  try{ var st=JSON.parse(decodeURIComponent(location.hash.slice(9))); for(var k in st) S[k]=st[k]; }catch(e){}
+  document.title='Explanation: why the coefficients must be positive';
+  wrap.style.display='none';
+  document.documentElement.style.overflow='auto'; document.body.style.overflow='auto';
+  var pg=document.createElement('div'); pg.className='body';
+  pg.style.cssText='max-width:820px;margin:0 auto;padding:14px 18px 40px;font-size:14.5px;line-height:1.6';
+  var hd=document.createElement('div');
+  hd.style.cssText='position:sticky;top:0;padding:9px 16px;background:var(--box);border-bottom:1px solid var(--line);font-weight:700;font-size:14px;z-index:2';
+  hd.textContent='Why the coefficients must be positive (follows the sliders in the main tab)';
+  document.body.appendChild(hd); document.body.appendChild(pg);
+  var show=function(){ pg.innerHTML=explain(); }; show();
+  if(chan) chan.onmessage=function(ev){ for(var k in ev.data) S[k]=ev.data[k]; show(); };
+  return;
+}
+window.addEventListener('resize',fit);
+if(window.ResizeObserver) new ResizeObserver(function(){ fit(); }).observe(wrap);
+syncInputs(); fit(); showLesson(true);
+})();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

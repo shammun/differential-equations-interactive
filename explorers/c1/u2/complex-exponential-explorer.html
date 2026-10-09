@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The complex exponential e^((a+bi)t)</title>
+<style>
+:root{
+  --bg:#EEF3FA; --card:#FFFFFF; --ink:#1C2430; --muted:#5C6B80;
+  --line:#DCE4EF; --shadow:0 2px 14px rgba(90,79,207,.09);
+  --amp:#C25E1B; --amp-bg:#FBEFE4; --amp-line:#E8B98C;
+  --ang:#0F7F6E; --ang-bg:#E2F3F0; --ang-line:#8ACFC3;
+  --act:#5A4FCF; --act-bg:#EEEDFB;
+  --r:12px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1000px;margin:0 auto;padding:28px 20px 72px}
+
+header{margin-bottom:22px}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:32px;line-height:1.2;margin:0 0 6px}
+h1 em{font-style:italic;color:var(--act)}
+.sub{color:var(--muted);margin:0;max-width:66ch}
+
+nav{display:flex;gap:6px;flex-wrap:wrap;margin:24px 0 18px;border-bottom:1px solid var(--line);padding-bottom:0}
+nav button{appearance:none;border:0;background:transparent;font:inherit;font-size:14px;color:var(--muted);
+  padding:9px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;border-radius:6px 6px 0 0}
+nav button:hover{color:var(--ink);background:rgba(90,79,207,.05)}
+nav button[aria-selected="true"]{color:var(--act);border-bottom-color:var(--act);font-weight:600}
+nav button:focus-visible{outline:2px solid var(--act);outline-offset:2px}
+
+.panel[hidden]{display:none}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:22px 24px;margin-bottom:18px}
+.card h2{font-family:Georgia,serif;font-weight:400;font-size:21px;margin:0 0 4px}
+.card h3{font-size:15px;font-weight:600;margin:20px 0 6px}
+.card p{margin:0 0 12px;max-width:74ch}
+.lead{color:var(--muted)}
+small{font-size:13.5px}
+
+/* math typesetting */
+.m{font-family:Georgia,"Times New Roman",serif;font-style:italic;white-space:nowrap}
+.m .op,.m .num{font-style:normal}
+.eq{font-family:Georgia,serif;font-size:22px;text-align:center;margin:16px 0;line-height:1.9}
+.eq .op{font-style:normal}
+.tag-a{color:var(--amp);font-style:italic}
+.tag-b{color:var(--ang);font-style:italic}
+.chip-a{background:var(--amp-bg);color:var(--amp);border-radius:6px;padding:2px 7px}
+.chip-b{background:var(--ang-bg);color:var(--ang);border-radius:6px;padding:2px 7px}
+
+/* stepper */
+.stepsbox{max-height:min(48vh,440px);overflow-y:auto;padding:2px 10px 2px 0;scroll-behavior:smooth;
+  border-radius:8px}
+.stepsbox::-webkit-scrollbar{width:8px}
+.stepsbox::-webkit-scrollbar-thumb{background:#CBD5E4;border-radius:4px}
+.scrollnote{font-size:12.5px;color:var(--muted);margin:0 0 8px;display:none}
+.scrollnote.on{display:block}
+.step{border-left:3px solid var(--line);padding:2px 0 2px 18px;margin:0 0 4px;
+  opacity:.45;transition:opacity .25s,border-color .25s,background .25s}
+.step.on{border-left-color:var(--act);opacity:1;background:#F6F5FE;border-radius:0 10px 10px 0;padding-right:14px}
+.step.on .lbl{color:var(--act);font-weight:600}
+.step .lbl{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:12px 0 2px}
+.step .why{color:var(--muted);font-size:14.5px;margin:2px 0 14px;max-width:70ch}
+.step[hidden]{display:none}
+.btnrow{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
+button.act{appearance:none;font:inherit;font-size:14px;background:var(--act);color:#fff;border:0;
+  border-radius:8px;padding:9px 16px;cursor:pointer}
+button.act:hover{filter:brightness(1.08)}
+button.act[disabled]{opacity:.4;cursor:default}
+button.ghost{appearance:none;font:inherit;font-size:14px;background:transparent;color:var(--act);
+  border:1px solid var(--act);border-radius:8px;padding:8px 14px;cursor:pointer}
+button.ghost:hover{background:var(--act-bg)}
+button:focus-visible{outline:2px solid var(--act);outline-offset:2px}
+
+/* decoder */
+.decoder{background:linear-gradient(0deg,var(--bg),var(--bg));border-radius:var(--r);padding:18px;margin:6px 0 0}
+.dec-eq{font-family:Georgia,serif;font-size:26px;text-align:center;margin:4px 0 2px}
+.dec-arrows{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}
+.dec-box{border-radius:10px;padding:12px 14px}
+.dec-box.a{background:var(--amp-bg);border:1px solid var(--amp-line)}
+.dec-box.b{background:var(--ang-bg);border:1px solid var(--ang-line)}
+.dec-box .k{font-size:12px;letter-spacing:.09em;text-transform:uppercase;margin:0 0 3px}
+.dec-box.a .k{color:var(--amp)} .dec-box.b .k{color:var(--ang)}
+.dec-box .v{font-family:Georgia,serif;font-size:19px;margin:0 0 6px}
+.dec-box small{display:block;color:#40506A;line-height:1.5}
+
+/* layout */
+.two{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:22px;align-items:start}
+@media(max-width:820px){.two{grid-template-columns:1fr}}
+canvas{display:block;width:100%;height:auto;border-radius:10px;background:#fff}
+
+.ctrl{margin-bottom:16px}
+.ctrl .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px}
+.ctrl label{font-size:14px;font-weight:600}
+.ctrl .val{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px}
+.ctrl .hint{font-size:13px;color:var(--muted);margin-top:3px}
+input[type=range]{width:100%;accent-color:var(--act);height:22px}
+input[type=range].a{accent-color:var(--amp)}
+input[type=range].b{accent-color:var(--ang)}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:14px 0 0}
+.stat{background:var(--bg);border-radius:10px;padding:10px 12px}
+.stat .k{font-size:12px;color:var(--muted);margin:0}
+.stat .v{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px;margin:2px 0 0}
+
+.note{border-radius:10px;padding:12px 14px;font-size:14.5px;margin:0 0 12px}
+.note.a{background:var(--amp-bg);color:#7A3A10}
+.note.b{background:var(--ang-bg);color:#0A5A4E}
+.note.act{background:var(--act-bg);color:#3B32A0}
+.note strong{font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:14.5px;margin:8px 0 4px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td.c,th.c{text-align:center}
+
+.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.tile{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;cursor:pointer;
+  border:2px solid transparent;text-align:left;font:inherit;color:inherit}
+.tile:hover{border-color:var(--act)}
+.tile h4{margin:0 0 2px;font-size:15px}
+.tile p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
+.tile canvas{margin-bottom:8px;background:var(--bg)}
+
+.mcq{list-style:none;padding:0;margin:10px 0 0}
+.mcq li{margin-bottom:8px}
+.mcq button{width:100%;text-align:left;font:inherit;font-size:14.5px;background:#fff;border:1px solid var(--line);
+  border-radius:9px;padding:10px 14px;cursor:pointer}
+.mcq button:hover{border-color:var(--act)}
+.mcq button.right{border-color:var(--ang);background:var(--ang-bg);color:#0A5A4E;font-weight:600}
+.mcq button.wrong{border-color:#C0392B;background:#FBEBEA;color:#8E2A20}
+.verdict{font-size:14.5px;margin-top:10px;min-height:1.4em}
+
+footer{color:var(--muted);font-size:13.5px;text-align:center;margin-top:26px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">18.03 · Unit 2 · complex exponentials</p>
+  <h1>What does <em>e<sup>(a+bi)t</sup></em> actually draw?</h1>
+  <p class="sub">Two real knobs, <span class="tag-a">a</span> and <span class="tag-b">b</span>, decide everything.
+  One sets how far the point is from the origin; the other sets which way it turns. Start with the algebra, then turn the knobs.</p>
+</header>
+
+<nav role="tablist">
+  <button role="tab" id="t0" aria-selected="true" aria-controls="p0">1 · The derivation</button>
+  <button role="tab" id="t1" aria-selected="false" aria-controls="p1">2 · Turn the knobs</button>
+  <button role="tab" id="t2" aria-selected="false" aria-controls="p2">3 · The four shapes</button>
+  <button role="tab" id="t3" aria-selected="false" aria-controls="p3">4 · Worked examples</button>
+</nav>
+
+<!-- ============================= TAB 1 ============================= -->
+<section class="panel" id="p0" role="tabpanel" aria-labelledby="t0">
+
+<div class="card">
+  <h2>Simplify it one step at a time</h2>
+  <p class="lead">Nothing here is a trick. Each line uses one rule, named underneath it.</p>
+
+  <p class="scrollnote" id="scrollnote">Earlier steps are above &mdash; scroll up inside this box to revisit them.</p>
+  <div class="stepsbox" id="steps"></div>
+
+  <div class="btnrow">
+    <button class="act" id="next">Show next step</button>
+    <button class="ghost" id="reset">Start over</button>
+    <span id="progress" style="font-size:13.5px;color:var(--muted)"></span>
+  </div>
+</div>
+
+<div class="card" id="decoderCard" hidden>
+  <h2>Reading the answer as polar form</h2>
+  <p>Polar form says any nonzero complex number is
+     <span class="m">r&#8202;e<sup>i&#952;</sup></span> — a distance <span class="m">r</span> and an angle <span class="m">&#952;</span>.
+     Line the final expression up against that template and the two ingredients fall out:</p>
+
+  <div class="decoder">
+    <div class="dec-eq">
+      <span class="m">e<sup>(a+bi)t</sup></span>
+      <span class="op">&nbsp;=&nbsp;</span>
+      <span class="chip-a m">e<sup>at</sup></span>
+      <span class="op">&nbsp;&#183;&nbsp;</span>
+      <span class="chip-b m">e<sup>i&#8202;bt</sup></span>
+      <span class="op" style="color:var(--muted)">&nbsp;&nbsp;&#8596;&nbsp;&nbsp;</span>
+      <span class="m" style="color:var(--muted)">r&#8202;e<sup>i&#952;</sup></span>
+    </div>
+    <div class="dec-arrows">
+      <div class="dec-box a">
+        <p class="k">a controls the radius</p>
+        <p class="v"><span class="m">r(t) = e<sup>at</sup></span></p>
+        <small>Notice <span class="m">b</span> is nowhere in this expression. The distance from the origin
+        depends on <span class="m">a</span> alone.</small>
+      </div>
+      <div class="dec-box b">
+        <p class="k">b controls the angle</p>
+        <p class="v"><span class="m">&#952;(t) = bt</span></p>
+        <small>And <span class="m">a</span> is nowhere in this one. The direction depends on
+        <span class="m">b</span> alone.</small>
+      </div>
+    </div>
+  </div>
+
+  <h3>Why that separation is the whole story</h3>
+  <p>Because the two knobs never touch each other, you can reason about them one at a time and then just
+     combine the verdicts. That is what the next tab lets you do by hand.</p>
+
+  <table>
+    <thead><tr><th>Knob</th><th>Value</th><th>What the point does</th></tr></thead>
+    <tbody>
+      <tr><td rowspan="3" class="tag-a">a<br><small style="color:var(--muted)">radius</small></td>
+          <td><span class="m">a &gt; 0</span></td><td><span class="m">e<sup>at</sup></span> grows — moves <strong>outward</strong></td></tr>
+      <tr><td><span class="m">a = 0</span></td><td><span class="m">e<sup>0</sup> = 1</span> forever — <strong>stays</strong> at distance 1</td></tr>
+      <tr><td><span class="m">a &lt; 0</span></td><td><span class="m">e<sup>at</sup> &#8594; 0</span> — moves <strong>inward</strong></td></tr>
+      <tr><td rowspan="3" class="tag-b">b<br><small style="color:var(--muted)">angle</small></td>
+          <td><span class="m">b &gt; 0</span></td><td>angle increases — turns <strong>counterclockwise</strong></td></tr>
+      <tr><td><span class="m">b = 0</span></td><td>angle stuck at 0 — <strong>never turns</strong></td></tr>
+      <tr><td><span class="m">b &lt; 0</span></td><td>angle decreases — turns <strong>clockwise</strong></td></tr>
+    </tbody>
+  </table>
+
+  <div class="note act" style="margin-top:16px">
+    <strong>One value to memorise:</strong> at <span class="m">t = 0</span> every trajectory starts at
+    <span class="m">e<sup>0</sup> = 1</span>, whatever <span class="m">a</span> and <span class="m">b</span> are.
+    That is the green dot in all the plots.
+  </div>
+
+  <div class="btnrow"><button class="act" id="toExplore">Turn the knobs &#8594;</button></div>
+</div>
+</section>
+
+<!-- ============================= TAB 2 ============================= -->
+<section class="panel" id="p1" role="tabpanel" aria-labelledby="t1" hidden>
+<div class="card">
+  <h2>Turn the knobs</h2>
+  <p class="lead">Move <span class="tag-a">a</span> and <span class="tag-b">b</span> and read the sentence
+     that appears underneath. The purple curve is the whole path; the orange dot is the point right now.</p>
+
+  <div class="two">
+    <div>
+      <div class="ctrl">
+        <div class="top"><label for="sa">a &mdash; radius knob</label><span class="val" id="va">-0.30</span></div>
+        <input type="range" class="a" id="sa" min="-1" max="1" step="0.05" value="-0.3">
+        <div class="hint" id="ha"></div>
+      </div>
+      <div class="ctrl">
+        <div class="top"><label for="sb">b &mdash; angle knob</label><span class="val" id="vb">4.00</span></div>
+        <input type="range" class="b" id="sb" min="-8" max="8" step="0.25" value="4">
+        <div class="hint" id="hb"></div>
+      </div>
+      <div class="ctrl">
+        <div class="top"><label for="st">t &mdash; time</label><span class="val" id="vt">0.00</span></div>
+        <input type="range" id="st" min="0" max="5" step="0.01" value="0">
+        <div class="hint">Drag to step through by hand, or press play.</div>
+      </div>
+      <div class="btnrow">
+        <button class="act" id="play">Play</button>
+        <button class="ghost" id="zero">Reset t to 0</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><p class="k">radius e<sup>at</sup></p><p class="v" id="orad">1.000</p></div>
+        <div class="stat"><p class="k">angle bt</p><p class="v" id="oang">0.0&#176;</p></div>
+        <div class="stat"><p class="k">the number</p><p class="v" id="oz">1.000 + 0.000i</p></div>
+        <div class="stat"><p class="k">turns completed</p><p class="v" id="oturn">0.00</p></div>
+      </div>
+      <p style="font-size:13px;color:var(--muted);margin:10px 0 0;line-height:1.55">
+        <strong style="color:var(--ink)">Turns completed</strong> = |bt| &#247; 2&#960; &mdash; how many full laps
+        around the origin the point has swept since t = 0. One full circle is 2&#960; radians, so dividing the
+        accumulated angle by 2&#960; converts radians into revolutions. A reading of 1.50 means one and a half
+        times around. When b = 0 it never leaves 0.00, because the point never turns.
+      </p>
+    </div>
+
+    <div>
+      <canvas id="main" width="760" height="760" aria-label="Trajectory in the complex plane"></canvas>
+      <div id="verdict" class="note act" style="margin-top:14px"></div>
+      <div id="whyA" class="note a"></div>
+      <div id="whyB" class="note b"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>The two ingredients over time</h2>
+  <p class="lead">Same two knobs, plotted separately. Left: the radius <span class="m">e<sup>at</sup></span>
+     against <span class="m">t</span>. Right: the angle <span class="m">bt</span> against <span class="m">t</span>.
+     The plane picture above is just these two graphs read together.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <canvas id="rplot" width="620" height="330" aria-label="Radius against time"></canvas>
+    <canvas id="aplot" width="620" height="330" aria-label="Angle against time"></canvas>
+  </div>
+  <p style="margin-top:12px"><small class="lead">The radius graph is an exponential; the angle graph is a straight
+     line through the origin with slope <span class="m">b</span>. A straight line for the angle is exactly what
+     &ldquo;turning at a constant rate&rdquo; means.</small></p>
+</div>
+</section>
+
+<!-- ============================= TAB 3 ============================= -->
+<section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+<div class="card">
+  <h2>Only four shapes are possible</h2>
+  <p class="lead">Each knob has three states (positive, zero, negative), but the shape depends only on whether
+     each is zero. Click a tile to load it into the explorer.</p>
+</div>
+<div class="gallery" id="gallery"></div>
+<div class="card" style="margin-top:18px">
+  <h2>Why a spiral is called a spiral</h2>
+  <p>When both knobs are on you can eliminate <span class="m">t</span> altogether. From
+     <span class="m">&#952; = bt</span> we get <span class="m">t = &#952;/b</span>, and substituting into
+     <span class="m">r = e<sup>at</sup></span>:</p>
+  <p class="eq"><span class="m">r = e<sup>(a/b)&#952;</sup></span></p>
+  <p>The radius grows exponentially in the angle — the definition of a <strong>logarithmic spiral</strong>.
+     The ratio <span class="m">a/b</span> is the only thing that sets how tightly it winds: a small
+     <span class="m">|a/b|</span> means many turns per doubling, a large one means it escapes after barely
+     turning at all.</p>
+  <div class="note act">Same shape you get from the powers of a fixed complex number, where
+     <span class="m">r = |w|<sup>n</sup></span> and <span class="m">&#952; = n&#8202;arg(w)</span>. There the
+     parameter jumps in whole steps; here it flows continuously.</div>
+</div>
+</section>
+
+<!-- ============================= TAB 4 ============================= -->
+<section class="panel" id="p3" role="tabpanel" aria-labelledby="t3" hidden>
+<div class="card">
+  <h2>Example 1 &mdash; when is the trajectory a line?</h2>
+  <p>A line means the direction never changes. The direction is
+     <span class="m">&#952;(t) = bt</span>, and the only way that stays constant for all
+     <span class="m">t</span> is <span class="m">b = 0</span>. Then</p>
+  <p class="eq"><span class="m">e<sup>(a+0i)t</sup> = e<sup>at</sup>(cos 0 + i&#8202;sin 0) = e<sup>at</sup> &#183; 1 = e<sup>at</sup></span></p>
+  <p>which is a positive real number sliding along the positive real axis. If <span class="m">a = 0</span> as
+     well it is frozen at 1 and traces nothing, so we also need <span class="m">a &#8800; 0</span>.</p>
+  <div class="note b"><strong>Answer:</strong> <span class="m">b = 0</span>, <span class="m">a</span> any nonzero value.</div>
+  <p><small class="lead">Strictly it is a ray, not a full line: <span class="m">e<sup>at</sup></span> is always
+     positive, so the point never crosses the origin onto the negative side.</small></p>
+  <div class="btnrow"><button class="ghost" data-load="0.5,0">Load a = 0.5, b = 0 in the explorer</button></div>
+</div>
+
+<div class="card">
+  <h2>Example 2 &mdash; describe <span class="m">e<sup>(&#8722;5&#8722;2i)t</sup></span> as <span class="m">t &#8594; &#8734;</span></h2>
+  <p>Match it to the template <span class="m">e<sup>(a+bi)t</sup></span>: here
+     <span class="chip-a m">a = &#8722;5</span> and <span class="chip-b m">b = &#8722;2</span>. Split it:</p>
+  <p class="eq"><span class="m">e<sup>(&#8722;5&#8722;2i)t</sup> = <span class="chip-a">e<sup>&#8722;5t</sup></span> <span class="chip-b">e<sup>i(&#8722;2t)</sup></span></span></p>
+  <p>Now read the two knobs separately:</p>
+  <div class="note a"><strong>Radius:</strong> <span class="m">e<sup>&#8722;5t</sup> &#8594; 0</span> as
+     <span class="m">t &#8594; &#8734;</span>, so the point moves <strong>inward</strong>.</div>
+  <div class="note b"><strong>Angle:</strong> <span class="m">&#952; = &#8722;2t</span> is decreasing,
+     so the point turns <strong>clockwise</strong>.</div>
+  <p>Both knobs are nonzero, so the shape is a spiral, and the two verdicts combine:</p>
+  <div class="note act"><strong>Answer:</strong> it spirals clockwise as it moves inward.</div>
+  <div class="btnrow"><button class="ghost" data-load="-1,-2">Load a similar case in the explorer</button></div>
+  <p><small class="lead">The slider only reaches <span class="m">a = &#8722;1</span>;
+     <span class="m">a = &#8722;5</span> collapses to the origin too fast to see. The shape is the same,
+     just wound far more tightly.</small></p>
+</div>
+
+<div class="card">
+  <h2>Check yourself</h2>
+  <p id="qtext"></p>
+  <ul class="mcq" id="mcq"></ul>
+  <p class="verdict" id="verdict2"></p>
+  <div class="btnrow"><button class="ghost" id="newq">Another question</button></div>
+</div>
+</section>
+
+<footer>Built for MIT 18.03 &#183; Unit 2 &#183; complex exponentials and ODEs</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- tabs ---------- */
+var tabs=[document.getElementById('t0'),document.getElementById('t1'),
+          document.getElementById('t2'),document.getElementById('t3')];
+var pans=[document.getElementById('p0'),document.getElementById('p1'),
+          document.getElementById('p2'),document.getElementById('p3')];
+function show(i){
+  tabs.forEach(function(t,k){t.setAttribute('aria-selected',k===i?'true':'false');});
+  pans.forEach(function(p,k){p.hidden=(k!==i);});
+  if(i===1){sizeAll();drawAll();}
+  if(i===2){drawGallery();}
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+tabs.forEach(function(t,i){t.addEventListener('click',function(){show(i);});});
+
+/* ---------- tab 1 stepper ---------- */
+var STEPS=[
+ {eq:'e<sup>(a+bi)t</sup>',
+  lbl:'Start',
+  why:'The function we want to understand. Here a and b are fixed real numbers; t is the real variable that runs.'},
+ {eq:'e<sup>at + ibt</sup>',
+  lbl:'Distribute the t',
+  why:'(a + bi)t = at + bit. Ordinary algebra inside the exponent — nothing complex-specific yet.'},
+ {eq:'e<sup>at</sup> &#183; e<sup>ibt</sup>',
+  lbl:'Split with the exponent law',
+  why:'e<sup>x+y</sup> = e<sup>x</sup>e<sup>y</sup>. This law holds for complex exponents too — it is exactly the multiplication rule for polar form.'},
+ {eq:'e<sup>at</sup> &#183; (cos bt + i&#8202;sin bt)',
+  lbl:'Apply Euler to the second factor only',
+  why:'Euler\u2019s formula e<sup>i&#952;</sup> = cos &#952; + i sin &#952; needs a purely imaginary exponent. The exponent of e<sup>ibt</sup> is imaginary, so Euler applies; the exponent of e<sup>at</sup> is real, so it does not — that factor stays an ordinary real exponential.'}
+];
+var shown=1;
+function renderSteps(){
+  var h='';
+  for(var i=0;i<STEPS.length;i++){
+    if(i>=shown)break;
+    var on=(i===shown-1)?' on':'';
+    h+='<div class="step'+on+'"><p class="lbl">'+STEPS[i].lbl+'</p>'+
+       '<div class="eq"><span class="m">'+STEPS[i].eq+'</span></div>'+
+       '<p class="why">'+STEPS[i].why+'</p></div>';
+  }
+  var box=document.getElementById('steps');
+  box.innerHTML=h;
+  document.getElementById('progress').textContent='step '+shown+' of '+STEPS.length;
+  document.getElementById('next').disabled=(shown>=STEPS.length);
+  document.getElementById('decoderCard').hidden=(shown<STEPS.length);
+  var live=box.querySelector('.step.on');
+  if(live){
+    var over=box.scrollHeight>box.clientHeight+2;
+    document.getElementById('scrollnote').className='scrollnote'+(over?' on':'');
+    if(over)box.scrollTop=live.offsetTop-box.offsetTop-6;
+  }else{
+    document.getElementById('scrollnote').className='scrollnote';
+  }
+}
+document.getElementById('next').addEventListener('click',function(){
+  if(shown<STEPS.length){shown++;renderSteps();}
+});
+document.getElementById('reset').addEventListener('click',function(){shown=1;renderSteps();});
+document.getElementById('toExplore').addEventListener('click',function(){show(1);});
+renderSteps();
+
+/* ---------- plotting ---------- */
+function setup(cv,cssW,cssH){
+  var dpr=window.devicePixelRatio||1;
+  cv.width=Math.round(cssW*dpr);cv.height=Math.round(cssH*dpr);
+  cv.style.height=cssH+'px';
+  var g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);
+  g.clearRect(0,0,cssW,cssH);
+  return g;
+}
+function plane(g,W,H,lim){
+  var cx=W/2,cy=H/2,S=Math.min(W,H)/(2*lim);
+  g.fillStyle='#fff';g.fillRect(0,0,W,H);
+  g.strokeStyle='#E7EDF6';g.lineWidth=1;
+  for(var k=1;k<=lim;k++){
+    g.beginPath();g.arc(cx,cy,k*S,0,2*Math.PI);g.stroke();
+  }
+  g.strokeStyle='#C4CFDE';
+  g.beginPath();g.moveTo(8,cy);g.lineTo(W-8,cy);g.moveTo(cx,8);g.lineTo(cx,H-8);g.stroke();
+  g.fillStyle='#8B99AC';g.font='12px -apple-system,Segoe UI,sans-serif';
+  for(var j=1;j<=lim;j++){g.fillText(String(j),cx+j*S-3,cy+15);}
+  g.fillText('Re',W-26,cy-8);g.fillText('Im',cx+8,16);
+  return {cx:cx,cy:cy,S:S};
+}
+function trajPath(g,p,a,b,tmax,lim){
+  g.strokeStyle='#7F77DD';g.lineWidth=2.2;g.beginPath();
+  var started=false,N=1400;
+  for(var i=0;i<=N;i++){
+    var t=i*tmax/N,r=Math.exp(a*t);
+    if(r>lim*1.03||r<0.008){if(started)break;else continue;}
+    var x=p.cx+r*Math.cos(b*t)*p.S,y=p.cy-r*Math.sin(b*t)*p.S;
+    if(!started){g.moveTo(x,y);started=true;}else{g.lineTo(x,y);}
+  }
+  g.stroke();
+}
+function dot(g,x,y,rad,col){g.fillStyle=col;g.beginPath();g.arc(x,y,rad,0,2*Math.PI);g.fill();}
+
+function drawMain(){
+  var cv=document.getElementById('main');
+  var W=cv.clientWidth||380,H=W;
+  var g=setup(cv,W,H);
+  var lim=3,p=plane(g,W,H,lim);
+  trajPath(g,p,A,B,5,lim);
+  var r=Math.exp(A*T),th=B*T;
+  var x=p.cx+r*Math.cos(th)*p.S,y=p.cy-r*Math.sin(th)*p.S;
+  /* radius arm */
+  if(r<=lim*1.02){
+    g.strokeStyle='#C25E1B';g.lineWidth=2;g.beginPath();
+    g.moveTo(p.cx,p.cy);g.lineTo(x,y);g.stroke();
+    /* angle arc */
+    var ar=Math.min(38,p.S*0.55);
+    g.strokeStyle='#0F7F6E';g.lineWidth=2;g.beginPath();
+    g.arc(p.cx,p.cy,ar,0,-th,th>0);g.stroke();
+  }
+  dot(g,p.cx+p.S,p.cy,5.5,'#1D9E75');
+  g.fillStyle='#0F7F6E';g.font='12px -apple-system,sans-serif';
+  g.fillText('start, t = 0',p.cx+p.S-24,p.cy+22);
+  if(r<=lim*1.02)dot(g,x,y,7,'#D2691E');
+}
+function drawR(){
+  var cv=document.getElementById('rplot');
+  var W=cv.clientWidth||300,H=Math.round(W*0.55),g=setup(cv,W,H);
+  var L=44,Rp=12,Tp=14,Bp=30,pw=W-L-Rp,ph=H-Tp-Bp;
+  var rmax=(A>0)?Math.max(1.3,Math.min(6,Math.exp(A*5))):1.3;
+  g.fillStyle='#fff';g.fillRect(0,0,W,H);
+  g.strokeStyle='#E7EDF6';g.lineWidth=1;
+  for(var k=0;k<=4;k++){var yy=Tp+ph*k/4;g.beginPath();g.moveTo(L,yy);g.lineTo(L+pw,yy);g.stroke();}
+  g.strokeStyle='#C4CFDE';g.beginPath();g.moveTo(L,Tp);g.lineTo(L,Tp+ph);g.lineTo(L+pw,Tp+ph);g.stroke();
+  g.fillStyle='#8B99AC';g.font='11px -apple-system,sans-serif';
+  g.fillText(rmax.toFixed(1),8,Tp+4);g.fillText('0',30,Tp+ph+4);
+  g.fillText('t',L+pw-6,Tp+ph+20);g.fillText('r',10,Tp+ph/2);
+  g.strokeStyle='#C25E1B';g.lineWidth=2.2;g.beginPath();
+  for(var i=0;i<=300;i++){
+    var t=i*5/300,r=Math.exp(A*t);
+    var xx=L+pw*t/5,yy2=Tp+ph*(1-Math.min(r,rmax)/rmax);
+    if(i===0)g.moveTo(xx,yy2);else g.lineTo(xx,yy2);
+  }
+  g.stroke();
+  var rt=Math.exp(A*T);
+  dot(g,L+pw*T/5,Tp+ph*(1-Math.min(rt,rmax)/rmax),5,'#D2691E');
+  g.fillStyle='#C25E1B';g.font='12px -apple-system,sans-serif';
+  g.fillText('radius e^(at)',L+6,Tp+12);
+}
+function drawA(){
+  var cv=document.getElementById('aplot');
+  var W=cv.clientWidth||300,H=Math.round(W*0.55),g=setup(cv,W,H);
+  var L=44,Rp=12,Tp=14,Bp=30,pw=W-L-Rp,ph=H-Tp-Bp;
+  var amax=Math.max(1,Math.abs(B)*5);
+  g.fillStyle='#fff';g.fillRect(0,0,W,H);
+  var zeroY=Tp+ph/2;
+  g.strokeStyle='#E7EDF6';g.lineWidth=1;
+  for(var k=0;k<=4;k++){var yy=Tp+ph*k/4;g.beginPath();g.moveTo(L,yy);g.lineTo(L+pw,yy);g.stroke();}
+  g.strokeStyle='#C4CFDE';g.beginPath();g.moveTo(L,Tp);g.lineTo(L,Tp+ph);
+  g.moveTo(L,zeroY);g.lineTo(L+pw,zeroY);g.stroke();
+  g.fillStyle='#8B99AC';g.font='11px -apple-system,sans-serif';
+  g.fillText('+'+amax.toFixed(0),8,Tp+10);g.fillText('0',30,zeroY+4);
+  g.fillText('-'+amax.toFixed(0),8,Tp+ph);
+  g.fillText('t',L+pw-6,Tp+ph+20);
+  g.strokeStyle='#0F7F6E';g.lineWidth=2.2;g.beginPath();
+  for(var i=0;i<=200;i++){
+    var t=i*5/200,th=B*t;
+    var xx=L+pw*t/5,yy2=zeroY-ph/2*(th/amax);
+    if(i===0)g.moveTo(xx,yy2);else g.lineTo(xx,yy2);
+  }
+  g.stroke();
+  dot(g,L+pw*T/5,zeroY-ph/2*((B*T)/amax),5,'#0F7F6E');
+  g.fillStyle='#0F7F6E';g.font='12px -apple-system,sans-serif';
+  g.fillText('angle bt (radians)',L+6,Tp+12);
+}
+
+/* ---------- state + commentary ---------- */
+var A=-0.3,B=4,T=0,playing=false,raf=null;
+function fmt(x,n){var v=x.toFixed(n);return (v==='-0.00'||v==='-0.0')?v.slice(1):v;}
+function commentary(){
+  var ha,hb,vd,wa,wb;
+  if(A>0){ha='e^(at) grows — the point escapes outward.';
+          wa='<strong>Radius:</strong> a = '+fmt(A,2)+' is positive, so e^(at) grows without bound. Distance from the origin increases forever.';}
+  else if(A<0){ha='e^(at) decays — the point falls toward the origin.';
+          wa='<strong>Radius:</strong> a = '+fmt(A,2)+' is negative, so e^(at) decays toward 0. The point closes in on the origin but never quite arrives.';}
+  else{ha='e^(0) = 1 always — distance locked at 1.';
+          wa='<strong>Radius:</strong> a = 0, so e^(at) = 1 for every t. The point is pinned to the unit circle.';}
+
+  if(B>0){hb='Angle increases — turns counterclockwise.';
+          wb='<strong>Angle:</strong> b = '+fmt(B,2)+' is positive, so &#952; = bt increases. It sweeps counterclockwise at '+fmt(Math.abs(B),2)+' radians per unit of t — one full turn every '+fmt(2*Math.PI/Math.abs(B),2)+' units of t.';}
+  else if(B<0){hb='Angle decreases — turns clockwise.';
+          wb='<strong>Angle:</strong> b = '+fmt(B,2)+' is negative, so &#952; = bt decreases. It sweeps clockwise at '+fmt(Math.abs(B),2)+' radians per unit of t — one full turn every '+fmt(2*Math.PI/Math.abs(B),2)+' units of t.';}
+  else{hb='Angle frozen at 0 — no turning at all.';
+          wb='<strong>Angle:</strong> b = 0, so &#952; = 0 for every t. The direction never changes; the point stays on the positive real axis.';}
+
+  if(A===0&&B===0){vd='<strong>Shape: a single point.</strong> Neither knob is doing anything, so e<sup>0</sup> = 1 forever. The point sits still at 1.';}
+  else if(A===0){vd='<strong>Shape: a circle of radius 1.</strong> The radius is locked at 1 and only the angle moves, so the point laps the unit circle '+(B>0?'counterclockwise':'clockwise')+' forever, never getting closer or further.';}
+  else if(B===0){vd='<strong>Shape: a line.</strong> The direction never changes, so the point slides along the positive real axis, '+(A>0?'racing outward':'creeping toward the origin')+'. This is the answer to the first exercise.';}
+  else{
+    var turns=Math.abs(B)/(2*Math.PI)*Math.log(2)/Math.abs(A);
+    vd='<strong>Shape: a spiral.</strong> Both knobs are on, so the point turns '+(B>0?'counterclockwise':'clockwise')+
+       ' while moving '+(A>0?'outward':'inward')+'. It makes about '+fmt(turns,1)+
+       ' turns for every '+(A>0?'doubling':'halving')+' of the radius — that ratio is set by a/b = '+fmt(A/B,2)+'.';
+  }
+  document.getElementById('ha').textContent=ha;
+  document.getElementById('hb').textContent=hb;
+  document.getElementById('verdict').innerHTML=vd;
+  document.getElementById('whyA').innerHTML=wa;
+  document.getElementById('whyB').innerHTML=wb;
+}
+function readouts(){
+  var r=Math.exp(A*T),th=B*T;
+  document.getElementById('orad').textContent=fmt(r,3);
+  document.getElementById('oang').textContent=fmt(th*180/Math.PI,1)+'\u00B0';
+  var re=r*Math.cos(th),im=r*Math.sin(th);
+  document.getElementById('oz').textContent=fmt(re,3)+(im<0?' - ':' + ')+fmt(Math.abs(im),3)+'i';
+  document.getElementById('oturn').textContent=fmt(Math.abs(th)/(2*Math.PI),2);
+}
+function drawAll(){drawMain();drawR();drawA();readouts();}
+function sizeAll(){/* canvases size from clientWidth at draw time */}
+
+var sa=document.getElementById('sa'),sb=document.getElementById('sb'),st=document.getElementById('st');
+function syncA(){A=parseFloat(sa.value);document.getElementById('va').textContent=fmt(A,2);commentary();drawAll();}
+function syncB(){B=parseFloat(sb.value);document.getElementById('vb').textContent=fmt(B,2);commentary();drawAll();}
+function syncT(){T=parseFloat(st.value);document.getElementById('vt').textContent=fmt(T,2);drawAll();}
+sa.addEventListener('input',syncA);sb.addEventListener('input',syncB);st.addEventListener('input',syncT);
+
+document.getElementById('zero').addEventListener('click',function(){st.value=0;syncT();});
+var playBtn=document.getElementById('play');
+function loop(){
+  if(!playing)return;
+  T+=0.014;if(T>5)T=0;
+  st.value=T;document.getElementById('vt').textContent=fmt(T,2);
+  drawAll();raf=requestAnimationFrame(loop);
+}
+playBtn.addEventListener('click',function(){
+  playing=!playing;playBtn.textContent=playing?'Pause':'Play';
+  if(playing)loop();else if(raf)cancelAnimationFrame(raf);
+});
+function load(a,b){
+  sa.value=a;sb.value=b;A=a;B=b;
+  document.getElementById('va').textContent=fmt(a,2);
+  document.getElementById('vb').textContent=fmt(b,2);
+  commentary();show(1);drawAll();
+}
+Array.prototype.forEach.call(document.querySelectorAll('[data-load]'),function(el){
+  el.addEventListener('click',function(){
+    var v=el.getAttribute('data-load').split(',');
+    load(parseFloat(v[0]),parseFloat(v[1]));
+  });
+});
+
+/* ---------- tab 3 gallery ---------- */
+var CASES=[
+ {a:0,b:3,t:'Circle',d:'a = 0, b \u2260 0. Radius locked at 1, angle turning. The point laps the unit circle forever.'},
+ {a:0.45,b:0,t:'Line',d:'a \u2260 0, b = 0. Direction frozen, radius growing. The point slides out along the real axis.'},
+ {a:-0.35,b:4,t:'Spiral inward',d:'a < 0, b \u2260 0. Turning while shrinking — the case in the exercise.'},
+ {a:0.3,b:-4,t:'Spiral outward',d:'a > 0, b < 0. Turning clockwise while escaping.'}
+];
+var galleryBuilt=false;
+function drawGallery(){
+  if(galleryBuilt){return;}
+  var host=document.getElementById('gallery');host.innerHTML='';
+  CASES.forEach(function(c,i){
+    var b=document.createElement('button');b.className='tile';
+    b.innerHTML='<canvas width="400" height="400" id="g'+i+'"></canvas>'+
+      '<h4>'+c.t+'</h4><p>'+c.d+'</p>';
+    b.addEventListener('click',function(){load(c.a,c.b);});
+    host.appendChild(b);
+  });
+  CASES.forEach(function(c,i){
+    var cv=document.getElementById('g'+i);
+    var W=cv.clientWidth||190,g=setup(cv,W,W);
+    var p=plane(g,W,W,3);
+    trajPath(g,p,c.a,c.b,5,3);
+    dot(g,p.cx+p.S,p.cy,4,'#1D9E75');
+  });
+  galleryBuilt=true;
+}
+
+/* ---------- tab 4 quiz ---------- */
+var QS=[
+ {a:-2,b:3,ans:'Spirals counterclockwise as it moves inward.'},
+ {a:4,b:-1,ans:'Spirals clockwise as it moves outward.'},
+ {a:0,b:-6,ans:'Clockwise along a circle.'},
+ {a:-3,b:0,ans:'Radially inward.'},
+ {a:0,b:2,ans:'Counterclockwise along a circle.'},
+ {a:5,b:0,ans:'Radially outward.'}
+];
+var OPTS=['Does not move.','Clockwise along a circle.','Counterclockwise along a circle.',
+ 'Spirals clockwise as it moves inward.','Spirals counterclockwise as it moves inward.',
+ 'Spirals clockwise as it moves outward.','Spirals counterclockwise as it moves outward.',
+ 'Radially inward.','Radially outward.'];
+var cur=null;
+function sign(x){return x<0?'\u2212'+Math.abs(x):''+x;}
+function newQ(){
+  cur=QS[Math.floor(Math.random()*QS.length)];
+  var bs=cur.b<0?(' \u2212 '+Math.abs(cur.b)+'i'):(cur.b===0?'':(' + '+cur.b+'i'));
+  document.getElementById('qtext').innerHTML='Describe the behaviour of <span class="m">e<sup>('+
+    sign(cur.a)+bs+')t</sup></span> as <span class="m">t &#8594; &#8734;</span>.';
+  var ul=document.getElementById('mcq');ul.innerHTML='';
+  OPTS.forEach(function(o){
+    var li=document.createElement('li'),bt=document.createElement('button');
+    bt.textContent=o;
+    bt.addEventListener('click',function(){
+      if(o===cur.ans){
+        bt.className='right';
+        document.getElementById('verdict2').innerHTML='Correct. a = '+cur.a+
+          (cur.a>0?' is positive so the radius grows; ':(cur.a<0?' is negative so the radius shrinks; ':' so the radius is fixed at 1; '))+
+          'b = '+cur.b+(cur.b>0?' is positive so it turns counterclockwise.':(cur.b<0?' is negative so it turns clockwise.':' so it never turns.'));
+      }else{
+        bt.className='wrong';
+        document.getElementById('verdict2').textContent='Not quite. Check the sign of a for inward/outward, then the sign of b for the direction of turning.';
+      }
+    });
+    li.appendChild(bt);ul.appendChild(li);
+  });
+  document.getElementById('verdict2').textContent='';
+}
+document.getElementById('newq').addEventListener('click',newQ);
+newQ();
+
+/* ---------- init ---------- */
+commentary();
+window.addEventListener('resize',function(){
+  if(!pans[1].hidden)drawAll();
+  if(!pans[2].hidden){galleryBuilt=false;drawGallery();}
+});
+window.addEventListener('load',function(){drawAll();});
+setTimeout(drawAll,60);
+})();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

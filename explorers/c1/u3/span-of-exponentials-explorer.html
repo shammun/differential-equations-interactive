@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Which sets span the same space? — e^{2t}, e^{-2t}, e^{2it}, e^{-2it}</title>
+<style>
+  :root{
+    --bg:#EEF3FB; --card:#FFFFFF; --ink:#1F2A44; --muted:#5B6B8C; --line:#D9E2F2;
+    --orange:#E8862A; --orange-soft:#FFF1E4;
+    --teal:#148F8F;   --teal-soft:#E3F5F5;
+    --purple:#6A4FD8; --purple-soft:#EFEAFF;
+    --red:#C93B3B;    --red-soft:#FDECEC;
+    --green:#1F9D55;  --green-soft:#E6F6EC;
+    --shadow:0 10px 30px rgba(93,78,190,.12), 0 2px 6px rgba(93,78,190,.08);
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
+    font-size:16px;line-height:1.6}
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 18px 60px}
+  header{margin-bottom:18px}
+  h1{font-size:1.65rem;line-height:1.25;margin:0 0 6px;font-weight:700}
+  .sub{color:var(--muted);margin:0}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 24px;margin:18px 0}
+  .card h2{font-size:1.28rem;margin:0 0 10px}
+  .card h3{font-size:1.05rem;margin:22px 0 8px}
+  p{margin:8px 0}
+  /* math typesetting without any external library */
+  .m{font-family:"Cambria","Georgia","Times New Roman",serif;font-style:italic;font-size:1.06em;white-space:nowrap}
+  .m .up{font-style:normal}
+  .m sup{font-size:.72em;vertical-align:.55em;line-height:0}
+  .m sub{font-size:.72em;vertical-align:-.3em;line-height:0}
+  .eq{font-family:"Cambria","Georgia","Times New Roman",serif;font-size:1.15em;text-align:center;margin:12px 0;padding:10px 12px;
+      background:#F7F9FE;border-radius:12px;border:1px solid var(--line);overflow-x:auto}
+  .eq .m{font-size:1em}
+  .frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 3px;line-height:1.1}
+  .frac > span:first-child{border-bottom:1px solid currentColor;padding:0 4px}
+  .frac > span:last-child{padding:0 4px}
+  .set{font-family:"Cambria","Georgia",serif;font-style:normal}
+  .set .m{font-size:1em}
+  /* tabs */
+  .tabbar{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+  .tabgroup{color:var(--muted);font-size:.85rem;margin:10px 0 2px}
+  .tab{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 14px;
+       cursor:pointer;font-size:.93rem;font-family:inherit;box-shadow:0 2px 6px rgba(93,78,190,.06)}
+  .tab:hover{border-color:var(--purple)}
+  .tab:focus-visible{outline:3px solid var(--purple);outline-offset:2px}
+  .tab.active{background:var(--purple);color:#fff;border-color:var(--purple)}
+  .tab .ok{color:var(--green);font-weight:700}.tab .no{color:var(--red);font-weight:700}
+  .tab.active .ok,.tab.active .no{color:#fff}
+  .panel{display:none}.panel.active{display:block}
+  /* callouts */
+  .note{border-left:5px solid var(--purple);background:var(--purple-soft);padding:10px 14px;border-radius:0 12px 12px 0;margin:12px 0}
+  .good{border-left:5px solid var(--green);background:var(--green-soft);padding:10px 14px;border-radius:0 12px 12px 0;margin:12px 0}
+  .bad{border-left:5px solid var(--red);background:var(--red-soft);padding:10px 14px;border-radius:0 12px 12px 0;margin:12px 0}
+  .hint{border-left:5px solid var(--orange);background:var(--orange-soft);padding:10px 14px;border-radius:0 12px 12px 0;margin:12px 0}
+  .verdict{display:inline-block;padding:4px 12px;border-radius:999px;font-weight:700;font-size:.9rem;margin-left:6px}
+  .verdict.ok{background:var(--green-soft);color:var(--green)}.verdict.no{background:var(--red-soft);color:var(--red)}
+  ol.steps{padding-left:22px}ol.steps li{margin:8px 0}
+  ul{padding-left:22px}
+  /* widgets */
+  .widget{background:#F7F9FE;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:14px 0}
+  .widget h4{margin:0 0 8px;font-size:1rem}
+  .row{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start}
+  .col{flex:1 1 280px;min-width:240px}
+  canvas{width:100%;height:auto;display:block;background:#fff;border-radius:12px;border:1px solid var(--line)}
+  .ctrl{display:flex;align-items:center;gap:10px;margin:7px 0;font-size:.93rem}
+  .ctrl label{min-width:110px}
+  .ctrl input[type=range]{flex:1;accent-color:var(--orange)}
+  .ctrl input[type=range].purple{accent-color:var(--purple)}
+  .ctrl .val{min-width:58px;text-align:right;font-variant-numeric:tabular-nums;color:var(--orange);font-weight:600}
+  .ctrl .val.purple{color:var(--purple)}
+  .out{background:var(--teal-soft);border:1px solid #BFE4E4;border-radius:12px;padding:10px 12px;margin-top:8px;font-size:.95rem}
+  .out b{color:var(--teal)}
+  .btn{background:var(--purple);color:#fff;border:0;border-radius:10px;padding:7px 13px;cursor:pointer;font-family:inherit;font-size:.9rem}
+  .btn.ghost{background:#fff;color:var(--purple);border:1px solid var(--purple)}
+  .btn:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+  select{font-family:inherit;font-size:.93rem;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:#fff}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.86rem;color:var(--muted);margin-top:6px}
+  .sw{display:inline-block;width:14px;height:4px;border-radius:2px;vertical-align:middle;margin-right:5px}
+  table.coef{border-collapse:collapse;width:100%;font-size:.93rem;margin-top:6px;background:#fff;border-radius:10px;overflow:hidden}
+  table.coef th,table.coef td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+  table.coef th{background:#F1F4FB;font-weight:600}
+  .tealnum{color:var(--teal);font-weight:700;font-variant-numeric:tabular-nums}
+  .key{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:10px}
+  .keybox{border-radius:12px;padding:12px 14px;border:1px solid var(--line);background:#fff}
+  .keybox.o{border-top:5px solid var(--orange)}.keybox.t{border-top:5px solid var(--teal)}.keybox.p{border-top:5px solid var(--purple)}
+  .quiz label{display:block;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin:6px 0;background:#fff;cursor:pointer}
+  .quiz label.right{border-color:var(--green);background:var(--green-soft)}
+  .quiz label.wrong{border-color:var(--red);background:var(--red-soft)}
+  .small{font-size:.88rem;color:var(--muted)}
+  @media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Which of these sets span the same space as <span class="set">{ <span class="m">e<sup>2t</sup></span>, <span class="m">e<sup>−2t</sup></span>, <span class="m">e<sup>2it</sup></span>, <span class="m">e<sup>−2it</sup></span> }</span>?</h1>
+  <p class="sub">A step-by-step, interactive walk-through of every option (complex coefficients allowed). Orange = things you change, teal = what the math gives back, purple = actions and navigation.</p>
+</header>
+
+<div class="tabgroup">Foundations (read these first)</div>
+<div class="tabbar" id="tabs1"></div>
+<div class="tabgroup">The five options</div>
+<div class="tabbar" id="tabs2"></div>
+<div class="tabgroup">Wrap-up</div>
+<div class="tabbar" id="tabs3"></div>
+
+<!-- ===================================================== OVERVIEW ===================================================== -->
+<section class="panel" id="p-overview">
+<div class="card">
+  <h2>The question in plain words</h2>
+  <p>We start with four functions of <span class="m">t</span>:</p>
+  <div class="eq"><span class="m">e<sup>2t</sup></span>,&nbsp;&nbsp; <span class="m">e<sup>−2t</sup></span>,&nbsp;&nbsp; <span class="m">e<sup>2it</sup></span>,&nbsp;&nbsp; <span class="m">e<sup>−2it</sup></span></div>
+  <p>Their <b>span</b> is the collection of <em>every</em> function you can build as</p>
+  <div class="eq"><span class="m">c<sub>1</sub> e<sup>2t</sup> + c<sub>2</sub> e<sup>−2t</sup> + c<sub>3</sub> e<sup>2it</sup> + c<sub>4</sub> e<sup>−2it</sup></span> &nbsp;&nbsp;<span class="small">(<span class="m">c<sub>1</sub>, …, c<sub>4</sub></span> any complex numbers)</span></div>
+  <p>Call this collection <b><span class="m">V</span></b>. Each option gives a different “kit” of functions. The question is: <em>does that kit build exactly the same collection <span class="m">V</span> — nothing more, nothing less?</em></p>
+
+  <div class="note"><b>The answer:</b> options 1, 2, 4 and 5 give the same span. Option 3 does <b>not</b>. The tabs above walk through <em>why</em>, one option at a time. If the word “span” or the exponentials with <span class="m">i</span> feel shaky, read the three Foundation tabs first — every option tab leans on exactly those three ideas.</div>
+
+  <h3>The three tools we will use again and again</h3>
+  <div class="key">
+    <div class="keybox p"><b>Tool 1 — what changes a span, what doesn’t</b><br>
+      Multiplying a function by a nonzero number, or adding a function that is already buildable from the others, leaves the span unchanged. Merging two independent functions into one <em>shrinks</em> it.</div>
+    <div class="keybox p"><b>Tool 2 — counting dimensions</b><br>
+      The four starting functions are linearly independent, so <span class="m">V</span> is 4-dimensional. A kit with only 3 independent functions can never rebuild it.</div>
+    <div class="keybox p"><b>Tool 3 — Euler’s bridge</b><br>
+      <span class="m">e<sup>2it</sup> = <span class="up">cos</span> 2t + i <span class="up">sin</span> 2t</span>. With complex coefficients allowed, the pair {<span class="m">e<sup>2it</sup></span>, <span class="m">e<sup>−2it</sup></span>} and the pair {<span class="m"><span class="up">cos</span> 2t</span>, <span class="m"><span class="up">sin</span> 2t</span>} are interchangeable.</div>
+  </div>
+
+  <h3>Meet the four building blocks</h3>
+  <p>Two of them are real: <span class="m">e<sup>2t</sup></span> grows, <span class="m">e<sup>−2t</sup></span> decays. The other two are complex-valued, so we can’t plot them directly — but their real part is <span class="m"><span class="up">cos</span> 2t</span> and their imaginary part is <span class="m">±<span class="up">sin</span> 2t</span>. Tick the boxes to compare.</p>
+  <div class="widget">
+    <div class="row">
+      <div class="col" style="flex:3 1 380px"><canvas id="cv-blocks" width="640" height="340"></canvas></div>
+      <div class="col" style="flex:1 1 200px">
+        <label class="ctrl"><input type="checkbox" data-block="0" checked> <span class="m">e<sup>2t</sup></span></label>
+        <label class="ctrl"><input type="checkbox" data-block="1" checked> <span class="m">e<sup>−2t</sup></span></label>
+        <label class="ctrl"><input type="checkbox" data-block="2" checked> <span class="m"><span class="up">cos</span> 2t</span> = Re <span class="m">e<sup>2it</sup></span></label>
+        <label class="ctrl"><input type="checkbox" data-block="3" checked> <span class="m"><span class="up">sin</span> 2t</span> = Im <span class="m">e<sup>2it</sup></span></label>
+        <p class="small">Notice how different their shapes are: exponential growth, exponential decay, and two oscillations. No amount of the oscillating ones can imitate the growing one, and so on — that is the intuition behind “linearly independent”.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ===================================================== TOOL 1: SPAN ===================================================== -->
+<section class="panel" id="p-span">
+<div class="card">
+  <h2>Tool 1 — What is a span, and what changes it?</h2>
+  <p>Functions are hard to picture, so let’s first play the same game with arrows in the plane. Everything we learn transfers word-for-word to functions.</p>
+  <p>The <b>span</b> of a set of arrows is every point you can reach by scaling the arrows and adding them. Drag the coefficient sliders (orange) to build one combination (teal). The light-teal region behind it is the whole span.</p>
+
+  <div class="widget">
+    <h4>Play: which sets reach the whole plane?</h4>
+    <div class="row">
+      <div class="col" style="flex:2 1 320px"><canvas id="cv-span" width="520" height="420"></canvas></div>
+      <div class="col">
+        <div class="ctrl"><label>Choose a set</label>
+          <select id="span-set">
+            <option value="A">{ e₁ , e₂ }</option>
+            <option value="B">{ 3e₁ , −e₂ }  (rescaled)</option>
+            <option value="C">{ e₁ , e₂ , e₁+e₂ }  (one extra)</option>
+            <option value="D">{ e₁+e₂ }  (merged into one)</option>
+            <option value="E">{ e₁+e₂ , e₁−e₂ }  (two combos)</option>
+          </select></div>
+        <div id="span-sliders"></div>
+        <div class="out" id="span-out"></div>
+        <button class="btn ghost" id="span-random" style="margin-top:8px">Try a random combination</button>
+      </div>
+    </div>
+  </div>
+
+  <h3>What you should notice</h3>
+  <ul>
+    <li><b>Set B (rescaled):</b> multiplying an arrow by a nonzero number (3, or −1) changes nothing about where you can reach. You just need a different slider value to get to the same point.</li>
+    <li><b>Set C (one extra arrow):</b> adding <span class="m">e<sub>1</sub>+e<sub>2</sub></span> adds nothing new — it was already reachable. The span is still the whole plane; there are now simply <em>many</em> slider settings that give the same point.</li>
+    <li><b>Set D (merged into one):</b> replacing <em>two</em> independent arrows by their single sum throws away a direction. You can only reach a line. <b>This is exactly what option 3 does.</b></li>
+    <li><b>Set E (two combos):</b> two combinations of the originals can still span the plane, as long as they don’t point along the same line. This is what option 5 does with <span class="m"><span class="up">cos</span>(2t − π/3)</span> and <span class="m"><span class="up">sin</span> 2t</span>.</li>
+  </ul>
+
+  <div class="note"><b>The two rules that keep a span the same:</b><br>
+    (1) Multiply any function by a nonzero number.<br>
+    (2) Add to the list — or remove from the list — a function that is a combination of the others.<br>
+    More generally: a new set spans the same space as the old one exactly when <em>every old function is buildable from the new ones</em> and <em>every new function is buildable from the old ones</em>.</div>
+
+  <h3>The “count the dimensions” shortcut</h3>
+  <p>If a space needs 4 independent directions (it is 4-dimensional), any kit with only 3 functions builds at most 3 directions, so it can never fill the space. Conversely, if a kit of functions all live inside the space <em>and</em> contains 4 independent ones, it fills the space completely. This is the quickest way to judge options 3 and 4.</p>
+</div>
+</section>
+
+<!-- ===================================================== TOOL 2: INDEPENDENCE ===================================================== -->
+<section class="panel" id="p-indep">
+<div class="card">
+  <h2>Tool 2 — Why <span class="m">e<sup>αt</sup></span> and <span class="m">e<sup>−αt</sup></span> are linearly independent</h2>
+  <p>This is the “quick recap” at the top of the official solution. It looks dense, so let’s do it slowly.</p>
+  <p><b>What “linearly independent” means here:</b> the only way to get the zero function (zero at <em>every</em> <span class="m">t</span>) as <span class="m">a e<sup>αt</sup> + b e<sup>−αt</sup></span> is the boring way, <span class="m">a = b = 0</span>. If some other choice also gave zero, the two functions would be “dependent”.</p>
+
+  <h3>The proof, step by step (with <span class="m">α ≠ 0</span>)</h3>
+  <ol class="steps">
+    <li><b>Suppose</b> some numbers <span class="m">a, b</span> make it zero for all <span class="m">t</span>:
+      <div class="eq"><span class="m">a e<sup>αt</sup> + b e<sup>−αt</sup> = 0</span> &nbsp;&nbsp;for every <span class="m">t</span></div></li>
+    <li><b>Plug in <span class="m">t = 0</span>.</b> Since <span class="m">e<sup>0</sup> = 1</span>: <span class="m">a·1 + b·1 = 0</span>, so <b><span class="m">a + b = 0</span></b>, i.e. <span class="m">b = −a</span>.</li>
+    <li><b>Differentiate both sides.</b> An equation that holds for all <span class="m">t</span> stays true after differentiating (the derivative of the constant 0 is 0):
+      <div class="eq"><span class="m">αa e<sup>αt</sup> − αb e<sup>−αt</sup> = 0</span></div>
+      (chain rule: the derivative of <span class="m">e<sup>αt</sup></span> is <span class="m">α e<sup>αt</sup></span>, and of <span class="m">e<sup>−αt</sup></span> is <span class="m">−α e<sup>−αt</sup></span>).</li>
+    <li><b>Divide by <span class="m">α</span></b> — allowed because <span class="m">α ≠ 0</span>: <span class="m">a e<sup>αt</sup> − b e<sup>−αt</sup> = 0</span>.</li>
+    <li><b>Plug in <span class="m">t = 0</span> again:</b> <b><span class="m">a − b = 0</span></b>, i.e. <span class="m">a = b</span>.</li>
+    <li><b>Combine:</b> <span class="m">b = −a</span> and <span class="m">b = a</span> force <span class="m">a = −a</span>, so <span class="m">2a = 0</span>, so <span class="m">a = 0</span>, and then <span class="m">b = 0</span>. The only solution is the boring one. ✔</li>
+  </ol>
+  <div class="hint"><b>Why step 3 is the clever move.</b> Value at 0 tells us about <span class="m">a + b</span>. Slope at 0 tells us about <span class="m">a − b</span>. Two independent facts pin down two unknowns. Nothing about the proof used that <span class="m">α</span> is real — so it works for <span class="m">α = 2i</span> too, which is why <span class="m">e<sup>2it</sup></span> and <span class="m">e<sup>−2it</sup></span> are independent.</div>
+
+  <div class="widget">
+    <h4>Play: try to make <span class="m">a e<sup>αt</sup> + b e<sup>−αt</sup></span> vanish everywhere</h4>
+    <p class="small">Move the sliders. The teal readouts are the two facts the proof uses: the value at 0 and the slope at 0. The curve is flat zero only when both are zero — and that happens only at <span class="m">a = b = 0</span>.</p>
+    <div class="row">
+      <div class="col" style="flex:2 1 320px"><canvas id="cv-indep" width="560" height="330"></canvas></div>
+      <div class="col">
+        <div class="ctrl"><label><span class="m">a</span></label><input type="range" id="ind-a" min="-2" max="2" step="0.05" value="1"><span class="val" id="ind-a-v"></span></div>
+        <div class="ctrl"><label><span class="m">b</span></label><input type="range" id="ind-b" min="-2" max="2" step="0.05" value="-1"><span class="val" id="ind-b-v"></span></div>
+        <div class="ctrl"><label><span class="m">α</span></label><input type="range" id="ind-al" min="0.2" max="3" step="0.1" value="2"><span class="val" id="ind-al-v"></span></div>
+        <div class="out" id="ind-out"></div>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn ghost" data-ab="1,-1">a=1, b=−1 (looks close to zero near 0)</button>
+          <button class="btn ghost" data-ab="1,1">a=1, b=1</button>
+          <button class="btn" data-ab="0,0">a=0, b=0</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>From two functions to all four</h3>
+  <p>The same “evaluate, differentiate, evaluate…” idea extends: for exponentials <span class="m">e<sup>α<sub>1</sub>t</sup>, …, e<sup>α<sub>n</sub>t</sup></span> with <b>distinct</b> exponents <span class="m">α<sub>k</sub></span>, the functions are always linearly independent. Our exponents <span class="m">2, −2, 2i, −2i</span> are four different numbers, so <span class="m">e<sup>2t</sup>, e<sup>−2t</sup>, e<sup>2it</sup>, e<sup>−2it</sup></span> are independent and <span class="m">V</span> is <b>4-dimensional</b>. (You can also just look at the shapes in the Overview tab: growth, decay and oscillation can’t imitate one another.)</p>
+</div>
+</section>
+
+<!-- ===================================================== TOOL 3: EULER ===================================================== -->
+<section class="panel" id="p-euler">
+<div class="card">
+  <h2>Tool 3 — Euler’s bridge between <span class="m">e<sup>±2it</sup></span> and <span class="m"><span class="up">cos</span> 2t, <span class="up">sin</span> 2t</span></h2>
+  <p>Euler’s identity says</p>
+  <div class="eq"><span class="m">e<sup>iθ</sup> = <span class="up">cos</span> θ + i <span class="up">sin</span> θ</span></div>
+  <p>With <span class="m">θ = 2t</span> and <span class="m">θ = −2t</span> (remember cos is even, sin is odd):</p>
+  <div class="eq"><span class="m">e<sup>2it</sup> = <span class="up">cos</span> 2t + i <span class="up">sin</span> 2t</span>,&nbsp;&nbsp;&nbsp;&nbsp;<span class="m">e<sup>−2it</sup> = <span class="up">cos</span> 2t − i <span class="up">sin</span> 2t</span></div>
+  <p>So <span class="m">e<sup>2it</sup></span> and <span class="m">e<sup>−2it</sup></span> are built from <span class="m"><span class="up">cos</span> 2t</span> and <span class="m"><span class="up">sin</span> 2t</span>. Now go the other way — <b>add</b> the two equations, and <b>subtract</b> them:</p>
+  <div class="eq"><span class="m"><span class="up">cos</span> 2t = </span><span class="frac"><span><span class="m">e<sup>2it</sup> + e<sup>−2it</sup></span></span><span>2</span></span>,&nbsp;&nbsp;&nbsp;&nbsp;
+    <span class="m"><span class="up">sin</span> 2t = </span><span class="frac"><span><span class="m">e<sup>2it</sup> − e<sup>−2it</sup></span></span><span><span class="m">2i</span></span></span><span class="m"> = −</span><span class="frac"><span><span class="m">i</span></span><span>2</span></span><span class="m"> e<sup>2it</sup> + </span><span class="frac"><span><span class="m">i</span></span><span>2</span></span><span class="m"> e<sup>−2it</sup></span></div>
+  <div class="note"><b>Here is why the problem says “with complex coefficients”.</b> To build <span class="m"><span class="up">sin</span> 2t</span> from <span class="m">e<sup>±2it</sup></span> we needed the coefficient <span class="m">1/(2i) = −i/2</span>, and to build <span class="m">e<sup>2it</sup></span> from cos and sin we needed the coefficient <span class="m">i</span>. With real coefficients only, neither direction would be possible. With complex coefficients, the pairs are perfectly interchangeable:
+    <div class="eq">Span{ <span class="m">e<sup>2it</sup></span>, <span class="m">e<sup>−2it</sup></span> } = Span{ <span class="m"><span class="up">cos</span> 2t</span>, <span class="m"><span class="up">sin</span> 2t</span> }</div>
+    And since <span class="m">e<sup>2it</sup>, e<sup>−2it</sup></span> are independent (Tool 2), so are <span class="m"><span class="up">cos</span> 2t, <span class="up">sin</span> 2t</span> — a 2-dimensional space either way.</div>
+
+  <div class="widget">
+    <h4>Play: watch cos and sin appear from the two rotating points</h4>
+    <p class="small">Left: the complex plane. <span class="m">e<sup>2it</sup></span> spins counter-clockwise, <span class="m">e<sup>−2it</sup></span> is its mirror image. Their <b>midpoint</b> always sits on the real axis at height 0 and position <span class="m"><span class="up">cos</span> 2t</span>; half their <b>difference</b> is <span class="m">i <span class="up">sin</span> 2t</span>. Right: the same values traced against <span class="m">t</span>.</p>
+    <div class="row">
+      <div class="col"><canvas id="cv-euler" width="360" height="360"></canvas></div>
+      <div class="col" style="flex:1.4 1 300px"><canvas id="cv-euler2" width="480" height="360"></canvas></div>
+    </div>
+    <div class="ctrl" style="margin-top:8px"><label><span class="m">t</span></label><input type="range" id="eu-t" min="0" max="3.1416" step="0.01" value="0.5"><span class="val" id="eu-t-v"></span>
+      <button class="btn" id="eu-play">Play</button></div>
+    <div class="out" id="eu-out"></div>
+  </div>
+</div>
+</section>
+
+<!-- ===================================================== OPTION 1 ===================================================== -->
+<section class="panel" id="p-opt1">
+<div class="card">
+  <h2>Option 1 <span class="verdict ok">Same span ✔</span></h2>
+  <div class="eq">Span{ <span class="m">e<sup>2t</sup></span>, <span class="m">e<sup>−2t</sup></span>, <span class="m"><span class="up">cos</span> 2t</span>, <span class="m"><span class="up">sin</span> 2t</span> }</div>
+  <p><b>What changed compared with the original?</b> The two real exponentials are untouched. The pair <span class="m">e<sup>2it</sup>, e<sup>−2it</sup></span> was swapped for the pair <span class="m"><span class="up">cos</span> 2t, <span class="up">sin</span> 2t</span>. Tool 3 says these pairs are interchangeable. That is the whole argument — but let’s check it the careful way, in both directions.</p>
+  <ol class="steps">
+    <li><b>Every function in option 1 lives in <span class="m">V</span>.</b> <span class="m">e<sup>2t</sup></span> and <span class="m">e<sup>−2t</sup></span> obviously do. And
+      <div class="eq"><span class="m"><span class="up">cos</span> 2t = ½ e<sup>2it</sup> + ½ e<sup>−2it</sup></span>,&nbsp;&nbsp;&nbsp;<span class="m"><span class="up">sin</span> 2t = −(i/2) e<sup>2it</sup> + (i/2) e<sup>−2it</sup></span></div>
+      are combinations of the originals with (complex) coefficients. So Span(option 1) ⊆ <span class="m">V</span>.</li>
+    <li><b>Every original function lives in Span(option 1).</b>
+      <div class="eq"><span class="m">e<sup>2it</sup> = <span class="up">cos</span> 2t + i <span class="up">sin</span> 2t</span>,&nbsp;&nbsp;&nbsp;<span class="m">e<sup>−2it</sup> = <span class="up">cos</span> 2t − i <span class="up">sin</span> 2t</span></div>
+      So <span class="m">V</span> ⊆ Span(option 1).</li>
+    <li>Both inclusions hold, so the spans are <b>equal</b>. ✔</li>
+  </ol>
+  <div class="good"><b>Shortcut with Tool 2:</b> option 1 has four independent functions (distinct shapes: growth, decay, cos, sin), all inside the 4-dimensional <span class="m">V</span>. Four independent directions inside a 4-dimensional space must fill it.</div>
+
+  <div class="widget" id="w-opt1">
+    <h4>Play: build any target from <span class="m">V</span> using option 1’s kit</h4>
+    <p class="small">Set a target (orange) as <span class="m">c<sub>1</sub> e<sup>2t</sup> + c<sub>2</sub> e<sup>−2t</sup> + c<sub>3</sub> <span class="up">cos</span> 2t + c<sub>4</sub> <span class="up">sin</span> 2t</span>. The kit’s coefficients (teal) are computed from the formulas above, and the rebuilt curve is drawn dashed on top. It should always land exactly on the target.</p>
+  </div>
+</div>
+</section>
+
+<!-- ===================================================== OPTION 2 ===================================================== -->
+<section class="panel" id="p-opt2">
+<div class="card">
+  <h2>Option 2 <span class="verdict ok">Same span ✔</span></h2>
+  <div class="eq">Span{ <span class="m">e<sup>2t</sup></span>, <span class="m">−e<sup>−2t</sup></span>, <span class="m">3 <span class="up">cos</span> 2t</span>, <span class="m">−<span class="up">sin</span> 2t</span> }</div>
+  <p><b>What changed compared with option 1?</b> Only scaling: <span class="m">e<sup>−2t</sup></span> became <span class="m">−e<sup>−2t</sup></span>, <span class="m"><span class="up">cos</span> 2t</span> became <span class="m">3 <span class="up">cos</span> 2t</span>, <span class="m"><span class="up">sin</span> 2t</span> became <span class="m">−<span class="up">sin</span> 2t</span>. Rule (1) from Tool 1: <b>multiplying by a nonzero number never changes a span</b>. Why? Because the scaling can always be undone by the coefficient.</p>
+  <ol class="steps">
+    <li>Anything built from option 1, say <span class="m">a e<sup>2t</sup> + b e<sup>−2t</sup> + c <span class="up">cos</span> 2t + d <span class="up">sin</span> 2t</span>, can be rewritten with option 2’s functions:
+      <div class="eq"><span class="m">= a·(e<sup>2t</sup>) + (−b)·(−e<sup>−2t</sup>) + (c/3)·(3 <span class="up">cos</span> 2t) + (−d)·(−<span class="up">sin</span> 2t)</span></div>
+      Every step just divides by the scale factor (−1, 3, −1), all nonzero.</li>
+    <li>And the reverse is even easier: <span class="m">−e<sup>−2t</sup></span>, <span class="m">3 <span class="up">cos</span> 2t</span>, <span class="m">−<span class="up">sin</span> 2t</span> are obviously combinations of option 1’s functions.</li>
+    <li>So Span(option 2) = Span(option 1) = <span class="m">V</span>. ✔</li>
+  </ol>
+  <div class="hint"><b>2-D picture:</b> in the Tool 1 tab, set B { 3e₁ , −e₂ } reaches every point that { e₁ , e₂ } reaches — the sliders just need different numbers. Same thing here.</div>
+
+  <div class="widget" id="w-opt2">
+    <h4>Play: same targets, option 2’s kit</h4>
+    <p class="small">Watch the teal coefficients: they are the orange ones divided by −1, 3 and −1. The rebuilt curve still lands exactly on the target.</p>
+  </div>
+</div>
+</section>
+
+<!-- ===================================================== OPTION 3 ===================================================== -->
+<section class="panel" id="p-opt3">
+<div class="card">
+  <h2>Option 3 <span class="verdict no">Different span ✘</span></h2>
+  <div class="eq">Span{ <span class="m">e<sup>2t</sup> + e<sup>−2t</sup></span>, <span class="m"><span class="up">cos</span>(2t)/2</span>, <span class="m"><span class="up">sin</span> 2t</span> }</div>
+  <p><b>What changed?</b> Two things. The <span class="m"><span class="up">cos</span> 2t</span> got scaled by ½ — harmless (Tool 1, rule 1). But the two independent functions <span class="m">e<sup>2t</sup></span> and <span class="m">e<sup>−2t</sup></span> were <b>merged into the single function</b> <span class="m">e<sup>2t</sup> + e<sup>−2t</sup></span>. That throws away a direction.</p>
+
+  <h3>Argument A — count the functions</h3>
+  <p>The kit has only <b>3</b> functions, so its span is at most 3-dimensional. <span class="m">V</span> is 4-dimensional (Tool 2). A 3-dimensional space cannot equal a 4-dimensional one. Done — this alone settles it. ✘</p>
+
+  <h3>Argument B — show a specific function of <span class="m">V</span> that option 3 cannot build</h3>
+  <p>Let’s try to build the very first original function, <span class="m">e<sup>2t</sup></span>. Suppose we could:</p>
+  <div class="eq"><span class="m">e<sup>2t</sup> = A (e<sup>2t</sup> + e<sup>−2t</sup>) + B <span class="up">cos</span>(2t)/2 + C <span class="up">sin</span> 2t</span></div>
+  <ol class="steps">
+    <li>Move everything to one side and group by the four independent building blocks:
+      <div class="eq"><span class="m">(1 − A) e<sup>2t</sup> + (−A) e<sup>−2t</sup> + (−B/2) <span class="up">cos</span> 2t + (−C) <span class="up">sin</span> 2t = 0</span></div></li>
+    <li>Because <span class="m">e<sup>2t</sup>, e<sup>−2t</sup>, <span class="up">cos</span> 2t, <span class="up">sin</span> 2t</span> are linearly independent, <b>every coefficient must be 0</b> (that’s what independence means):
+      <div class="eq"><span class="m">1 − A = 0</span>,&nbsp;&nbsp; <span class="m">−A = 0</span>,&nbsp;&nbsp; <span class="m">B = 0</span>,&nbsp;&nbsp; <span class="m">C = 0</span></div></li>
+    <li>The first two say <span class="m">A = 1</span> <em>and</em> <span class="m">A = 0</span> at the same time. Impossible. So <span class="m">e<sup>2t</sup></span> is <b>not</b> in Span(option 3). ✘</li>
+  </ol>
+  <div class="bad"><b>The general rule for this kit:</b> anything built from option 3 looks like <span class="m">A e<sup>2t</sup> + A e<sup>−2t</sup> + (B/2) <span class="up">cos</span> 2t + C <span class="up">sin</span> 2t</span>. The coefficients of <span class="m">e<sup>2t</sup></span> and <span class="m">e<sup>−2t</sup></span> are <b>forced to be equal</b>. So option 3 only reaches the functions of <span class="m">V</span> whose growing and decaying parts have the same weight. It misses <span class="m">e<sup>2t</sup></span>, misses <span class="m">e<sup>−2t</sup></span>, misses <span class="m">3e<sup>2t</sup> − e<sup>−2t</sup></span>, and so on.</div>
+
+  <h3>The official solution’s sentence, decoded</h3>
+  <p>“Combining <span class="m">e<sup>2t</sup></span> and <span class="m">e<sup>−2t</sup></span> into <span class="m">e<sup>2t</sup> + e<sup>−2t</sup></span> is similar to replacing <span class="m">e<sub>1</sub> = (1,0)</span> and <span class="m">e<sub>2</sub> = (0,1)</span> with <span class="m">v = (1,1)</span>.” In the plane, <span class="m">e<sub>1</sub></span> and <span class="m">e<sub>2</sub></span> reach every point; the single arrow <span class="m">(1,1)</span> only reaches the diagonal line. Go to the Tool 1 tab and pick set D { e₁+e₂ } to see exactly this collapse. The functions <span class="m">e<sup>2t</sup></span> and <span class="m">e<sup>−2t</sup></span> play the roles of <span class="m">e<sub>1</sub></span> and <span class="m">e<sub>2</sub></span>.</p>
+
+  <div class="widget" id="w-opt3">
+    <h4>Play: try to build a target with option 3’s kit — and watch it fail</h4>
+    <p class="small">The kit can match the target only when <span class="m">c<sub>1</sub> = c<sub>2</sub></span>. Otherwise the best it can do is use the average <span class="m">(c<sub>1</sub>+c<sub>2</sub>)/2</span>, and the dashed teal curve visibly misses the orange target. Press “<span class="m">e<sup>2t</sup></span>” to see the classic failure, then “equal weights” to see the one case that works.</p>
+  </div>
+</div>
+</section>
+
+<!-- ===================================================== OPTION 4 ===================================================== -->
+<section class="panel" id="p-opt4">
+<div class="card">
+  <h2>Option 4 <span class="verdict ok">Same span ✔</span></h2>
+  <div class="eq">Span{ <span class="m">e<sup>2t</sup></span>, <span class="m">e<sup>−2t</sup></span>, <span class="m">e<sup>2t</sup> − e<sup>−2t</sup></span>, <span class="m"><span class="up">cos</span> 2t</span>, <span class="m"><span class="up">sin</span> 2t</span> }</div>
+  <p><b>What changed compared with option 1?</b> One <em>extra</em> function was added: <span class="m">e<sup>2t</sup> − e<sup>−2t</sup></span>. Note the difference from option 3: here <span class="m">e<sup>2t</sup></span> and <span class="m">e<sup>−2t</sup></span> are still <em>both present</em>. Nothing was removed.</p>
+  <ol class="steps">
+    <li><b>The extra function is redundant.</b> <span class="m">e<sup>2t</sup> − e<sup>−2t</sup> = 1·e<sup>2t</sup> + (−1)·e<sup>−2t</sup></span> — already buildable from two other members of the kit. Rule (2) of Tool 1: adding a function that is a combination of the others does not change the span.</li>
+    <li>So Span(option 4) = Span{ <span class="m">e<sup>2t</sup>, e<sup>−2t</sup>, <span class="up">cos</span> 2t, <span class="up">sin</span> 2t</span> } = Span(option 1) = <span class="m">V</span>. ✔</li>
+  </ol>
+  <div class="good"><b>Five functions, four dimensions.</b> The kit is “too big”: there is one redundant function, so each target can be built in <em>infinitely many</em> ways. That is not a problem for the span — the span only asks <em>which</em> functions are reachable, not <em>how many ways</em>.</div>
+  <div class="hint"><b>2-D picture:</b> Tool 1, set C { e₁ , e₂ , e₁+e₂ } — still the whole plane, just with a redundant third slider.</div>
+
+  <div class="widget" id="w-opt4">
+    <h4>Play: build a target, then drag the “redundancy” slider</h4>
+    <p class="small">Write the target as <span class="m">(c<sub>1</sub> − s) e<sup>2t</sup> + (c<sub>2</sub> + s) e<sup>−2t</sup> + s (e<sup>2t</sup> − e<sup>−2t</sup>) + c<sub>3</sub> <span class="up">cos</span> 2t + c<sub>4</sub> <span class="up">sin</span> 2t</span>: the <span class="m">s</span> terms cancel out. The purple slider changes <span class="m">s</span> — the teal coefficients move, but the rebuilt curve does not budge.</p>
+  </div>
+</div>
+</section>
+
+<!-- ===================================================== OPTION 5 ===================================================== -->
+<section class="panel" id="p-opt5">
+<div class="card">
+  <h2>Option 5 <span class="verdict ok">Same span ✔</span></h2>
+  <div class="eq">Span{ <span class="m">e<sup>2t</sup></span>, <span class="m">e<sup>−2t</sup></span>, <span class="m">e<sup>2t</sup> − e<sup>−2t</sup></span>, <span class="m"><span class="up">cos</span>(2t − π/3)</span>, <span class="m"><span class="up">sin</span> 2t</span> }</div>
+  <p><b>What changed compared with option 4?</b> Only one thing: <span class="m"><span class="up">cos</span> 2t</span> was replaced by the phase-shifted <span class="m"><span class="up">cos</span>(2t − π/3)</span>. So the question becomes: does { <span class="m"><span class="up">cos</span>(2t − π/3)</span>, <span class="m"><span class="up">sin</span> 2t</span> } span the same 2-dimensional space as { <span class="m"><span class="up">cos</span> 2t</span>, <span class="m"><span class="up">sin</span> 2t</span> }? The official solution says “apply some trigonometric identities”. Here they are.</p>
+  <ol class="steps">
+    <li><b>Expand the phase shift</b> with <span class="m"><span class="up">cos</span>(x − y) = <span class="up">cos</span> x <span class="up">cos</span> y + <span class="up">sin</span> x <span class="up">sin</span> y</span>, using <span class="m"><span class="up">cos</span>(π/3) = ½</span> and <span class="m"><span class="up">sin</span>(π/3) = √3/2</span>:
+      <div class="eq"><span class="m"><span class="up">cos</span>(2t − π/3) = ½ <span class="up">cos</span> 2t + (√3/2) <span class="up">sin</span> 2t</span></div>
+      So the new function is a combination of <span class="m"><span class="up">cos</span> 2t</span> and <span class="m"><span class="up">sin</span> 2t</span> → it lives in <span class="m">V</span>. (One direction done.)</li>
+    <li><b>Solve back for <span class="m"><span class="up">cos</span> 2t</span>.</b> Multiply by 2 and rearrange:
+      <div class="eq"><span class="m"><span class="up">cos</span> 2t = 2 <span class="up">cos</span>(2t − π/3) − √3 <span class="up">sin</span> 2t</span></div>
+      So <span class="m"><span class="up">cos</span> 2t</span> is buildable from option 5’s kit. Since <span class="m"><span class="up">sin</span> 2t</span> is in the kit directly, and <span class="m">e<sup>±2t</sup></span> are too, every function of option 1 (hence of <span class="m">V</span>) is buildable. (Other direction done.)</li>
+    <li>Both directions hold, so Span(option 5) = <span class="m">V</span>. The extra <span class="m">e<sup>2t</sup> − e<sup>−2t</sup></span> is redundant exactly as in option 4. ✔</li>
+  </ol>
+  <div class="note"><b>Check with numbers at <span class="m">t = 0</span>:</b> left side <span class="m"><span class="up">cos</span> 0 = 1</span>. Right side: <span class="m">2 <span class="up">cos</span>(−π/3) − √3 <span class="up">sin</span> 0 = 2·½ − 0 = 1</span>. ✔ At <span class="m">t = π/4</span>: left <span class="m"><span class="up">cos</span>(π/2) = 0</span>; right <span class="m">2 <span class="up">cos</span>(π/6) − √3 <span class="up">sin</span>(π/2) = 2·(√3/2) − √3 = 0</span>. ✔</div>
+
+  <h3>Why the shift <span class="m">π/3</span> is fine, and which shift would <em>not</em> be</h3>
+  <p>For a general shift <span class="m">φ</span>: <span class="m"><span class="up">cos</span>(2t − φ) = <span class="up">cos</span> φ · <span class="up">cos</span> 2t + <span class="up">sin</span> φ · <span class="up">sin</span> 2t</span>. To recover <span class="m"><span class="up">cos</span> 2t</span> we divide by <span class="m"><span class="up">cos</span> φ</span>:
+  <span class="m"><span class="up">cos</span> 2t = (<span class="up">cos</span>(2t − φ) − <span class="up">sin</span> φ · <span class="up">sin</span> 2t) / <span class="up">cos</span> φ</span>. This works whenever <span class="m"><span class="up">cos</span> φ ≠ 0</span>. It would fail at <span class="m">φ = π/2</span>, because <span class="m"><span class="up">cos</span>(2t − π/2) = <span class="up">sin</span> 2t</span> — the “new” function would just be a copy of <span class="m"><span class="up">sin</span> 2t</span>, and we would be back in an option-3 style collapse. For <span class="m">φ = π/3</span>, <span class="m"><span class="up">cos</span> φ = ½ ≠ 0</span>, so all is well.</p>
+
+  <div class="widget">
+    <h4>Play: slide the phase φ and see the decomposition</h4>
+    <div class="row">
+      <div class="col" style="flex:2 1 320px"><canvas id="cv-phase" width="560" height="320"></canvas></div>
+      <div class="col">
+        <div class="ctrl"><label><span class="m">φ</span></label><input type="range" id="ph-phi" min="0" max="3.1416" step="0.01" value="1.0472"><span class="val" id="ph-phi-v"></span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0">
+          <button class="btn ghost" data-phi="0">φ = 0</button>
+          <button class="btn" data-phi="1.0472">φ = π/3 (the option)</button>
+          <button class="btn ghost" data-phi="1.5708">φ = π/2 (danger!)</button>
+        </div>
+        <div class="out" id="ph-out"></div>
+      </div>
+    </div>
+    <div class="legend"><span><span class="sw" style="background:var(--orange)"></span>cos(2t − φ)</span><span><span class="sw" style="background:#9AA6C7"></span>cos φ · cos 2t</span><span><span class="sw" style="background:#C9B8FF"></span>sin φ · sin 2t</span><span><span class="sw" style="background:var(--teal)"></span>cos 2t rebuilt from the kit (dashed)</span></div>
+  </div>
+
+  <div class="widget" id="w-opt5">
+    <h4>Play: build any target with option 5’s kit</h4>
+    <p class="small">The teal coefficient on <span class="m"><span class="up">cos</span>(2t − π/3)</span> is <span class="m">2c<sub>3</sub></span> and on <span class="m"><span class="up">sin</span> 2t</span> it is <span class="m">c<sub>4</sub> − √3 c<sub>3</sub></span> — straight from step 2. The purple slider is the same redundancy as in option 4.</p>
+  </div>
+</div>
+</section>
+
+<!-- ===================================================== SUMMARY ===================================================== -->
+<section class="panel" id="p-summary">
+<div class="card">
+  <h2>Summary — one line per option</h2>
+  <table class="coef">
+    <tr><th>Option</th><th>What was done to the original kit</th><th>Effect on the span</th><th>Verdict</th></tr>
+    <tr><td>1</td><td>Swapped <span class="m">e<sup>±2it</sup></span> for <span class="m"><span class="up">cos</span> 2t, <span class="up">sin</span> 2t</span></td><td>None — Euler’s bridge (needs complex coefficients)</td><td style="color:var(--green);font-weight:700">Same ✔</td></tr>
+    <tr><td>2</td><td>…and scaled three functions by −1, 3, −1</td><td>None — nonzero scaling is reversible</td><td style="color:var(--green);font-weight:700">Same ✔</td></tr>
+    <tr><td>3</td><td>Merged <span class="m">e<sup>2t</sup>, e<sup>−2t</sup></span> into one function</td><td>Lost a dimension: 3 functions can’t span a 4-D space; <span class="m">e<sup>2t</sup></span> unreachable</td><td style="color:var(--red);font-weight:700">Different ✘</td></tr>
+    <tr><td>4</td><td>Added the redundant <span class="m">e<sup>2t</sup> − e<sup>−2t</sup></span></td><td>None — it was already buildable</td><td style="color:var(--green);font-weight:700">Same ✔</td></tr>
+    <tr><td>5</td><td>…and replaced <span class="m"><span class="up">cos</span> 2t</span> by <span class="m"><span class="up">cos</span>(2t − π/3)</span></td><td>None — <span class="m"><span class="up">cos</span> 2t = 2<span class="up">cos</span>(2t − π/3) − √3 <span class="up">sin</span> 2t</span></td><td style="color:var(--green);font-weight:700">Same ✔</td></tr>
+  </table>
+
+  <h3>The official solution, sentence by sentence</h3>
+  <ul>
+    <li><b>“For any non-zero α, exp(αt) and exp(−αt) are linearly independent…”</b> — the evaluate / differentiate / evaluate proof (Tool 2). It is stated for general <span class="m">α</span> so that it covers both <span class="m">α = 2</span> and <span class="m">α = 2i</span>.</li>
+    <li><b>“Invoking Euler’s identity … cos(αt) and sin(αt) are linearly independent”</b> — because they are invertible combinations of the independent pair <span class="m">e<sup>±iαt</sup></span> (Tool 3).</li>
+    <li><b>“The first, second and fourth options span the same set”</b> — swap the pair (option 1), rescale (option 2), add a redundant function (option 4).</li>
+    <li><b>“The third option does not … like replacing e₁, e₂ with v = (1,1)”</b> — merging two independent things into one loses a direction (Tool 1, set D).</li>
+    <li><b>“The fifth option does … trigonometric identities on cos(2t − π/3)”</b> — the angle-difference formula shows cos(2t − π/3) and sin 2t are just a “rotated” pair spanning the same plane as cos 2t and sin 2t.</li>
+  </ul>
+
+  <h3>Test yourself</h3>
+  <p>Tick the sets that have the same span as { <span class="m">e<sup>2t</sup>, e<sup>−2t</sup>, e<sup>2it</sup>, e<sup>−2it</sup></span> } (complex coefficients), then check.</p>
+  <div class="quiz" id="quiz">
+    <label><input type="checkbox" data-ans="1"> { <span class="m">e<sup>2t</sup> + e<sup>−2t</sup></span>, <span class="m">e<sup>2t</sup> − e<sup>−2t</sup></span>, <span class="m"><span class="up">cos</span> 2t</span>, <span class="m"><span class="up">sin</span> 2t</span> } &nbsp;<span class="small">(hint: two combos, like set E)</span></label>
+    <label><input type="checkbox" data-ans="1"> { <span class="m">e<sup>2t</sup></span>, <span class="m">e<sup>−2t</sup></span>, <span class="m"><span class="up">cos</span> 2t</span>, <span class="m"><span class="up">cos</span>(2t − π/2)</span> } &nbsp;<span class="small">(hint: what is cos(2t − π/2)?)</span></label>
+    <label><input type="checkbox" data-ans="1"> { <span class="m">5e<sup>2t</sup></span>, <span class="m">e<sup>−2t</sup></span>, <span class="m">e<sup>2it</sup></span>, <span class="m"><span class="up">sin</span> 2t</span> }</label>
+    <label><input type="checkbox" data-ans="0"> { <span class="m">e<sup>2t</sup></span>, <span class="m">e<sup>−2t</sup></span>, <span class="m"><span class="up">cos</span> 2t</span>, <span class="m"><span class="up">sin</span> 2t</span>, <span class="m">t e<sup>2t</sup></span> }</label>
+    <button class="btn" id="quiz-check" style="margin-top:8px">Check answers</button>
+    <div class="out" id="quiz-out" style="display:none"></div>
+  </div>
+</div>
+</section>
+
+</div>
+
+<script>
+(function(){
+'use strict';
+/* ---------------------------------------------------------------- tabs */
+const TABS = [
+  ['tabs1','p-overview','Overview & answer'],
+  ['tabs1','p-span','Tool 1: what a span is'],
+  ['tabs1','p-indep','Tool 2: independence proof'],
+  ['tabs1','p-euler','Tool 3: Euler’s bridge'],
+  ['tabs2','p-opt1','Option 1 <span class="ok">✔</span>'],
+  ['tabs2','p-opt2','Option 2 <span class="ok">✔</span>'],
+  ['tabs2','p-opt3','Option 3 <span class="no">✘</span>'],
+  ['tabs2','p-opt4','Option 4 <span class="ok">✔</span>'],
+  ['tabs2','p-opt5','Option 5 <span class="ok">✔</span>'],
+  ['tabs3','p-summary','Summary & self-test'],
+];
+const tabButtons = [];
+TABS.forEach(([bar,panel,label])=>{
+  const b=document.createElement('button'); b.className='tab'; b.innerHTML=label; b.dataset.panel=panel;
+  b.addEventListener('click',()=>activate(panel)); document.getElementById(bar).appendChild(b); tabButtons.push(b);
+});
+function activate(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));
+  tabButtons.forEach(b=>b.classList.toggle('active',b.dataset.panel===id));
+  redrawAll(); window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ---------------------------------------------------------------- generic plot helper */
+function fix(cv){ // handle high-dpi
+  const r=window.devicePixelRatio||1; const w=cv.clientWidth||cv.width, h=w*(cv.height0||cv.getAttribute('height'))/(cv.width0||cv.getAttribute('width'));
+  if(!cv.width0){cv.width0=+cv.getAttribute('width');cv.height0=+cv.getAttribute('height');}
+  cv.width=Math.round(w*r); cv.height=Math.round(h*r); const c=cv.getContext('2d'); c.setTransform(r,0,0,r,0,0); return {c,W:w,H:h};
+}
+function plot(cv,opt){
+  const {c,W,H}=fix(cv); const L=44,R=12,T=14,B=30; const pw=W-L-R, ph=H-T-B;
+  const xmin=opt.xmin, xmax=opt.xmax; const N=300;
+  let ymin=opt.ymin, ymax=opt.ymax;
+  if(ymin===undefined){ ymin=Infinity;ymax=-Infinity;
+    opt.curves.forEach(cu=>{ for(let k=0;k<=N;k++){const x=xmin+(xmax-xmin)*k/N;const y=cu.f(x); if(isFinite(y)){ymin=Math.min(ymin,y);ymax=Math.max(ymax,y);}}});
+    if(!isFinite(ymin)){ymin=-1;ymax=1;}
+    const pad=(ymax-ymin)*0.12||1; ymin-=pad; ymax+=pad; ymin=Math.min(ymin,-0.2); ymax=Math.max(ymax,0.2);
+    if(opt.ycap){ymin=Math.max(ymin,-opt.ycap);ymax=Math.min(ymax,opt.ycap);}
+  }
+  const X=x=>L+(x-xmin)/(xmax-xmin)*pw, Y=y=>T+(ymax-y)/(ymax-ymin)*ph;
+  c.clearRect(0,0,W,H); c.fillStyle='#fff'; c.fillRect(0,0,W,H);
+  // grid
+  c.strokeStyle='#EEF1F8'; c.lineWidth=1; c.font='11px Segoe UI, sans-serif'; c.fillStyle='#7A88A8';
+  const ystep=niceStep(ymax-ymin), xstep=niceStep(xmax-xmin);
+  for(let y=Math.ceil(ymin/ystep)*ystep;y<=ymax;y+=ystep){c.beginPath();c.moveTo(L,Y(y));c.lineTo(W-R,Y(y));c.stroke(); c.textAlign='right'; c.fillText(fmt(y),L-5,Y(y)+4);}
+  for(let x=Math.ceil(xmin/xstep)*xstep;x<=xmax+1e-9;x+=xstep){c.beginPath();c.moveTo(X(x),T);c.lineTo(X(x),H-B);c.stroke(); c.textAlign='center'; c.fillText(fmt(x),X(x),H-B+14);}
+  // axes
+  c.strokeStyle='#B9C3DB'; c.lineWidth=1.2;
+  if(ymin<0&&ymax>0){c.beginPath();c.moveTo(L,Y(0));c.lineTo(W-R,Y(0));c.stroke();}
+  if(xmin<0&&xmax>0){c.beginPath();c.moveTo(X(0),T);c.lineTo(X(0),H-B);c.stroke();}
+  c.fillStyle='#7A88A8'; c.textAlign='left'; c.fillText(opt.xlabel||'t',W-R-8,H-B-6);
+  // curves
+  c.save(); c.beginPath(); c.rect(L,T,pw,ph); c.clip();
+  opt.curves.forEach(cu=>{ c.beginPath(); c.strokeStyle=cu.color; c.lineWidth=cu.width||2.2; c.setLineDash(cu.dash||[]);
+    let started=false; for(let k=0;k<=N;k++){const x=xmin+(xmax-xmin)*k/N; const y=cu.f(x); if(!isFinite(y)){started=false;continue;} const py=Y(y); if(!started){c.moveTo(X(x),py);started=true;}else c.lineTo(X(x),py);} c.stroke(); c.setLineDash([]); });
+  (opt.markers||[]).forEach(m=>{ c.beginPath(); c.fillStyle=m.color; c.arc(X(m.x),Y(m.y),5,0,2*Math.PI); c.fill(); if(m.label){c.fillStyle=m.color;c.font='bold 12px Segoe UI, sans-serif';c.textAlign='left';c.fillText(m.label,X(m.x)+8,Y(m.y)-6);} });
+  (opt.segments||[]).forEach(s=>{ c.beginPath(); c.strokeStyle=s.color; c.lineWidth=s.width||2; c.setLineDash(s.dash||[]); c.moveTo(X(s.x1),Y(s.y1)); c.lineTo(X(s.x2),Y(s.y2)); c.stroke(); c.setLineDash([]); });
+  c.restore();
+  // legend
+  if(opt.legend){ let x=L+8, y=T+14; c.font='12px Segoe UI, sans-serif'; opt.legend.forEach(([col,txt,dash])=>{ c.strokeStyle=col;c.lineWidth=3;c.setLineDash(dash||[]);c.beginPath();c.moveTo(x,y-4);c.lineTo(x+18,y-4);c.stroke();c.setLineDash([]); c.fillStyle='#3B4660';c.textAlign='left';c.fillText(txt,x+23,y); x+=23+c.measureText(txt).width+16; if(x>W-120){x=L+8;y+=17;} }); }
+}
+function niceStep(range){ const raw=range/6, p=Math.pow(10,Math.floor(Math.log10(raw))); const m=raw/p; return (m<1.5?1:m<3.5?2:m<7.5?5:10)*p; }
+function fmt(v){ return (Math.abs(v)<1e-9?0:v).toFixed(Math.abs(v)>=10?0:Math.abs(v)>=1?1:2).replace(/\.?0+$/,''); }
+const f2=v=>(Math.abs(v)<5e-4?0:v).toFixed(2).replace('-','−');
+const redraws=[]; function redrawAll(){ redraws.forEach(fn=>{try{fn();}catch(e){console.error(e);}}); }
+window.addEventListener('resize',redrawAll);
+
+const C={orange:'#E8862A',teal:'#148F8F',purple:'#6A4FD8',grey:'#9AA6C7',lav:'#C9B8FF',red:'#C93B3B',green:'#1F9D55'};
+const E2=t=>Math.exp(2*t), EM2=t=>Math.exp(-2*t), COS=t=>Math.cos(2*t), SIN=t=>Math.sin(2*t);
+
+/* ---------------------------------------------------------------- overview blocks */
+(function(){
+  const cv=document.getElementById('cv-blocks'); const boxes=[...document.querySelectorAll('[data-block]')];
+  const fs=[E2,EM2,COS,SIN], cols=[C.orange,C.teal,C.purple,C.grey], names=['e²ᵗ','e⁻²ᵗ','cos 2t','sin 2t'];
+  function draw(){ const curves=[],legend=[]; boxes.forEach((b,i)=>{ if(b.checked){curves.push({f:fs[i],color:cols[i]});legend.push([cols[i],names[i]]);} });
+    plot(cv,{xmin:-1.5,xmax:1.5,ymin:-2,ymax:8,curves,legend}); }
+  boxes.forEach(b=>b.addEventListener('change',draw)); redraws.push(draw);
+})();
+
+/* ---------------------------------------------------------------- Tool 1: span of arrows */
+(function(){
+  const cv=document.getElementById('cv-span'), sel=document.getElementById('span-set'), sl=document.getElementById('span-sliders'), out=document.getElementById('span-out');
+  const SETS={A:{v:[[1,0],[0,1]],n:['e₁','e₂']},B:{v:[[3,0],[0,-1]],n:['3e₁','−e₂']},C:{v:[[1,0],[0,1],[1,1]],n:['e₁','e₂','e₁+e₂']},D:{v:[[1,1]],n:['e₁+e₂']},E:{v:[[1,1],[1,-1]],n:['e₁+e₂','e₁−e₂']}};
+  let coef=[];
+  function rank(vs){ if(vs.length===0)return 0; for(let i=0;i<vs.length;i++)for(let j=i+1;j<vs.length;j++){ if(Math.abs(vs[i][0]*vs[j][1]-vs[i][1]*vs[j][0])>1e-9) return 2; } return vs.some(v=>Math.abs(v[0])+Math.abs(v[1])>0)?1:0; }
+  function build(){ const s=SETS[sel.value]; coef=s.v.map(()=>0.6); sl.innerHTML='';
+    s.v.forEach((v,i)=>{ const d=document.createElement('div'); d.className='ctrl'; d.innerHTML=`<label>coef of ${s.n[i]}</label><input type="range" min="-2" max="2" step="0.05" value="0.6"><span class="val"></span>`;
+      d.querySelector('input').addEventListener('input',e=>{coef[i]=+e.target.value;draw();}); sl.appendChild(d); }); draw(); }
+  function draw(){ const s=SETS[sel.value]; const {c,W,H}=fix(cv); const cx=W/2, cy=H/2, u=Math.min(W,H)/9.5; const X=x=>cx+x*u, Y=y=>cy-y*u;
+    c.clearRect(0,0,W,H); c.fillStyle='#fff'; c.fillRect(0,0,W,H);
+    const rk=rank(s.v);
+    if(rk===2){ c.fillStyle='rgba(20,143,143,0.10)'; c.fillRect(0,0,W,H); }
+    else if(rk===1){ const v=s.v.find(v=>Math.abs(v[0])+Math.abs(v[1])>0); c.strokeStyle='rgba(20,143,143,0.35)'; c.lineWidth=10; c.beginPath(); c.moveTo(X(-v[0]*20),Y(-v[1]*20)); c.lineTo(X(v[0]*20),Y(v[1]*20)); c.stroke(); }
+    // grid
+    c.strokeStyle='#EEF1F8'; c.lineWidth=1; for(let k=-5;k<=5;k++){c.beginPath();c.moveTo(X(k),0);c.lineTo(X(k),H);c.stroke();c.beginPath();c.moveTo(0,Y(k));c.lineTo(W,Y(k));c.stroke();}
+    c.strokeStyle='#B9C3DB'; c.lineWidth=1.2; c.beginPath();c.moveTo(0,cy);c.lineTo(W,cy);c.moveTo(cx,0);c.lineTo(cx,H);c.stroke();
+    // basis arrows
+    s.v.forEach((v,i)=>arrow(c,X(0),Y(0),X(v[0]),Y(v[1]),C.purple,2.5,s.n[i]));
+    // combination
+    let rx=0,ry=0; s.v.forEach((v,i)=>{rx+=coef[i]*v[0];ry+=coef[i]*v[1];});
+    // show partial sums
+    let px=0,py=0; c.setLineDash([4,4]); s.v.forEach((v,i)=>{ const nx=px+coef[i]*v[0], ny=py+coef[i]*v[1]; c.strokeStyle=C.orange; c.lineWidth=1.5; c.beginPath(); c.moveTo(X(px),Y(py)); c.lineTo(X(nx),Y(ny)); c.stroke(); px=nx;py=ny; }); c.setLineDash([]);
+    arrow(c,X(0),Y(0),X(rx),Y(ry),C.teal,3.5,'');
+    c.fillStyle=C.teal; c.font='bold 13px Segoe UI, sans-serif'; c.textAlign='left'; c.fillText(`(${f2(rx)}, ${f2(ry)})`,X(rx)+8,Y(ry)-8);
+    const expr=s.v.map((v,i)=>`${f2(coef[i])}·${s.n[i]}`).join(' + ');
+    out.innerHTML=`Combination: <b>${expr}</b> = <b>(${f2(rx)}, ${f2(ry)})</b><br>Span of this set: <b>${rk===2?'the whole plane (2-dimensional)':rk===1?'only a line (1-dimensional)':'just the origin'}</b>` + (rk===2&&s.v.length>2?'<br><span class="small">3 arrows for a 2-D plane: one is redundant, so many slider settings give the same point.</span>':'') + (rk===1?'<br><span class="small">No slider setting can leave this line — a whole direction was lost.</span>':'');
+  }
+  function arrow(c,x1,y1,x2,y2,col,w,label){ c.strokeStyle=col;c.fillStyle=col;c.lineWidth=w;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke(); const a=Math.atan2(y2-y1,x2-x1),hl=10; if(Math.hypot(x2-x1,y2-y1)>2){c.beginPath();c.moveTo(x2,y2);c.lineTo(x2-hl*Math.cos(a-0.4),y2-hl*Math.sin(a-0.4));c.lineTo(x2-hl*Math.cos(a+0.4),y2-hl*Math.sin(a+0.4));c.closePath();c.fill();} if(label){c.font='12px Segoe UI, sans-serif';c.textAlign='left';c.fillText(label,x2+6,y2+4);} }
+  sel.addEventListener('change',build); document.getElementById('span-random').addEventListener('click',()=>{ coef=coef.map(()=>+(Math.random()*4-2).toFixed(2)); [...sl.querySelectorAll('input')].forEach((inp,i)=>{inp.value=coef[i];inp.nextElementSibling.textContent=f2(coef[i]);}); draw(); });
+  sl.addEventListener('input',e=>{ if(e.target.type==='range') e.target.nextElementSibling.textContent=f2(+e.target.value); });
+  build(); [...sl.querySelectorAll('input')].forEach(inp=>inp.nextElementSibling.textContent=f2(+inp.value));
+  redraws.push(draw);
+})();
+
+/* ---------------------------------------------------------------- Tool 2: independence */
+(function(){
+  const cv=document.getElementById('cv-indep'), A=document.getElementById('ind-a'), Bb=document.getElementById('ind-b'), AL=document.getElementById('ind-al'), out=document.getElementById('ind-out');
+  function draw(){ const a=+A.value,b=+Bb.value,al=+AL.value; document.getElementById('ind-a-v').textContent=f2(a); document.getElementById('ind-b-v').textContent=f2(b); document.getElementById('ind-al-v').textContent=f2(al);
+    const f=t=>a*Math.exp(al*t)+b*Math.exp(-al*t); const v0=a+b, s0=al*(a-b);
+    plot(cv,{xmin:-2,xmax:2,ycap:12,curves:[{f,color:C.orange}],markers:[{x:0,y:v0,color:C.teal,label:'f(0)'}],segments:[{x1:-0.6,y1:v0-0.6*s0,x2:0.6,y2:v0+0.6*s0,color:C.teal,dash:[5,4]}],legend:[[C.orange,'f(t) = a e^(αt) + b e^(−αt)'],[C.teal,'tangent at t = 0',[5,4]]]});
+    const zero=Math.abs(a)<1e-9&&Math.abs(b)<1e-9;
+    out.innerHTML=`Value at 0: <b>f(0) = a + b = ${f2(v0)}</b><br>Slope at 0: <b>f′(0) = α(a − b) = ${f2(s0)}</b><br>Is f the zero function? <b style="color:${zero?'var(--green)':'var(--red)'}">${zero?'Yes — and only because a = b = 0':'No — it is nonzero somewhere'}</b>` + (!zero&&Math.abs(v0)<1e-9?'<br><span class="small">f(0)=0 but the slope is not 0 — the curve crosses zero, it isn’t flat. That is what step 3 catches.</span>':'');
+  }
+  [A,Bb,AL].forEach(i=>i.addEventListener('input',draw));
+  document.querySelectorAll('[data-ab]').forEach(btn=>btn.addEventListener('click',()=>{const [a,b]=btn.dataset.ab.split(',');A.value=a;Bb.value=b;draw();}));
+  redraws.push(draw);
+})();
+
+/* ---------------------------------------------------------------- Tool 3: Euler */
+(function(){
+  const cv=document.getElementById('cv-euler'), cv2=document.getElementById('cv-euler2'), T=document.getElementById('eu-t'), out=document.getElementById('eu-out'), play=document.getElementById('eu-play');
+  let timer=null;
+  function draw(){ const t=+T.value, th=2*t; document.getElementById('eu-t-v').textContent=f2(t);
+    const {c,W,H}=fix(cv); const cx=W/2,cy=H/2,r=Math.min(W,H)*0.36; c.clearRect(0,0,W,H); c.fillStyle='#fff';c.fillRect(0,0,W,H);
+    c.strokeStyle='#B9C3DB';c.lineWidth=1.2;c.beginPath();c.moveTo(0,cy);c.lineTo(W,cy);c.moveTo(cx,0);c.lineTo(cx,H);c.stroke();
+    c.strokeStyle='#D9E2F2';c.beginPath();c.arc(cx,cy,r,0,2*Math.PI);c.stroke();
+    c.fillStyle='#7A88A8';c.font='11px Segoe UI, sans-serif';c.textAlign='left';c.fillText('Re',W-22,cy-6);c.fillText('Im',cx+6,12);c.fillText('1',cx+r+4,cy+14);
+    const x=Math.cos(th), y=Math.sin(th); const P=[cx+r*x,cy-r*y], Q=[cx+r*x,cy+r*y];
+    // angle arc
+    c.strokeStyle=C.purple;c.lineWidth=2;c.beginPath();c.arc(cx,cy,r*0.25,0,-th,true);c.stroke(); c.fillStyle=C.purple;c.font='12px Segoe UI, sans-serif';c.fillText('2t',cx+r*0.28*Math.cos(th/2)+2,cy-r*0.28*Math.sin(th/2));
+    // dashed segment between P and Q, midpoint
+    c.strokeStyle=C.grey;c.setLineDash([4,4]);c.lineWidth=1.5;c.beginPath();c.moveTo(P[0],P[1]);c.lineTo(Q[0],Q[1]);c.stroke();c.setLineDash([]);
+    // radii
+    c.strokeStyle=C.orange;c.lineWidth=2.2;c.beginPath();c.moveTo(cx,cy);c.lineTo(P[0],P[1]);c.stroke();
+    c.strokeStyle=C.lav;c.beginPath();c.moveTo(cx,cy);c.lineTo(Q[0],Q[1]);c.stroke();
+    // projections
+    c.strokeStyle=C.teal;c.lineWidth=5;c.beginPath();c.moveTo(cx,cy);c.lineTo(cx+r*x,cy);c.stroke();
+    c.strokeStyle=C.purple;c.lineWidth=5;c.beginPath();c.moveTo(P[0],cy);c.lineTo(P[0],P[1]);c.stroke();
+    dot(c,P[0],P[1],C.orange,'e²ⁱᵗ'); dot(c,Q[0],Q[1],C.lav,'e⁻²ⁱᵗ'); dot(c,cx+r*x,cy,C.teal,'cos 2t');
+    // right plot
+    plot(cv2,{xmin:0,xmax:Math.PI,ymin:-1.3,ymax:1.3,curves:[{f:COS,color:C.teal},{f:SIN,color:C.purple}],markers:[{x:t,y:Math.cos(th),color:C.teal},{x:t,y:Math.sin(th),color:C.purple}],segments:[{x1:t,y1:-1.3,x2:t,y2:1.3,color:C.grey,dash:[3,3],width:1}],legend:[[C.teal,'cos 2t = (e²ⁱᵗ+e⁻²ⁱᵗ)/2'],[C.purple,'sin 2t = (e²ⁱᵗ−e⁻²ⁱᵗ)/(2i)']]});
+    out.innerHTML=`At t = ${f2(t)}: &nbsp;<b>e<sup>2it</sup> = ${f2(x)} + ${f2(y)}i</b>, &nbsp;<b>e<sup>−2it</sup> = ${f2(x)} − ${f2(y)}i</b><br>Sum ÷ 2 = <b>${f2(x)} = cos 2t</b> &nbsp;&nbsp; Difference ÷ 2i = <b>${f2(y)} = sin 2t</b>`;
+  }
+  function dot(c,x,y,col,lab){c.fillStyle=col;c.beginPath();c.arc(x,y,6,0,2*Math.PI);c.fill();c.fillStyle=(col===C.lav?C.purple:col);c.font='bold 12px Segoe UI, sans-serif';c.textAlign='left';c.fillText(lab,x+9,y+4);}
+  T.addEventListener('input',draw);
+  play.addEventListener('click',()=>{ if(timer){clearInterval(timer);timer=null;play.textContent='Play';return;} play.textContent='Pause'; timer=setInterval(()=>{let v=+T.value+0.02; if(v>Math.PI)v=0; T.value=v; draw();},40); });
+  redraws.push(draw);
+})();
+
+/* ---------------------------------------------------------------- Option 5 phase widget */
+(function(){
+  const cv=document.getElementById('cv-phase'), P=document.getElementById('ph-phi'), out=document.getElementById('ph-out');
+  function draw(){ const phi=+P.value; document.getElementById('ph-phi-v').textContent=f2(phi)+' rad';
+    const cp=Math.cos(phi), sp=Math.sin(phi); const ok=Math.abs(cp)>1e-3;
+    const rebuilt=t=>ok?(Math.cos(2*t-phi)-sp*Math.sin(2*t))/cp:NaN;
+    plot(cv,{xmin:-1.6,xmax:1.6,ymin:-1.3,ymax:1.3,curves:[{f:t=>cp*Math.cos(2*t),color:C.grey,width:1.6},{f:t=>sp*Math.sin(2*t),color:C.lav,width:1.6},{f:t=>Math.cos(2*t-phi),color:C.orange,width:2.6},{f:rebuilt,color:C.teal,dash:[6,5],width:2.4}]});
+    out.innerHTML=`cos(2t − φ) = <b>${f2(cp)}</b>·cos 2t + <b>${f2(sp)}</b>·sin 2t<br>` + (ok?`Recover cos 2t = [cos(2t − φ) − ${f2(sp)}·sin 2t] / ${f2(cp)} — <b style="color:var(--green)">works</b>, so { cos(2t − φ), sin 2t } spans the same plane as { cos 2t, sin 2t }.`:`cos φ = 0, so cos(2t − φ) = ±sin 2t — <b style="color:var(--red)">just a copy of sin 2t</b>. The pair collapses to one direction; cos 2t cannot be rebuilt (division by zero).`);
+  }
+  P.addEventListener('input',draw); document.querySelectorAll('[data-phi]').forEach(b=>b.addEventListener('click',()=>{P.value=b.dataset.phi;draw();})); redraws.push(draw);
+})();
+
+/* ---------------------------------------------------------------- the target-matching widget, one per option */
+const SQ3=Math.sqrt(3);
+const OPTIONS={
+  1:{basis:[{n:'e²ᵗ',f:E2},{n:'e⁻²ᵗ',f:EM2},{n:'cos 2t',f:COS},{n:'sin 2t',f:SIN}],
+     solve:c=>({k:[c[0],c[1],c[2],c[3]],ok:true}), formula:'k = (c₁, c₂, c₃, c₄)', free:false},
+  2:{basis:[{n:'e²ᵗ',f:E2},{n:'−e⁻²ᵗ',f:t=>-EM2(t)},{n:'3 cos 2t',f:t=>3*COS(t)},{n:'−sin 2t',f:t=>-SIN(t)}],
+     solve:c=>({k:[c[0],-c[1],c[2]/3,-c[3]],ok:true}), formula:'k = (c₁, −c₂, c₃/3, −c₄)', free:false},
+  3:{basis:[{n:'e²ᵗ + e⁻²ᵗ',f:t=>E2(t)+EM2(t)},{n:'cos(2t)/2',f:t=>COS(t)/2},{n:'sin 2t',f:SIN}],
+     solve:c=>{const ok=Math.abs(c[0]-c[1])<1e-9; return {k:[ok?c[0]:(c[0]+c[1])/2,2*c[2],c[3]],ok};}, formula:'needs c₁ = c₂; then k = (c₁, 2c₃, c₄). Otherwise: best attempt uses A = (c₁+c₂)/2', free:false},
+  4:{basis:[{n:'e²ᵗ',f:E2},{n:'e⁻²ᵗ',f:EM2},{n:'e²ᵗ − e⁻²ᵗ',f:t=>E2(t)-EM2(t)},{n:'cos 2t',f:COS},{n:'sin 2t',f:SIN}],
+     solve:(c,s)=>({k:[c[0]-s,c[1]+s,s,c[2],c[3]],ok:true}), formula:'k = (c₁ − s, c₂ + s, s, c₃, c₄) for any s', free:true},
+  5:{basis:[{n:'e²ᵗ',f:E2},{n:'e⁻²ᵗ',f:EM2},{n:'e²ᵗ − e⁻²ᵗ',f:t=>E2(t)-EM2(t)},{n:'cos(2t − π/3)',f:t=>Math.cos(2*t-Math.PI/3)},{n:'sin 2t',f:SIN}],
+     solve:(c,s)=>({k:[c[0]-s,c[1]+s,s,2*c[2],c[3]-SQ3*c[2]],ok:true}), formula:'k = (c₁ − s, c₂ + s, s, 2c₃, c₄ − √3·c₃) for any s', free:true},
+};
+const TARGET_NAMES=['e²ᵗ','e⁻²ᵗ','cos 2t','sin 2t'], TARGET_F=[E2,EM2,COS,SIN];
+function matcher(id){
+  const o=OPTIONS[id], root=document.getElementById('w-opt'+id);
+  const presets = id===3 ? [['e²ᵗ','1,0,0,0'],['e⁻²ᵗ','0,1,0,0'],['cos 2t','0,0,1,0'],['equal weights: e²ᵗ+e⁻²ᵗ+cos 2t','1,1,1,0']]
+                         : [['e²ᵗ','1,0,0,0'],['cos 2t','0,0,1,0'],['sin 2t','0,0,0,1'],['a mix','0.5,-1,1.5,0.8']];
+  root.insertAdjacentHTML('beforeend',`
+    <div class="row">
+      <div class="col" style="flex:2 1 320px"><canvas width="560" height="320"></canvas>
+        <div class="legend"><span><span class="sw" style="background:var(--orange)"></span>target (from the original span)</span><span><span class="sw" style="background:var(--teal)"></span>rebuilt with this option’s kit (dashed)</span></div></div>
+      <div class="col">
+        ${[0,1,2,3].map(i=>`<div class="ctrl"><label>c<sub>${i+1}</sub> · ${TARGET_NAMES[i]}</label><input type="range" data-c="${i}" min="-2" max="2" step="0.1" value="${[1,0.5,1,0][i]}"><span class="val"></span></div>`).join('')}
+        ${o.free?`<div class="ctrl"><label style="color:var(--purple)">s (redundancy)</label><input type="range" class="purple" data-s min="-2" max="2" step="0.1" value="0"><span class="val purple"></span></div>`:''}
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0">${presets.map(p=>`<button class="btn ghost" data-preset="${p[1]}">${p[0]}</button>`).join('')}</div>
+        <div class="out"><div class="small">Coefficient formula: ${o.formula}</div><table class="coef"><tr><th>Kit function</th><th>coefficient k</th></tr>${o.basis.map(b=>`<tr><td>${b.n}</td><td class="tealnum"></td></tr>`).join('')}</table><div class="verdictline" style="margin-top:6px"></div></div>
+      </div>
+    </div>`);
+  const cv=root.querySelector('canvas'), cs=[...root.querySelectorAll('[data-c]')], sS=root.querySelector('[data-s]'), cells=[...root.querySelectorAll('.tealnum')], vline=root.querySelector('.verdictline');
+  function draw(){ const c=cs.map(i=>+i.value); cs.forEach(i=>i.nextElementSibling.textContent=f2(+i.value)); const s=sS?+sS.value:0; if(sS)sS.nextElementSibling.textContent=f2(s);
+    const {k,ok}=o.solve(c,s); cells.forEach((cell,i)=>cell.textContent=f2(k[i]));
+    const target=t=>c.reduce((acc,ci,i)=>acc+ci*TARGET_F[i](t),0), rebuilt=t=>k.reduce((acc,ki,i)=>acc+ki*o.basis[i].f(t),0);
+    let maxdiff=0; for(let t=-1.2;t<=1.2;t+=0.02) maxdiff=Math.max(maxdiff,Math.abs(target(t)-rebuilt(t)));
+    plot(cv,{xmin:-1.2,xmax:1.2,ycap:14,curves:[{f:target,color:C.orange,width:3},{f:rebuilt,color:C.teal,dash:[7,5],width:2.4}]});
+    const nz=c.every(v=>Math.abs(v)<1e-9);
+    if(ok) vline.innerHTML=`Largest gap between target and rebuilt curve: <b>${maxdiff.toExponential(1)}</b> — <b style="color:var(--green)">exact match</b>${nz?' (the zero function, trivially)':''}.`;
+    else vline.innerHTML=`Largest gap: <b>${f2(maxdiff)}</b> — <b style="color:var(--red)">cannot match</b>: c₁ = ${f2(c[0])} ≠ c₂ = ${f2(c[1])}, but this kit forces the e<sup>2t</sup> and e<sup>−2t</sup> weights to be equal.`;
+  }
+  cs.forEach(i=>i.addEventListener('input',draw)); if(sS)sS.addEventListener('input',draw);
+  root.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{ b.dataset.preset.split(',').forEach((v,i)=>cs[i].value=v); draw(); }));
+  redraws.push(draw);
+}
+[1,2,3,4,5].forEach(matcher);
+
+/* ---------------------------------------------------------------- quiz */
+(function(){
+  const labels=[...document.querySelectorAll('#quiz label')], out=document.getElementById('quiz-out');
+  const why=['Yes: e²ᵗ = ½(sum) + ½(difference) and e⁻²ᵗ = ½(sum) − ½(difference), so both originals are rebuildable — two combos that don’t point the same way (like set E).',
+             'Yes: cos(2t − π/2) = sin 2t, so this set is exactly option 1 in disguise. The π/2 shift is harmless here because cos 2t is still in the kit; it would only be a problem if cos 2t had been removed (compare the “danger” case in the option 5 phase widget).',
+             'Yes: scaling by 5 is reversible, and {e²ⁱᵗ, sin 2t} spans the same plane as {cos 2t, sin 2t} because cos 2t = e²ⁱᵗ − i·sin 2t.',
+             'No: t·e²ᵗ is a genuinely new shape not in V (it has a different form from every exponential), so this span is bigger — 5-dimensional.'];
+  const ans=[1,1,1,0];
+  document.getElementById('quiz-check').addEventListener('click',()=>{
+    let score=0; labels.forEach((l,i)=>{ const chk=l.querySelector('input').checked?1:0; const right=chk===ans[i]; l.classList.toggle('right',right); l.classList.toggle('wrong',!right); if(right)score++; });
+    out.style.display='block'; out.innerHTML=`<b>${score} / ${labels.length} correct.</b><ul style="margin:6px 0 0">${why.map((w,i)=>`<li><b>Set ${i+1} — ${ans[i]?'same span':'different span'}.</b> ${w}</li>`).join('')}</ul>`;
+  });
+})();
+
+activate('p-overview');
+})();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

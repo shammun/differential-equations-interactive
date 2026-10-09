@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why ω = 0 is a local maximum of 1/g² (and ±ω_r are local minima)</title>
+<style>
+:root{
+  --bg:#eef1f6; --card:#ffffff; --ink:#1b2230; --mut:#5f6879; --line:#e4e8f0;
+  --h:#1d6fa5; --h-soft:#e6f1fa; --h-text:#155a87;        /* 1/g²  : blue   */
+  --g:#c2306a; --g-soft:#fbe9f0; --g-text:#9e2455;        /* g     : rose   */
+  --w:#e0900b; --w-soft:#fff4dd; --w-text:#a86500;        /* ω marker: amber */
+  --up:#1f9d55; --dn:#d6423a;                             /* uphill / downhill */
+  --act:#3b5bdb; --act-soft:#e9edfb;
+  --shadow:0 6px 22px rgba(59,91,219,.12), 0 1px 3px rgba(27,34,48,.08);
+  --sans:"Segoe UI Variable","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --math:"Cambria Math","STIX Two Math",Cambria,Georgia,"Times New Roman",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--sans);color:var(--ink);background:var(--bg);font-size:14px;
+  height:100vh;height:100dvh;width:100vw;overflow:hidden;display:flex;flex-direction:column}
+.m{font-family:var(--math);font-style:italic;font-size:1.07em;white-space:nowrap}
+.m sup,.m sub{font-style:normal;font-size:.72em}
+header{flex:none;display:flex;align-items:center;gap:6px 18px;padding:10px 14px 0;flex-wrap:wrap}
+header h1{margin:0;font-size:18px;font-weight:650;letter-spacing:-.01em}
+header p{margin:0;color:var(--mut);font-size:13px}
+nav{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+nav button{font:inherit;font-size:13px;border:0;background:rgba(255,255,255,.7);color:var(--ink);
+  padding:6px 13px;border-radius:999px;cursor:pointer}
+nav button:hover{background:#fff}
+nav button[aria-selected="true"]{background:var(--act);color:#fff;box-shadow:0 4px 14px rgba(59,91,219,.35)}
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:10px;padding:10px 14px 12px}
+.col{display:flex;flex-direction:column;gap:10px;min-height:0;min-width:0}
+.card{background:var(--card);border-radius:14px;box-shadow:var(--shadow)}
+.fig{flex:1 1 0;display:flex;flex-direction:column;padding:8px 10px;min-height:0;min-width:0}
+.figtitle{flex:none;font-size:12.5px;color:var(--mut);line-height:1.35;margin:0 2px 4px;display:flex;justify-content:space-between;gap:2px 12px;flex-wrap:wrap}
+.figtitle b{color:var(--ink);font-weight:600}
+.legend{white-space:nowrap}
+.sw{display:inline-block;width:16px;height:3px;border-radius:2px;vertical-align:middle;margin:0 4px 0 10px}
+.sw.h{background:var(--h)} .sw.g{background:var(--g)} .sw.w{background:var(--w)}
+.sw.dash{background:repeating-linear-gradient(90deg,#9aa3b8 0 4px,transparent 4px 7px)}
+.cv{flex:1 1 0;position:relative;min-height:0}
+.cv canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+.controls{flex:none;padding:8px 12px;display:flex;flex-direction:column;gap:6px}
+.row{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap}
+.lbl{font-size:12.5px;color:var(--mut)}
+.row input[type=range]{flex:1 1 120px;min-width:100px;accent-color:var(--act)}
+#w{accent-color:var(--w)}
+output{font-variant-numeric:tabular-nums;font-size:13px;min-width:56px}
+.wlab{font-family:var(--math);font-style:italic;font-size:18px;color:var(--w-text);font-weight:600}
+.wout{min-width:70px;color:var(--w-text);font-weight:600}
+.jump{display:flex;gap:4px;flex-wrap:wrap}
+.jump button,.presets button{font:inherit;font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid #f1cf8f;background:var(--w-soft);color:var(--w-text);cursor:pointer}
+.jump button.on{background:var(--w);color:#fff;border-color:var(--w)}
+.presets button{border-color:#c9d2f4;background:var(--act-soft);color:var(--act)}
+.presets button.on{background:var(--act);color:#fff}
+.btn{font:inherit;font-size:13px;border:0;border-radius:9px;padding:6px 12px;cursor:pointer;background:var(--act);color:#fff}
+.chk{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--mut);cursor:pointer}
+.chk input{accent-color:var(--act);margin:0}
+.cond{font-size:12px;padding:3px 9px;border-radius:999px;font-weight:600}
+.cond.ok{background:#e3f6ea;color:#177a42}
+.cond.bad{background:#fde7e5;color:#a8302a}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--act);outline-offset:2px}
+
+.calc,.notes{padding:10px 14px;overflow:auto;min-height:0;font-size:13px;line-height:1.5}
+.calc{flex:1.7 1 0}
+.notes{flex:1 1 0}
+.calc h3,.notes h3{font-size:13px;margin:12px 0 4px;color:var(--act);font-weight:650}
+.calc h3:first-child,.notes h3:first-child{margin-top:0}
+.ln{padding:3px 0;border-bottom:1px dashed var(--line);font-variant-numeric:tabular-nums}
+.why{color:var(--mut);font-size:12px}
+b.h{color:var(--h-text)} b.g{color:var(--g-text)} b.w{color:var(--w-text)} b.up{color:var(--up)} b.dn{color:var(--dn)}
+.verdict{margin:7px 0 2px;padding:7px 10px;border-radius:10px;border-left:3px solid var(--act);background:var(--act-soft);font-weight:600}
+.verdict.max{background:var(--h-soft);border-left-color:var(--h)}
+.verdict.min{background:var(--g-soft);border-left-color:var(--g)}
+.verdict.slope{background:var(--w-soft);border-left-color:var(--w)}
+.notes p{margin:0 0 8px;max-width:70ch}
+.notes .try{background:var(--w-soft);border-left:3px solid var(--w);padding:7px 10px;border-radius:10px}
+.calc table,.notes table,.float-body table{border-collapse:collapse;font-size:12.5px;margin:2px 0 8px;width:100%}
+th,td{padding:3px 8px 3px 0;text-align:left;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th{color:var(--mut);font-weight:600}
+tr.cur td{background:var(--w-soft);font-weight:600}
+.pill{display:inline-block;padding:0 7px;border-radius:999px;font-weight:600;font-size:12px}
+.pill.pos{background:#e3f6ea;color:#177a42} .pill.neg{background:#fde7e5;color:#a8302a} .pill.zero{background:#eef0f5;color:#5f6879}
+
+/* floating explainer */
+.help-btn{background:var(--act);box-shadow:0 4px 14px rgba(59,91,219,.3)}
+.help-btn[aria-expanded="true"]{background:#fff;color:var(--act);box-shadow:inset 0 0 0 1.5px var(--act)}
+.float{position:fixed;z-index:50;background:#fff;border-radius:14px;display:flex;flex-direction:column;overflow:hidden;border:1px solid #cfd8f7;
+  box-shadow:0 18px 50px rgba(59,91,219,.32),0 2px 8px rgba(27,34,48,.12)}
+.float-head{flex:none;display:flex;align-items:center;gap:8px;padding:7px 8px 7px 14px;background:var(--act);color:#fff;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.float-head:active{cursor:grabbing}
+.float-head .ttl{font-weight:600;font-size:13.5px}
+.float-head .hint{font-size:11.5px;opacity:.75}
+.float-head button{flex:none;background:rgba(255,255,255,.2);border:0;color:#fff;height:30px;border-radius:8px;cursor:pointer;font:inherit;font-size:12.5px;padding:0 10px}
+.float-head button:hover{background:rgba(255,255,255,.34)}
+.float-x{margin-left:auto;width:30px;padding:0!important;font-size:19px!important;line-height:1}
+.float-body{flex:1;min-height:0;overflow:auto;padding:10px 16px 22px;font-size:13.5px;line-height:1.6}
+.float-body h3{font-size:14px;margin:16px 0 5px;color:var(--act);font-weight:650}
+.float-body h3:first-child{margin-top:0}
+.float-body p{margin:0 0 9px;max-width:66ch}
+.float-body .box{background:#f5f7fd;border-radius:10px;padding:8px 12px;margin:4px 0 10px;line-height:1.7}
+.float-body .box.h{background:var(--h-soft)} .float-body .box.g{background:var(--g-soft)} .float-body .box.w{background:var(--w-soft)}
+.float-grip{position:absolute;right:0;bottom:0;width:28px;height:28px;cursor:nwse-resize;touch-action:none;z-index:2}
+.float-grip::after{content:"";position:absolute;right:2px;bottom:2px;width:18px;height:18px;
+  background:linear-gradient(135deg,transparent 0 50%,#c5cde6 50% 60%,transparent 60% 70%,#c5cde6 70% 80%,transparent 80%)}
+
+@media (max-width:860px){
+  body{height:auto;overflow:auto;width:auto;display:block}
+  header{padding:10px 10px 0}
+  nav{margin-left:0}
+  main{display:flex;flex-direction:column;padding:8px 10px 10px}
+  .col{display:contents}
+  .fig{order:1;flex:none}
+  .fig .cv{flex:none;height:min(62vh,420px)}
+  .controls{order:2;position:sticky;bottom:0;z-index:10;box-shadow:0 -6px 24px rgba(59,91,219,.22);gap:4px;padding:6px 10px}
+  .calc{order:3;flex:none;overflow:visible}
+  .notes{order:4;flex:none;overflow:visible}
+  .float{left:2vw!important;top:8vh!important;width:96vw!important;height:84vh!important}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Hilltop or valley? Reading <span class="m">1/g<sup>2</sup></span></h1>
+    <p>Why <span class="m">ω</span> = 0 is a <b>local maximum</b> of <span class="m">1/g<sup>2</sup></span> and <span class="m">ω</span> = ±<span class="m">ω<sub>r</sub></span> are <b>local minima</b> (so the gain <span class="m">g</span> peaks at <span class="m">ω<sub>r</sub></span>)</p>
+  </div>
+  <button class="btn help-btn" id="helpBtn" aria-expanded="false" aria-controls="helpPanel">Explain it slowly</button>
+  <nav role="tablist" aria-label="Steps">
+    <button role="tab" data-tab="which" aria-selected="true">1 · Which curve?</button>
+    <button role="tab" data-tab="neighbors" aria-selected="false">2 · The neighbor test</button>
+    <button role="tab" data-tab="slope" aria-selected="false">3 · Uphill or downhill?</button>
+    <button role="tab" data-tab="pieces" aria-selected="false">4 · Where the bump comes from</button>
+  </nav>
+</header>
+
+<main>
+  <section class="col">
+    <div class="card fig">
+      <div class="figtitle" id="figTitle"></div>
+      <div class="cv"><canvas id="cv" role="img" aria-label="Graph of 1 over g squared against omega"></canvas></div>
+    </div>
+    <div class="card controls">
+      <div class="row">
+        <label for="w" class="wlab">ω</label>
+        <input type="range" id="w" min="-1.5" max="1.5" step="0.005" value="0.3">
+        <output id="wOut" class="wout" for="w"></output>
+        <div class="jump" id="jump" aria-label="Jump ω to a special value">
+          <button data-j="neg">ω = −ω<sub>r</sub></button>
+          <button data-j="zero">ω = 0</button>
+          <button data-j="pos">ω = +ω<sub>r</sub></button>
+        </div>
+        <span class="lbl" id="dRow">step <span class="m">Δ</span></span>
+        <input type="range" id="d" min="0.02" max="0.6" step="0.01" value="0.2" style="flex:0 1 110px;min-width:80px">
+        <output id="dOut" for="d" style="min-width:44px"></output>
+      </div>
+      <div class="row">
+        <label for="m" class="lbl">mass <span class="m">m</span></label>
+        <input type="range" id="m" min="0.5" max="3" step="0.05" value="1">
+        <output id="mOut" for="m"></output>
+        <label for="b" class="lbl">damping <span class="m">b</span></label>
+        <input type="range" id="b" min="0.1" max="3.5" step="0.05" value="1">
+        <output id="bOut" for="b"></output>
+        <label for="k" class="lbl">stiffness <span class="m">k</span></label>
+        <input type="range" id="k" min="0.5" max="4" step="0.05" value="1">
+        <output id="kOut" for="k"></output>
+      </div>
+      <div class="row">
+        <span class="cond" id="cond"></span>
+        <div class="presets" id="presets" aria-label="Damping presets">
+          <button data-p="light">light damping</button>
+          <button data-p="book">book values</button>
+          <button data-p="edge">b² = 2km (bump just disappears)</button>
+          <button data-p="heavy">heavy damping (no resonance)</button>
+        </div>
+        <label class="chk"><input type="checkbox" id="zoom"> zoom in on the W</label>
+      </div>
+    </div>
+  </section>
+
+  <section class="col">
+    <div class="card calc" id="calc" aria-live="off"></div>
+    <div class="card notes" id="notes"></div>
+  </section>
+</main>
+
+<div id="helpPanel" class="float" role="dialog" aria-labelledby="helpTtl" hidden>
+  <div class="float-head" id="helpHead" tabindex="0" aria-label="Explainer window. Drag to move, or use arrow keys; Shift plus arrow keys resizes.">
+    <span class="ttl" id="helpTtl">The whole argument, slowly</span>
+    <span class="hint">drag to move · corner to resize</span>
+    <button id="helpTab" type="button">Open in new tab</button>
+    <button class="float-x" id="helpClose" aria-label="Close explainer">×</button>
+  </div>
+  <div class="float-body" id="helpBody"></div>
+  <div class="float-grip" id="helpGrip" aria-hidden="true"></div>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const S = { m:1, b:1, k:1, w:0.3, d:0.2, tab:"which", zoom:false };
+
+/* ---------- the math ---------- */
+const coef = () => ({ a:S.m*S.m, c:S.b*S.b - 2*S.k*S.m, e:S.k*S.k });   // 1/g² = a ω⁴ + c ω² + e
+const H  = w => { const {a,c,e}=coef(); return a*w**4 + c*w*w + e; };   // 1/g²
+const G  = w => 1/Math.sqrt(H(w));                                       // gain
+const B  = w => { const {a,c}=coef(); return 4*a*w*w + 2*c; };           // the bracket in h'
+const Hp = w => w*B(w);                                                  // derivative of 1/g²
+const WR = () => { const v = S.k/S.m - S.b*S.b/(2*S.m*S.m); return v>0 ? Math.sqrt(v) : null; };
+const hMin = () => { const r=WR(); return r===null ? H(0) : H(r); };
+function xLimit(){ // choose L so that 1/g²(L) ≈ 2.3·k²  → the W always fills the frame
+  const {a,c,e}=coef(); const Y=2.3*e; const disc=c*c-4*a*(e-Y);
+  return Math.sqrt((-c+Math.sqrt(disc))/(2*a))*1.04;
+}
+const f = (v,n=3) => (Math.abs(v)<5e-4 && n>=3 ? 0 : v).toFixed(n);
+const sgn = v => Math.abs(v)<1e-9 ? "zero" : (v>0 ? "pos" : "neg");
+const pill = v => `<span class="pill ${sgn(v)}">${sgn(v)==="zero"?"0":(v>0?"+":"−")}</span>`;
+const fs = (v,n=3) => (v<0?"−":"")+Math.abs(v).toFixed(n);
+
+/* ---------- canvas plumbing ---------- */
+const cv=$("cv"), ctx=cv.getContext("2d");
+let W=0, Hh=0, dpr=1;
+function resize(){ const r=cv.parentElement.getBoundingClientRect(); dpr=window.devicePixelRatio||1;
+  W=Math.max(50,r.width); Hh=Math.max(50,r.height); cv.width=W*dpr; cv.height=Hh*dpr; draw(); }
+new ResizeObserver(resize).observe(cv.parentElement);
+
+const C = { h:"#1d6fa5", g:"#c2306a", w:"#e0900b", up:"#1f9d55", dn:"#d6423a", mut:"#5f6879", line:"#e4e8f0", ink:"#1b2230", ref:"#9aa3b8" };
+function makePlot(x0,y0,pw,ph,xr,yr){
+  const X = w => x0 + (w-xr[0])/(xr[1]-xr[0])*pw;
+  const Y = v => y0 + ph - (v-yr[0])/(yr[1]-yr[0])*ph;
+  return {x0,y0,pw,ph,xr,yr,X,Y};
+}
+function axes(p, ylab){
+  ctx.save();
+  ctx.strokeStyle=C.line; ctx.lineWidth=1; ctx.fillStyle=C.mut; ctx.font="11.5px system-ui,sans-serif";
+  ctx.strokeRect(p.x0,p.y0,p.pw,p.ph);
+  // x ticks
+  const span=p.xr[1]-p.xr[0]; const step=[0.05,0.1,0.2,0.25,0.5,1].find(st=>span/st<=9)||1;
+  ctx.textAlign="center"; ctx.textBaseline="top";
+  for(let t=Math.ceil(p.xr[0]/step)*step; t<=p.xr[1]+1e-9; t+=step){
+    const x=p.X(t); ctx.beginPath(); ctx.moveTo(x,p.y0); ctx.lineTo(x,p.y0+p.ph); ctx.stroke();
+    ctx.fillText(f(t,step<0.1?2:(step<1?1:0)).replace("-","−"), x, p.y0+p.ph+3);
+  }
+  // y ticks (4)
+  ctx.textAlign="right"; ctx.textBaseline="middle";
+  for(let i=0;i<=4;i++){ const v=p.yr[0]+(p.yr[1]-p.yr[0])*i/4; const y=p.Y(v);
+    ctx.beginPath(); ctx.moveTo(p.x0,y); ctx.lineTo(p.x0+p.pw,y); ctx.stroke(); ctx.fillText(f(v,2),p.x0-5,y); }
+  // vertical dotted references at 0 and ±ω_r
+  ctx.setLineDash([3,4]); ctx.strokeStyle=C.ref;
+  const r=WR(); [0, r, r===null?null:-r].forEach(v=>{ if(v===null) return; if(v<p.xr[0]||v>p.xr[1]) return;
+    ctx.beginPath(); ctx.moveTo(p.X(v),p.y0); ctx.lineTo(p.X(v),p.y0+p.ph); ctx.stroke(); });
+  ctx.setLineDash([]);
+  ctx.textAlign="left"; ctx.textBaseline="top"; ctx.fillStyle=C.ink; ctx.font="600 12px system-ui,sans-serif";
+  ctx.fillText(ylab, p.x0+6, p.y0+5);
+  ctx.textAlign="right"; ctx.fillStyle=C.mut; ctx.font="11.5px system-ui,sans-serif";
+  ctx.fillText("ω", p.x0+p.pw-2, p.y0+p.ph+3);
+  ctx.restore();
+}
+function curve(p, fn, color, width=2.4, dash=null){
+  ctx.save(); ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=width; if(dash) ctx.setLineDash(dash);
+  ctx.rect(p.x0,p.y0,p.pw,p.ph); ctx.clip(); ctx.beginPath();
+  const n=360; for(let i=0;i<=n;i++){ const w=p.xr[0]+(p.xr[1]-p.xr[0])*i/n; const y=p.Y(fn(w));
+    if(i===0) ctx.moveTo(p.X(w),y); else ctx.lineTo(p.X(w),y); }
+  ctx.stroke(); ctx.restore();
+}
+function dot(x,y,color,r=5,ring=false){ ctx.save(); ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+  if(ring){ ctx.fillStyle="#fff"; ctx.fill(); ctx.lineWidth=2.5; ctx.strokeStyle=color; ctx.stroke(); } else { ctx.fillStyle=color; ctx.fill(); }
+  ctx.restore(); }
+function label(x,y,txt,color,align="left",base="bottom",font="600 12px system-ui,sans-serif",bg=true){
+  ctx.save(); ctx.font=font; ctx.textAlign=align; ctx.textBaseline=base;
+  if(bg){ const m=ctx.measureText(txt); const w=m.width+8, h=16; let bx=x-4, by=y-h;
+    if(align==="center") bx=x-w/2; if(align==="right") bx=x-w+4; if(base==="top") by=y; if(base==="middle") by=y-h/2;
+    ctx.fillStyle="rgba(255,255,255,.85)"; ctx.fillRect(bx,by,w,h); }
+  ctx.fillStyle=color; ctx.fillText(txt,x,y); ctx.restore(); }
+function arrow(x1,y1,x2,y2,color){ ctx.save(); ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=2.2;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  const a=Math.atan2(y2-y1,x2-x1); ctx.beginPath(); ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-9*Math.cos(a-.45),y2-9*Math.sin(a-.45)); ctx.lineTo(x2-9*Math.cos(a+.45),y2-9*Math.sin(a+.45)); ctx.closePath(); ctx.fill(); ctx.restore(); }
+
+/* ranges */
+function xRange(){ const L=xLimit(); const r=WR();
+  if(S.zoom && r!==null) return [-1.5*r, 1.5*r]; return [-L,L]; }
+function hRange(xr){ const {e}=coef(); const mn=hMin();
+  if(S.zoom && WR()!==null){ const top=Math.max(e,H(xr[1])); const pad=0.25*(top-mn)+1e-6; return [mn-pad, top+pad]; }
+  return [Math.max(0,mn*0.55), 2.3*e*1.03]; }
+function gRange(xr){ const gmax=1/Math.sqrt(hMin()); const gmin=Math.min(G(xr[0]),G(0));
+  if(S.zoom && WR()!==null){ const pad=0.25*(gmax-gmin)+1e-6; return [gmin-pad, gmax+pad]; }
+  return [0, gmax*1.15]; }
+
+/* ---------- drawing per tab ---------- */
+function draw(){
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,Hh);
+  const ml=46, mr=14, mt=8, mb=22;
+  const xr=xRange();
+  if(S.tab==="which") drawWhich(ml,mr,mt,mb,xr);
+  else if(S.tab==="neighbors") drawNeighbors(ml,mr,mt,mb,xr);
+  else if(S.tab==="slope") drawSlope(ml,mr,mt,mb,xr);
+  else drawPieces(ml,mr,mt,mb,xr);
+}
+function drawWhich(ml,mr,mt,mb,xr){
+  const gap=26, ph=(Hh-mt-mb*2-gap)/2;
+  const pT=makePlot(ml,mt,W-ml-mr,ph,xr,hRange(xr));
+  const pB=makePlot(ml,mt+ph+mb+gap,W-ml-mr,ph,xr,gRange(xr));
+  axes(pT,"1/g²  — the text minimises THIS"); curve(pT,H,C.h);
+  axes(pB,"g = 1/√(1/g²)  — the gain we actually want big"); curve(pB,G,C.g);
+  const r=WR();
+  // markers at 0 and ±ω_r
+  const mark=(p,fn,wv,txt,col,dy)=>{ const x=p.X(wv), y=p.Y(fn(wv)); dot(x,y,col,4.5,true); label(x,y+dy,txt,col,"center",dy<0?"bottom":"top","600 11.5px system-ui,sans-serif"); };
+  mark(pT,H,0,"hilltop → local MAX of 1/g²",C.h,-9);
+  mark(pB,G,0,"valley → local MIN of g",C.g,9);
+  if(r!==null){ mark(pT,H,r,"valley → local MIN",C.h,10); mark(pT,H,-r,"valley → local MIN",C.h,10);
+    mark(pB,G,r,"peak → local MAX (resonance)",C.g,-9); mark(pB,G,-r,"peak",C.g,-9); }
+  // current ω: vertical through both plots
+  ctx.save(); ctx.strokeStyle=C.w; ctx.lineWidth=1.5; ctx.setLineDash([5,4]);
+  ctx.beginPath(); ctx.moveTo(pT.X(S.w),pT.y0); ctx.lineTo(pT.X(S.w),pB.y0+pB.ph); ctx.stroke(); ctx.restore();
+  dot(pT.X(S.w),pT.Y(H(S.w)),C.w,6); dot(pB.X(S.w),pB.Y(G(S.w)),C.w,6);
+  label(pT.X(S.w)+8,pT.Y(H(S.w))-4,`1/g² = ${f(H(S.w))}`,C.w);
+  label(pB.X(S.w)+8,pB.Y(G(S.w))-4,`g = ${f(G(S.w))}`,C.w);
+  label(pT.X(S.w),pB.y0+pB.ph+4,`ω = ${f(S.w,2)}`,C.w,"center","top");
+}
+function drawNeighbors(ml,mr,mt,mb,xr){
+  const p=makePlot(ml,mt,W-ml-mr,Hh-mt-mb,xr,hRange(xr));
+  axes(p,"1/g²  — stand at ω, step Δ left and right"); curve(p,H,C.h);
+  const w0=S.w, d=S.d, hl=H(w0-d), hc=H(w0), hr=H(w0+d);
+  // horizontal reference at h(ω)
+  ctx.save(); ctx.strokeStyle=C.w; ctx.setLineDash([4,4]); ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.moveTo(p.X(Math.max(xr[0],w0-d)),p.Y(hc)); ctx.lineTo(p.X(Math.min(xr[1],w0+d)),p.Y(hc)); ctx.stroke(); ctx.restore();
+  const pts=[[w0-d,hl,"ω − Δ"],[w0+d,hr,"ω + Δ"]];
+  pts.forEach(([wv,hv,t])=>{ if(wv<xr[0]||wv>xr[1]) return; const x=p.X(wv), yc=p.Y(hc), y=p.Y(hv);
+    const col = hv<hc-1e-9 ? C.dn : (hv>hc+1e-9 ? C.up : C.mut);
+    arrow(x,yc,x,y+(hv<hc?-7:7),col); dot(x,y,col,5);
+    label(x, hv<hc ? y+8 : y-8, `${t}: ${f(hv)}  (${hv<hc?"lower ↓":(hv>hc?"higher ↑":"same")})`, col, "center", hv<hc?"top":"bottom"); });
+  dot(p.X(w0),p.Y(hc),C.w,7);
+  label(p.X(w0), p.Y(hc)-12, `you are here: ω = ${f(w0,2)},  1/g² = ${f(hc)}`, C.w, "center","bottom");
+  const v = verdict(hl,hc,hr);
+  label(p.x0+p.pw/2, p.y0+p.ph-10, v.canvas, v.col, "center","bottom","700 13px system-ui,sans-serif");
+}
+function verdict(hl,hc,hr){
+  const eps=1e-9;
+  if(hl<hc-eps && hr<hc-eps) return {cls:"max",col:C.h,canvas:"both neighbours are LOWER → hilltop → local MAXIMUM of 1/g²", txt:"Both neighbours are <b class=\"dn\">lower</b>. Wherever you step, you go down. That is what “local maximum” means: a hilltop. So this ω is a <b class=\"h\">local maximum of 1/g²</b> — which is the same as a local <b class=\"g\">minimum of the gain g</b>."};
+  if(hl>hc+eps && hr>hc+eps) return {cls:"min",col:C.g,canvas:"both neighbours are HIGHER → valley floor → local MINIMUM of 1/g²", txt:"Both neighbours are <b class=\"up\">higher</b>. Wherever you step, you go up. That is a valley floor: a <b class=\"h\">local minimum of 1/g²</b> — which is the same as a local <b class=\"g\">maximum of the gain g</b> (resonance)."};
+  if(hl>hc+eps && hr<hc-eps) return {cls:"slope",col:C.w,canvas:"left is higher, right is lower → you are on a downhill slope, not a top or a bottom", txt:"Left neighbour higher, right neighbour lower: you are part-way down a slope. Neither a hilltop nor a valley. Slide ω toward a dotted line to find one."};
+  if(hl<hc-eps && hr>hc+eps) return {cls:"slope",col:C.w,canvas:"left is lower, right is higher → you are on an uphill slope, not a top or a bottom", txt:"Left neighbour lower, right neighbour higher: you are part-way up a slope. Neither a hilltop nor a valley. Slide ω toward a dotted line to find one."};
+  return {cls:"slope",col:C.mut,canvas:"neighbours tie — make Δ smaller or move ω a little", txt:"The two neighbours tie at this step size. Shrink Δ or move ω slightly."};
+}
+function drawSlope(ml,mr,mt,mb,xr){
+  const stripH=88, gap=20;
+  const p=makePlot(ml,mt,W-ml-mr,Hh-mt-mb-stripH-gap,xr,hRange(xr));
+  axes(p,"1/g² with its tangent line at ω  (slope = h′(ω))"); curve(p,H,C.h);
+  // tangent
+  const w0=S.w, h0=H(w0), s=Hp(w0);
+  const span=(xr[1]-xr[0])*0.16;
+  ctx.save(); ctx.beginPath(); ctx.rect(p.x0,p.y0,p.pw,p.ph); ctx.clip();
+  ctx.strokeStyle = Math.abs(s)<1e-6 ? C.mut : (s>0?C.up:C.dn); ctx.lineWidth=2.6;
+  ctx.beginPath(); ctx.moveTo(p.X(w0-span),p.Y(h0-s*span)); ctx.lineTo(p.X(w0+span),p.Y(h0+s*span)); ctx.stroke(); ctx.restore();
+  dot(p.X(w0),p.Y(h0),C.w,7);
+  const word = Math.abs(s)<1e-4 ? "flat (slope 0)" : (s>0 ? "uphill to the right (slope +)" : "downhill to the right (slope −)");
+  label(p.X(w0), p.Y(h0)-12, `ω = ${f(w0,2)}:  ${word}`, Math.abs(s)<1e-4?C.mut:(s>0?C.up:C.dn), "center","bottom");
+  // sign strip
+  const sy=p.y0+p.ph+gap+14, rowH=22, x0=p.x0, pw=p.pw;
+  const rows=[["factor  ω", w=>w],["bracket  4m²ω² + 2(b²−2km)", B],["product  h′(ω)", Hp]];
+  ctx.save(); ctx.font="600 11.5px system-ui,sans-serif"; ctx.textBaseline="middle";
+  ctx.textAlign="left"; ctx.fillStyle=C.mut; ctx.fillText("sign of …", x0, sy-12);
+  rows.forEach(([name,fn],i)=>{ const y=sy+i*rowH;
+    const n=200; for(let j=0;j<n;j++){ const wa=xr[0]+(xr[1]-xr[0])*j/n, wb=xr[0]+(xr[1]-xr[0])*(j+1)/n; const v=fn((wa+wb)/2);
+      ctx.fillStyle = Math.abs(v)<1e-9 ? "#eef0f5" : (v>0 ? "#cdeedb" : "#f9d3d0"); ctx.fillRect(p.X(wa),y,p.X(wb)-p.X(wa)+0.6,rowH-4); }
+    // +/- text in regions
+    const r=WR(); const marks = i===0 ? [0] : (i===1 ? (r===null?[]:[-r,r]) : (r===null?[0]:[-r,0,r]));
+    const bounds=[xr[0],...marks.filter(v=>v>xr[0]&&v<xr[1]).sort((a,b)=>a-b),xr[1]];
+    for(let q=0;q<bounds.length-1;q++){ const mid=(bounds[q]+bounds[q+1])/2; const v=fn(mid);
+      ctx.fillStyle = v>0?"#177a42":"#a8302a"; ctx.textAlign="center"; ctx.fillText(v>0?"+":"−", p.X(mid), y+rowH/2-2); }
+    ctx.fillStyle="rgba(255,255,255,.85)"; const m=ctx.measureText(name); ctx.fillRect(x0+4,y+1,m.width+8,rowH-6);
+    ctx.fillStyle=C.ink; ctx.textAlign="left"; ctx.fillText(name, x0+8, y+rowH/2-2);
+    // marker
+    ctx.strokeStyle=C.w; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(p.X(w0),y-1); ctx.lineTo(p.X(w0),y+rowH-3); ctx.stroke();
+  });
+  ctx.restore();
+}
+function drawPieces(ml,mr,mt,mb,xr){
+  const p=makePlot(ml,mt,W-ml-mr,Hh-mt-mb,xr,hRange(xr));
+  axes(p,"1/g² built from three pieces:  k²  +  (b²−2km)ω²  +  m²ω⁴");
+  const {a,c,e}=coef();
+  curve(p,()=>e,C.mut,1.6,[6,4]);                      // flat floor k²
+  curve(p,w=>e+c*w*w,c<0?C.dn:C.up,2,[2,3]);           // floor + ω² piece
+  curve(p,H,C.h,2.8);                                  // full sum
+  // shading between "floor+ω²" and sum = the ω⁴ piece
+  ctx.save(); ctx.beginPath(); ctx.rect(p.x0,p.y0,p.pw,p.ph); ctx.clip();
+  ctx.fillStyle="rgba(29,111,165,.10)"; ctx.beginPath(); const n=200;
+  for(let i=0;i<=n;i++){ const w=xr[0]+(xr[1]-xr[0])*i/n; const y=p.Y(e+c*w*w); i? ctx.lineTo(p.X(w),y):ctx.moveTo(p.X(w),y); }
+  for(let i=n;i>=0;i--){ const w=xr[0]+(xr[1]-xr[0])*i/n; ctx.lineTo(p.X(w),p.Y(H(w))); }
+  ctx.closePath(); ctx.fill(); ctx.restore();
+  // legend text
+  const ly=p.y0+26;
+  label(p.x0+8,ly,"— — k²  (flat floor)",C.mut,"left","top");
+  label(p.x0+8,ly+17,c<0?"· · · k² + (b²−2km)ω²  (ω² piece pulls the floor DOWN near 0)":"· · · k² + (b²−2km)ω²  (ω² piece pushes UP: no dip)",c<0?C.dn:C.up,"left","top");
+  label(p.x0+8,ly+34,"—— all three: the ω⁴ piece lifts it back up far out (shaded)",C.h,"left","top");
+  // current ω decomposition
+  const w0=S.w; const x=p.X(w0);
+  ctx.save(); ctx.strokeStyle=C.w; ctx.setLineDash([5,4]); ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(x,p.y0); ctx.lineTo(x,p.y0+p.ph); ctx.stroke(); ctx.restore();
+  dot(x,p.Y(e),C.mut,4,true); dot(x,p.Y(e+c*w0*w0),c<0?C.dn:C.up,4,true); dot(x,p.Y(H(w0)),C.w,6);
+  label(x+8,p.Y(H(w0))-4,`1/g² = ${f(H(w0))}`,C.w);
+  label(x+8,p.Y(e+c*w0*w0)+4,`after ω² piece: ${f(e+c*w0*w0)}`,c<0?C.dn:C.up,"left","top");
+  label(x,p.y0+p.ph+4,`ω = ${f(w0,2)}`,C.w,"center","top");
+}
+
+/* ---------- side panels ---------- */
+const M = s => `<span class="m">${s}</span>`;
+function calcHTML(){
+  const {a,c,e}=coef(); const w=S.w, r=WR();
+  const wrLine = r===null
+    ? `<div class="ln">${M("ω<sub>r</sub>")} = √(${f(S.k/S.m)} − ${f(S.b*S.b/(2*S.m*S.m))}) — <b class="dn">negative inside the root → no ω<sub>r</sub></b>. The assumption in the book fails here.</div>`
+    : `<div class="ln">${M("ω<sub>r</sub>")} = √(k/m − b²/2m²) = √(${f(S.k/S.m)} − ${f(S.b*S.b/(2*S.m*S.m))}) = √${f(S.k/S.m - S.b*S.b/(2*S.m*S.m))} = <b class="h">${f(r)}</b></div>`;
+  const hLine = `<div class="ln">${M("1/g<sup>2</sup>")}(${f(w,2)}) = m²ω⁴ + (b²−2km)ω² + k² = (${f(a)})(${f(w**4,4)}) + (${fs(c)})(${f(w*w,4)}) + ${f(e)} = ${fs(a*w**4,4)} ${c<0?"−":"+"} ${f(Math.abs(c)*w*w,4)} + ${f(e)} = <b class="h">${f(H(w))}</b></div>`;
+  const coefLine = `<div class="ln">middle coefficient  b² − 2km = ${f(S.b*S.b)} − ${f(2*S.k*S.m)} = <b class="${c<0?"dn":"up"}">${fs(c)}</b> ${pill(c)} <span class="why">${c<0?"negative → there is a dip → resonance exists":"not negative → no dip → no resonance"}</span></div>`;
+  let out="";
+  if(S.tab==="which"){
+    out += `<h3>Same ω, two different questions</h3>${hLine}
+      <div class="ln">${M("g")}(${f(w,2)}) = 1/√${f(H(w))} = <b class="g">${f(G(w))}</b></div>
+      <div class="ln">at ω = 0:  1/g² = k² = <b class="h">${f(e)}</b>,   g = 1/k = <b class="g">${f(1/S.k)}</b></div>
+      <div class="ln">moving from 0 to ${f(w,2)}:  1/g² changed by <b class="${H(w)-e<0?"dn":"up"}">${fs(H(w)-e)}</b>,  g changed by <b class="${G(w)-1/S.k<0?"dn":"up"}">${fs(G(w)-1/S.k)}</b> <span class="why">— always opposite signs, because g = 1/√(1/g²)</span></div>
+      ${wrLine}
+      <div class="verdict">A hilltop of ${M("1/g<sup>2</sup>")} is a valley of ${M("g")}, and a valley of ${M("1/g<sup>2</sup>")} is a peak of ${M("g")}. The book climbs down into the valleys of 1/g² because that is where the gain peaks.</div>`;
+  } else if(S.tab==="neighbors"){
+    const d=S.d, hl=H(w-d), hc=H(w), hr=H(w+d); const v=verdict(hl,hc,hr);
+    out += `<h3>Compare with the two neighbours</h3>
+      <table><tr><th>where</th><th>ω</th><th>1/g²</th><th>vs here</th></tr>
+      <tr><td>left neighbour</td><td>${fs(w-d,3)}</td><td>${f(hl)}</td><td>${hl<hc?'<b class="dn">lower</b>':(hl>hc?'<b class="up">higher</b>':'same')}</td></tr>
+      <tr class="cur"><td>here</td><td>${fs(w,3)}</td><td>${f(hc)}</td><td>—</td></tr>
+      <tr><td>right neighbour</td><td>${fs(w+d,3)}</td><td>${f(hr)}</td><td>${hr<hc?'<b class="dn">lower</b>':(hr>hc?'<b class="up">higher</b>':'same')}</td></tr></table>
+      <div class="verdict ${v.cls}">${v.txt}</div>
+      <h3>How the three numbers are computed</h3>${hLine}
+      <div class="ln">${M("1/g<sup>2</sup>")}(${fs(w-d,2)}) = (${f(a)})(${f((w-d)**4,4)}) + (${fs(c)})(${f((w-d)**2,4)}) + ${f(e)} = <b>${f(hl)}</b></div>
+      <div class="ln">${M("1/g<sup>2</sup>")}(${fs(w+d,2)}) = (${f(a)})(${f((w+d)**4,4)}) + (${fs(c)})(${f((w+d)**2,4)}) + ${f(e)} = <b>${f(hr)}</b></div>
+      ${wrLine}
+      <p class="why">“Local” means “compared with the immediate neighbours only” — not compared with the whole curve. Keep Δ small; a huge step can jump clean over the hill.</p>`;
+  } else if(S.tab==="slope"){
+    const A=w, Bv=B(w), P=Hp(w);
+    out += `<h3>The derivative is a product of two factors</h3>
+      <div class="ln">h′(ω) = ω · [4m²ω² + 2(b²−2km)]</div>
+      <div class="ln">factor A = ω = <b>${fs(A)}</b> ${pill(A)}</div>
+      <div class="ln">factor B = 4(${f(a)})(${f(w*w,4)}) + 2(${fs(c)}) = ${f(4*a*w*w,4)} ${c<0?"−":"+"} ${f(Math.abs(2*c),4)} = <b>${fs(Bv)}</b> ${pill(Bv)}</div>
+      <div class="ln">slope = A × B = <b class="${P<0?"dn":(P>0?"up":"")}">${fs(P)}</b> ${pill(P)} <span class="why">${Math.abs(P)<1e-4?"flat: a hilltop, a valley floor, or a boundary":(P>0?"uphill to the right":"downhill to the right")}</span></div>
+      ${coefLine}
+      <h3>Read the strip left to right</h3>
+      <div class="ln">Factor A flips sign only at ω = 0.  Factor B flips sign only at ω = ±ω<sub>r</sub>${r===null?" (never, here — it is always positive)":""}.</div>
+      ${r===null
+        ? `<div class="ln">With b² − 2km ≥ 0 the bracket B is positive everywhere, so the slope has the sign of ω: <b class="dn">−</b> left of 0, <b class="up">+</b> right of 0. Down then up → ω = 0 is a <b class="h">valley (local minimum)</b>. No hilltop anywhere.</div>`
+        : `<div class="ln">Just left of 0:  A <b class="dn">−</b> × B <b class="dn">−</b> = <b class="up">+</b>  uphill.   Just right of 0:  A <b class="up">+</b> × B <b class="dn">−</b> = <b class="dn">−</b>  downhill.   Up-then-down = <b class="h">hilltop at ω = 0 → local maximum</b>.</div>
+           <div class="ln">Just left of ω<sub>r</sub>:  A <b class="up">+</b> × B <b class="dn">−</b> = <b class="dn">−</b>  downhill.   Just right:  A <b class="up">+</b> × B <b class="up">+</b> = <b class="up">+</b>  uphill.   Down-then-up = <b class="h">valley at ω<sub>r</sub> → local minimum</b>.</div>
+           <div class="verdict">The whole question is the sign of B near ω = 0, and that is just the sign of b² − 2km. Negative bracket at 0 ⇒ hill at 0.</div>`}`;
+  } else {
+    const p1=e, p2=c*w*w, p3=a*w**4;
+    out += `<h3>Three pieces at ω = ${f(w,2)}</h3>
+      <div class="ln">piece 1  k² = <b>${f(p1)}</b> <span class="why">a flat floor, the same at every ω</span></div>
+      <div class="ln">piece 2  (b²−2km) ω² = (${fs(c)})(${f(w*w,4)}) = <b class="${p2<0?"dn":"up"}">${fs(p2,4)}</b> <span class="why">${c<0?"negative: pulls the floor DOWN":"positive: pushes UP"}</span></div>
+      <div class="ln">piece 3  m² ω⁴ = (${f(a)})(${f(w**4,4)}) = <b class="up">${f(p3,4)}</b> <span class="why">always positive: pushes UP</span></div>
+      <div class="ln">sum = ${f(p1)} ${p2<0?"−":"+"} ${f(Math.abs(p2),4)} + ${f(p3,4)} = <b class="h">${f(H(w))}</b></div>
+      ${coefLine}
+      <h3>Why the tug-of-war goes the way it does</h3>
+      <div class="ln">Near ω = 0, ω⁴ is far smaller than ω²: at ω = ${f(w,2)},  ω² = ${f(w*w,4)} but ω⁴ = ${f(w**4,4)}.  So the ω² piece wins there.</div>
+      <div class="ln">${c<0?"The ω² piece is negative, so the curve starts <b class=\"dn\">going down</b> as you leave 0 → ω = 0 is a hilltop.":"The ω² piece is not negative, so nothing pulls the curve down as you leave 0 → ω = 0 is a valley floor."}</div>
+      <div class="ln">Far from 0, ω⁴ grows much faster than ω², so the positive ω⁴ piece takes over and the curve <b class="up">climbs</b>. ${c<0?"Down first, then up: the two turning points where it switches are the valleys at ±ω<sub>r</sub>.":""}</div>
+      ${wrLine}
+      <div class="verdict">The assumption in the problem, k/m − b²/2m² &gt; 0, is exactly “b² − 2km &lt; 0”: it guarantees the ω² piece is the down-pulling kind. That is the whole reason ω = 0 is a hilltop.</div>`;
+  }
+  return out;
+}
+function notesHTML(){
+  const r=WR();
+  if(S.tab==="which") return `<h3>What you are looking at</h3>
+    <p>Top: ${M("1/g<sup>2</sup>")}, the expression the book minimises. Bottom: the gain ${M("g")} itself. They are the same information drawn upside-down, because a bigger 1/g² means a smaller g.</p>
+    <p>The book says “ω = 0 is a local maximum”. It is talking about the <b>top</b> curve. On the bottom curve the very same point is a local <i>minimum</i>. That is why “ω = 0 is a maximum” and “the gain is largest at ω<sub>r</sub>” do not contradict each other.</p>
+    <p class="try">Try: drag ω from 0 out to the dotted line at ω<sub>r</sub>${r===null?" (there is none right now — lower b)":""}. Watch the top dot go <i>down</i> into a valley while the bottom dot goes <i>up</i> to a peak.</p>`;
+  if(S.tab==="neighbors") return `<h3>The only definition you need</h3>
+    <p>A point is a <b>local maximum</b> if a small step to either side takes you <i>lower</i>. A <b>local minimum</b>: a small step either way takes you <i>higher</i>. Nothing about being the biggest value overall.</p>
+    <p>So the book's claim is a claim about three numbers: 1/g² at 0, at −Δ, and at +Δ. The panel on the right computes all three.</p>
+    <p class="try">Try: press “ω = 0”: both neighbours are lower → hilltop. Press “ω = +ω<sub>r</sub>”: both higher → valley. Then shrink Δ to see the verdict survive as the step gets tiny.</p>`;
+  if(S.tab==="slope") return `<h3>The book's derivative argument, made visible</h3>
+    <p>Equation (6.77) says the slope is ω times a bracket. A product is negative exactly when the two factors disagree in sign. The coloured strip shows each factor's sign and the product.</p>
+    <p>A hilltop is “slope + on the left, slope − on the right”. A valley is the opposite. Read the bottom row of the strip around each dotted line and you have the answer.</p>
+    <p class="try">Try: slide ω slowly across 0 and watch which factor flips (only ω). Then across ω<sub>r</sub> and watch which flips (only the bracket). Raise b past the point where b² = 2km and see the bracket's red region vanish.</p>`;
+  return `<h3>Why there is a dip at all</h3>
+    <p>1/g² is a sum of three pieces. Piece 1 is a flat floor k². Piece 2 is (b²−2km)ω² — and in the book's setting this coefficient is <b>negative</b>, so this piece drags the curve <i>below</i> the floor as soon as ω leaves 0. Piece 3, m²ω⁴, is positive but negligible near 0 and huge far away.</p>
+    <p>Down first (piece 2 wins), up later (piece 3 wins). Any curve that does that has a hill at 0 and a valley on each side. The “coefficient of ω⁴ is positive” line in the book is just “piece 3 eventually wins, so the ends go up”.</p>
+    <p class="try">Try: press “heavy damping”. Now b² − 2km is positive, piece 2 pushes up too, the dip is gone and ω = 0 becomes a valley: the system has no resonant frequency.</p>`;
+}
+function figTitle(){
+  const t={which:"<b>Step 1</b> — the same ω on both curves",neighbors:"<b>Step 2</b> — is ω higher or lower than its neighbours?",slope:"<b>Step 3</b> — the sign of the slope, factor by factor",pieces:"<b>Step 4</b> — the tug-of-war between the ω² piece and the ω⁴ piece"}[S.tab];
+  const leg = S.tab==="which"?`<span class="legend"><span class="sw h"></span>1/g²<span class="sw g"></span>g<span class="sw w"></span>current ω<span class="sw dash"></span>0 and ±ω<sub>r</sub></span>`:`<span class="legend"><span class="sw h"></span>1/g²<span class="sw w"></span>current ω<span class="sw dash"></span>0 and ±ω<sub>r</sub></span>`;
+  $("figTitle").innerHTML = `<span>${t}</span>${leg}`;
+}
+
+/* ---------- explainer ---------- */
+function helpHTML(){
+  const {a,c,e}=coef(); const r=WR(); const d=0.25;
+  const rows=[-d,0,d].map(x=>`<tr${x===0?' class="cur"':''}><td>${x===0?"ω = 0":"ω = "+fs(x,2)}</td><td>${f(H(x))}</td><td>${x===0?"—":(H(x)<H(0)?"lower":"higher")}</td></tr>`).join("");
+  const rows2 = r===null ? "" : [r-d,r,r+d].map(x=>`<tr${x===r?' class="cur"':''}><td>${x===r?"ω = ω<sub>r</sub> = "+f(r,2):"ω = "+f(x,2)}</td><td>${f(H(x))}</td><td>${x===r?"—":(H(x)<H(r)?"lower":"higher")}</td></tr>`).join("");
+  return `
+<h3>1. “Local maximum” is a statement about neighbours, nothing more</h3>
+<p>Stand on a hiking trail. If one step forward goes downhill and one step back also goes downhill, you are on a hilltop. That is a <b>local maximum</b>. If both directions go uphill, you are at the bottom of a dip: a <b>local minimum</b>. It says nothing about the highest point on the whole trail.</p>
+<p>So “ω = 0 is a local maximum of 1/g²” only claims: <i>1/g² at 0 is bigger than 1/g² at nearby values of ω.</i> That is a claim we can check with three numbers.</p>
+
+<h3>2. Check it with the current sliders (m = ${f(S.m,2)}, b = ${f(S.b,2)}, k = ${f(S.k,2)})</h3>
+<div class="box h">1/g² = m²ω⁴ + (b² − 2km)ω² + k² = ${f(a,2)}·ω⁴ ${c<0?"−":"+"} ${f(Math.abs(c),2)}·ω² + ${f(e,2)}</div>
+<table><tr><th>where</th><th>1/g²</th><th>compared with the middle row</th></tr>${rows}</table>
+${c<0?`<p>Both neighbours are <b>lower</b>. So 0 is a hilltop of 1/g². That is the whole content of the book's sentence.</p>`:`<p>With these sliders both neighbours are <b>higher</b>: 0 is a dip, not a hill. That is because b² − 2km = ${fs(c,2)} is not negative, so the book's assumption does not hold. Lower b to get back to the book's situation.</p>`}
+${r===null?"":`<table><tr><th>where</th><th>1/g²</th><th>compared with the middle row</th></tr>${rows2}</table>
+<p>Around ω<sub>r</sub> both neighbours are <b>higher</b>: a valley. That is “ω<sub>r</sub> is a local minimum of 1/g²”.</p>`}
+
+<h3>3. Why does leaving 0 make 1/g² go down?</h3>
+<p>Look at the three pieces of 1/g². The floor k² does not change. The piece (b² − 2km)ω² has a <b>negative</b> coefficient whenever the book's assumption k/m − b²/2m² &gt; 0 holds (multiply that inequality by 2m² and rearrange: it says b² − 2km &lt; 0). So this piece <i>subtracts</i> something as soon as ω ≠ 0. The piece m²ω⁴ adds something back, but near 0 it is far too small to matter: at ω = 0.2, ω² = 0.04 while ω⁴ = 0.0016.</p>
+<div class="box w">Near 0:   1/g² ≈ k² − (something positive)·ω²  → drops as |ω| grows → hilltop at 0.</div>
+<p>Far from 0 the ω⁴ piece grows fastest and wins, so the curve turns around and climbs. Down, then up. The turning points are the valleys at ±ω<sub>r</sub>.</p>
+
+<h3>4. The same thing in the language of slopes (equation 6.77)</h3>
+<div class="box">h′(ω) = ω · [ 4m²ω² + 2(b² − 2km) ]</div>
+<p>At ω = 0 the bracket equals 2(b² − 2km), which is <b>negative</b>. Just to the left of 0 the factor ω is negative too, so the slope is (−)(−) = + : uphill. Just to the right, ω is positive, so the slope is (+)(−) = − : downhill. Uphill then downhill is a hilltop. That is exactly the sentence in the book.</p>
+<p>At ω<sub>r</sub> the bracket is what changes sign (from − to +) while ω stays positive, so the slope goes from − to + : a valley.</p>
+
+<h3>5. What “the coefficient of ω⁴ is positive” is doing in the book</h3>
+<p>It is a shortcut. There are exactly three places where the slope is zero: −ω<sub>r</sub>, 0, +ω<sub>r</sub>. Because the ω⁴ coefficient is positive, the curve goes to +∞ at both far ends. A curve that ends high on both sides and has three flat spots has to go valley–hill–valley (a W). So the two outer flat spots are valleys and the middle one is a hill. No computation needed.</p>
+
+<h3>6. Why this is good news for the gain</h3>
+<div class="box g">g = 1 / √(1/g²)  — so where 1/g² is at its lowest, g is at its highest.</div>
+<p>The book minimises 1/g² only because it is easier than maximising g directly. A hilltop of 1/g² (at 0) is a valley of g: the gain is <i>locally smallest</i> for a static push. A valley of 1/g² (at ±ω<sub>r</sub>) is a peak of g: the resonant frequency. Negative ω has no physical meaning for a forcing sin(ωt), so we keep +ω<sub>r</sub>.</p>
+<p>Physically: at ω = 0 the response is just the spring giving way, g(0) = 1/k. Shake it a little faster and the mass starts to swing with you, so the response grows — until at ω<sub>r</sub> it is largest, after which the mass cannot keep up and the response falls off.</p>`;
+}
+
+/* ---------- floating panel plumbing ---------- */
+const panel=$("helpPanel"), head=$("helpHead"), grip=$("helpGrip"), helpBtn=$("helpBtn");
+let placed=false;
+function placePanel(){ if(placed) return; placed=true;
+  const fig=document.querySelector(".fig").getBoundingClientRect();
+  const w=Math.min(600, Math.max(320, fig.width-24)), h=Math.min(Math.max(360, fig.height-24), window.innerHeight*0.8);
+  panel.style.left=(fig.left+12)+"px"; panel.style.top=(fig.top+12)+"px"; panel.style.width=w+"px"; panel.style.height=h+"px"; }
+function openHelp(){ $("helpBody").innerHTML=helpHTML(); placePanel(); panel.hidden=false; helpBtn.setAttribute("aria-expanded","true"); head.focus(); }
+function closeHelp(){ panel.hidden=true; helpBtn.setAttribute("aria-expanded","false"); helpBtn.focus(); }
+helpBtn.addEventListener("click",()=> panel.hidden ? openHelp() : closeHelp());
+$("helpClose").addEventListener("click",closeHelp);
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && !panel.hidden) closeHelp(); });
+$("helpTab").addEventListener("click",()=>{
+  const css=`body{font-family:${getComputedStyle(document.body).fontFamily};color:#1b2230;max-width:76ch;margin:32px auto;padding:0 18px;line-height:1.6;font-size:15px}
+  h1{font-size:22px} h3{color:#3b5bdb;margin:22px 0 6px} table{border-collapse:collapse;margin:6px 0 12px} th,td{padding:4px 12px 4px 0;border-bottom:1px solid #e4e8f0;text-align:left;font-variant-numeric:tabular-nums} th{color:#5f6879}
+  tr.cur td{background:#fff4dd;font-weight:600} .box{background:#f5f7fd;border-radius:10px;padding:8px 12px;margin:4px 0 10px} .box.h{background:#e6f1fa} .box.g{background:#fbe9f0} .box.w{background:#fff4dd}
+  .m{font-family:${getComputedStyle(document.querySelector(".m")).fontFamily};font-style:italic}`;
+  const html=`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Why ω = 0 is a local maximum of 1/g²</title><style>${css}</style></head><body><h1>Why ω = 0 is a local maximum of 1/g² (and ±ω<sub>r</sub> are local minima)</h1>${helpHTML()}</body></html>`;
+  const url=URL.createObjectURL(new Blob([html],{type:"text/html"})); window.open(url,"_blank"); closeHelp();
+});
+// drag
+let drag=null;
+head.addEventListener("pointerdown",e=>{ if(e.target.tagName==="BUTTON") return; drag={x:e.clientX,y:e.clientY,l:panel.offsetLeft,t:panel.offsetTop}; head.setPointerCapture(e.pointerId); });
+head.addEventListener("pointermove",e=>{ if(!drag) return; panel.style.left=Math.max(0,Math.min(window.innerWidth-80,drag.l+e.clientX-drag.x))+"px"; panel.style.top=Math.max(0,Math.min(window.innerHeight-40,drag.t+e.clientY-drag.y))+"px"; });
+head.addEventListener("pointerup",()=>drag=null); head.addEventListener("pointercancel",()=>drag=null);
+head.addEventListener("keydown",e=>{ const s=e.shiftKey?1:0, st=16; const k={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key]; if(!k) return; e.preventDefault();
+  if(s){ panel.style.width=Math.max(300,panel.offsetWidth+k[0]*st)+"px"; panel.style.height=Math.max(220,panel.offsetHeight+k[1]*st)+"px"; }
+  else { panel.style.left=(panel.offsetLeft+k[0]*st)+"px"; panel.style.top=(panel.offsetTop+k[1]*st)+"px"; } });
+let rs=null;
+grip.addEventListener("pointerdown",e=>{ rs={x:e.clientX,y:e.clientY,w:panel.offsetWidth,h:panel.offsetHeight}; grip.setPointerCapture(e.pointerId); e.preventDefault(); });
+grip.addEventListener("pointermove",e=>{ if(!rs) return; panel.style.width=Math.max(300,rs.w+e.clientX-rs.x)+"px"; panel.style.height=Math.max(220,rs.h+e.clientY-rs.y)+"px"; });
+grip.addEventListener("pointerup",()=>rs=null); grip.addEventListener("pointercancel",()=>rs=null);
+
+/* ---------- controls ---------- */
+const wIn=$("w"), dIn=$("d");
+function syncWRange(){ const L=xLimit(); const r=WR(); const lim = (S.zoom && r!==null) ? 1.5*r : L;
+  wIn.min=(-lim).toFixed(3); wIn.max=lim.toFixed(3); S.w=Math.max(-lim,Math.min(lim,S.w)); wIn.value=S.w; }
+function update(){
+  syncWRange();
+  $("wOut").textContent = fs(S.w,3);
+  $("dOut").textContent = S.d.toFixed(2);
+  $("mOut").textContent = S.m.toFixed(2); $("bOut").textContent = S.b.toFixed(2); $("kOut").textContent = S.k.toFixed(2);
+  const c=S.b*S.b-2*S.k*S.m, cond=$("cond");
+  cond.className = "cond "+(c<0?"ok":"bad");
+  cond.innerHTML = c<0 ? `k/m − b²/2m² = ${f(S.k/S.m - S.b*S.b/(2*S.m*S.m),3)} &gt; 0 ✓  (b² − 2km = ${fs(c,2)} &lt; 0)` : `k/m − b²/2m² = ${f(S.k/S.m - S.b*S.b/(2*S.m*S.m),3)} ≤ 0 ✗  no resonance`;
+  const r=WR();
+  document.querySelectorAll("#jump button").forEach(b=>{ const j=b.dataset.j; const tgt = j==="zero"?0:(r===null?null:(j==="pos"?r:-r));
+    b.disabled = tgt===null; b.classList.toggle("on", tgt!==null && Math.abs(S.w-tgt)<1e-6); });
+  document.querySelectorAll("#presets button").forEach(b=>b.classList.toggle("on", presetOn(b.dataset.p)));
+  const showD = S.tab==="neighbors"; $("dRow").hidden=!showD; dIn.hidden=!showD; $("dOut").hidden=!showD;
+  $("zoom").disabled = r===null;
+  figTitle(); $("calc").innerHTML=calcHTML(); $("notes").innerHTML=notesHTML();
+  if(!panel.hidden) $("helpBody").innerHTML=helpHTML();
+  draw();
+}
+const PRESETS={light:{m:1,b:0.4,k:1}, book:{m:1,b:1,k:1}, edge:{m:1,b:Math.sqrt(2),k:1}, heavy:{m:1,b:2.2,k:1}};
+function presetOn(p){ const q=PRESETS[p]; return Math.abs(S.m-q.m)<1e-6&&Math.abs(S.b-q.b)<1e-3&&Math.abs(S.k-q.k)<1e-6; }
+wIn.addEventListener("input",()=>{ S.w=+wIn.value; update(); });
+dIn.addEventListener("input",()=>{ S.d=+dIn.value; update(); });
+["m","b","k"].forEach(id=>$(id).addEventListener("input",()=>{ S[id]=+$(id).value; update(); }));
+$("zoom").addEventListener("change",()=>{ S.zoom=$("zoom").checked; update(); });
+$("jump").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||b.disabled) return; const r=WR();
+  S.w = b.dataset.j==="zero"?0:(b.dataset.j==="pos"?r:-r); update(); });
+$("presets").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return; const q=PRESETS[b.dataset.p];
+  S.m=q.m; S.b=q.b; S.k=q.k; $("m").value=q.m; $("b").value=Math.round(q.b*20)/20; $("k").value=q.k; S.b=+$("b").value; update(); });
+document.querySelectorAll('nav [role="tab"]').forEach(t=>t.addEventListener("click",()=>{
+  document.querySelectorAll('nav [role="tab"]').forEach(x=>x.setAttribute("aria-selected", x===t ? "true":"false"));
+  S.tab=t.dataset.tab; if(S.tab==="neighbors" && !S.zoom && WR()!==null){ S.zoom=true; $("zoom").checked=true; } update(); }));
+document.addEventListener("keydown",e=>{ if(e.target.tagName==="INPUT"||e.target.tagName==="BUTTON"||!panel.hidden) return;
+  const st=e.shiftKey?0.1:0.01; if(e.key==="ArrowLeft"){ S.w-=st; update(); } else if(e.key==="ArrowRight"){ S.w+=st; update(); } });
+// click / drag on the canvas moves ω
+let cvDrag=false;
+const cvSet = e => { const rect=cv.getBoundingClientRect(); const xr=xRange(); const ml=46, mr=14; const x=e.clientX-rect.left;
+  S.w = Math.max(xr[0],Math.min(xr[1], xr[0]+(x-ml)/(rect.width-ml-mr)*(xr[1]-xr[0]))); update(); };
+cv.addEventListener("pointerdown",e=>{ cvDrag=true; cv.setPointerCapture(e.pointerId); cvSet(e); });
+cv.addEventListener("pointermove",e=>{ if(cvDrag) cvSet(e); });
+cv.addEventListener("pointerup",()=>cvDrag=false); cv.addEventListener("pointercancel",()=>cvDrag=false);
+
+update();
+})();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

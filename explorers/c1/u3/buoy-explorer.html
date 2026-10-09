@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Bobbing Buoy — interactive explorer</title>
+<style>
+  :root{
+    --bg:#eef3fb; --card:#ffffff; --ink:#1d2a3a; --muted:#5b6b80;
+    --input:#e8711a; --input-soft:#fdf0e4;
+    --output:#0f8b8d; --output-soft:#e3f4f4;
+    --action:#6c4fd8; --action-soft:#efeafc;
+    --shadow:0 10px 30px rgba(108,79,216,.13);
+    --radius:16px; --water:#bcd6f3; --water-deep:#8fb8e8;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Segoe UI",system-ui,-apple-system,Helvetica,Arial,sans-serif}
+  header{padding:22px 16px 6px;max-width:1180px;margin:0 auto}
+  h1{margin:0;font-size:clamp(24px,5vw,30px);font-weight:700;letter-spacing:-.3px}
+  header p{margin:6px 0 0;color:var(--muted);max-width:70ch}
+  .story{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;margin:14px 0 0;max-width:none}
+  details.story summary{cursor:pointer;font-weight:700}
+  details.story p{margin:8px 0 0}
+  .story b{color:var(--ink)}
+  .wrap{max-width:1180px;margin:0 auto;padding:10px 16px 48px}
+  nav{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px}
+  nav button{border:0;background:var(--card);color:var(--action);font-weight:600;padding:9px 14px;border-radius:999px;cursor:pointer;box-shadow:var(--shadow);font-size:14px;flex:1 1 auto}
+  nav button[aria-selected="true"]{background:var(--action);color:#fff}
+  nav button:focus-visible{outline:3px solid var(--action);outline-offset:2px}
+  .scene{display:none}.scene.on{display:block}
+  /* desktop: controls left, figure + explanation right. phone: figure / controls / explanation, figure sticky */
+  .layout{display:grid;grid-template-columns:340px minmax(0,1fr);grid-template-areas:"ctrl viz" "ctrl explain";gap:16px;align-items:start}
+  .pair{display:contents}
+  .viz{grid-area:viz}.ctrl{grid-area:ctrl}.explain{grid-area:explain}
+  @media(max-width:900px){
+    .layout{display:block}
+    .pair{display:block}
+    .viz{position:sticky;top:0;z-index:5;border-radius:0 0 var(--radius) var(--radius);box-shadow:0 10px 24px rgba(29,42,58,.18);padding:10px 12px 12px}
+    .ctrl,.explain{margin-top:12px}
+    label.ctrl{margin:6px 0 2px}
+    .wrap{padding-top:0}
+  }
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;min-width:0}
+  .card h2{margin:0 0 6px;font-size:18px}
+  .card h3{margin:14px 0 6px;font-size:14px;color:var(--muted);font-weight:600}
+  .lead{color:var(--muted);margin:0 0 10px}
+  label.ctrl{display:block;margin:10px 0 4px;font-size:14px}
+  label.ctrl b{color:var(--input)}
+  input[type=range]{width:100%;accent-color:var(--input);height:28px;margin:0}
+  input[type=number]{width:100%;padding:8px 10px;border:2px solid var(--input-soft);border-radius:10px;font:inherit;font-size:16px;color:var(--ink)}
+  input[type=number]:focus{outline:none;border-color:var(--input)}
+  .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600}
+  .pill.in{background:var(--input-soft);color:var(--input)}
+  .btn{border:0;background:var(--action);color:#fff;padding:10px 16px;border-radius:12px;font-weight:600;cursor:pointer;font-size:14px;margin:4px 6px 4px 0}
+  .btn.ghost{background:var(--action-soft);color:var(--action)}
+  .btn:focus-visible{outline:3px solid var(--action);outline-offset:2px}
+  canvas{width:100%;display:block;border-radius:12px;background:#f8fafe;touch-action:pan-y}
+  .readout{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  @media(max-width:380px){.readout{grid-template-columns:1fr}}
+  .ro{background:var(--output-soft);border-radius:12px;padding:8px 12px;min-width:0}
+  .ro small{display:block;color:var(--output);font-weight:600;font-size:12px;line-height:1.3}
+  .ro span{font-size:17px;font-weight:700;color:var(--ink);overflow-wrap:anywhere}
+  .ro.wide{grid-column:1/-1}
+  .math{font-family:"Cambria Math","Times New Roman",serif;font-size:16px}
+  .steps{margin:8px 0 0;padding:0;list-style:none}
+  .steps li{padding:9px 12px;border-left:4px solid var(--output);background:#f6fbfb;margin:6px 0;border-radius:0 10px 10px 0;overflow-wrap:anywhere}
+  .steps li b{color:var(--output)}
+  .note{background:var(--input-soft);border-radius:12px;padding:10px 12px;margin-top:10px;font-size:14px;overflow-wrap:anywhere}
+  .try{background:var(--action-soft);border-radius:12px;padding:10px 12px 10px 28px;margin-top:10px;font-size:14px}
+  .try li{margin:4px 0}
+  .try::before{content:"Try this";display:block;margin-left:-16px;font-weight:700;color:var(--action);margin-bottom:4px}
+  .warn{background:#fdecec;color:#b13a3a;border-radius:12px;padding:8px 12px;margin-top:10px;font-size:14px;display:none}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-width:0}
+  .two.bx{grid-template-columns:2fr 3fr}
+  .two>div{min-width:0}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:8px}
+  .legend i{display:inline-block;width:14px;height:4px;border-radius:2px;vertical-align:middle;margin-right:5px}
+  .choice{display:block;background:#fff;border:2px solid var(--action-soft);border-radius:12px;padding:10px 14px;margin:6px 0;cursor:pointer}
+  .choice.right{border-color:var(--output);background:var(--output-soft)}
+  .choice.wrong{border-color:#e08b8b;background:#fdecec}
+  .mt{margin-top:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>The Bobbing Buoy</h1>
+  <p>An interactive companion to the MITx 18.03x buoy problems. Orange controls are things <b style="color:var(--input)">you set</b>; teal boxes are what the <b style="color:var(--output)">model computes</b>; purple buttons <b style="color:var(--action)">do things</b>.</p>
+  <details class="story" open>
+    <summary>The problem</summary>
+    <p>A cylindrical buoy of radius <span class="math">r</span>, height <span class="math">h</span> and density half that of water floats in still water.
+    Let <span class="math">x</span> be the depth of the buoy's <em>bottom</em> below the surface, measured <b>downward</b>. You hold the buoy with its bottom at the surface (<span class="math">x = 0</span>) and let go.
+    How deep does it float, how fast does it bob, and what does the simple model leave out? Work through the four tabs in order.</p>
+  </details>
+</header>
+
+<div class="wrap">
+<nav role="tablist" id="tabs">
+  <button role="tab" aria-selected="true" data-s="forces">1 · Forces</button>
+  <button role="tab" aria-selected="false" data-s="bob">2 · Bobbing</button>
+  <button role="tab" aria-selected="false" data-s="second">3 · Second buoy</button>
+  <button role="tab" aria-selected="false" data-s="damp">4 · Damping</button>
+</nav>
+
+<!-- ================= SCENE 1: FORCES ================= -->
+<section class="scene on" id="s-forces">
+<div class="layout">
+<div class="pair">
+  <div class="card viz">
+    <canvas id="c_forces"></canvas>
+    <div class="legend"><span><i style="background:#d33"></i>gravity mg (down)</span><span><i style="background:#0f8b8d"></i>buoyancy (up)</span><span><i style="background:#6c4fd8"></i>net force</span><span><i style="background:#e8711a"></i>floating depth</span></div>
+  </div>
+  <div class="card ctrl">
+    <h2>Push the buoy down by hand</h2>
+    <label class="ctrl"><b>Depth of bottom, x</b> <span class="pill in" id="f_x_v"></span></label>
+    <input type="range" id="f_x" min="0" max="1" step="0.005" value="0">
+    <label class="ctrl"><b>Radius r</b> (cm) <span class="pill in" id="f_r_v"></span></label>
+    <input type="range" id="f_r" min="5" max="40" step="1" value="20">
+    <label class="ctrl"><b>Height h</b> (cm) <span class="pill in" id="f_h_v"></span></label>
+    <input type="range" id="f_h" min="40" max="300" step="5" value="200">
+    <label class="ctrl"><b>Buoy density ρ<sub>b</sub></b> (g/cm³, water = 1) <span class="pill in" id="f_rho_v"></span></label>
+    <input type="range" id="f_rho" min="0.1" max="0.95" step="0.05" value="0.5">
+    <div class="note" id="f_msg"></div>
+    <h3>What the model computes</h3>
+    <div class="readout">
+      <div class="ro"><small>Mass of buoy m = ρ<sub>b</sub>πr²h</small><span id="f_m"></span></div>
+      <div class="ro"><small>Displaced water m<sub>wd</sub> = ρ<sub>w</sub>πr²x</small><span id="f_mwd"></span></div>
+      <div class="ro"><small>Gravity F<sub>G</sub> = +mg (down)</small><span id="f_fg"></span></div>
+      <div class="ro"><small>Buoyancy F<sub>B</sub> = −m<sub>wd</sub>g (up)</small><span id="f_fb"></span></div>
+      <div class="ro"><small>Net force F<sub>G</sub> + F<sub>B</sub></small><span id="f_net"></span></div>
+      <div class="ro"><small>Acceleration ẍ = net / m</small><span id="f_acc"></span></div>
+    </div>
+  </div>
+</div>
+  <div class="card explain">
+    <p class="lead">Two forces act: gravity pulls down, and the water pushes up with a force equal to the <em>weight of the water the buoy displaces</em> (Archimedes). Drag the depth slider and watch them fight.</p>
+    <ul class="try">
+      <li>Slide x until the net force reads 0. That depth is where the buoy <em>floats</em>.</li>
+      <li>Change the radius r. Forces change, but ẍ does not — r cancels.</li>
+      <li>Set ρ<sub>b</sub> = 0.9: the buoy floats much deeper (x<sub>eq</sub> = 0.9h).</li>
+    </ul>
+    <h3>Net force as a function of depth</h3>
+    <canvas id="c_fx"></canvas>
+    <div class="note">
+      Newton's law: <span class="math">m ẍ = mg − ρ<sub>w</sub>πr²x·g</span>. Dividing by <span class="math">m = ρ<sub>b</sub>πr²h</span>:
+      <span class="math"><b>ẍ = g − (g ρ<sub>w</sub> / h ρ<sub>b</sub>) x</b></span>.
+      With ρ<sub>b</sub> = ½ρ<sub>w</sub> this is <span class="math">ẍ = g − (2g/h) x</span>.
+      The force is a straight line in x, crossing zero at the floating depth, so above it the buoy is pushed down and below it pushed up — a <em>restoring</em> force, exactly what makes an oscillator.
+      <span id="f_sub" style="display:block;margin-top:6px;color:var(--muted)"></span>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ================= SCENE 2: BOBBING ================= -->
+<section class="scene" id="s-bob">
+<div class="layout">
+<div class="pair">
+  <div class="card viz">
+    <div class="two bx">
+      <div><canvas id="c_buoy"></canvas></div>
+      <div><canvas id="c_xt"></canvas></div>
+    </div>
+    <div class="legend"><span><i style="background:#6c4fd8"></i>x(t) from the model</span><span><i style="background:#e8711a"></i>floating depth x<sub>eq</sub></span><span><i style="background:#0f8b8d"></i>one period T</span></div>
+  </div>
+  <div class="card ctrl">
+    <h2>Release it and watch it bob</h2>
+    <div>
+      <button class="btn" id="b_play">Pause</button>
+      <button class="btn ghost" id="b_reset">Restart from rest</button>
+    </div>
+    <label class="ctrl"><b>Height h</b> (m) <span class="pill in" id="b_h_v"></span></label>
+    <input type="range" id="b_h" min="0.5" max="4" step="0.1" value="2">
+    <label class="ctrl"><b>Gravity g</b> (m/s²) <span class="pill in" id="b_g_v"></span></label>
+    <input type="range" id="b_g" min="1.6" max="25" step="0.1" value="9.8">
+    <label class="ctrl"><b>Buoy density ρ<sub>b</sub></b> (g/cm³) <span class="pill in" id="b_rho_v"></span></label>
+    <input type="range" id="b_rho" min="0.1" max="0.95" step="0.05" value="0.5">
+    <label class="ctrl"><b>Release depth x(0)</b> (m) <span class="pill in" id="b_x0_v"></span></label>
+    <input type="range" id="b_x0" min="0" max="4" step="0.05" value="0">
+    <label class="ctrl"><b>Playback speed</b> (× real time) <span class="pill in" id="b_sp_v"></span></label>
+    <input type="range" id="b_sp" min="0.1" max="2" step="0.1" value="0.5">
+    <h3>What the model computes</h3>
+    <div class="readout">
+      <div class="ro"><small>ω<sub>n</sub> = √(g ρ<sub>w</sub>/(h ρ<sub>b</sub>))</small><span id="b_w"></span></div>
+      <div class="ro"><small>Period T = 2π/ω<sub>n</sub></small><span id="b_T"></span></div>
+      <div class="ro"><small>Floating depth x<sub>eq</sub> = hρ<sub>b</sub>/ρ<sub>w</sub></small><span id="b_eq"></span></div>
+      <div class="ro"><small>Amplitude A = |x<sub>eq</sub> − x(0)|</small><span id="b_A"></span></div>
+      <div class="ro"><small>Time t</small><span id="b_t"></span></div>
+      <div class="ro"><small>Depth x(t)</small><span id="b_x"></span></div>
+    </div>
+    <div class="warn" id="b_warn"></div>
+  </div>
+</div>
+  <div class="card explain">
+    <p class="lead">Released from rest with its bottom at the surface (x = 0, ẋ = 0). The equation <span class="math">ẍ + ω<sub>n</sub>²x = g</span> is a harmonic oscillator whose centre is the floating depth, not zero. Left figure: the buoy itself. Right: its depth against time — the cosine curve worked out in the steps below.</p>
+    <ul class="try">
+      <li>Double h. The period grows by √2 (T ∝ √h) — count it on the teal bracket.</li>
+      <li>Set x(0) equal to x<sub>eq</sub>. Amplitude 0: the buoy just sits there.</li>
+      <li>Lower g to 1.6 (the Moon). Same floating depth, much slower bob.</li>
+    </ul>
+    <h3>Phase plane: depth against velocity</h3>
+    <canvas id="c_phase"></canvas>
+    <div class="note">With no damping the point goes round the same closed loop forever, centred on x<sub>eq</sub>: energy is conserved, so the buoy never settles. Compare with the spiral in tab 4.</div>
+    <h3>Solving the equation, step by step</h3>
+    <ol class="steps" id="b_steps"></ol>
+  </div>
+</div>
+</section>
+
+<!-- ================= SCENE 3: SECOND BUOY ================= -->
+<section class="scene" id="s-second">
+<div class="layout">
+<div class="pair">
+  <div class="card viz">
+    <div class="two">
+      <div><canvas id="c_second_buoy"></canvas></div>
+      <div><canvas id="c_second_time"></canvas></div>
+    </div>
+    <div class="readout">
+      <div class="ro"><small>Radius R (independent of ρ<sub>b</sub>)</small><span id="s_R"></span></div>
+      <div class="ro"><small>Height h (depends on ρ<sub>b</sub>)</small><span id="s_h"></span></div>
+    </div>
+  </div>
+  <div class="card ctrl">
+    <h2>Work backwards from the period</h2>
+    <label class="ctrl"><b>Try a density ρ<sub>b</sub></b> (g/cm³) — it will cancel! <span class="pill in" id="s_rb_v"></span></label>
+    <input type="range" id="s_rb" min="0.1" max="0.95" step="0.05" value="0.5">
+    <div class="two">
+      <div><label class="ctrl"><b>Mass M</b> (kg)</label><input type="number" id="s_M" value="50" min="0.1" step="1" inputmode="decimal"></div>
+      <div><label class="ctrl"><b>Bobs N</b></label><input type="number" id="s_N" value="4" min="1" step="1" inputmode="numeric"></div>
+      <div><label class="ctrl"><b>… in seconds S</b></label><input type="number" id="s_S" value="10" min="0.1" step="0.5" inputmode="decimal"></div>
+      <div><label class="ctrl"><b>g</b> (cm/s²)</label><input type="number" id="s_g" value="981" min="1" step="1" inputmode="decimal"></div>
+      <div><label class="ctrl"><b>Water ρ<sub>w</sub></b> (g/cm³)</label><input type="number" id="s_rw" value="1" min="0.1" step="0.05" inputmode="decimal"></div>
+    </div>
+  </div>
+</div>
+  <div class="card explain">
+    <p class="lead">A second buoy has mass M and bobs N times in S seconds. We don't know its height or its density — yet the radius can still be found. Left figure: the buoy drawn to scale at its floating position for the ρ<sub>b</sub> you picked. Right: N bobs in S seconds — the period is read straight off this picture.</p>
+    <ul class="try">
+      <li>Drag ρ<sub>b</sub> from 0.1 to 0.95. The buoy gets shorter, but R never moves.</li>
+      <li>Double the mass M. R grows by √2.</li>
+      <li>Make it bob faster (more bobs in the same time). Bigger ω<sub>n</sub> ⇒ bigger R.</li>
+    </ul>
+    <h3>Solving for R, step by step</h3>
+    <ol class="steps" id="s_steps"></ol>
+    <div class="note">Whatever ρ<sub>b</sub> you choose, the buoy changes shape (taller and thinner, or shorter and fatter) but the radius R never moves. That is the algebra telling you the density cancels: the bobbing frequency only ever "knew" the mass and the cross-section.</div>
+  </div>
+</div>
+</section>
+
+<!-- ================= SCENE 4: DAMPING ================= -->
+<section class="scene" id="s-damp">
+<div class="layout">
+<div class="pair">
+  <div class="card viz">
+    <canvas id="c_damp"></canvas>
+    <div class="legend"><span><i style="background:#c9c9d6"></i>no damping (the course's model)</span><span><i style="background:#6c4fd8"></i>with damping b</span><span><i style="background:#e8711a"></i>floating depth h/2</span><span><i style="background:#0f8b8d"></i>decay envelope</span></div>
+  </div>
+  <div class="card ctrl">
+    <h2>What is missing from the model?</h2>
+    <label class="ctrl"><b>Damping b</b> (1/s) <span class="pill in" id="d_b_v"></span></label>
+    <input type="range" id="d_b" min="0" max="8" step="0.05" value="0">
+    <label class="ctrl"><b>Height h</b> (m) <span class="pill in" id="d_h_v"></span></label>
+    <input type="range" id="d_h" min="0.5" max="4" step="0.1" value="2">
+    <div class="readout">
+      <div class="ro wide"><small>Regime</small><span id="d_reg"></span></div>
+      <div class="ro"><small>ω<sub>n</sub> = √(2g/h)</small><span id="d_w"></span></div>
+      <div class="ro"><small>Critical damping b<sub>c</sub> = 2ω<sub>n</sub></small><span id="d_bc"></span></div>
+      <div class="ro wide"><small>Equation ẍ + bẋ + ω<sub>n</sub>²x = g</small><span class="math" id="d_eqn"></span></div>
+    </div>
+    <div class="note" id="d_note"></div>
+  </div>
+</div>
+  <div class="card explain">
+    <p class="lead">A real buoy stops bobbing. Add a force that opposes velocity, <span class="math">−b ẋ</span>, to the ρ<sub>b</sub> = ½ buoy and compare with the frictionless model (grey curve).</p>
+    <ul class="try">
+      <li>Nudge b just above 0: the bobs keep their rhythm but shrink inside the teal envelope.</li>
+      <li>Set b near b<sub>c</sub>: the buoy sinks to its floating depth with no overshoot at all.</li>
+      <li>Push b past b<sub>c</sub>: it still doesn't overshoot, but takes <em>longer</em> to settle.</li>
+    </ul>
+    <h3>Phase plane: closed loop vs spiral</h3>
+    <canvas id="c_dphase"></canvas>
+    <div class="note">Without damping the solution is <span class="math">x = (h/2)(1 − cos ω<sub>n</sub>t)</span> and the amplitude never shrinks: the buoy bobs forever. Real water produces drag and turbulence, which appear in the equation as <span class="math">b ẋ</span>. The characteristic roots become <span class="math">r = −b/2 ± √(b²/4 − ω<sub>n</sub>²)</span>: complex (underdamped, spiral), repeated (critical), or real (overdamped, no crossings).</div>
+    <h3>Pick the most important missing component</h3>
+    <div id="d_quiz">
+      <label class="choice"><input type="radio" name="q" value="damping"> damping</label>
+      <label class="choice"><input type="radio" name="q" value="air"> air resistance</label>
+      <label class="choice"><input type="radio" name="q" value="qm"> quantum mechanics</label>
+      <label class="choice"><input type="radio" name="q" value="rel"> relativity</label>
+      <label class="choice"><input type="radio" name="q" value="sharks"> sharks</label>
+    </div>
+    <div class="note" id="d_fb">Choose one.</div>
+  </div>
+</div>
+</section>
+</div>
+
+<script>
+(function(){
+"use strict";
+// roundRect is missing on older Safari / Android WebView; fall back to a plain rectangle path
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+    r=Math.min(r||0,w/2,h/2);
+    this.moveTo(x+r,y);this.lineTo(x+w-r,y);this.quadraticCurveTo(x+w,y,x+w,y+r);
+    this.lineTo(x+w,y+h-r);this.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    this.lineTo(x+r,y+h);this.quadraticCurveTo(x,y+h,x,y+h-r);
+    this.lineTo(x,y+r);this.quadraticCurveTo(x,y,x+r,y);this.closePath();
+  };
+}
+const $=id=>document.getElementById(id);
+const fmt=(v,d=2)=>Number(v).toFixed(d);
+const C={input:"#e8711a",out:"#0f8b8d",act:"#6c4fd8",water:"#bcd6f3",water2:"#8fb8e8",ink:"#1d2a3a",muted:"#5b6b80",grid:"#e3e8f2"};
+const FONT="px system-ui,-apple-system,Segoe UI,Helvetica,Arial,sans-serif";
+
+/* ---------- responsive, crisp canvases ----------
+   Each canvas is sized from its CSS width every draw. The backing store is scaled by
+   devicePixelRatio and the context transformed so all drawing code works in CSS pixels;
+   text therefore stays 12-13px on any screen. aspect = height/width; a taller aspect is
+   used on narrow screens so plots don't get squashed. Returns null if the canvas is hidden. */
+function fit(cv,aspectWide,aspectNarrow){
+  const cssW=cv.clientWidth;
+  if(!cssW)return null;
+  const narrow=window.innerWidth<=900, aspect=narrow?(aspectNarrow||aspectWide):aspectWide;
+  const cssH=Math.round(cssW*aspect), dpr=Math.min(window.devicePixelRatio||1,3);
+  const w=Math.round(cssW*dpr), h=Math.round(cssH*dpr);
+  if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}
+  if(cv.style.height!==cssH+"px")cv.style.height=cssH+"px";
+  const ctx=cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cssW,cssH);
+  return {ctx,W:cssW,H:cssH,narrow};
+}
+
+/* ---------- tabs ---------- */
+let active='forces';
+function show(name){
+  active=name;
+  document.querySelectorAll('#tabs button').forEach(x=>x.setAttribute('aria-selected',String(x.dataset.s===name)));
+  document.querySelectorAll('.scene').forEach(s=>s.classList.toggle('on',s.id==='s-'+name));
+  redraw();
+}
+function redraw(){
+  if(active==='forces')drawForces();
+  else if(active==='second')drawSecond();
+  else if(active==='damp')drawDamp();
+  // scene 2 redraws itself every animation frame
+}
+document.querySelectorAll('#tabs button').forEach(b=>b.addEventListener('click',()=>show(b.dataset.s)));
+let rs;window.addEventListener('resize',()=>{clearTimeout(rs);rs=setTimeout(redraw,80);});
+
+/* ---------- helpers ---------- */
+function axes(ctx,W,H,pad,xmin,xmax,ymin,ymax,xl,yl){
+  const X=x=>pad.l+(x-xmin)/(xmax-xmin)*(W-pad.l-pad.r);
+  const Y=y=>H-pad.b-(y-ymin)/(ymax-ymin)*(H-pad.t-pad.b);
+  ctx.strokeStyle=C.grid;ctx.lineWidth=1;
+  ctx.beginPath();
+  for(let i=0;i<=5;i++){const y=ymin+(ymax-ymin)*i/5;ctx.moveTo(X(xmin),Y(y));ctx.lineTo(X(xmax),Y(y));}
+  ctx.stroke();
+  ctx.strokeStyle="#9aa6b8";ctx.beginPath();ctx.moveTo(X(xmin),Y(ymin));ctx.lineTo(X(xmax),Y(ymin));ctx.moveTo(X(xmin),Y(ymin));ctx.lineTo(X(xmin),Y(ymax));ctx.stroke();
+  ctx.fillStyle=C.muted;ctx.font="12"+FONT;ctx.textAlign="center";
+  ctx.fillText(xl,(X(xmin)+X(xmax))/2,H-5);
+  ctx.save();ctx.translate(12,(Y(ymin)+Y(ymax))/2);ctx.rotate(-Math.PI/2);ctx.fillText(yl,0,0);ctx.restore();
+  ctx.textAlign="right";
+  for(let i=0;i<=5;i++){const y=ymin+(ymax-ymin)*i/5;ctx.fillText(fmt(y,1),X(xmin)-4,Y(y)+4);}
+  ctx.textAlign="center";
+  const nx=W<420?4:5;
+  for(let i=0;i<=nx;i++){const x=xmin+(xmax-xmin)*i/nx;ctx.fillText(fmt(x,1),X(x),Y(ymin)+14);}
+  return {X,Y};
+}
+function arrow(ctx,x1,y1,x2,y2,col,w=4){
+  ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  const a=Math.atan2(y2-y1,x2-x1),s=10;
+  ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-s*Math.cos(a-0.5),y2-s*Math.sin(a-0.5));ctx.lineTo(x2-s*Math.cos(a+0.5),y2-s*Math.sin(a+0.5));ctx.closePath();ctx.fill();
+}
+function dashed(ctx,x1,y1,x2,y2,col,w=1.5){
+  ctx.setLineDash([6,5]);ctx.strokeStyle=col;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.setLineDash([]);
+}
+function polyline(ctx,pts,col,w,ix,iy){
+  ctx.strokeStyle=col;ctx.lineWidth=w;ctx.beginPath();
+  for(let i=0;i<pts.length;i++){const x=ix(pts[i]),y=iy(pts[i]);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+  ctx.stroke();
+}
+// draw a buoy in water. depthFrac = fraction of h below the surface (can exceed 1 or be <0)
+function drawBuoyScene(ctx,W,H,depthFrac,rFrac,label,extra){
+  const surf=H*0.5, bh=H*0.4, bw=Math.max(26,Math.min(W*0.42,bh*rFrac*2));
+  const cx=W*0.5;
+  const g=ctx.createLinearGradient(0,surf,0,H);g.addColorStop(0,C.water);g.addColorStop(1,C.water2);
+  ctx.fillStyle=g;ctx.fillRect(0,surf,W,H-surf);
+  ctx.strokeStyle="#5f93d2";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,surf);ctx.lineTo(W,surf);ctx.stroke();
+  ctx.fillStyle="#5f93d2";ctx.font="12"+FONT;ctx.textAlign="left";ctx.fillText(W<200?"x = 0":"water surface (x = 0)",8,surf-6);
+  const bottom=surf+depthFrac*bh, top=bottom-bh;
+  ctx.fillStyle="#fbe3cc";ctx.strokeStyle="#c9781f";ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect(cx-bw/2,top,bw,bh,4);ctx.fill();ctx.stroke();
+  const subTop=Math.max(top,surf), subBot=Math.min(bottom,H);
+  if(subBot>subTop){ctx.fillStyle="rgba(15,139,141,.18)";ctx.fillRect(cx-bw/2,subTop,bw,subBot-subTop);}
+  ctx.fillStyle=C.ink;ctx.textAlign="center";ctx.font="13"+FONT;ctx.fillText(label||"buoy",cx,top-8);
+  if(depthFrac>0.02){const ax=cx+bw/2+20;arrow(ctx,ax,surf,ax,bottom,C.input,2);ctx.fillStyle=C.input;ctx.textAlign="left";ctx.fillText("x",ax+6,(surf+bottom)/2+4);}
+  if(extra)extra({cx,bw,bh,top,bottom,surf});
+}
+
+/* ================= SCENE 1: forces ================= */
+const f={x:$('f_x'),r:$('f_r'),h:$('f_h'),rho:$('f_rho')};
+function drawForces(){
+  const r=+f.r.value,h=+f.h.value,rho=+f.rho.value,xf=+f.x.value,x=xf*h,g=981;
+  const m=rho*Math.PI*r*r*h, mwd=Math.PI*r*r*Math.min(Math.max(x,0),h);
+  const FG=m*g, FB=-mwd*g, net=FG+FB, acc=net/m, xeq=h*rho;
+  $('f_x_v').textContent=`${fmt(x,0)} cm  (${fmt(xf*100,0)}% of h)`;
+  $('f_r_v').textContent=r;$('f_h_v').textContent=h;$('f_rho_v').textContent=fmt(rho,2);
+  $('f_m').textContent=`${fmt(m/1000,1)} kg`;
+  $('f_mwd').textContent=`${fmt(mwd/1000,1)} kg`;
+  $('f_fg').textContent=`+${fmt(FG/1e5,1)} N`;
+  $('f_fb').textContent=`${fmt(FB/1e5,1)} N`;
+  $('f_net').textContent=`${net>=0?'+':''}${fmt(net/1e5,1)} N`;
+  $('f_acc').textContent=`${fmt(acc/100,2)} m/s²`;
+  $('f_sub').textContent=`Right now: ẍ = ${fmt(g/100,2)} − ${fmt(g/(h*rho)/100,2)}·${fmt(x/100,2)} = ${fmt(acc/100,2)} m/s²  (all in m, s).`;
+  let msg;
+  if(x<1)msg=`At x = 0 nothing is displaced, so buoyancy is zero. Only gravity acts: the buoy starts to sink with ẍ = g.`;
+  else if(Math.abs(x-xeq)<h*0.03)msg=`Bottom is ${fmt(xeq,0)} cm down: the displaced water weighs exactly as much as the buoy. Net force zero — this is the floating (equilibrium) depth x = hρb/ρw.`;
+  else if(x<xeq)msg=`Bottom above the floating depth (${fmt(xeq,0)} cm): gravity still wins, net force points down (positive). The buoy would accelerate downward.`;
+  else msg=`Bottom below the floating depth (${fmt(xeq,0)} cm): buoyancy wins, net force points up (negative). This restoring force is why the buoy oscillates instead of sinking.`;
+  $('f_msg').textContent=msg;
+
+  const S=fit($('c_forces'),0.5,0.78);
+  if(S){
+    const {ctx,W,H}=S;
+    drawBuoyScene(ctx,W,H,xf,r/h,`r = ${r} cm, h = ${h} cm`,s=>{
+      // arrows scaled so the largest force is 30% of the canvas height and always fits
+      const scale=(H*0.3)/Math.max(FG,Math.abs(FB),Math.abs(net)), cy=(s.top+s.bottom)/2;
+      ctx.font="13"+FONT;
+      arrow(ctx,s.cx-14,cy,s.cx-14,cy+FG*scale,"#d33",5);
+      ctx.fillStyle="#d33";ctx.textAlign="right";ctx.fillText("mg",s.cx-22,cy+FG*scale);
+      if(mwd>0){arrow(ctx,s.cx+14,cy,s.cx+14,cy+FB*scale,C.out,5);ctx.fillStyle=C.out;ctx.textAlign="left";ctx.fillText("F_B",s.cx+22,cy+FB*scale+4);}
+      if(Math.abs(net)>1){const nx=Math.max(18,s.cx-s.bw/2-50),ny=cy+net*scale;arrow(ctx,nx,cy,nx,ny,C.act,5);ctx.fillStyle=C.act;ctx.textAlign="center";ctx.fillText("net",nx,net>0?ny+14:ny-8);}
+      const eqY=s.surf+rho*s.bh;
+      dashed(ctx,0,eqY,W,eqY,C.input);
+      ctx.fillStyle=C.input;ctx.textAlign="right";ctx.font="12"+FONT;ctx.fillText(`floating depth = ${fmt(xeq,0)} cm`,W-8,eqY-5);
+    });
+  }
+  const P=fit($('c_fx'),0.3,0.6);
+  if(P){
+    const {ctx:k,W,H}=P;
+    const Fend=(m-Math.PI*r*r*h)*g/1e5, ymax=Math.max(FG/1e5,Math.abs(Fend))*1.12;
+    const A=axes(k,W,H,{l:52,r:14,t:14,b:30},0,h,-ymax,ymax,"depth of bottom x (cm)","net force (N)");
+    k.strokeStyle="#9aa6b8";k.setLineDash([4,4]);k.beginPath();k.moveTo(A.X(0),A.Y(0));k.lineTo(A.X(h),A.Y(0));k.stroke();k.setLineDash([]);
+    k.strokeStyle=C.act;k.lineWidth=3;k.beginPath();k.moveTo(A.X(0),A.Y(FG/1e5));k.lineTo(A.X(h),A.Y(Fend));k.stroke();
+    k.fillStyle=C.out;k.beginPath();k.arc(A.X(xeq),A.Y(0),5,0,7);k.fill();
+    k.fillStyle=C.input;k.beginPath();k.arc(A.X(x),A.Y(net/1e5),6,0,7);k.fill();
+    k.fillStyle=C.muted;k.font="12"+FONT;k.textAlign="left";
+    k.fillText("F = mg − (ρw g πr²)·x",A.X(h*0.04),A.Y(-ymax*0.8));
+    k.fillStyle=C.out;k.textAlign="center";k.fillText("floats here",A.X(xeq),A.Y(0)+16);
+  }
+}
+Object.values(f).forEach(el=>el.addEventListener('input',drawForces));
+
+/* ================= SCENE 2: bobbing ================= */
+const b={h:$('b_h'),g:$('b_g'),rho:$('b_rho'),x0:$('b_x0'),sp:$('b_sp')};
+let sim={t:0,x:0,v:0,run:true,hist:[]}, acc=0, lastTs=null;
+function bParams(){return {h:+b.h.value,g:+b.g.value,rho:+b.rho.value,x0:Math.min(+b.x0.value,+b.h.value)};}
+// exact piecewise physics: buoyancy uses submerged length clamped to [0,h]
+function accel(x,v,p,damp=0){const sub=Math.min(Math.max(x,0),p.h);return p.g-(p.g/(p.h*p.rho))*sub-damp*v;}
+function rk4(s,p,dt,damp=0){
+  const a1=accel(s.x,s.v,p,damp);
+  const x2=s.x+s.v*dt/2,v2=s.v+a1*dt/2,a2=accel(x2,v2,p,damp);
+  const x3=s.x+v2*dt/2,v3=s.v+a2*dt/2,a3=accel(x3,v3,p,damp);
+  const x4=s.x+v3*dt,v4=s.v+a3*dt,a4=accel(x4,v4,p,damp);
+  s.x+=dt*(s.v+2*v2+2*v3+v4)/6;s.v+=dt*(a1+2*a2+2*a3+a4)/6;s.t+=dt;
+}
+function bReset(){const p=bParams();sim={t:0,x:p.x0,v:0,run:sim.run,hist:[[0,p.x0,0]]};acc=0;}
+function bUpdateText(){
+  const p=bParams(),w=Math.sqrt(p.g/(p.h*p.rho)),T=2*Math.PI/w,xeq=p.h*p.rho,A=Math.abs(xeq-p.x0);
+  $('b_h_v').textContent=fmt(p.h,1);$('b_g_v').textContent=fmt(p.g,1);$('b_rho_v').textContent=fmt(p.rho,2);$('b_x0_v').textContent=fmt(p.x0,2);$('b_sp_v').textContent=fmt(b.sp.value,1)+"×";
+  $('b_w').textContent=fmt(w,3)+" rad/s";$('b_T').textContent=fmt(T,3)+" s";$('b_eq').textContent=fmt(xeq,2)+" m";$('b_A').textContent=fmt(A,2)+" m";
+  const maxDepth=xeq+A,minDepth=xeq-A,warn=$('b_warn');
+  if(maxDepth>p.h+1e-9||minDepth<-1e-9){warn.style.display="block";warn.innerHTML=`The linear model assumes the buoy stays partly submerged (0 ≤ x ≤ h). With these settings the cosine formula would swing to x = ${fmt(maxDepth,2)} m (but h = ${p.h} m) on the way down and x = ${fmt(minDepth,2)} m on the way up. The animation uses the true piecewise physics, so it departs from the formula: once fully under, buoyancy stops growing; once fully out of the water, it vanishes.`;}
+  else warn.style.display="none";
+  const c1=p.x0-xeq;
+  $('b_steps').innerHTML=`
+   <li><b>Standard form.</b> ẍ + (gρ<sub>w</sub>/hρ<sub>b</sub>) x = g, so ω<sub>n</sub>² = ${fmt(p.g,1)}·1/(${fmt(p.h,1)}·${fmt(p.rho,2)}) = ${fmt(w*w,3)} s⁻² and ω<sub>n</sub> = ${fmt(w,3)} rad/s.</li>
+   <li><b>Homogeneous solution.</b> x<sub>h</sub> = c₁cos(ω<sub>n</sub>t) + c₂sin(ω<sub>n</sub>t). <b>Particular solution:</b> a constant, x<sub>p</sub> = g/ω<sub>n</sub>² = hρ<sub>b</sub>/ρ<sub>w</sub> = ${fmt(xeq,2)} m — the floating depth. General solution x = x<sub>p</sub> + x<sub>h</sub>.</li>
+   <li><b>Period.</b> T = 2π/ω<sub>n</sub> = 6.283/${fmt(w,3)} = ${fmt(T,2)} s.</li>
+   <li><b>Initial conditions.</b> x(0) = ${fmt(p.x0,2)} ⇒ ${fmt(xeq,2)} + c₁ = ${fmt(p.x0,2)} ⇒ c₁ = ${fmt(c1,2)}. &nbsp; ẋ(0) = 0 ⇒ c₂ω<sub>n</sub> = 0 ⇒ c₂ = 0.</li>
+   <li><b>Motion.</b> x(t) = ${fmt(xeq,2)} ${c1>=0?'+':'−'} ${fmt(Math.abs(c1),2)}·cos(${fmt(w,2)} t). &nbsp; <b>Amplitude</b> = |c₁| = ${fmt(A,2)} m, so x swings between ${fmt(minDepth,2)} m and ${fmt(maxDepth,2)} m about the floating depth.</li>`;
+}
+function bFrame(ts){
+  requestAnimationFrame(bFrame);
+  const p=bParams(),w=Math.sqrt(p.g/(p.h*p.rho)),T=2*Math.PI/w,xeq=p.h*p.rho;
+  // advance the simulation by real elapsed time × playback speed, in fixed steps
+  if(lastTs==null)lastTs=ts;
+  const real=Math.min((ts-lastTs)/1000,0.1);lastTs=ts;
+  if(sim.run){
+    acc+=real*+b.sp.value;
+    const dt=0.004;let n=0;
+    while(acc>=dt&&n<200){rk4(sim,p,dt);acc-=dt;n++;}
+    if(n){sim.hist.push([sim.t,sim.x,sim.v]);const tmax=3*T;while(sim.hist.length>1&&sim.hist[0][0]<sim.t-tmax)sim.hist.shift();}
+  }
+  if(active!=='bob')return;
+  $('b_t').textContent=fmt(sim.t,2)+" s";$('b_x').textContent=fmt(sim.x,2)+" m";
+  const R=Math.max(p.h,1e-3),vmax=Math.max(w*R,1);
+  // the buoy
+  const S1=fit($('c_buoy'),1.0,1.3);
+  if(S1){
+    const {ctx,W,H}=S1;
+    drawBuoyScene(ctx,W,H,sim.x/p.h,0.18,`h = ${fmt(p.h,1)} m`,s=>{
+      const eqY=s.surf+p.rho*s.bh;
+      dashed(ctx,0,eqY,W,eqY,C.input);
+      ctx.fillStyle=C.input;ctx.textAlign="left";ctx.font="12"+FONT;ctx.fillText(`x_eq = ${fmt(xeq,2)} m`,8,eqY-5);
+      const cy=(s.top+s.bottom)/2;
+      if(Math.abs(sim.v)>0.05){arrow(ctx,s.cx,cy,s.cx,cy+Math.sign(sim.v)*Math.min(60,s.bh*0.45,Math.abs(sim.v)*25),C.act,4);}
+    });
+  }
+  // phase plane
+  const S2=fit($('c_phase'),0.5,0.85);
+  if(S2){
+    const {ctx:k,W,H}=S2;
+    const A=axes(k,W,H,{l:48,r:12,t:22,b:30},-0.2*R,R*1.2,-vmax,vmax,"depth x (m)","velocity ẋ (m/s)");
+    k.fillStyle=C.muted;k.font="13"+FONT;k.textAlign="left";k.fillText("phase plane",A.X(-0.2*R)+6,14);
+    dashed(k,A.X(xeq),A.Y(-vmax),A.X(xeq),A.Y(vmax),C.input,1);
+    polyline(k,sim.hist,C.act,2.5,q=>A.X(q[1]),q=>A.Y(q[2]));
+    k.fillStyle=C.act;k.beginPath();k.arc(A.X(sim.x),A.Y(sim.v),6,0,7);k.fill();
+  }
+  // x(t)
+  const S3=fit($('c_xt'),0.62,0.85);
+  if(S3){
+    const {ctx:q,W,H}=S3;
+    const t0=Math.max(0,sim.t-3*T),t1=t0+3*T;
+    const B=axes(q,W,H,{l:W<260?40:48,r:10,t:14,b:30},t0,t1,-0.2*R,R*1.2,"time t (s)","depth x (m)");
+    dashed(q,B.X(t0),B.Y(xeq),B.X(t1),B.Y(xeq),C.input,1);
+    const pt0=Math.ceil(t0/T)*T;
+    if(pt0+T<t1){q.strokeStyle=C.out;q.lineWidth=3;q.beginPath();q.moveTo(B.X(pt0),B.Y(R*1.12));q.lineTo(B.X(pt0+T),B.Y(R*1.12));q.stroke();q.fillStyle=C.out;q.font="12"+FONT;q.textAlign="left";q.fillText(`T = ${fmt(T,2)} s`,B.X(pt0)+2,B.Y(R*1.12)-5);}
+    polyline(q,sim.hist,C.act,3,z=>B.X(z[0]),z=>B.Y(z[1]));
+    q.fillStyle=C.act;q.beginPath();q.arc(B.X(sim.t),B.Y(sim.x),5,0,7);q.fill();
+  }
+}
+Object.values(b).forEach(el=>el.addEventListener('input',()=>{bUpdateText();if(el!==b.sp)bReset();}));
+$('b_play').addEventListener('click',()=>{sim.run=!sim.run;$('b_play').textContent=sim.run?"Pause":"Play";});
+$('b_reset').addEventListener('click',bReset);
+bUpdateText();bReset();
+
+/* ================= SCENE 3: second buoy ================= */
+const s={M:$('s_M'),N:$('s_N'),S:$('s_S'),g:$('s_g'),rw:$('s_rw'),rb:$('s_rb')};
+function drawSecond(){
+  const M=Math.max(+s.M.value,0.1)*1000,N=Math.max(+s.N.value,1),S=Math.max(+s.S.value,0.1),g=Math.max(+s.g.value,1),rw=Math.max(+s.rw.value,0.1),rb=+s.rb.value;
+  $('s_rb_v').textContent=fmt(rb,2);
+  const T=S/N,w=2*Math.PI/T,R=Math.sqrt(M*w*w/(Math.PI*g*rw)),h=g*rw/(w*w*rb);
+  $('s_R').textContent=fmt(R,1)+" cm";$('s_h').textContent=fmt(h,1)+" cm";
+  $('s_steps').innerHTML=`
+   <li><b>Period.</b> ${N} bobs in ${S} s ⇒ T = ${S}/${N} = ${fmt(T,3)} s ⇒ ω<sub>n</sub> = 2π/T = ${fmt(w,3)} rad/s.</li>
+   <li><b>Units.</b> M = ${+s.M.value} kg = ${M.toLocaleString()} g; g = ${g} cm/s². Work in cm–g–s so R comes out in cm.</li>
+   <li><b>Equation for a buoy of any density.</b> ẍ = g − (gρ<sub>w</sub>/hρ<sub>b</sub>) x ⇒ ω<sub>n</sub>² = gρ<sub>w</sub>/(hρ<sub>b</sub>).</li>
+   <li><b>Solve for h.</b> h = gρ<sub>w</sub>/(ω<sub>n</sub>²ρ<sub>b</sub>) = ${g}·${rw}/(${fmt(w*w,3)}·${fmt(rb,2)}) = ${fmt(h,1)} cm &nbsp;(depends on the ρ<sub>b</sub> you picked).</li>
+   <li><b>Substitute into the mass.</b> M = ρ<sub>b</sub>πR²h = ρ<sub>b</sub>πR²·gρ<sub>w</sub>/(ω<sub>n</sub>²ρ<sub>b</sub>) = πR²gρ<sub>w</sub>/ω<sub>n</sub>² — the ρ<sub>b</sub> cancels.</li>
+   <li><b>Solve for R.</b> R = √(Mω<sub>n</sub>²/(πgρ<sub>w</sub>)) = √(${M.toLocaleString()}·${fmt(w*w,3)}/(π·${g}·${rw})) = √${fmt(R*R,2)} = <b>${fmt(R,1)} cm</b>.</li>`;
+  // left: the buoy drawn to scale, floating
+  const S1=fit($('c_second_buoy'),1.0,1.15);
+  if(S1){
+    const {ctx,W,H}=S1;
+    const tiny=W<260, top=30, maxH=H-(tiny?90:64), scale=Math.min(maxH/h,(W*0.45)/(2*R));
+    const bw=2*R*scale,bh=h*scale,cx=W*0.5,bottom=top+bh,sy=top+bh*(1-rb);
+    ctx.fillStyle=C.water;ctx.fillRect(0,sy,W,H-sy);
+    ctx.strokeStyle="#5f93d2";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,sy);ctx.lineTo(W,sy);ctx.stroke();
+    ctx.fillStyle="#5f93d2";ctx.font="12"+FONT;ctx.textAlign="left";ctx.fillText("water surface",8,sy-6);
+    ctx.fillStyle="#fbe3cc";ctx.strokeStyle="#c9781f";ctx.beginPath();ctx.roundRect(cx-bw/2,top,bw,bh,3);ctx.fill();ctx.stroke();
+    ctx.fillStyle="rgba(15,139,141,.18)";ctx.fillRect(cx-bw/2,sy,bw,bottom-sy);
+    ctx.fillStyle=C.ink;ctx.font="12"+FONT;ctx.textAlign="center";
+    ctx.fillText(`2R = ${fmt(2*R,1)} cm`,cx,bottom+16);
+    if(tiny){ctx.fillText(`h = ${fmt(h,0)} cm`,cx,bottom+32);ctx.fillText(`ρb = ${fmt(rb,2)}`,cx,bottom+48);}
+    else{ctx.textAlign="left";ctx.fillText(`h = ${fmt(h,0)} cm`,cx+bw/2+8,(top+bottom)/2);ctx.fillText(`ρb = ${fmt(rb,2)}`,cx+bw/2+8,(top+bottom)/2+16);}
+    ctx.fillStyle=C.muted;ctx.textAlign="left";ctx.fillText(tiny?"to scale":"drawn to scale, floating",8,16);
+  }
+  // right: the bob timeline
+  const S2=fit($('c_second_time'),1.0,1.15);
+  if(S2){
+    const {ctx,W,H}=S2;
+    const x0=16,x1=W-16,y=H*0.52,amp=Math.min(50,H*0.2);
+    ctx.strokeStyle="#9aa6b8";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke();
+    ctx.strokeStyle=C.act;ctx.lineWidth=2.5;ctx.beginPath();
+    for(let i=0;i<=400;i++){const t=S*i/400,xx=x0+(x1-x0)*i/400,yy=y-amp*Math.cos(w*t);i?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy);}
+    ctx.stroke();
+    const every=Math.max(1,Math.ceil(N/(W<260?2:W<400?4:8)));
+    ctx.font="11"+FONT;
+    for(let k=0;k<=N;k++){const xx=x0+(x1-x0)*k/N;ctx.strokeStyle=C.out;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(xx,y-amp-10);ctx.lineTo(xx,y+amp+10);ctx.stroke();ctx.setLineDash([]);
+      if(k%every===0||k===N){ctx.fillStyle=C.out;ctx.textAlign=k===0?"left":k===N?"right":"center";ctx.fillText(fmt(k*T,2)+" s",xx,y+amp+26);}}
+    ctx.fillStyle=C.ink;ctx.font="13"+FONT;ctx.textAlign="center";
+    ctx.fillText(`${N} bobs in ${S} s`,W/2,y-amp-30);
+    ctx.fillText(W<260?`T = ${S}/${N} = ${fmt(T,2)} s`:`→ one bob every T = ${fmt(T,2)} s`,W/2,y-amp-14);
+    ctx.fillStyle=C.muted;ctx.font="12"+FONT;ctx.fillText("depth of the bottom vs. time",W/2,H-8);
+  }
+}
+Object.values(s).forEach(el=>el.addEventListener('input',drawSecond));
+
+/* ================= SCENE 4: damping ================= */
+const d={b:$('d_b'),h:$('d_h')};
+function drawDamp(){
+  const bb=+d.b.value,h=+d.h.value,g=9.8,w=Math.sqrt(2*g/h),T=2*Math.PI/w,bc=2*w;
+  $('d_b_v').textContent=fmt(bb,2);$('d_h_v').textContent=fmt(h,1);$('d_w').textContent=fmt(w,3)+" rad/s";$('d_bc').textContent=fmt(bc,2)+" 1/s";
+  const disc=bb*bb-4*w*w, kind=bb===0?0:disc<-1e-6?1:Math.abs(disc)<=1e-6?2:3;
+  $('d_reg').textContent=["undamped — bobs forever","underdamped — decaying bobs","critically damped — fastest settling, no overshoot","overdamped — creeps to rest, no overshoot"][kind];
+  $('d_eqn').innerHTML=`ẍ + ${fmt(bb,2)} ẋ + ${fmt(w*w,2)} x = ${g}`;
+  const wd=Math.sqrt(Math.max(0,-disc))/2;
+  $('d_note').innerHTML=[
+    `b = 0: the roots are ±iω<sub>n</sub> and the solution is a pure cosine about h/2. Nothing removes energy.`,
+    `b² − 4ω<sub>n</sub>² = ${fmt(disc,2)} &lt; 0 ⇒ complex roots −${fmt(bb/2,2)} ± ${fmt(wd,2)}i. The buoy still bobs, at the slightly lower "damped" frequency ω<sub>d</sub> = ${fmt(wd,3)} rad/s, inside an envelope that shrinks like e<sup>−${fmt(bb/2,2)}t</sup>.`,
+    `b² − 4ω<sub>n</sub>² = 0 ⇒ a repeated root −${fmt(bb/2,2)}. Solution (c₁ + c₂t)e<sup>−${fmt(bb/2,2)}t</sup>: the boundary between bobbing and not bobbing.`,
+    `b² − 4ω<sub>n</sub>² = ${fmt(disc,2)} &gt; 0 ⇒ two real negative roots ${fmt(-bb/2+Math.sqrt(disc)/2,2)} and ${fmt(-bb/2-Math.sqrt(disc)/2,2)}. No oscillation; the slower root ${fmt(-bb/2+Math.sqrt(disc)/2,2)} controls how long it takes to settle.`][kind];
+  const p={h,g,rho:0.5},tmax=6*T,n=1500,dt=tmax/n;
+  const und=[],dam=[];let a={t:0,x:0,v:0},c={t:0,x:0,v:0};
+  for(let i=0;i<=n;i++){und.push([a.t,a.x,a.v]);dam.push([c.t,c.x,c.v]);rk4(a,p,dt,0);rk4(c,p,dt,bb);}
+  const S1=fit($('c_damp'),0.4,0.62);
+  if(S1){
+    const {ctx:k,W,H}=S1;
+    const A=axes(k,W,H,{l:48,r:12,t:14,b:30},0,tmax,0,h*1.05,"time t (s)","depth x (m)");
+    dashed(k,A.X(0),A.Y(h/2),A.X(tmax),A.Y(h/2),C.input,1);
+    polyline(k,und,"#c9c9d6",2.5,q=>A.X(q[0]),q=>A.Y(q[1]));
+    polyline(k,dam,C.act,3,q=>A.X(q[0]),q=>A.Y(q[1]));
+    if(kind===1){
+      // exact envelope of x = h/2 − (h/2)e^{−bt/2}[cos ωd t + (b/2ωd) sin ωd t]
+      const amp=h/2*Math.sqrt(1+(bb/(2*wd))**2);
+      const env=[];for(let i=0;i<=100;i++){const t=tmax*i/100;env.push([t,h/2+amp*Math.exp(-bb*t/2)]);}
+      k.setLineDash([5,4]);polyline(k,env,C.out,1.5,q=>A.X(q[0]),q=>A.Y(q[1]));k.setLineDash([]);
+      k.fillStyle=C.out;k.font="12"+FONT;k.textAlign="left";
+      const tl=tmax*0.4;k.fillText(`envelope ∝ e^(−${fmt(bb/2,2)}t)`,A.X(tl),Math.max(A.Y(h*1.05)+12,A.Y(h/2+amp*Math.exp(-bb*tl/2))-6));
+    }
+  }
+  const S2=fit($('c_dphase'),0.45,0.85);
+  if(S2){
+    const {ctx:q,W,H}=S2;
+    const vmax=w*h/2*1.15;
+    const B=axes(q,W,H,{l:48,r:12,t:22,b:30},0,h*1.05,-vmax,vmax,"depth x (m)","velocity ẋ (m/s)");
+    q.fillStyle=C.muted;q.font="13"+FONT;q.textAlign="left";q.fillText("phase plane: closed loop vs spiral",B.X(0)+6,14);
+    polyline(q,und,"#c9c9d6",2.5,z=>B.X(z[1]),z=>B.Y(z[2]));
+    polyline(q,dam,C.act,2.5,z=>B.X(z[1]),z=>B.Y(z[2]));
+    q.fillStyle=C.input;q.beginPath();q.arc(B.X(h/2),B.Y(0),5,0,7);q.fill();
+    q.fillStyle=C.input;q.font="12"+FONT;q.textAlign="left";q.fillText("rest (h/2, 0)",B.X(h/2)+8,B.Y(0)-8);
+  }
+}
+Object.values(d).forEach(el=>el.addEventListener('input',drawDamp));
+const fb={damping:["right","Yes. The model has no term that opposes velocity, so its solution bobs forever. Water drag and turbulence supply a b·ẋ term that makes the bobbing decay. Slide b above zero to see it."],
+ air:["wrong","Air resistance is a kind of damping, but air is ~800× less dense than water, so drag from the water dominates. The general idea — damping — is the answer."],
+ qm:["wrong","A metre-sized buoy is far too large for quantum effects to matter."],
+ rel:["wrong","The buoy moves at a few metres per second, nowhere near light speed."],
+ sharks:["right","The course accepts this with a wink, but the physics answer it wants you to notice is damping: without it the buoy never stops bobbing."]};
+document.querySelectorAll('#d_quiz input').forEach(r=>r.addEventListener('change',()=>{
+  document.querySelectorAll('#d_quiz .choice').forEach(c=>c.classList.remove('right','wrong'));
+  const [cls,txt]=fb[r.value];r.parentElement.classList.add(cls);$('d_fb').textContent=txt;
+}));
+
+/* ---------- start ---------- */
+drawForces();
+requestAnimationFrame(bFrame);
+})();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Waves &amp; Oscillations Explorer</title>
+<style>
+  :root{
+    --bg:#eef2fb;          /* blue-tinted background */
+    --card:#ffffff;
+    --shadow:0 10px 26px rgba(124,58,237,.12);
+    --input:#f97316;       /* orange = input */
+    --input-soft:#ffedd5;
+    --output:#0d9488;      /* teal = output */
+    --output-soft:#ccfbf1;
+    --action:#7c3aed;      /* purple = actions */
+    --action-soft:#ede9fe;
+    --ink:#1e293b;
+    --muted:#64748b;
+    --wave:#2563eb;
+    --ref:#94a3b8;
+    --amp:#f97316;
+    --per:#7c3aed;
+    --lag:#0d9488;
+    --phase:#db2777;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:18px 16px 40px;
+    background:var(--bg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+  }
+  .wrap{max-width:1180px;margin:0 auto}
+  h1{font-size:22px;margin:4px 2px 2px;font-weight:700}
+  .sub{color:var(--muted);font-size:13px;margin:0 2px 14px}
+  /* tabs */
+  .tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .tab-btn{
+    border:0;cursor:pointer;padding:10px 18px;border-radius:999px;
+    background:var(--card);color:var(--action);font-weight:600;font-size:14px;
+    box-shadow:var(--shadow);transition:background .15s,color .15s;
+  }
+  .tab-btn.active{background:var(--action);color:#fff}
+  .tab{display:none}
+  .tab.show{display:block}
+
+  .layout{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start}
+  @media(max-width:900px){.layout{grid-template-columns:1fr}}
+
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px}
+  .card h2{font-size:14px;margin:0 0 10px;letter-spacing:.02em;color:var(--muted);text-transform:uppercase}
+
+  /* controls */
+  .ctl{margin-bottom:14px}
+  .ctl label{display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:4px}
+  .ctl .val{color:var(--input);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--input);height:22px}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{
+    border:0;cursor:pointer;border-radius:10px;padding:8px 14px;font-weight:600;font-size:13px;
+    background:var(--action-soft);color:var(--action);
+  }
+  .btn.primary{background:var(--action);color:#fff}
+  .btn.on{background:var(--action);color:#fff}
+  .chk{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;margin-top:4px}
+  .chk input{accent-color:var(--action);width:16px;height:16px}
+
+  canvas{width:100%;display:block}
+  #cv1{cursor:ew-resize;touch-action:none}
+
+  /* color legend */
+  .legend{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:8px;font-size:12px;color:var(--muted)}
+  .legend b{color:var(--ink);font-weight:600}
+  .chip{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+  /* value tiles */
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:10px;margin-top:14px}
+  .tile{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:10px 12px}
+  .tile .name{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--muted)}
+  .tile .calc{font-size:14px;margin:4px 0;color:var(--ink)}
+  .tile .calc .out{color:var(--output);font-weight:700;background:var(--output-soft);border-radius:6px;padding:0 5px}
+  .tile .calc .in{color:var(--input);font-weight:700}
+  .tile .why{font-size:12px;color:var(--muted);line-height:1.35}
+  .eq{font-size:15px;text-align:center;background:var(--action-soft);border-radius:10px;padding:8px;margin:8px 0 2px}
+  .eq .in{color:var(--input);font-weight:700}
+  .eq .out{color:var(--output);font-weight:700}
+  sup,sub{font-size:.72em}
+
+  /* expandable "More" explanations */
+  .more-btn{border:0;cursor:pointer;background:var(--action-soft);color:var(--action);
+    font-weight:700;font-size:12px;border-radius:8px;padding:4px 12px;margin-top:8px}
+  .more-btn:hover{background:var(--action);color:#fff}
+  .moretext{display:none;margin-top:10px;font-size:13px;line-height:1.55;color:var(--ink);
+    background:#f7f8fe;border-left:3px solid var(--action);border-radius:8px;padding:12px 14px}
+  .moretext h4{margin:10px 0 4px;font-size:13px;color:var(--action)}
+  .moretext h4:first-child{margin-top:0}
+  .moretext table{border-collapse:collapse;margin:8px 0;font-size:12.5px;width:100%}
+  .moretext td,.moretext th{border-bottom:1px solid #e2e8f0;padding:4px 8px;text-align:left}
+  .moretext th{color:var(--muted);font-weight:600}
+  .moretext .wk{background:var(--output-soft);border-radius:6px;padding:2px 6px;font-weight:600}
+  .tile.exp{grid-column:1/-1}
+
+  /* modal for "More" explanations */
+  .modal-bg{position:fixed;inset:0;background:rgba(30,41,59,.45);display:none;z-index:100;
+    align-items:center;justify-content:center;padding:20px}
+  .modal-bg.show{display:flex}
+  .modal{background:var(--card);border-radius:var(--radius);box-shadow:0 20px 50px rgba(124,58,237,.30);
+    width:min(720px,100%);max-height:min(82vh,660px);display:flex;flex-direction:column;overflow:hidden}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;
+    padding:13px 18px;border-bottom:1px solid #eef2fb;font-weight:700;font-size:15px;color:var(--action)}
+  .modal-head button{border:0;background:var(--action-soft);color:var(--action);width:32px;height:32px;flex:none;
+    border-radius:9px;cursor:pointer;font-size:14px;font-weight:700}
+  .modal-head button:hover{background:var(--action);color:#fff}
+  .modal-body{padding:6px 18px 16px;overflow-y:auto}
+  .modal-body .moretext{display:block;border:0;background:transparent;padding:0;margin:0;font-size:13.5px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Waves &amp; Oscillations Explorer</h1>
+  <p class="sub">Drag the <b style="color:var(--input)">orange</b> sliders → every <b style="color:var(--output)">teal</b> value below is recomputed live, and the labelled graph redraws.</p>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="tab1">1 · Anatomy of a sinusoid</button>
+    <button class="tab-btn" data-tab="tab2">2 · The traveling wave y(x,t)</button>
+  </div>
+
+  <!-- ============================ TAB 1 ============================ -->
+  <div class="tab show" id="tab1">
+    <div class="layout">
+      <div class="card">
+        <h2>Inputs</h2>
+        <div class="eq" id="e1eq">y(t) = <span class="in">A</span> sin(<span class="in">ω</span>t − <span class="in">φ</span>) + <span class="in">C</span></div>
+        <div class="row" style="margin:0 0 6px">
+          <button class="btn on" id="b1sin">Sine</button>
+          <button class="btn" id="b1cos">Cosine</button>
+          <button class="btn" id="b1both">Both</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">sine = the arrow's <b>vertical</b> shadow (peaks when it points up) · cosine = its <b>horizontal</b> shadow (peaks when it points right)</div>
+        <div class="ctl">
+          <label>Amplitude A <span class="val" id="v1A">1.50</span></label>
+          <input type="range" id="s1A" min="0.1" max="3" step="0.05" value="1.5">
+        </div>
+        <div class="ctl">
+          <label>Period T <span class="val" id="v1T">4.0 s</span></label>
+          <input type="range" id="s1T" min="0.5" max="8" step="0.1" value="4">
+        </div>
+        <div class="ctl">
+          <label>Angular frequency ω <span class="val" id="v1W">1.57 rad/s</span></label>
+          <input type="range" id="s1W" min="0.79" max="12.57" step="0.01" value="1.57">
+          <div style="font-size:11px;color:var(--muted)">linked by ω = 2π/T — move either slider, the other follows</div>
+        </div>
+        <div class="ctl">
+          <label>Phase lag φ <span class="val" id="v1P">π/2</span></label>
+          <input type="range" id="s1P" min="-24" max="24" step="1" value="6">
+        </div>
+        <div class="ctl">
+          <label>Vertical offset C <span class="val" id="v1C">0.00</span></label>
+          <input type="range" id="s1C" min="-1.5" max="1.5" step="0.05" value="0">
+        </div>
+        <div class="ctl">
+          <label>Time cursor t <span class="val" id="v1t">0.00 s</span></label>
+          <input type="range" id="s1t" min="0" max="10" step="0.02" value="0">
+        </div>
+        <label class="chk"><input type="checkbox" id="c1ref" checked> Show reference wave (no lag)</label>
+        <label class="chk"><input type="checkbox" id="c1deg"> Show angles in degrees</label>
+        <label class="chk"><input type="checkbox" id="c1cw"> Show a <b style="color:#ef4444">clockwise</b> phasor — and the (wrong) wave it would trace</label>
+        <div class="row" style="margin-top:12px">
+          <button class="btn primary" id="b1play">⏸ Pause</button>
+          <button class="btn" id="b1reset">Reset</button>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" id="b1pure">Plain sine: A=1, ω=1, φ=0, C=0</button>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:0">The spinning arrow (a <b>phasor</b>) turns at angular speed ω; its height is the wave. Tip: you can <b>drag left–right on the graph</b> to scrub time yourself.</p>
+      </div>
+
+      <div class="card">
+        <h2>One picture, every term</h2>
+        <canvas id="cv1" height="400"></canvas>
+        <div class="legend">
+          <span><span class="chip" style="background:var(--wave)"></span><b>sine wave</b> — the arrow's vertical shadow (dots mark peaks)</span>
+          <span><span class="chip" style="background:#16a34a"></span><b>cosine wave</b> — its horizontal shadow, stood upright</span>
+          <span><span class="chip" style="background:var(--ref)"></span><b>reference</b> (no lag)</span>
+          <span><span class="chip" style="background:var(--amp)"></span><b>amplitude A</b> (midline → peak)</span>
+          <span><span class="chip" style="background:var(--per)"></span><b>period T</b> (peak → next peak)</span>
+          <span><span class="chip" style="background:var(--lag)"></span><b>time lag t₀</b> (how late in seconds)</span>
+          <span><span class="chip" style="background:var(--phase)"></span><b>phase lag φ</b> (how late in angle)</span>
+          <span><span class="chip" style="background:#1140d8"></span><b>midline</b> y = C, with envelope C ± A</span>
+          <span><span class="chip" style="background:#f59e0b"></span><b>time cursor</b> t — drag it on the graph</span>
+        </div>
+        <button class="more-btn" data-more="mPhasor" data-title="The phasor, from scratch">More ▸ what exactly is a phasor, and why does it spin counterclockwise?</button>
+        <div class="moretext" id="mPhasor">
+          <h4>1 · A phasor is just an arrow with a growing angle</h4>
+          Pin an arrow of length A at the centre of the circle and let its angle grow at a steady rate — ω radians every second. At time t its angle is θ = ωt − φ. Worked, with ω = 1.57 rad/s and φ = 1.57: at t = 0 s, θ = 0×1.57 − 1.57 = <span class="wk">−1.57</span> (arrow points straight down); at t = 1 s, θ = 1.57 − 1.57 = <span class="wk">0</span> (arrow points right); at t = 2 s, θ = 3.14 − 1.57 = <span class="wk">+1.57</span> (straight up). Steady spin — nothing else.
+          <h4>2 · The wave is the arrow's shadow — and there are two shadows</h4>
+          The one spinning arrow casts two shadows, and each is a wave. Its <b>vertical</b> shadow — the height of the tip above the midline — is A sin θ. Its <b>horizontal</b> shadow — how far the tip sits to the right of centre — is A cos θ. Use the Sine / Cosine / Both buttons to watch either shadow (or both) being read off the <i>same</i> arrow. Concrete check at θ = 0, arrow at 3 o'clock: height = sin 0 = <b>0</b>, but horizontal reach = cos 0 = <b>1</b>, the full radius. So <b>sine peaks when the arrow points straight up</b> (θ = π/2), while <b>cosine peaks when it points right</b> (θ = 0). “Vertical/highest = maximum” is a <i>sine-only</i> statement; for cosine, maximum means “fully to the right”. The two are one wave a quarter-turn apart: cos θ = sin(θ + π/2) — cosine is a sine with a π/2 head start. Everything else transfers identically for both: radius → amplitude, one lap → one period, spin rate → ω, head start −φ → phase.
+          <h4>3 · Why counterclockwise, not clockwise?</h4>
+          Because θ = ωt − φ <b>increases</b> with time, and by the standard convention increasing angles sweep counterclockwise from the 3 o'clock direction. Check it with the graph itself: when the arrow passes 3 o'clock (θ = 0), the height is 0 and, an instant later, sin θ is slightly <i>positive</i> — so the tip must move <b>up</b> from 3 o'clock. Up from 3 o'clock is counterclockwise. A clockwise arrow would move <i>down</i> from 3 o'clock and its height would trace A sin(−ωt − φ) — a mirror-image wave that disagrees with the graph. Tick the red checkbox in the Inputs card to see exactly that mismatch drawn live. (Try it with φ = 0. One curious exception: at φ = ±π/2 the wave is ∓A cos(ωt), which reads the same forwards and backwards in time, so its mirror lands exactly on top of it — the red dot still betrays the wrong direction, though.)
+          <h4>4 · So when <i>would</i> clockwise be right?</h4>
+          When the angle in the formula <i>decreases</i> with time. In tab 2 a rightward-travelling wave is y = A sin(kx − ωt + φ); watch one fixed point x₀ and its angle kx₀ − ωt + φ shrinks as t grows — a phasor for that point really does turn clockwise. Same physics, opposite sign in front of ωt. The rotation direction always just follows the sign of the ωt term: +ωt → counterclockwise, −ωt → clockwise. It is a bookkeeping convention, not a law of nature.
+          <div><button class="more-btn close" data-more="mPhasor">Close ✕</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tiles" id="tiles1">
+      <div class="tile"><div class="name">Amplitude A</div>
+        <div class="calc">A = <span class="out" id="t1A">1.50</span></div>
+        <div class="why">Half the peak-to-trough distance: peak = C+A = <span id="t1pk">1.50</span>, trough = C−A = <span id="t1tr">−1.50</span>, so A = (<span id="t1pk2">1.50</span> − (<span id="t1tr2">−1.50</span>))/2. With C ≠ 0 the peak height ≠ A — slide C and watch them separate.</div></div>
+      <div class="tile"><div class="name">Vertical offset C (midline)</div>
+        <div class="calc">C = <span class="out" id="t1C">0.00</span></div>
+        <div class="why">Raises or lowers the whole curve. Changes peak and trough, but leaves A, T, φ and t₀ alone.</div></div>
+      <div class="tile"><div class="name">Period T</div>
+        <div class="calc">T = 2π/ω = <span class="out" id="t1T">4.00 s</span></div>
+        <div class="why">Seconds for one full cycle. In the 10 s window you can count 10/T = <span id="t1cyc">2.5</span> cycles.</div></div>
+      <div class="tile"><div class="name">Frequency f</div>
+        <div class="calc">f = 1/T = 1/<span class="in" id="t1fT">4.00</span> = <span class="out" id="t1f">0.25 Hz</span></div>
+        <div class="why">Cycles per second — the reciprocal of the period. Big T ⇔ small f.</div></div>
+      <div class="tile"><div class="name">Angular frequency / angular speed ω</div>
+        <div class="calc">ω = 2π/T = 2π/<span class="in" id="t1wT">4.00</span> = <span class="out" id="t1w">1.57 rad/s</span></div>
+        <div class="why">Radians swept per second by the phasor. One cycle = 2π rad = 360°, so ω = 2πf too (= <span id="t1w2">1.57</span>).</div>
+        <button class="more-btn" data-more="mOmega" data-title="Period, frequency &amp; angular frequency — three names, one fact">More ▸</button>
+        <div class="moretext" id="mOmega">
+          <h4>Three names for one fact</h4>
+          T, f and ω all answer "how fast does it repeat?" — they only differ in the <b>unit of one cycle</b>:
+          <table>
+            <tr><th>symbol</th><th>name</th><th>unit</th><th>reads as</th></tr>
+            <tr><td><b>T</b></td><td>period</td><td>s per cycle</td><td>seconds for one full oscillation</td></tr>
+            <tr><td><b>f</b></td><td>frequency</td><td>cycles per s (Hz)</td><td>oscillations per second</td></tr>
+            <tr><td><b>ω</b></td><td>angular frequency</td><td>rad per s</td><td>angle swept per second</td></tr>
+          </table>
+          <h4>The conversion chain, with numbers</h4>
+          Take T = 4 s. Then f = 1/T = 1/4 = <span class="wk">0.25 Hz</span> (a quarter cycle each second, so 4 s per cycle — reciprocals). One cycle is one full lap of the circle = 2π ≈ 6.283 radians, so ω = 2π × f = 6.283 × 0.25 = <span class="wk">1.571 rad/s</span>, which is the same as ω = 2π/T. Multiply cycles-per-second by radians-per-cycle and you get radians-per-second — pure unit bookkeeping.
+          <h4>Why bother with ω at all?</h4>
+          Because sin() eats <i>angles</i>, not seconds or cycles. ω is the exchange rate that converts clock time into the angle sin() needs: after t seconds the accumulated angle is ωt radians. With ω = 1.571 rad/s, after t = 2 s the angle is 1.571 × 2 = <span class="wk">3.142 rad</span> — exactly half a lap (π), i.e. half a cycle of the wave, as T = 4 s says it should be.
+          <div><button class="more-btn close" data-more="mOmega">Close ✕</button></div>
+        </div></div>
+      <div class="tile"><div class="name">Phase lag φ</div>
+        <div class="calc">φ = <span class="out" id="t1p">π/2 rad</span> = <span id="t1pd">90°</span></div>
+        <div class="why">How far <i>behind</i> the reference the wave runs, measured as an angle. It must be an angle: ωt is in radians, and you can only subtract like from like. Negative φ = a phase <i>lead</i>.</div>
+        <button class="more-btn" data-more="mPhi" data-title="Phase lag φ, in depth">More ▸</button>
+        <div class="moretext" id="mPhi">
+          <h4>1 · Two runners on the same circular track</h4>
+          Picture the reference wave and your wave as two runners going round the phasor circle at the <i>same</i> speed ω. Your runner started φ radians behind on the track, and can never catch up: at every instant, your runner's angle = (reference angle) − φ. That is literally the formula — sin(ωt − φ) versus sin(ωt). Turn on "Show reference wave" and watch the grey and blue arrows keep a fixed pink angle φ between them while both spin.
+          <h4>2 · Why φ must be an angle (and is "unitless")</h4>
+          Whatever sits inside sin( ) has to be an angle. ωt already is one: (rad/s) × s = rad. Since you can only subtract like from like, φ must also be in radians — and radians are a pure number (arc length ÷ radius), so φ carries no physical unit. The <i>seconds</i> version of the same shift is a different symbol: t₀ = φ/ω.
+          <h4>3 · Why positive φ means "later", step by step</h4>
+          The wave peaks when its angle reaches π/2. Without lag: ωt = π/2 → t = π/2ω. With lag: ωt − φ = π/2 → t = (π/2 + φ)/ω — a <b>bigger</b> t, so the peak happens later, and the whole graph slides right. Worked, with ω = 1.571 and φ = 1.571 (= π/2): peak without lag at t = 1.571/1.571 = <span class="wk">1 s</span>; with lag at t = (1.571+1.571)/1.571 = <span class="wk">2 s</span>. One second late — which is exactly t₀ = φ/ω = 1 s. The minus sign in sin(ωt − φ) is precisely what makes positive φ mean "delayed".
+          <h4>4 · φ as a fraction of a cycle</h4>
+          A whole cycle is 2π, so φ/2π tells you <i>what fraction of a cycle</i> the wave is behind — independent of ω. φ = π/2 → (π/2)/2π = <span class="wk">1/4 of a cycle</span>, always. Special values (for the sine form used here):
+          <table>
+            <tr><th>φ</th><th>shift</th><th>sin(ωt − φ) becomes</th></tr>
+            <tr><td>0</td><td>none</td><td>sin(ωt)</td></tr>
+            <tr><td>π/2</td><td>quarter cycle right</td><td>−cos(ωt)</td></tr>
+            <tr><td>π</td><td>half cycle</td><td>−sin(ωt)</td></tr>
+            <tr><td>−π/2</td><td>quarter cycle left (a lead)</td><td>cos(ωt)</td></tr>
+          </table>
+          (That table is for the sine form. Select Cosine and the same shifts give: cos(ωt−π/2) = sin ωt, cos(ωt−π) = −cos ωt, cos(ωt+π/2) = −sin ωt.)
+          Set the φ slider to each of these and check the graph really becomes that function.
+          <div><button class="more-btn close" data-more="mPhi">Close ✕</button></div>
+        </div></div>
+      <div class="tile"><div class="name">Time lag t₀</div>
+        <div class="calc">t₀ = φ/ω = <span class="in" id="t1lp">1.57</span>/<span class="in" id="t1lw">1.57</span> = <span class="out" id="t1l">1.00 s</span></div>
+        <div class="why">The same lateness in seconds — rad ÷ (rad/s) = s. Try it: raise ω and the first peak slides left even though φ never moved, because t₀ = φ/ω shrinks.</div>
+        <button class="more-btn" data-more="mT0" data-title="Time lag t₀, in depth">More ▸</button>
+        <div class="moretext" id="mT0">
+          <h4>1 · Converting angle-lateness into clock-lateness</h4>
+          φ says "behind by so many radians"; to turn that into seconds, divide by how many radians pass per second — which is ω. Hence t₀ = φ/ω. The units confirm it: rad ÷ (rad/s) = <span class="wk">s</span>. Worked: φ = 1.571 rad behind, spinning at ω = 1.571 rad/s → behind by 1.571/1.571 = <span class="wk">1.00 s</span>. Now double the speed to ω = 3.142 with the <i>same</i> φ: t₀ = 1.571/3.142 = <span class="wk">0.50 s</span>. Same angle behind, half the seconds behind, because everything happens twice as fast.
+          <h4>2 · The one-line proof: factor ω out</h4>
+          A sin(ωt − φ) = A sin( ω(t − φ/ω) ) = A sin( ω(t − t₀) ). Compare with the un-lagged A sin(ωt): it is the identical function with t replaced by t − t₀ — i.e. every event (peak, zero, trough) occurs t₀ seconds later. Factoring ω out of the bracket is the entire content of "t₀ = φ/ω". This is why the graph shows the time-lag arrow as a pure horizontal shift.
+          <h4>3 · Two rulers, one shift</h4>
+          The sideways shift can be quoted in either currency, and the fractions always agree: φ/2π (fraction of a cycle, in angle) = t₀/T (fraction of a period, in time). With φ = π/2, ω = 1.571: φ/2π = 0.25 and t₀/T = 1/4 = 0.25 ✓. The "Fraction of a cycle" tile below tracks this equality live as you drag any slider.
+          <div><button class="more-btn close" data-more="mT0">Close ✕</button></div>
+        </div></div>
+      <div class="tile"><div class="name">Fraction of a cycle</div>
+        <div class="calc">φ/2π = <span class="out" id="t1fr1">0.250</span> = t₀/T = <span class="out" id="t1fr2">0.250</span> ✓</div>
+        <div class="why">Angle-currency and time-currency always agree: φ = π/2 is a quarter cycle no matter what ω is — only the number of <i>seconds</i> that quarter takes depends on ω.</div></div>
+      <div class="tile"><div class="name">Phase right now (live)</div>
+        <div class="calc">θ(t) = ωt − φ = <span class="out" id="t1th">…</span></div>
+        <div class="why">The phasor's current angle — “where in its cycle” the wave is at the cursor instant. Cycles completed so far: t/T = <span id="t1turns">0.00</span>. One arrow, two shadows: sin θ = <span id="t1s">…</span> (vertical), cos θ = <span id="t1c">…</span> (horizontal).</div></div>
+      <div class="tile"><div class="name">At the cursor (live)</div>
+        <div class="calc" id="t1cur" style="font-size:13px">…</div>
+        <div class="why">The full substitution, step by step: angle → sine → scale by A → shift by C. Drag the graph and watch each number move.</div></div>
+      <div class="tile"><div class="name">Equation with your numbers</div>
+        <div class="calc" id="t1eq">y(t) = 1.50 sin(1.57 t − 1.57)</div>
+        <div class="why">Equivalently y(t) = A sin(ω(t − t₀)) + C: factoring ω out of the bracket turns the angle shift φ into the time shift t₀.</div></div>
+    </div>
+  </div>
+
+  <!-- ============================ TAB 2 ============================ -->
+  <div class="tab" id="tab2">
+    <div class="layout">
+      <div class="card">
+        <h2>Inputs</h2>
+        <div class="eq">y(x,t) = <span class="in">A</span> sin(<span class="in">k</span>x <span id="e2sign">−</span> <span class="in">ω</span>t + <span class="in">φ</span>)</div>
+        <div class="ctl">
+          <label>Amplitude A <span class="val" id="v2A">1.2</span></label>
+          <input type="range" id="s2A" min="0.2" max="2" step="0.1" value="1.2">
+        </div>
+        <div class="ctl">
+          <label>Wavelength λ (m) <span class="val" id="v2L">5.0 m</span></label>
+          <input type="range" id="s2L" min="2" max="12" step="0.5" value="5">
+        </div>
+        <div class="ctl">
+          <label>Period T (s) <span class="val" id="v2T">2.0 s</span></label>
+          <input type="range" id="s2T" min="0.5" max="6" step="0.1" value="2">
+        </div>
+        <div class="ctl">
+          <label>Phase φ <span class="val" id="v2P">0</span></label>
+          <input type="range" id="s2P" min="-24" max="24" step="1" value="0">
+        </div>
+        <div class="ctl">
+          <label>Watch the point at x₀ <span class="val" id="v2X">6.0 m</span></label>
+          <input type="range" id="s2X" min="0" max="20" step="0.5" value="6">
+        </div>
+        <div class="row">
+          <button class="btn on" id="b2right">→ moves +x (kx − ωt)</button>
+          <button class="btn" id="b2left">← moves −x (kx + ωt)</button>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn primary" id="b2play">⏸ Pause</button>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:0">Top graph = a <b>photo</b> of the whole rope at one instant (x-axis: you read λ). Bottom graph = a <b>movie</b> of one point (t-axis: you read T).</p>
+      </div>
+
+      <div class="card">
+        <h2>Snapshot in space — read the wavelength here</h2>
+        <canvas id="cv2" height="330"></canvas>
+        <div class="legend">
+          <span><span class="chip" style="background:var(--wave)"></span><b>wave now</b></span>
+          <span><span class="chip" style="background:var(--amp)"></span><b>amplitude A</b></span>
+          <span><span class="chip" style="background:var(--per)"></span><b>wavelength λ</b> (crest → next crest)</span>
+          <span><span class="chip" style="background:var(--phase)"></span><b>crest tracker</b> — moves at speed v</span>
+          <span><span class="chip" style="background:var(--lag)"></span><b>the point x₀</b> — only bobs up &amp; down</span>
+        </div>
+        <h2 style="margin-top:16px">History of the point x₀ — read the period here</h2>
+        <canvas id="cv2b" height="150"></canvas>
+      </div>
+    </div>
+
+    <div class="tiles">
+      <div class="tile"><div class="name">Wavelength λ</div>
+        <div class="calc">λ = <span class="out" id="t2L">5.00 m</span></div>
+        <div class="why">Length of one cycle in <i>space</i> (crest to crest). The spatial twin of the period T.</div></div>
+      <div class="tile"><div class="name">Wave number k</div>
+        <div class="calc">k = 2π/λ = 2π/<span class="in" id="t2kL">5.00</span> = <span class="out" id="t2k">1.26 rad/m</span></div>
+        <div class="why">Radians of phase per meter — the spatial twin of ω (which is radians per second).</div></div>
+      <div class="tile"><div class="name">Period T &amp; frequency f</div>
+        <div class="calc">T = <span class="out" id="t2T">2.00 s</span>, f = 1/T = <span class="out" id="t2f">0.50 Hz</span></div>
+        <div class="why">Time for the point x₀ to complete one bob. Visible in the lower (movie) graph, not the photo.</div></div>
+      <div class="tile"><div class="name">Angular frequency ω</div>
+        <div class="calc">ω = 2π/T = 2π/<span class="in" id="t2wT">2.00</span> = <span class="out" id="t2w">3.14 rad/s</span></div>
+        <div class="why">How fast the phase (kx ∓ ωt + φ) advances in time at a fixed point.</div></div>
+      <div class="tile"><div class="name">Wave speed v</div>
+        <div class="calc">v = λ/T = <span class="in" id="t2vL">5.00</span>/<span class="in" id="t2vT">2.00</span> = <span class="out" id="t2v">2.50 m/s</span></div>
+        <div class="why">One wavelength per period. Same number as v = fλ = ω/k = <span id="t2v2">2.50</span> m/s.</div></div>
+      <div class="tile"><div class="name">Direction</div>
+        <div class="calc">sign of ωt term: <span class="out" id="t2dir">− ωt → moves +x</span></div>
+        <div class="why">A crest sits where the phase = π/2. To keep that phase constant as t grows, x must move — that motion is the wave.</div></div>
+      <div class="tile"><div class="name">Phase φ</div>
+        <div class="calc">φ = <span class="out" id="t2p">0 rad</span> = <span id="t2pd">0°</span></div>
+        <div class="why">Slides the whole pattern along x by φ/k = <span id="t2shift">0.00</span> m without changing shape or speed.</div></div>
+      <div class="tile"><div class="name">Equation with your numbers</div>
+        <div class="calc" id="t2eq">y(x,t) = 1.20 sin(1.26 x − 3.14 t)</div>
+        <div class="why">Two clocks in one formula: k counts radians along space, ω counts radians along time.</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-head"><span id="modalTitle"></span><button id="modalClose" aria-label="Close">✕</button></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const TAU = Math.PI*2;
+const fmt = (x,d=2)=>Number(x).toFixed(d);
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* φ slider stores n; φ = n·π/12 — show as a tidy π-fraction */
+function piFrac(n){
+  if(n===0) return "0";
+  const sign = n<0 ? "−" : "";
+  n = Math.abs(n);
+  let den = 12, g = (a,b)=>b?g(b,a%b):a, d = g(n,den);
+  const num = n/d, dd = den/d;
+  const top = (num===1?"π":num+"π");
+  return sign + (dd===1? top : top+"/"+dd);
+}
+
+/* tabs */
+document.querySelectorAll(".tab-btn").forEach(b=>{
+  b.onclick = ()=>{
+    document.querySelectorAll(".tab-btn").forEach(x=>x.classList.toggle("active",x===b));
+    document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("show",t.id===b.dataset.tab));
+  };
+});
+
+/* canvas helpers */
+function fitCanvas(cv){
+  const dpr = window.devicePixelRatio||1;
+  if(!cv.dataset.h) cv.dataset.h = cv.getAttribute("height"); // design height, saved ONCE
+  const h = +cv.dataset.h;
+  const w = cv.clientWidth;
+  if(!w) return null;                       // hidden tab — skip drawing
+  const bw = Math.round(w*dpr), bh = Math.round(h*dpr);
+  if(cv.width!==bw || cv.height!==bh){      // resize backing store only when needed
+    cv.width = bw; cv.height = bh;
+    cv.style.height = h+"px";               // pin displayed height in CSS
+  }
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx,w,h};
+}
+function dblArrow(ctx,x1,y1,x2,y2,color,label,labelDx,labelDy){
+  ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  const a=Math.atan2(y2-y1,x2-x1);
+  const head=(x,y,ang)=>{ctx.beginPath();ctx.moveTo(x,y);
+    ctx.lineTo(x-7*Math.cos(ang-0.4),y-7*Math.sin(ang-0.4));
+    ctx.lineTo(x-7*Math.cos(ang+0.4),y-7*Math.sin(ang+0.4));ctx.closePath();ctx.fill();};
+  head(x2,y2,a); head(x1,y1,a+Math.PI);
+  if(label){ctx.font="600 12px sans-serif";
+    ctx.fillText(label,(x1+x2)/2+(labelDx||0),(y1+y2)/2+(labelDy||0));}
+}
+
+/* ============================ TAB 1 ============================ */
+const S1 = {A:1.5, T:4, n:6, C:0, fn:"sin", ref:true, deg:false, cw:false, play:!reduced, t:0};
+const cv1 = document.getElementById("cv1");
+const $id = id => document.getElementById(id);
+
+function phi1(){ return S1.n*Math.PI/12; }
+function angTxt(rad){ return S1.deg ? fmt(rad*180/Math.PI,1)+"\u00b0" : fmt(rad)+" rad"; }
+function phiTxt(){ return S1.deg ? fmt(S1.n*15,0)+"\u00b0" : piFrac(S1.n); }
+
+/* static readouts — refresh on any slider/toggle change */
+function ui1(){
+  $id("v1A").textContent = fmt(S1.A);
+  $id("v1T").textContent = fmt(S1.T,1)+" s";
+  $id("v1W").textContent = fmt(TAU/S1.T)+" rad/s";
+  $id("v1P").textContent = phiTxt();
+  $id("v1C").textContent = fmt(S1.C);
+  const w = TAU/S1.T, p = phi1(), f = 1/S1.T, t0 = p/w;
+  const set=(id,v)=>$id(id).textContent=v;
+  set("t1A",fmt(S1.A));
+  set("t1pk",fmt(S1.C+S1.A)); set("t1tr",fmt(S1.C-S1.A));
+  set("t1pk2",fmt(S1.C+S1.A)); set("t1tr2",fmt(S1.C-S1.A));
+  set("t1C",fmt(S1.C));
+  set("t1T",fmt(S1.T)+" s"); set("t1cyc",fmt(10/S1.T,1));
+  set("t1fT",fmt(S1.T)); set("t1f",fmt(f,3)+" Hz");
+  set("t1wT",fmt(S1.T)); set("t1w",fmt(w)+" rad/s"); set("t1w2",fmt(TAU*f));
+  set("t1p",S1.deg? fmt(S1.n*15,0)+"°" : piFrac(S1.n)+" rad ("+fmt(p)+")");
+  set("t1pd",S1.deg? piFrac(S1.n)+" rad" : fmt(S1.n*15,0)+"°");
+  set("t1lp",fmt(p)); set("t1lw",fmt(w)); set("t1l",fmt(t0)+" s");
+  set("t1fr1",fmt(p/TAU,3)); set("t1fr2",fmt(t0/S1.T,3));
+  const tail = Math.abs(S1.C)>1e-9 ? " + "+fmt(S1.C) : "";
+  const eqS = "y(t) = "+fmt(S1.A)+" sin("+fmt(w)+" t − ("+fmt(p)+"))"+tail;
+  const eqC = "y(t) = "+fmt(S1.A)+" cos("+fmt(w)+" t − ("+fmt(p)+"))"+tail;
+  $id("t1eq").innerHTML = S1.fn==="both" ? eqS+"<br>"+eqC : (S1.fn==="cos" ? eqC : eqS);
+  $id("e1eq").innerHTML = ({
+    sin: 'y(t) = <span class="in">A</span> sin(<span class="in">ω</span>t − <span class="in">φ</span>) + <span class="in">C</span>',
+    cos: 'y(t) = <span class="in">A</span> cos(<span class="in">ω</span>t − <span class="in">φ</span>) + <span class="in">C</span>',
+    both:'y = <span class="in">A</span> sin(<span class="in">ω</span>t−<span class="in">φ</span>)+<span class="in">C</span> · y = <span class="in">A</span> cos(<span class="in">ω</span>t−<span class="in">φ</span>)+<span class="in">C</span>'
+  })[S1.fn];
+}
+
+/* per-frame readouts — the cursor-dependent tiles */
+function live1(){
+  const w = TAU/S1.T, p = phi1(), th = w*S1.t - p;
+  const s = Math.sin(th), c = Math.cos(th);
+  $id("v1t").textContent = fmt(S1.t)+" s";
+  $id("s1t").value = S1.t;
+  $id("t1th").textContent = angTxt(th);
+  $id("t1turns").textContent = fmt(S1.t/S1.T);
+  $id("t1s").textContent = fmt(s,3);
+  $id("t1c").textContent = fmt(c,3);
+  const chain = (name,v) =>
+    "t = <span class=\"in\">"+fmt(S1.t)+"</span> s: ωt − φ = "+fmt(w)+"×"+fmt(S1.t)+" − "+fmt(p)+
+    " = <b>"+fmt(th)+"</b> rad → "+name+" = <b>"+fmt(v,3)+"</b> → y = "+fmt(S1.C)+" + "+fmt(S1.A)+"×"+fmt(v,3)+
+    " = <span class=\"out\">"+fmt(S1.C+S1.A*v,3)+"</span>";
+  $id("t1cur").innerHTML = S1.fn==="both" ? chain("sin",s)+"<br>"+chain("cos",c)
+                         : (S1.fn==="cos" ? chain("cos",c) : chain("sin",s));
+}
+
+function draw1(){
+  const fc = fitCanvas(cv1); if(!fc) return;
+  const {ctx,w:W,h:H} = fc;
+  ctx.clearRect(0,0,W,H);
+  const cy = 200;
+  const unit = Math.min(55, 160/(Math.abs(S1.C)+S1.A+0.3));   // auto-zoom so C never clips
+  const w = TAU/S1.T, p = phi1();
+  const cx = 95, R = S1.A*unit, cyc = cy - S1.C*unit;          // circle rides on the midline
+  const L = 210, Rt = W-16, tMax = 10;
+  cv1._map = {L, R:Rt, tMax};
+  const X = t => L + (t/tMax)*(Rt-L);
+  const Y = y => cy - y*unit;
+  const showSin = S1.fn!=="cos", showCos = S1.fn!=="sin";
+  const prim = (S1.fn==="cos") ? Math.cos : Math.sin;          // annotations follow the primary wave
+  const peakPhase = (S1.fn==="cos") ? 0 : Math.PI/2;           // sin peaks at θ=π/2, cos at θ=0
+  const ySin = t => S1.C + S1.A*Math.sin(w*t - p);
+  const yCos = t => S1.C + S1.A*Math.cos(w*t - p);
+  const yPrim = (S1.fn==="cos") ? yCos : ySin;
+
+  /* axes */
+  ctx.strokeStyle="#cbd5e1"; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(L,cy); ctx.lineTo(Rt,cy); ctx.stroke();       // y = 0 axis
+  ctx.fillStyle="#94a3b8"; ctx.font="11px sans-serif";
+  for(let s=0;s<=10;s+=2){ ctx.fillText(s+" s",X(s)-8,cy+16); }
+
+  /* midline y = C and envelope C ± A */
+  ctx.setLineDash([6,5]); ctx.strokeStyle="#1140d8"; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(L,Y(S1.C)); ctx.lineTo(Rt,Y(S1.C)); ctx.stroke();
+  ctx.setLineDash([4,4]); ctx.strokeStyle="#fdba74"; ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.moveTo(L,Y(S1.C+S1.A)); ctx.lineTo(Rt,Y(S1.C+S1.A)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(L,Y(S1.C-S1.A)); ctx.lineTo(Rt,Y(S1.C-S1.A)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle="#1140d8"; ctx.font="600 11px sans-serif";
+  ctx.fillText("midline y = C = "+fmt(S1.C), Rt-135, Y(S1.C)-5);
+
+  /* phasor circle, centred on the midline */
+  ctx.strokeStyle="#e2e8f0"; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(cx,cyc,R,0,TAU); ctx.stroke();
+  ctx.strokeStyle="#e2e8f0"; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(cx-R-12,cyc); ctx.lineTo(cx+R+12,cyc); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,cyc-R-12); ctx.lineTo(cx,cyc+R+12); ctx.stroke();
+
+  const th = w*S1.t - p;            // current phase of the wave
+  const thr = w*S1.t;               // reference phase
+  if(S1.ref){
+    ctx.setLineDash([5,4]);
+    ctx.strokeStyle="#94a3b8"; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(cx,cyc);
+    ctx.lineTo(cx+R*Math.cos(thr), cyc-R*Math.sin(thr)); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  if(S1.ref && S1.n!==0){
+    ctx.strokeStyle="#db2777"; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(cx,cyc,Math.min(26,R*0.6),-th,-thr, p>0); ctx.stroke();
+    const mid = th + p/2, ra = Math.min(38,R*0.85);
+    ctx.fillStyle="#db2777"; ctx.font="700 13px sans-serif";
+    ctx.fillText("φ", cx+ra*Math.cos(mid)-4, cyc-ra*Math.sin(mid)+4);
+  }
+  ctx.strokeStyle="#2563eb"; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(cx,cyc);
+  const px = cx+R*Math.cos(th), py = cyc-R*Math.sin(th);
+  ctx.lineTo(px,py); ctx.stroke();
+  ctx.fillStyle="#2563eb"; ctx.beginPath(); ctx.arc(px,py,5,0,TAU); ctx.fill();
+  ctx.fillStyle="#64748b"; ctx.font="11px sans-serif";
+  ctx.fillText("spins ↺ CCW at ω = "+fmt(w)+" rad/s", cx-58, cyc+R+26);
+  ctx.fillText("θ = ωt − φ = "+angTxt(th), cx-58, cyc-R-16);
+
+  /* optional: the CLOCKWISE ghost — same start, wrong direction (follows the primary wave) */
+  if(S1.cw){
+    const thg = -w*S1.t - p;                       // same angle −φ at t = 0, then clockwise
+    ctx.setLineDash([2,4]); ctx.strokeStyle="#ef4444"; ctx.lineWidth=2;
+    ctx.beginPath();
+    for(let i=0;i<=400;i++){ const t=i/400*tMax;
+      const x=X(t), y=Y(S1.C+S1.A*prim(-w*t-p)); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+    ctx.stroke(); ctx.setLineDash([]);
+    const gx=cx+R*Math.cos(thg), gy=cyc-R*Math.sin(thg);
+    ctx.strokeStyle="#ef4444"; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.arc(gx,gy,5,0,TAU); ctx.stroke();
+    ctx.fillStyle="#ef4444"; ctx.font="600 11px sans-serif";
+    ctx.fillText("↻ clockwise", cx+R*0.2, cyc+R+40);
+    const coincide = (prim===Math.cos) ? Math.abs(Math.sin(p))<0.06 : Math.abs(Math.cos(p))<0.06;
+    if(coincide){
+      const msg = (prim===Math.cos)
+        ? "⚠ at φ = 0 or π the mirrored cosine lands exactly on the real one — try φ = π/2 to see them split"
+        : "⚠ at φ = ±π/2 the mirrored wave lands exactly on the real one — set φ = 0 to see them split";
+      ctx.fillText(msg, L+8, H-8);
+    } else {
+      ctx.fillText("✗ a clockwise arrow traces this mirrored wave instead", L+8, H-8);
+    }
+  }
+
+  /* reference wave (no lag) of the primary */
+  if(S1.ref){
+    ctx.setLineDash([5,4]); ctx.strokeStyle="#94a3b8"; ctx.lineWidth=2;
+    ctx.beginPath();
+    for(let i=0;i<=400;i++){ const t=i/400*tMax;
+      const x=X(t), y=Y(S1.C+S1.A*prim(w*t)); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  /* the waves: cosine in green, sine in blue (sine drawn last, on top) */
+  if(showCos){
+    ctx.strokeStyle="#16a34a"; ctx.lineWidth=3;
+    ctx.beginPath();
+    for(let i=0;i<=500;i++){ const t=i/500*tMax;
+      const x=X(t), y=Y(yCos(t)); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+    ctx.stroke();
+  }
+  if(showSin){
+    ctx.strokeStyle="#2563eb"; ctx.lineWidth=3;
+    ctx.beginPath();
+    for(let i=0;i<=500;i++){ const t=i/500*tMax;
+      const x=X(t), y=Y(ySin(t)); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+    ctx.stroke();
+  }
+
+  /* peaks of the primary wave, all marked */
+  let tp = ((peakPhase + p)/w) % S1.T; if(tp<0) tp += S1.T;   // first peak
+  ctx.fillStyle = (prim===Math.cos) ? "#16a34a" : "#2563eb";
+  for(let pk=tp; pk<=tMax; pk+=S1.T){
+    ctx.beginPath(); ctx.arc(X(pk),Y(S1.C+S1.A),4,0,TAU); ctx.fill();
+  }
+
+  /* time cursor */
+  const tc = Math.max(0,Math.min(tMax,S1.t));
+  ctx.setLineDash([4,4]); ctx.strokeStyle="#f59e0b"; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.moveTo(X(tc),Y(S1.C+S1.A)-10); ctx.lineTo(X(tc),Y(S1.C-S1.A)+10); ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* SINE read-off: the vertical shadow (tip height), carried horizontally to the blue curve */
+  if(showSin){
+    ctx.setLineDash([3,4]); ctx.strokeStyle="#2563eb"; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(X(tc),Y(ySin(tc))); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle="#2563eb";
+    ctx.beginPath(); ctx.arc(cx,py,3.5,0,TAU); ctx.fill();            // shadow on the vertical axis
+    ctx.font="600 10px sans-serif"; ctx.fillText("sin θ", cx+6, py-5);
+    ctx.beginPath(); ctx.arc(X(tc),Y(ySin(tc)),5.5,0,TAU); ctx.fill();
+    ctx.font="600 11px sans-serif"; ctx.fillText("y = "+fmt(ySin(tc)), X(tc)+8, Y(ySin(tc))-8);
+  }
+
+  /* COSINE read-off: the horizontal shadow (foot below the tip), stood upright, then carried to the green curve */
+  if(showCos){
+    const d = R*Math.cos(th);
+    ctx.setLineDash([3,4]); ctx.strokeStyle="#16a34a"; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,cyc); ctx.stroke();          // drop to horizontal axis
+    if(Math.abs(d)>4){                                                              // stand the shadow upright
+      const a0 = d>0 ? 0 : Math.PI;
+      ctx.beginPath(); ctx.arc(cx,cyc,Math.abs(d), -a0, -(a0+Math.PI/2), true); ctx.stroke();
+    }
+    ctx.beginPath(); ctx.moveTo(cx,cyc-d); ctx.lineTo(X(tc),Y(yCos(tc))); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle="#16a34a";
+    ctx.beginPath(); ctx.arc(px,cyc,3.5,0,TAU); ctx.fill();            // shadow on the horizontal axis
+    ctx.font="600 10px sans-serif"; ctx.fillText("cos θ", px+5, cyc+13);
+    ctx.beginPath(); ctx.arc(cx,cyc-d,3.5,0,TAU); ctx.fill();          // same length, upright
+    ctx.beginPath(); ctx.arc(X(tc),Y(yCos(tc)),5.5,0,TAU); ctx.fill();
+    ctx.font="600 11px sans-serif"; ctx.fillText("y = "+fmt(yCos(tc)), X(tc)+8, Y(yCos(tc))+14);
+  }
+
+  /* amplitude arrow: midline → peak, at the primary's first peak */
+  dblArrow(ctx, X(tp)+0.01, Y(S1.C), X(tp), Y(S1.C+S1.A), "#f97316",
+           "A = "+fmt(S1.A), 8, -(S1.A*unit)/2 + 4);
+  /* period bracket between two successive peaks */
+  if(tp + S1.T <= tMax){
+    const yb = Y(S1.C+S1.A) - 16;
+    dblArrow(ctx, X(tp), yb, X(tp+S1.T), yb, "#7c3aed", "T = "+fmt(S1.T)+" s", -30, -8);
+  }
+  /* time-lag arrow between reference peak and lagged peak (of the primary) */
+  if(S1.ref && S1.n!==0){
+    const t0v = p/w;
+    let tr = peakPhase/w, tm = peakPhase/w + t0v;
+    while(tm<0 || tr<0){ tr+=S1.T; tm+=S1.T; }
+    while(Math.max(tr,tm)>tMax && Math.min(tr,tm)-S1.T>=0){ tr-=S1.T; tm-=S1.T; }
+    if(Math.max(tr,tm)<=tMax){
+      const yl = Y(S1.C-S1.A) + 26;
+      ctx.setLineDash([3,4]); ctx.strokeStyle="#0d9488"; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(X(tr),Y(S1.C+S1.A*prim(w*tr))); ctx.lineTo(X(tr),yl); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(X(tm),Y(yPrim(tm))); ctx.lineTo(X(tm),yl); ctx.stroke();
+      ctx.setLineDash([]);
+      dblArrow(ctx, X(tr), yl, X(tm), yl, "#0d9488",
+        (t0v>=0?"time lag":"time lead")+" t₀ = φ/ω = "+fmt(Math.abs(t0v))+" s", -55, 16);
+    }
+  }
+}
+
+/* ============================ TAB 2 ============================ */
+const S2 = {A:1.2, L:5, T:2, n:0, dir:1, x0:6, play:!reduced, t:0, hist:[]};
+const cv2 = document.getElementById("cv2");
+const cv2b = document.getElementById("cv2b");
+
+function phi2(){ return S2.n*Math.PI/12; }
+
+function ui2(){
+  document.getElementById("v2A").textContent = fmt(S2.A,1);
+  document.getElementById("v2L").textContent = fmt(S2.L,1)+" m";
+  document.getElementById("v2T").textContent = fmt(S2.T,1)+" s";
+  document.getElementById("v2P").textContent = piFrac(S2.n);
+  document.getElementById("v2X").textContent = fmt(S2.x0,1)+" m";
+  const k = TAU/S2.L, w = TAU/S2.T, v = S2.L/S2.T, p = phi2();
+  const set=(id,val)=>document.getElementById(id).textContent=val;
+  set("t2L",fmt(S2.L)+" m");
+  set("t2kL",fmt(S2.L)); set("t2k",fmt(k)+" rad/m");
+  set("t2T",fmt(S2.T)+" s"); set("t2f",fmt(1/S2.T,3)+" Hz");
+  set("t2wT",fmt(S2.T)); set("t2w",fmt(w)+" rad/s");
+  set("t2vL",fmt(S2.L)); set("t2vT",fmt(S2.T)); set("t2v",fmt(v)+" m/s"); set("t2v2",fmt(w/k));
+  set("t2dir", S2.dir>0 ? "− ωt → moves +x (right)" : "+ ωt → moves −x (left)");
+  set("t2p",piFrac(S2.n)+" rad ("+fmt(p)+")"); set("t2pd",fmt(S2.n*15,0)+"°");
+  set("t2shift",fmt(p/k));
+  set("e2sign", S2.dir>0 ? "−" : "+");
+  set("t2eq","y(x,t) = "+fmt(S2.A)+" sin("+fmt(k)+" x "+(S2.dir>0?"−":"+")+" "+fmt(w)+" t"+(S2.n?(" + ("+fmt(p)+")"):"")+")");
+}
+
+function y2(x,t){ const k=TAU/S2.L, w=TAU/S2.T;
+  return S2.A*Math.sin(k*x - S2.dir*w*t + phi2()); }
+
+function draw2(){
+  const fc = fitCanvas(cv2); if(!fc) return;
+  const {ctx,w:W,h:H} = fc;
+  ctx.clearRect(0,0,W,H);
+  const cy=165, unit=55, L=46, R=W-16, xMax=20;
+  const X = x => L + (x/xMax)*(R-L);
+  const Y = y => cy - y*unit;
+  const k=TAU/S2.L, w=TAU/S2.T, v=S2.L/S2.T, p=phi2();
+
+  ctx.strokeStyle="#cbd5e1"; ctx.beginPath(); ctx.moveTo(L,cy); ctx.lineTo(R,cy); ctx.stroke();
+  ctx.fillStyle="#94a3b8"; ctx.font="11px sans-serif";
+  for(let m=0;m<=20;m+=5) ctx.fillText(m+" m",X(m)-8,cy+16);
+
+  /* wave */
+  ctx.strokeStyle="#2563eb"; ctx.lineWidth=3; ctx.beginPath();
+  for(let i=0;i<=600;i++){ const x=i/600*xMax;
+    const xx=X(x), yy=Y(y2(x,S2.t)); i?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy); }
+  ctx.stroke();
+
+  /* crest positions: k x − dir ω t + φ = π/2 + 2πn */
+  const base = (Math.PI/2 - p + S2.dir*w*S2.t)/k;
+  let c1 = base % S2.L; if(c1<0) c1+=S2.L;
+  /* wavelength bracket */
+  if(c1 + S2.L <= xMax){
+    const yb = Y(S2.A)-16;
+    dblArrow(ctx, X(c1), yb, X(c1+S2.L), yb, "#7c3aed", "λ = "+fmt(S2.L)+" m", -28, -8);
+  }
+  /* amplitude arrow at first crest */
+  dblArrow(ctx, X(c1)+0.01, cy, X(c1), Y(S2.A), "#f97316", "A = "+fmt(S2.A), 8, -(S2.A*unit)/2+4);
+
+  /* crest tracker dot + speed label */
+  let ct = c1; if(ct+S2.L/2 < xMax/2) ct += S2.L;   // pick one near middle-ish
+  ctx.fillStyle="#db2777"; ctx.beginPath(); ctx.arc(X(ct),Y(S2.A),6,0,TAU); ctx.fill();
+  ctx.font="600 12px sans-serif";
+  ctx.fillText((S2.dir>0?"→":"←")+" v = λ/T = "+fmt(v)+" m/s", X(ct)+(S2.dir>0?10:-120), Y(S2.A)-10);
+
+  /* probe point x0 */
+  ctx.setLineDash([4,4]); ctx.strokeStyle="#0d9488"; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(X(S2.x0),Y(-S2.A)-0); ctx.lineTo(X(S2.x0),Y(S2.A)); ctx.stroke();
+  ctx.setLineDash([]);
+  const yp = y2(S2.x0,S2.t);
+  ctx.fillStyle="#0d9488"; ctx.beginPath(); ctx.arc(X(S2.x0),Y(yp),6,0,TAU); ctx.fill();
+  ctx.font="600 12px sans-serif";
+  ctx.fillText("x₀: y = "+fmt(yp), X(S2.x0)+9, Y(yp)+4);
+}
+
+function draw2b(){
+  const fc = fitCanvas(cv2b); if(!fc) return;
+  const {ctx,w:W,h:H} = fc;
+  ctx.clearRect(0,0,W,H);
+  const cy=75, unit=28, L=46, R=W-16, span=8;   // last 8 seconds
+  ctx.strokeStyle="#cbd5e1"; ctx.beginPath(); ctx.moveTo(L,cy); ctx.lineTo(R,cy); ctx.stroke();
+  ctx.fillStyle="#94a3b8"; ctx.font="11px sans-serif";
+  ctx.fillText("t (last "+span+" s) →", R-92, cy+16);
+
+  const t1 = S2.t, t0 = t1-span;
+  const X = t => L + ((t-t0)/span)*(R-L);
+  const Y = y => cy - y*unit;
+  ctx.strokeStyle="#0d9488"; ctx.lineWidth=2.5; ctx.beginPath();
+  let started=false;
+  for(const pt of S2.hist){
+    if(pt.t<t0) continue;
+    const x=X(pt.t), y=Y(pt.y);
+    started?ctx.lineTo(x,y):ctx.moveTo(x,y); started=true;
+  }
+  ctx.stroke();
+  /* period bracket anchored at the right edge */
+  if(t1-t0 >= S2.T){
+    const yb = Y(S2.A)-12;
+    dblArrow(ctx, X(t1-S2.T), yb, X(t1), yb, "#7c3aed", "one period T = "+fmt(S2.T)+" s", -70, -6);
+  }
+}
+
+/* ============================ wiring ============================ */
+function pause1(){ if(S1.play){ S1.play=false; b1.textContent="\u25b6 Play"; } }
+function refresh(){ ui1(); ui2(); live1(); }
+
+/* tab 1 sliders */
+$id("s1A").addEventListener("input", e=>{ S1.A=+e.target.value; refresh(); });
+$id("s1T").addEventListener("input", e=>{           // T slider drives \u03c9 slider
+  S1.T=+e.target.value;
+  $id("s1W").value = (TAU/S1.T).toFixed(2);
+  refresh();
+});
+$id("s1W").addEventListener("input", e=>{           // \u03c9 slider drives T slider
+  S1.T = Math.min(8, Math.max(0.5, TAU/(+e.target.value)));
+  $id("s1T").value = S1.T.toFixed(1);
+  refresh();
+});
+$id("s1P").addEventListener("input", e=>{ S1.n=+e.target.value; refresh(); });
+$id("s1C").addEventListener("input", e=>{ S1.C=+e.target.value; refresh(); });
+$id("s1t").addEventListener("input", e=>{ pause1(); S1.t=+e.target.value; refresh(); });
+$id("c1ref").onchange = e=>{ S1.ref=e.target.checked; };
+$id("c1deg").onchange = e=>{ S1.deg=e.target.checked; refresh(); };
+$id("c1cw").onchange = e=>{ S1.cw=e.target.checked; };
+
+/* sine / cosine / both selector */
+const b1s=$id("b1sin"), b1c=$id("b1cos"), b1b=$id("b1both");
+function setFn(fn){
+  S1.fn=fn;
+  b1s.classList.toggle("on",fn==="sin");
+  b1c.classList.toggle("on",fn==="cos");
+  b1b.classList.toggle("on",fn==="both");
+  refresh();
+}
+b1s.onclick=()=>setFn("sin"); b1c.onclick=()=>setFn("cos"); b1b.onclick=()=>setFn("both");
+
+/* "More" explanations open in a scrollable modal */
+const modalBg=$id("modalBg"), modalBody=$id("modalBody"), modalTitle=$id("modalTitle");
+function openModal(srcId, title){
+  const src=$id(srcId);
+  const clone=src.cloneNode(true);
+  clone.querySelectorAll(".more-btn").forEach(x=>x.parentElement.remove());  // strip in-panel close buttons
+  modalBody.innerHTML='<div class="moretext">'+clone.innerHTML+'</div>';
+  modalTitle.textContent=title||"More";
+  modalBg.classList.add("show");
+  modalBody.scrollTop=0;
+  document.body.style.overflow="hidden";              // freeze the page behind
+}
+function closeModal(){
+  modalBg.classList.remove("show");
+  document.body.style.overflow="";
+}
+document.querySelectorAll(".more-btn[data-more]").forEach(b=>{
+  if(b.classList.contains("close")) return;
+  b.addEventListener("click",()=>openModal(b.dataset.more, b.dataset.title));
+});
+$id("modalClose").onclick=closeModal;
+modalBg.addEventListener("click",e=>{ if(e.target===modalBg) closeModal(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeModal(); });
+
+/* tab 1 buttons */
+const b1=$id("b1play");
+b1.onclick=()=>{ S1.play=!S1.play; b1.textContent=S1.play?"\u23f8 Pause":"\u25b6 Play"; };
+$id("b1reset").onclick=()=>{
+  Object.assign(S1,{A:1.5,T:4,n:6,C:0,t:0});
+  $id("s1A").value=1.5; $id("s1T").value=4; $id("s1W").value=(TAU/4).toFixed(2);
+  $id("s1P").value=6; $id("s1C").value=0; refresh();
+};
+$id("b1pure").onclick=()=>{
+  pause1();
+  Object.assign(S1,{A:1,T:TAU,n:0,C:0,t:0});          // \u03c9 = 2\u03c0/T = 1
+  $id("s1A").value=1; $id("s1T").value=TAU.toFixed(1); $id("s1W").value="1.00";
+  $id("s1P").value=0; $id("s1C").value=0; refresh();
+};
+
+/* drag on the tab-1 graph to scrub time */
+let drag1=false;
+function scrub1(e){
+  const m=cv1._map; if(!m) return;
+  const r=cv1.getBoundingClientRect();
+  const t=((e.clientX-r.left)-m.L)/(m.R-m.L)*m.tMax;
+  S1.t=Math.max(0,Math.min(m.tMax,t));
+  refresh();
+}
+cv1.addEventListener("pointerdown",e=>{drag1=true;cv1.setPointerCapture(e.pointerId);pause1();scrub1(e);});
+cv1.addEventListener("pointermove",e=>{if(drag1)scrub1(e);});
+cv1.addEventListener("pointerup",()=>drag1=false);
+
+/* tab 2 sliders */
+function bind2(id, fn){ $id(id).addEventListener("input", e=>{fn(+e.target.value); ui2();}); }
+bind2("s2A", v=>S2.A=v); bind2("s2L", v=>S2.L=v); bind2("s2T", v=>S2.T=v);
+bind2("s2P", v=>S2.n=v); bind2("s2X", v=>S2.x0=v);
+
+const b2=$id("b2play");
+b2.onclick=()=>{S2.play=!S2.play; b2.textContent=S2.play?"\u23f8 Pause":"\u25b6 Play";};
+if(reduced){b1.textContent="\u25b6 Play"; b2.textContent="\u25b6 Play";}
+
+const bR=$id("b2right"), bL=$id("b2left");
+bR.onclick=()=>{S2.dir=1; bR.classList.add("on"); bL.classList.remove("on"); ui2();};
+bL.onclick=()=>{S2.dir=-1; bL.classList.add("on"); bR.classList.remove("on"); ui2();};
+
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05); last=now;
+  if(S1.play){ S1.t=(S1.t+dt)%10; live1(); }
+  if(S2.play){
+    S2.t+=dt;
+    S2.hist.push({t:S2.t, y:y2(S2.x0,S2.t)});
+    while(S2.hist.length && S2.hist[0].t < S2.t-8.5) S2.hist.shift();
+  }
+  draw1(); draw2(); draw2b();
+  requestAnimationFrame(loop);
+}
+ui1(); ui2(); live1();
+window.addEventListener("resize",()=>{draw1();draw2();draw2b();});
+requestAnimationFrame(loop);
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

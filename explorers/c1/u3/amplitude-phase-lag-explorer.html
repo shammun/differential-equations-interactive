@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amplitude and phase lag explorer — the bay model</title>
+<style>
+  :root{
+    --bg:#EEF3FB; --card:#FFFFFF; --ink:#1F2A44; --muted:#6B7690; --grid:#DDE3EE; --line:#C9D3E6;
+    --input:#E8842A; --input-soft:#FDF1E4; --output:#1D9E75; --output-soft:#E3F5EE;
+    --action:#534AB7; --action-soft:#EEEDFE; --shadow:0 6px 18px rgba(83,74,183,.12);
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:15.5px;line-height:1.55}
+  header{max-width:900px;margin:0 auto;padding:18px 14px 8px}
+  h1{font-size:22px;font-weight:600;margin:0 0 6px}
+  h2{font-size:18px;font-weight:600;margin:0 0 10px}
+  h3{font-size:15px;font-weight:600;margin:14px 0 6px;color:var(--action)}
+  .sub{color:var(--muted);margin:0}
+  .m{font-family:Georgia,"Times New Roman",serif;font-style:italic;font-size:1.05em}
+  .eq{font-family:Georgia,"Times New Roman",serif;font-size:1.15em;text-align:center;margin:10px 0;padding:8px;background:#F7F9FD;border-radius:8px;font-style:italic}
+  .eq b,.m b{font-style:normal;font-weight:600}
+  .in{color:var(--input);font-weight:600}.out{color:var(--output);font-weight:600}.act{color:var(--action);font-weight:600}
+  .wrap{max-width:900px;margin:0 auto;padding:12px 14px 60px}
+  .bar{position:sticky;top:0;z-index:20;background:rgba(238,243,251,.96);backdrop-filter:blur(6px);padding:8px 14px 6px;border-bottom:1px solid var(--line)}
+  .bar-in{max-width:900px;margin:0 auto}
+  .bar .row{margin:4px 0}
+  .bar .row label{min-width:auto;width:96px;font-size:14px}
+  .mini{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+  .mini span{font-size:12.5px;background:#fff;border-radius:999px;padding:2px 9px;box-shadow:0 1px 4px rgba(83,74,183,.12);font-variant-numeric:tabular-nums}
+  .mini b{color:var(--output)}
+  .btns{overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+  .btns button{white-space:nowrap;padding:6px 10px;font-size:13px}
+  .bar .stats{display:none}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;margin-bottom:18px}
+  
+  .row{display:flex;align-items:center;gap:10px;margin:8px 0}
+  .row label{min-width:150px;font-weight:600}
+  input[type=range]{flex:1;accent-color:var(--action)}
+  .val{min-width:54px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+  button{background:var(--action);color:#fff;border:0;border-radius:9px;padding:8px 12px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 3px 10px rgba(83,74,183,.25)}
+  button.ghost{background:var(--action-soft);color:var(--action);box-shadow:none}
+  button:hover{filter:brightness(1.06)}
+  button:focus-visible{outline:3px solid #B9B3F0;outline-offset:2px}
+  .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .stat{border-radius:10px;padding:10px 12px;background:#F7F9FD}
+  .stat.o{background:var(--output-soft)}.stat.i{background:var(--input-soft)}
+  .stat .l{font-size:12.5px;color:var(--muted)}.stat .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}.stat .s{font-size:12px;color:var(--muted)}
+  table{border-collapse:collapse;width:100%;font-size:14px}
+  th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--grid);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:13px}
+  td.num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+  .step{border-left:4px solid var(--action-soft);padding:6px 12px;margin:8px 0;border-radius:0 8px 8px 0;background:#FBFBFE}
+  .step .t{font-weight:600;color:var(--action);font-size:14px}
+  .step .why{color:var(--muted);font-size:14px}
+  canvas{width:100%;height:auto;display:block}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:700px){.two{grid-template-columns:1fr}}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13.5px;color:var(--muted);margin-top:6px}
+  .sw{display:inline-block;width:14px;height:4px;border-radius:2px;vertical-align:middle;margin-right:5px}
+  .case{border-radius:12px;padding:14px 16px;margin-top:10px;border:1.5px solid var(--grid)}
+  .case.active{border-color:var(--action);background:#FBFBFE}
+  .arrow-up{color:var(--output);font-weight:700}.arrow-down{color:var(--input);font-weight:700}
+  .note{background:#F7F9FD;border-radius:10px;padding:10px 12px;font-size:14px;color:var(--muted)}
+  .chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12.5px;font-weight:600;background:var(--action-soft);color:var(--action)}
+  .sentence{font-size:15px;line-height:1.6;background:#FBFBFE;border-radius:10px;padding:10px 12px;margin-top:8px}
+  svg text{font-family:inherit}
+  .lock{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+  @media(max-width:600px){body{font-size:15px}.card{padding:14px 14px}.two{grid-template-columns:1fr}th,td{padding:5px 5px;font-size:13px}.bar{padding:5px 10px 4px}.bar .row{margin:2px 0}.bar .row label{width:22px;font-size:15px}.lw{display:none}.val{min-width:40px}.mini{flex-wrap:nowrap;overflow-x:auto;gap:5px}.mini span{white-space:nowrap;font-size:12px;padding:1px 7px}.btns{margin-top:6px}.btns button{padding:5px 9px;font-size:12.5px}}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Amplitude and phase lag in the bay model</h1>
+  <p class="sub">Move <span class="act">k</span> (the channel) and <span class="act">ω</span> (the tide frequency). The control bar stays pinned to the top, so every figure updates while you watch it.</p>
+</header>
+
+<!-- ================= PINNED CONTROL BAR ================= -->
+<div class="bar"><div class="bar-in">
+  <div class="row"><label for="k"><span class="lw">Channel </span><span class="m">k</span></label><input type="range" id="k" min="0.05" max="2" step="0.01" value="0.20"><span class="val" id="kv">0.20</span></div>
+  <div class="row"><label for="w"><span class="lw">Tide freq. </span><span class="m">ω</span></label><input type="range" id="w" min="0.05" max="2" step="0.01" value="0.50"><span class="val" id="wv">0.50</span></div>
+  <div class="mini"><span>ω/k = <b id="ratio">2.50</b></span><span>A = <b id="A">0.371</b></span><span>φ = <b id="phi">1.190 rad</b></span><span>t₀ = <b id="t0">2.38</b></span><span id="t0s" style="color:var(--muted)">P = 12.57</span></div>
+  <div class="btns">
+    <button id="sweepK" title="Animate k from small to large while ω stays fixed">Sweep k up (ω fixed)</button>
+    <button id="sweepW" title="Animate ω from small to large while k stays fixed">Sweep ω up (k fixed)</button>
+    <button id="play" class="ghost">Play the tide</button>
+    <button id="reset" class="ghost">Mathlet values</button>
+    <button id="setBase" class="ghost">Set as baseline</button>
+  </div>
+  <span id="phis" hidden></span>
+</div></div>
+
+<div class="wrap">
+  <!-- ================= FIGURES FIRST ================= -->
+  <div class="card">
+    <h2>1. The bay chasing the ocean</h2>
+    <svg id="bay" viewBox="0 0 760 250" width="100%" role="img" aria-label="Ocean, channel and bay schematic">
+      <rect x="0" y="0" width="760" height="250" fill="#F7F9FD" rx="12"/>
+      <rect x="20" y="210" width="720" height="26" fill="#D8CFC0"/>
+      <rect id="rockTop" x="330" y="30" width="90" height="70" fill="#D8CFC0"/>
+      <rect id="rockBot" x="330" y="150" width="90" height="60" fill="#D8CFC0"/>
+      <rect id="oceanW" x="20" y="90" width="310" height="120" fill="#F9C89A" opacity="0.9"/>
+      <rect id="chanW" x="330" y="100" width="90" height="50" fill="#BFE8D6"/>
+      <rect id="bayW" x="420" y="120" width="320" height="90" fill="#9FE1CB" opacity="0.95"/>
+      <path id="oceanSurf" d="" stroke="#E8842A" stroke-width="3" fill="none"/>
+      <line id="baySurf" x1="420" y1="120" x2="740" y2="120" stroke="#1D9E75" stroke-width="3"/>
+      <line x1="20" y1="120" x2="740" y2="120" stroke="#9AA6C0" stroke-dasharray="5 5"/>
+      <text x="26" y="116" fill="#6B7690" font-size="16">mean level 0</text>
+      <g id="flow"><line id="flowL" x1="345" y1="125" x2="405" y2="125" stroke="#534AB7" stroke-width="4"/><polygon id="flowH" points="405,118 418,125 405,132" fill="#534AB7"/></g>
+      <text x="175" y="28" text-anchor="middle" font-size="21" font-weight="600" fill="#E8842A">ocean (input)</text>
+      <text x="175" y="50" text-anchor="middle" font-size="17" fill="#6B7690">level q<tspan baseline-shift="sub" font-size="13">e</tspan>(t) = cos ωt</text>
+      <text x="580" y="28" text-anchor="middle" font-size="21" font-weight="600" fill="#1D9E75">bay (response)</text>
+      <text x="580" y="50" text-anchor="middle" font-size="17" fill="#6B7690">level x(t) → A cos(ωt − φ)</text>
+      <text x="375" y="22" text-anchor="middle" font-size="17" font-weight="600" fill="#534AB7">channel, opening ∝ k</text>
+      <text id="kLab" x="375" y="240" text-anchor="middle" font-size="17" fill="#534AB7" font-weight="600">k = 0.20</text>
+      <text id="tLab" x="734" y="240" text-anchor="end" font-size="17" fill="#6B7690">t = 0.0</text>
+      <text id="qLab" x="26" y="205" font-size="17" fill="#E8842A" font-weight="600">q(t) = 1.00</text>
+      <text id="xLab" x="734" y="205" text-anchor="end" font-size="17" fill="#1D9E75" font-weight="600">x(t) = 0.14</text>
+      <text id="flowLab" x="375" y="185" text-anchor="middle" font-size="16" fill="#534AB7">ẋ = k(q − x) &gt; 0: filling</text>
+    </svg>
+    <p class="note">The channel opening scales with <span class="m">k</span>. The purple arrow shows the flow <span class="m">k(q − x)</span>: in while the ocean is higher, out while it is lower. Press <b>Play the tide</b> in the bar above.</p>
+  </div>
+
+  <div class="card">
+    <h2>2. Input and response over time</h2>
+    <canvas id="plot" width="820" height="360"></canvas>
+    <div class="legend"><span><span class="sw" style="background:var(--input)"></span>ocean input cos ωt</span><span><span class="sw" style="background:var(--output)"></span>bay response A cos(ωt − φ)</span><span><span class="sw" style="background:#B9B3F0"></span>time lag t₀ between peaks</span><span>● crossings, always at the bay's peaks and troughs</span></div>
+    <p class="note" id="plotNote"></p>
+  </div>
+
+  <div class="card">
+    <h2>3. The k–ω triangle: where A and φ come from</h2>
+    <canvas id="tri" width="400" height="330" style="max-width:460px;margin:0 auto"></canvas>
+    <p class="note" id="triNote"></p>
+  </div>
+
+  <div class="card">
+    <h2>4. How A and φ move as you change one knob</h2>
+    <div class="two">
+      <div><canvas id="curveK" width="400" height="300"></canvas><p class="note">Sliding <span class="m">k</span> with <span class="m">ω</span> held at its current value. The dot is where you are now.</p></div>
+      <div><canvas id="curveW" width="400" height="300"></canvas><p class="note">Sliding <span class="m">ω</span> with <span class="m">k</span> held at its current value. The dot is where you are now.</p></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>5. Compared with the baseline</h2>
+    <table>
+      <thead><tr><th></th><th>baseline</th><th>now</th><th>change</th></tr></thead>
+      <tbody id="cmp"></tbody>
+    </table>
+    <div class="sentence" id="sentence"></div>
+    <p class="note">The baseline starts at the mathlet values k = 0.2, ω = 0.5. Press <b>Set as baseline</b> to compare against any other starting point.</p>
+  </div>
+
+  <!-- ================= EXPLANATIONS ================= -->
+  <div class="card">
+    <h2>6. The physical picture</h2>
+    <div class="eq"><b>ẋ</b> + <b>k</b>x = <b>k</b> cos(<b>ω</b>t)</div>
+    <p>The <span class="in">ocean</span> rises and falls with the tide: its level is the <span class="in">input</span> <span class="m">q<sub>e</sub>(t) = cos ωt</span>. Water flows through a channel into a <span class="out">bay</span>, whose level <span class="m">x(t)</span> is the <span class="out">response</span>. The rate of change of the bay level is proportional to the difference between the two levels: <span class="m">ẋ = k(cos ωt − x)</span>. A wide, dredged channel (large <span class="m">k</span>) lets the bay react quickly; a silted one (small <span class="m">k</span>) makes it sluggish.</p>
+  </div>
+
+  <div class="card">
+    <h2>7. The terms and their notation</h2>
+    <table>
+      <thead><tr><th>symbol</th><th>name</th><th>meaning in the bay</th><th>value now</th></tr></thead>
+      <tbody>
+        <tr><td class="in m">q<sub>e</sub>(t) = cos ωt</td><td>input</td><td>ocean level, swings between −1 and +1</td><td class="num">amplitude 1</td></tr>
+        <tr><td class="m">ω</td><td>angular frequency</td><td>how fast the tide cycles; period <span class="m">P = 2π/ω</span></td><td class="num" id="tw"></td></tr>
+        <tr><td class="m">k</td><td>coupling constant</td><td>how freely water passes the channel; also sets the bay's reaction time ≈ <span class="m">1/k</span></td><td class="num" id="tk"></td></tr>
+        <tr><td class="out m">x(t)</td><td>response</td><td>bay level; after transients it becomes <span class="m">A cos(ωt − φ)</span></td><td class="num">—</td></tr>
+        <tr><td class="out m">A</td><td>amplitude</td><td>how far the bay swings; 1 means "same as ocean", 0 means "does not move"</td><td class="num" id="tA"></td></tr>
+        <tr><td class="out m">φ</td><td>phase lag</td><td>how far behind the bay is, as an angle: 2π = one full cycle, π/2 = a quarter cycle</td><td class="num" id="tphi"></td></tr>
+        <tr><td class="out m">t₀ = φ/ω</td><td>time lag</td><td>how far behind the bay is, in time: the bay's high tide comes <span class="m">t₀</span> after the ocean's</td><td class="num" id="tt0"></td></tr>
+        <tr><td class="m">ω/k</td><td>the ratio</td><td>tide speed compared with reaction speed; both <span class="m">A</span> and <span class="m">φ</span> depend only on this</td><td class="num" id="tr"></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>8. Why A = cos φ (the triangle in section 3)</h2>
+    <p>Replace the input by the complex exponential <span class="m">e<sup>iωt</sup></span> and try <span class="m">z = H e<sup>iωt</sup></span>. Substituting gives <span class="m">H(k + iω) = k</span>, so</p>
+    <div class="eq">H = k / (k + iω)</div>
+    <p>The complex number <span class="m">k + iω</span> is the hypotenuse of a right triangle with legs <span class="m">k</span> (along the real axis) and <span class="m">ω</span> (up the imaginary axis). Dividing by it divides the length and subtracts the angle:</p>
+    <div class="eq">A = |H| = k / √(k² + ω²) = <b>cos φ</b>,&nbsp; φ = arctan(ω/k)</div>
+    <p>So the amplitude is literally the cosine of the phase lag: they always move in opposite directions. Make the <span class="m">ω</span> leg taller (faster tide) and the angle opens while <span class="m">k/hyp</span> shrinks; make the <span class="m">k</span> leg longer (wider channel) and the angle closes while <span class="m">k/hyp</span> approaches 1.</p>
+  </div>
+
+  <div class="card">
+    <h2>9. The derivation with your numbers substituted</h2>
+    <div id="deriv"></div>
+  </div>
+
+  <div class="card">
+    <h2>10. The two cases from the problem</h2>
+    <div class="case" id="caseK">
+      <span class="chip">Case (i): k increases, ω fixed</span>
+      <p><b>Physical story.</b> The channel is dredged. Water passes more freely, so the bay reacts faster (reaction time ≈ 1/k drops) and can follow the ocean more closely.</p>
+      <p><b>Amplitude.</b> ω/k gets smaller, so <span class="m">A = 1/√(1 + (ω/k)²)</span> rises toward 1. Limit <span class="m">k → ∞</span>: the bay is the ocean, <span class="m">A = 1</span>. Limit <span class="m">k → 0</span>: plugged channel, <span class="m">A = 0</span>.</p>
+      <p><b>Phase lag.</b> <span class="m">φ = arctan(ω/k)</span> falls toward 0: a quick bay is hardly late. <b>Answer: A increases, φ decreases.</b></p>
+      <table><thead><tr><th>k</th><th>ω/k</th><th>A</th><th>φ (rad)</th><th>t₀</th></tr></thead><tbody id="tabK"></tbody></table>
+    </div>
+    <div class="case" id="caseW">
+      <span class="chip">Case (ii): ω increases, k fixed</span>
+      <p><b>Physical story.</b> The Earth spins faster, so tides come more often. The channel is unchanged, so the bay's reaction time ≈ 1/k is the same as before.</p>
+      <p><b>Amplitude.</b> ω/k grows, so <span class="m">A</span> falls toward 0: the ocean flips before the bay can fill, and the ups and downs cancel. Limit <span class="m">ω → 0</span>: infinitely slow tide, the bay keeps up, <span class="m">A = 1</span>.</p>
+      <p><b>Phase lag.</b> The same reaction time is now a bigger fraction of a shorter cycle, so <span class="m">φ</span> rises toward π/2 (a quarter cycle behind). <b>Answer: A decreases, φ increases.</b></p>
+      <table><thead><tr><th>ω</th><th>ω/k</th><th>A</th><th>φ (rad)</th><th>t₀</th><th>P</th></tr></thead><tbody id="tabW"></tbody></table>
+    </div>
+    <p class="note" style="margin-top:12px">Both cases are the same fact seen from two sides: everything depends on the ratio <span class="m">ω/k</span>. Raising <span class="m">k</span> lowers the ratio; raising <span class="m">ω</span> raises it. Changing both at once? Only their ratio matters for <span class="m">A</span> and <span class="m">φ</span> (the time lag <span class="m">t₀ = φ/ω</span> does also depend on ω itself).</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const C = {input:'#E8842A', output:'#1D9E75', action:'#534AB7', soft:'#B9B3F0', ink:'#1F2A44', muted:'#6B7690', grid:'#DDE3EE'};
+  const kS=$('k'), wS=$('w');
+  let base={k:0.20,w:0.50};
+  let tAnim=0, playing=false, raf=null, sweeping=false;
+
+  function calc(k,w){
+    const hyp=Math.sqrt(k*k+w*w), A=k/hyp, phi=Math.atan2(w,k), P=2*Math.PI/w, t0=phi/w;
+    return {k,w,hyp,A,phi,P,t0,ratio:w/k};
+  }
+  const f2=x=>x.toFixed(2), f3=x=>x.toFixed(3);
+  const deg=r=>Math.round(r*180/Math.PI);
+
+  // ---------- header stats & tables ----------
+  function updateText(s){
+    $('kv').textContent=f2(s.k); $('wv').textContent=f2(s.w);
+    $('ratio').textContent=f2(s.ratio);
+    $('A').textContent=f3(s.A);
+    $('phi').textContent=f3(s.phi)+' rad';
+    $('phis').textContent=deg(s.phi)+'°, '+f2(s.phi/(2*Math.PI))+' of a cycle';
+    $('t0').textContent=f2(s.t0);
+    $('t0s').textContent='P = 2π/ω = '+f2(s.P);
+    $('tw').textContent='ω = '+f2(s.w)+', P = '+f2(s.P);
+    $('tk').textContent='k = '+f2(s.k)+', 1/k = '+f2(1/s.k);
+    $('tA').textContent=f3(s.A);
+    $('tphi').textContent=f3(s.phi)+' rad = '+deg(s.phi)+'°';
+    $('tt0').textContent=f2(s.t0);
+    $('tr').textContent=f2(s.ratio);
+    $('plotNote').innerHTML='Ocean peaks at t = 0, P, 2P (P = '+f2(s.P)+'). The bay peaks '+f2(s.t0)+' later each time, with height A = '+f3(s.A)+'. That delay is '+f2(s.t0/s.P)+' of a period, which is exactly φ/2π = '+f3(s.phi)+'/6.283 = '+f2(s.phi/(2*Math.PI))+'.';
+    $('triNote').innerHTML='Now: legs k = '+f2(s.k)+' and ω = '+f2(s.w)+', hypotenuse √('+f2(s.k)+'² + '+f2(s.w)+'²) = '+f3(s.hyp)+'. Angle φ = arctan('+f2(s.w)+'/'+f2(s.k)+') = '+f3(s.phi)+' rad. Amplitude A = '+f2(s.k)+'/'+f3(s.hyp)+' = '+f3(s.A)+', and cos φ = cos('+f3(s.phi)+') = '+f3(Math.cos(s.phi))+'. Same number.';
+  }
+
+  function updateDeriv(s){
+    const steps=[
+      ['Start from the equation', '<span class="m">ẋ + '+f2(s.k)+'x = '+f2(s.k)+' cos('+f2(s.w)+'t)</span>', 'k multiplies both x and the input, so a wide channel makes both the leak-out and the push-in stronger.'],
+      ['Replace cos ωt by e<sup>iωt</sup>', '<span class="m">ż + '+f2(s.k)+'z = '+f2(s.k)+' e<sup>i·'+f2(s.w)+'t</sup></span>, then take x = Re z at the end', 'cos ωt is the real part of e<sup>iωt</sup>; exponentials are easier to differentiate than cosines.'],
+      ['Guess the same shape as the input', '<span class="m">z = H e<sup>iωt</sup></span> ⇒ <span class="m">ż = iω H e<sup>iωt</sup></span>', 'The bay must end up oscillating at the tide\'s own frequency; only its size and timing (packed into H) are unknown.'],
+      ['Substitute and cancel e<sup>iωt</sup>', '<span class="m">H(k + iω) = k</span> ⇒ <span class="m">H = '+f2(s.k)+' / ('+f2(s.k)+' + '+f2(s.w)+'i)</span>', 'One algebraic line replaces solving a differential equation.'],
+      ['Length of the denominator', '<span class="m">|k + iω| = √(k² + ω²) = √('+f3(s.k*s.k)+' + '+f3(s.w*s.w)+') = √'+f3(s.hyp*s.hyp)+' = '+f3(s.hyp)+'</span>', 'This is the hypotenuse of the k–ω triangle in section 4.'],
+      ['Angle of the denominator', '<span class="m">arg(k + iω) = arctan(ω/k) = arctan('+f2(s.ratio)+') = '+f3(s.phi)+' rad = '+deg(s.phi)+'°</span>', 'Dividing by a complex number subtracts its angle, so the response is rotated backward by this angle: that is the phase lag φ.'],
+      ['Amplitude', '<span class="m">A = |H| = k / √(k² + ω²) = '+f2(s.k)+' / '+f3(s.hyp)+' = '+f3(s.A)+'</span>, equivalently <span class="m">1/√(1 + (ω/k)²) = 1/√(1 + '+f2(s.ratio)+'²) = '+f3(s.A)+'</span>', 'Dividing by the length shrinks the response; a longer hypotenuse (bigger ω or smaller k) means a smaller bay swing.'],
+      ['Steady-state response', '<span class="m">x<sub>p</sub>(t) = Re(H e<sup>iωt</sup>) = '+f3(s.A)+' cos('+f2(s.w)+'t − '+f3(s.phi)+')</span>', 'The full solution also has C e<sup>−'+f2(s.k)+'t</sup>, which decays to nothing (after t = '+f2(5/s.k)+' it is below 1% of C).'],
+      ['Time lag', '<span class="m">t₀ = φ/ω = '+f3(s.phi)+' / '+f2(s.w)+' = '+f2(s.t0)+'</span>, compared with the period <span class="m">P = 2π/ω = '+f2(s.P)+'</span>', 'The bay\'s high tide is '+f2(s.t0)+' time units after the ocean\'s, i.e. '+f2(s.t0/s.P)+' of a cycle.']
+    ];
+    $('deriv').innerHTML=steps.map((st,i)=>'<div class="step"><div class="t">Step '+(i+1)+' — '+st[0]+'</div><div>'+st[1]+'</div><div class="why">'+st[2]+'</div></div>').join('');
+  }
+
+  function updateCompare(s){
+    const b=calc(base.k,base.w);
+    const rows=[['k',b.k,s.k,2],['ω',b.w,s.w,2],['ω/k',b.ratio,s.ratio,2],['A',b.A,s.A,3],['φ (rad)',b.phi,s.phi,3],['t₀',b.t0,s.t0,2],['P',b.P,s.P,2]];
+    $('cmp').innerHTML=rows.map(r=>{
+      const d=r[2]-r[1]; const cls=Math.abs(d)<1e-9?'':(d>0?'arrow-up':'arrow-down'); const sym=Math.abs(d)<1e-9?'same':(d>0?'▲ +'+d.toFixed(r[3]):'▼ '+d.toFixed(r[3]));
+      return '<tr><td class="m">'+r[0]+'</td><td class="num">'+r[1].toFixed(r[3])+'</td><td class="num">'+r[2].toFixed(r[3])+'</td><td class="num '+cls+'">'+sym+'</td></tr>';}).join('');
+    const dk=s.k-b.k, dw=s.w-b.w; let txt='';
+    const dir=(x,up,down)=>Math.abs(x)<1e-9?'':(x>0?up:down);
+    if(Math.abs(dk)<1e-9&&Math.abs(dw)<1e-9) txt='You are at the baseline. Move a slider, or press a sweep button, and this sentence will describe what changed and why.';
+    else{
+      const parts=[];
+      if(Math.abs(dk)>1e-9) parts.push('k went '+f2(b.k)+' → '+f2(s.k)+' ('+dir(dk,'channel dredged, quicker bay','channel silted, slower bay')+')');
+      if(Math.abs(dw)>1e-9) parts.push('ω went '+f2(b.w)+' → '+f2(s.w)+' ('+dir(dw,'faster tides','slower tides')+')');
+      const dr=s.ratio-b.ratio;
+      txt=parts.join(' and ')+'. So the ratio ω/k went '+f2(b.ratio)+' → '+f2(s.ratio)+' ('+dir(dr,'up','down')+').'+
+        ' Because A = 1/√(1+(ω/k)²), the amplitude went '+f3(b.A)+' → '+f3(s.A)+' ('+dir(s.A-b.A,'<span class="arrow-up">increased</span>','<span class="arrow-down">decreased</span>')+'),'+
+        ' and because φ = arctan(ω/k), the phase lag went '+f3(b.phi)+' → '+f3(s.phi)+' rad ('+dir(s.phi-b.phi,'<span class="arrow-up">increased</span>','<span class="arrow-down">decreased</span>')+').'+
+        ' In time units the lag t₀ = φ/ω went '+f2(b.t0)+' → '+f2(s.t0)+'.';
+      if(Math.abs(dr)<1e-6&&(Math.abs(dk)>1e-9)) txt+=' The ratio is unchanged, so A and φ are unchanged: only the period and the time lag moved.';
+    }
+    $('sentence').innerHTML=txt;
+  }
+
+  function fillTables(s){
+    const ks=[0.1,0.2,0.5,1,2], ws=[0.05,0.1,0.2,0.5,1,2];
+    $('tabK').innerHTML=ks.map(k=>{const r=calc(k,s.w);return '<tr><td class="num">'+f2(k)+'</td><td class="num">'+f2(r.ratio)+'</td><td class="num">'+f3(r.A)+'</td><td class="num">'+f3(r.phi)+'</td><td class="num">'+f2(r.t0)+'</td></tr>';}).join('')+'<tr><td colspan="5" style="color:var(--muted);font-size:12.5px">ω held at '+f2(s.w)+' (your current ω)</td></tr>';
+    $('tabW').innerHTML=ws.map(w=>{const r=calc(s.k,w);return '<tr><td class="num">'+f2(w)+'</td><td class="num">'+f2(r.ratio)+'</td><td class="num">'+f3(r.A)+'</td><td class="num">'+f3(r.phi)+'</td><td class="num">'+f2(r.t0)+'</td><td class="num">'+f2(r.P)+'</td></tr>';}).join('')+'<tr><td colspan="6" style="color:var(--muted);font-size:12.5px">k held at '+f2(s.k)+' (your current k)</td></tr>';
+  }
+
+  // ---------- bay schematic ----------
+  function drawBay(s){
+    const t=tAnim, q=Math.cos(s.w*t), x=s.A*Math.cos(s.w*t-s.phi);
+    const mean=120, scale=60;
+    const yo=mean-q*scale, yb=mean-x*scale;
+    $('oceanW').setAttribute('y',yo); $('oceanW').setAttribute('height',210-yo);
+    $('bayW').setAttribute('y',yb); $('bayW').setAttribute('height',210-yb);
+    $('baySurf').setAttribute('y1',yb); $('baySurf').setAttribute('y2',yb);
+    let d='M20 '+yo; for(let i=1;i<=31;i++){d+=' L'+(20+i*10)+' '+(yo+(i%2?-2.5:2.5));} $('oceanSurf').setAttribute('d',d);
+    const open=14+ (s.k/2)*100; const top=mean-open/2, bot=mean+open/2;
+    $('rockTop').setAttribute('height',top-30); $('rockBot').setAttribute('y',bot); $('rockBot').setAttribute('height',210-bot);
+    const wl=Math.max(yo,yb); $('chanW').setAttribute('y',Math.max(top,Math.min(yo,yb))); $('chanW').setAttribute('height',Math.max(0,bot-Math.max(top,Math.min(yo,yb))));
+    const rate=s.k*(q-x); const L=Math.min(45,Math.abs(rate)*60);
+    const cy=Math.min(bot-6,Math.max(top+6,(yo+yb)/2));
+    if(rate>=0){$('flowL').setAttribute('x1',375-L);$('flowL').setAttribute('x2',375+L-8);$('flowH').setAttribute('points',(375+L-10)+','+(cy-7)+' '+(375+L+3)+','+cy+' '+(375+L-10)+','+(cy+7));}
+    else{$('flowL').setAttribute('x1',375+L);$('flowL').setAttribute('x2',375-L+8);$('flowH').setAttribute('points',(375-L+10)+','+(cy-7)+' '+(375-L-3)+','+cy+' '+(375-L+10)+','+(cy+7));}
+    $('flowL').setAttribute('y1',cy);$('flowL').setAttribute('y2',cy);
+    $('kLab').textContent='k = '+f2(s.k);
+    $('tLab').textContent='t = '+t.toFixed(1)+'  (P = '+f2(s.P)+')';
+    $('qLab').textContent='q(t) = '+q.toFixed(2);
+    $('xLab').textContent='x(t) = '+x.toFixed(2);
+    $('flowLab').textContent= rate>0.005?'ẋ = k(q − x) = '+rate.toFixed(2)+' > 0: filling':(rate<-0.005?'ẋ = k(q − x) = '+rate.toFixed(2)+' < 0: draining':'ẋ ≈ 0: bay at a peak or trough');
+  }
+
+  // ---------- time plot ----------
+  function drawPlot(s){
+    const c=$('plot'), g=c.getContext('2d'), W=c.width,H=c.height, L=56,R=20,T=34,B=50, pw=W-L-R, ph=H-T-B;
+    const tmax=3*s.P; const X=t=>L+pw*t/tmax, Y=v=>T+ph*(1-(v+1.25)/2.5);
+    g.clearRect(0,0,W,H); g.fillStyle='#FBFCFE'; g.fillRect(0,0,W,H);
+    g.font='15px sans-serif'; g.lineWidth=1;
+    [-1,-0.5,0,0.5,1].forEach(v=>{g.strokeStyle=C.grid;g.beginPath();g.moveTo(L,Y(v));g.lineTo(W-R,Y(v));g.stroke();g.fillStyle=C.muted;g.textAlign='right';g.fillText(v,L-6,Y(v)+4);});
+    for(let i=0;i<=3;i++){const xx=X(i*s.P);g.strokeStyle=C.grid;g.beginPath();g.moveTo(xx,T);g.lineTo(xx,H-B);g.stroke();g.fillStyle=C.muted;g.textAlign='center';g.fillText(i===0?'t = 0':(i===1?'P = '+f2(s.P):i+'P'),xx,H-B+16);}
+    g.fillStyle=C.muted;g.textAlign='center';g.fillText('time t  (three ocean periods)',L+pw/2,H-6);
+    g.save();g.translate(14,T+ph/2);g.rotate(-Math.PI/2);g.fillText('water level',0,0);g.restore();
+    // period bracket
+    g.strokeStyle=C.input;g.beginPath();g.moveTo(X(0),T-10);g.lineTo(X(s.P),T-10);g.stroke();
+    g.fillStyle=C.input;g.textAlign='center';g.fillText('one period P = 2π/ω = '+f2(s.P),X(s.P/2),T-14);
+    // lag band
+    g.fillStyle='rgba(185,179,240,0.35)';g.fillRect(X(s.P),T,X(s.P+s.t0)-X(s.P),ph);
+    g.fillStyle=C.action;g.textAlign='left';g.fillText('t₀ = φ/ω = '+f2(s.t0),X(s.P+s.t0)+4,T+14);
+    const curve=(fn,col)=>{g.strokeStyle=col;g.lineWidth=2.5;g.beginPath();for(let j=0;j<=500;j++){const t=tmax*j/500;const x=X(t),y=Y(fn(t));j?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();};
+    curve(t=>Math.cos(s.w*t),C.input); curve(t=>s.A*Math.cos(s.w*t-s.phi),C.output);
+    // amplitude arrows
+    const arrow=(x,y0,y1,col,label,side)=>{g.strokeStyle=col;g.fillStyle=col;g.lineWidth=1.5;g.beginPath();g.moveTo(x,Y(y0));g.lineTo(x,Y(y1));g.stroke();
+      [[y0,1],[y1,-1]].forEach(p=>{const yy=Y(p[0]);const dir=(Y(y1)>Y(y0)?-1:1)*p[1];g.beginPath();g.moveTo(x,yy);g.lineTo(x-4,yy+5*dir);g.lineTo(x+4,yy+5*dir);g.closePath();g.fill();});
+      g.textAlign=side;g.fillText(label,x+(side==='left'?6:-6),Y((y0+y1)/2)+4);};
+    arrow(X(2*s.P),0,1,C.input,'amplitude 1','right');
+    arrow(X(2*s.P+s.t0),0,s.A,C.output,'A = '+f3(s.A),'left');
+    // peaks and crossings
+    g.fillStyle=C.input;g.beginPath();g.arc(X(s.P),Y(1),4.5,0,7);g.fill();g.textAlign='center';g.fillText('ocean high tide',X(s.P),Y(1)-8);
+    g.fillStyle=C.output;g.beginPath();g.arc(X(s.P+s.t0),Y(s.A),4.5,0,7);g.fill();g.textAlign='left';g.fillText('bay high tide',X(s.P+s.t0)+8,Y(s.A)-6);
+    g.fillStyle=C.ink;for(let n=0;n<6;n++){const tc=s.t0+n*s.P/2;if(tc<tmax){g.beginPath();g.arc(X(tc),Y(s.A*Math.cos(s.w*tc-s.phi)),3.2,0,7);g.fill();}}
+    // animated markers
+    const tm=tAnim%tmax;
+    g.strokeStyle='#9AA6C0';g.setLineDash([3,3]);g.beginPath();g.moveTo(X(tm),T);g.lineTo(X(tm),H-B);g.stroke();g.setLineDash([]);
+    g.fillStyle=C.input;g.beginPath();g.arc(X(tm),Y(Math.cos(s.w*tm)),5,0,7);g.fill();
+    g.fillStyle=C.output;g.beginPath();g.arc(X(tm),Y(s.A*Math.cos(s.w*tm-s.phi)),5,0,7);g.fill();
+  }
+
+  // ---------- triangle ----------
+  function drawTri(s){
+    const c=$('tri'), g=c.getContext('2d'), W=c.width,H=c.height;
+    g.clearRect(0,0,W,H); g.fillStyle='#FBFCFE'; g.fillRect(0,0,W,H);
+    const ox=60, oy=H-70, sc=215/s.hyp;
+    const kx=ox+s.k*sc, wy=oy-s.w*sc;
+    g.strokeStyle=C.grid;g.lineWidth=1;g.beginPath();g.moveTo(20,oy);g.lineTo(W-20,oy);g.moveTo(ox,H-20);g.lineTo(ox,20);g.stroke();
+    g.fillStyle=C.muted;g.font='12px sans-serif';g.textAlign='right';g.fillText('real axis',W-24,oy+16);g.textAlign='left';g.fillText('imaginary axis',ox+6,28);
+    // angle arc
+    const r=Math.min(40, Math.hypot(s.k*sc,s.w*sc)*0.45);
+    g.fillStyle='rgba(185,179,240,0.4)';g.beginPath();g.moveTo(ox,oy);g.arc(ox,oy,r,0,-s.phi,true);g.closePath();g.fill();
+    g.strokeStyle=C.action;g.lineWidth=2;g.beginPath();g.arc(ox,oy,r,0,-s.phi,true);g.stroke();
+    // legs
+    g.strokeStyle=C.input;g.lineWidth=4;g.beginPath();g.moveTo(ox,oy);g.lineTo(kx,oy);g.stroke();
+    g.strokeStyle=C.input;g.beginPath();g.moveTo(kx,oy);g.lineTo(kx,wy);g.stroke();
+    g.strokeStyle=C.output;g.beginPath();g.moveTo(ox,oy);g.lineTo(kx,wy);g.stroke();
+    // right-angle mark
+    g.strokeStyle=C.muted;g.lineWidth=1;g.strokeRect(kx-10,oy-10,10,10);
+    g.font='600 13px sans-serif';g.fillStyle=C.input;g.textAlign='center';g.fillText('k = '+f2(s.k),(ox+kx)/2,oy+18);
+    g.textAlign='left';g.fillText('ω = '+f2(s.w),kx+8,(oy+wy)/2+4);
+    g.fillStyle=C.output;g.textAlign='left';g.fillText('hypotenuse (teal) √(k²+ω²) = '+f3(s.hyp),ox+8,50);
+    g.fillStyle=C.action;g.textAlign='left';g.fillText('φ = '+f3(s.phi)+' rad = '+deg(s.phi)+'°',ox+r+6,oy-8);
+    g.fillStyle=C.ink;g.font='13px sans-serif';g.textAlign='left';
+    g.fillText('A = k / hypotenuse = cos φ = '+f3(s.A),ox,H-36);
+    g.fillStyle=C.muted;g.fillText('rescaled so only the shape (the angle φ) changes',ox,H-20);
+  }
+
+  // ---------- A and phi curves ----------
+  function drawCurve(id, mode, s){
+    const c=$(id), g=c.getContext('2d'), W=c.width,H=c.height, L=44,R=44,T=30,B=40,pw=W-L-R,ph=H-T-B;
+    g.clearRect(0,0,W,H); g.fillStyle='#FBFCFE'; g.fillRect(0,0,W,H);
+    const xmax=2, X=v=>L+pw*v/xmax, YA=v=>T+ph*(1-v), YP=v=>T+ph*(1-v/(Math.PI/2));
+    g.font='12px sans-serif';g.lineWidth=1;
+    [0,0.5,1,1.5,2].forEach(v=>{g.strokeStyle=C.grid;g.beginPath();g.moveTo(X(v),T);g.lineTo(X(v),H-B);g.stroke();g.fillStyle=C.muted;g.textAlign='center';g.fillText(v,X(v),H-B+14);});
+    [0,0.5,1].forEach(v=>{g.strokeStyle=C.grid;g.beginPath();g.moveTo(L,YA(v));g.lineTo(W-R,YA(v));g.stroke();});
+    g.fillStyle=C.output;g.textAlign='right';[0,0.5,1].forEach(v=>g.fillText(v,L-6,YA(v)+4));
+    g.fillStyle=C.action;g.textAlign='left';[[0,'0'],[Math.PI/4,'π/4'],[Math.PI/2,'π/2']].forEach(p=>g.fillText(p[1],W-R+6,YP(p[0])+4));
+    g.fillStyle=C.muted;g.textAlign='center';g.fillText(mode==='k'?'k  (ω fixed at '+f2(s.w)+')':'ω  (k fixed at '+f2(s.k)+')',L+pw/2,H-4);
+    g.fillStyle=C.output;g.textAlign='left';g.fillText('A',L-30,T-10);g.fillStyle=C.action;g.textAlign='right';g.fillText('φ',W-R+30,T-10);
+    const fn=v=>mode==='k'?calc(v,s.w):calc(s.k,v);
+    const trace=(sel,col,Ymap)=>{g.strokeStyle=col;g.lineWidth=2.5;g.beginPath();for(let j=0;j<=200;j++){const v=0.02+xmax*j/200;const r=fn(v);const x=X(v),y=Ymap(sel(r));j?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();};
+    trace(r=>r.A,C.output,YA); trace(r=>r.phi,C.action,YP);
+    const cur=mode==='k'?s.k:s.w;
+    g.strokeStyle='#9AA6C0';g.setLineDash([3,3]);g.beginPath();g.moveTo(X(cur),T);g.lineTo(X(cur),H-B);g.stroke();g.setLineDash([]);
+    g.fillStyle=C.output;g.beginPath();g.arc(X(cur),YA(s.A),6,0,7);g.fill();
+    g.fillStyle=C.action;g.beginPath();g.arc(X(cur),YP(s.phi),6,0,7);g.fill();
+    g.font='600 12px sans-serif';g.textAlign='left';
+    g.fillStyle=C.output;g.fillText('A = '+f3(s.A),X(cur)+9,YA(s.A)+(mode==='k'?14:-8));
+    g.fillStyle=C.action;g.fillText('φ = '+f3(s.phi),X(cur)+9,YP(s.phi)+(mode==='k'?-8:14));
+    g.fillStyle=C.muted;g.font='12px sans-serif';g.textAlign='center';
+    g.fillText(mode==='k'?'→ larger k: A climbs to 1, φ drops to 0':'→ larger ω: A falls to 0, φ climbs to π/2',L+pw/2,T-10);
+  }
+
+  function render(){
+    const s=calc(+kS.value,+wS.value);
+    updateText(s); updateDeriv(s); updateCompare(s); fillTables(s);
+    drawBay(s); drawPlot(s); drawTri(s); drawCurve('curveK','k',s); drawCurve('curveW','w',s);
+  }
+  function renderFast(){ // during animation, skip the heavy text rebuilds
+    const s=calc(+kS.value,+wS.value); drawBay(s); drawPlot(s);
+  }
+
+  kS.addEventListener('input',render); wS.addEventListener('input',render);
+  $('reset').addEventListener('click',()=>{kS.value=0.2;wS.value=0.5;render();});
+  $('setBase').addEventListener('click',()=>{base={k:+kS.value,w:+wS.value};render();});
+  $('play').addEventListener('click',function(){playing=!playing;this.textContent=playing?'Pause the tide':'Play the tide';if(playing)loop();else cancelAnimationFrame(raf);});
+  function loop(){if(!playing)return;tAnim+=0.08;renderFast();raf=requestAnimationFrame(loop);}
+
+  function sweep(slider,from,to,caseId){
+    if(sweeping)return; sweeping=true;
+    document.querySelectorAll('.case').forEach(e=>e.classList.remove('active')); $(caseId).classList.add('active');
+    const bar=document.querySelector('.bar').offsetHeight; const top=$('plot').getBoundingClientRect().top+window.scrollY-bar-90; if(window.innerWidth<700) window.scrollTo({top:top,behavior:'smooth'});
+    base={k:+kS.value,w:+wS.value}; slider.value=from; render();
+    base={k:+kS.value,w:+wS.value};
+    const n=160; let i=0;
+    (function step(){ i++; slider.value=(from+(to-from)*i/n).toFixed(2); render(); if(i<n){setTimeout(step,28);} else {sweeping=false;} })();
+  }
+  $('sweepK').addEventListener('click',()=>sweep(kS,0.05,2,'caseK'));
+  $('sweepW').addEventListener('click',()=>sweep(wS,0.05,2,'caseW'));
+  render();
+})();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

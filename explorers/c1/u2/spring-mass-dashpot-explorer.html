@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spring–mass–dashpot explorer</title>
+<style>
+:root{--bg:#eef3fb;--card:#fff;--ink:#1d2540;--muted:#5b6784;--in:#f28c28;--out:#12a5a0;--act:#7b5cd6;
+      --grid:#dfe6f3;--red:#b03a3a;--shadow:0 8px 24px rgba(123,92,214,.14)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;line-height:1.55}
+.wrap{max-width:1140px;margin:0 auto;padding:20px 16px 70px}
+h1{font-size:1.55rem;margin:0 0 4px}
+h2{font-size:1.1rem;margin:0 0 10px;color:var(--act)}
+h3{font-size:.98rem;margin:14px 0 5px;color:var(--ink)}
+.sub{color:var(--muted);margin-bottom:14px}
+.card{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:18px 20px;margin-bottom:20px}
+canvas{width:100%;height:auto;border-radius:12px;background:#fbfcff;border:1px solid var(--grid);touch-action:none}
+canvas.drag{cursor:ew-resize}
+.eq{background:#f6f8fd;border-left:4px solid var(--act);border-radius:8px;padding:9px 12px;
+    font-family:Cambria,Georgia,serif;font-size:1.02rem;margin:6px 0;overflow-x:auto}
+.eq b{color:var(--out)} .eq i.v{color:var(--in);font-style:normal;font-weight:700}
+.mono{font-family:Consolas,monospace}
+.note{font-size:.88rem;color:var(--muted)}
+.hint{font-size:.82rem;color:var(--act);font-weight:600;margin:3px 0 8px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.tabs button{border:none;border-radius:10px;padding:9px 13px;font-size:.9rem;cursor:pointer;
+  background:#e6eaf6;color:var(--muted);font-weight:600}
+.tabs button.on{background:var(--act);color:#fff}
+.panel{display:none}.panel.on{display:block}
+.sticky{position:sticky;top:0;z-index:20;background:var(--card);border-radius:14px;box-shadow:var(--shadow);
+  padding:11px 15px;margin-bottom:16px;border:2px solid #e4dcfa}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:8px 18px}
+.p{display:flex;flex-direction:column;font-size:.87rem}
+.p label{color:var(--muted);font-weight:600}
+.p .val{color:var(--in);font-weight:700}
+input[type=range]{accent-color:var(--in);width:100%}
+button.act{background:var(--act);color:#fff;border:none;border-radius:9px;padding:7px 11px;font-weight:600;cursor:pointer;font-size:.87rem}
+button.ghost{background:#efeafc;color:var(--act)}
+select{border:2px solid var(--act);border-radius:9px;padding:6px 9px;font-weight:600;color:var(--ink);background:#fff}
+label.chk{font-size:.87rem;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:5px;cursor:pointer}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:880px){.grid2{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+td,th{padding:5px 6px;border-bottom:1px solid var(--grid);text-align:center}
+th{color:var(--muted);font-weight:600}
+.verdict{padding:9px 12px;border-radius:9px;margin:8px 0;font-size:.95rem}
+.tru{background:#e1f6f5;border:2px solid var(--out)}
+.fal{background:#fdeaea;border:2px solid var(--red)}
+.tag{font-weight:800}.tag.t{color:var(--out)}.tag.f{color:var(--red)}
+.warn{background:#fff6e8;border-left:4px solid var(--in);border-radius:8px;padding:9px 12px;margin:8px 0;font-size:.93rem}
+.row{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:8px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Spring–mass–dashpot: interactive companion</h1>
+<div class="sub">Every graph is <b>draggable</b> — click or drag on a plot to move the variable it controls. Set <b>k = 0</b> for the homework problem; raise k to make oscillation appear.</div>
+
+<div class="sticky">
+  <div class="pgrid">
+    <div class="p"><label>mass <span class="val">m = <span id="lm"></span></span></label><input type="range" id="m" min="0.2" max="4" step="0.05" value="1"></div>
+    <div class="p"><label>dashpot <span class="val">b = <span id="lb"></span></span></label><input type="range" id="b" min="0" max="4" step="0.05" value="0.5"></div>
+    <div class="p"><label>spring <span class="val">k = <span id="lk"></span></span></label><input type="range" id="k" min="0" max="4" step="0.05" value="0"></div>
+    <div class="p"><label>initial velocity <span class="val">v&#8320; = <span id="lv"></span></span></label><input type="range" id="v0" min="-3" max="3" step="0.1" value="2"></div>
+    <div class="p"><label>time <span class="val">t = <span id="lt"></span></span></label><input type="range" id="t" min="0" max="30" step="0.02" value="0"></div>
+  </div>
+  <div class="row">
+    <button class="act" id="play">&#9654; Play</button>
+    <label class="chk">speed
+      <select id="spd"><option value="0.15">slow</option><option value="0.4" selected>normal</option><option value="1">fast</option></select>
+    </label>
+    <button class="act" id="restart">&#8635; Restart at t = 0</button>
+    <button class="act ghost" id="k0">Set k = 0</button>
+    <button class="act ghost" id="reset">Reset all</button>
+    <label class="chk"><input type="checkbox" id="autozoom" checked> auto-zoom the cart view</label>
+    <label class="chk"><input type="checkbox" id="freeze"> fewer decimals while playing</label>
+  </div>
+  <div class="note" id="regime" style="margin-top:4px"></div>
+</div>
+
+<div class="tabs">
+  <button data-p="p1" class="on">1 &middot; The setup</button>
+  <button data-p="p2">2 &middot; Why &minus;kx and &minus;b&#7819;</button>
+  <button data-p="p3">3 &middot; Solving v&#775; = &minus;(b/m)v</button>
+  <button data-p="p4">4 &middot; The six statements</button>
+  <button data-p="pw">5 &middot; Why complex &#8658; oscillation</button>
+  <button data-p="p5">6 &middot; Roots &amp; oscillation</button>
+  <button data-p="p6">7 &middot; Position</button>
+</div>
+
+<div class="panel on" id="p1">
+  <div class="card">
+    <h2>The cart, live</h2>
+    <p class="note">Spring on the left wall, cart, dashpot on the right wall. Purple arrow = spring force &minus;kx, orange arrow = dashpot force &minus;b&#7819;. With k = 0 the purple arrow never appears.</p>
+    <div id="zoomnote" class="note"></div>
+    <canvas id="cvSetup" width="900" height="250"></canvas>
+    <div class="eq" id="eqSetup"></div>
+    <div class="eq" id="eqNewton"></div>
+    <h3>Microscope: is it really still moving?</h3>
+    <p class="note">At normal zoom the cart looks parked after a few seconds. This view auto-magnifies so that the motion during the <b>next one second</b> always fills the frame. Play the animation and watch: the cart keeps crawling at every magnification, forever.</p>
+    <canvas id="cvMicro" width="900" height="155"></canvas>
+    <div class="eq" id="eqMicro"></div>
+  </div>
+</div>
+
+<div class="panel" id="p2">
+  <div class="card">
+    <h2>Why the spring force is &minus;kx but the dashpot force is &minus;b&#7819;</h2>
+    <p>Both are straight lines through the origin with negative slope. The only difference is <b>what sits on the horizontal axis</b>.</p>
+    <div class="row">
+      <label class="chk"><input type="checkbox" id="follow" checked> probes follow the live cart</label>
+      <span class="note">uncheck (or drag a graph) to place the probes yourself</span>
+    </div>
+    <div class="grid2">
+      <div>
+        <canvas id="cvFs" class="drag" width="440" height="320"></canvas>
+        <div class="hint">&#8596; drag on this graph to change x</div>
+        <div class="eq" id="eqFs"></div>
+      </div>
+      <div>
+        <canvas id="cvFd" class="drag" width="440" height="320"></canvas>
+        <div class="hint">&#8596; drag on this graph to change &#7819;</div>
+        <div class="eq" id="eqFd"></div>
+      </div>
+    </div>
+    <div class="pgrid">
+      <div class="p"><label>probe position <span class="val">x = <span id="lpx"></span></span></label><input type="range" id="px" min="-3" max="3" step="0.02" value="1.5"></div>
+      <div class="p"><label>probe velocity <span class="val">&#7819; = <span id="lpv"></span></span></label><input type="range" id="pv" min="-3" max="3" step="0.02" value="1.5"></div>
+    </div>
+    <h3>The same two forces, drawn on a cart</h3>
+    <p class="note">This cart sits at the probe position with the probe velocity. Move either slider and watch which arrow responds &mdash; and which one does not.</p>
+    <canvas id="cvProbeCart" width="900" height="270"></canvas>
+    <div class="eq" id="eqProbe"></div>
+  </div>
+</div>
+
+<div class="panel" id="p3">
+  <div class="card">
+    <h2>Solving v&#775; = &minus;(b/m) v, step by step</h2>
+    <div id="k0warn"></div>
+    <div class="row"><label class="chk"><input type="checkbox" id="logv"> log scale on v (shows it never reaches zero)</label></div>
+    <div class="grid2">
+      <div>
+        <canvas id="cvV" class="drag" width="480" height="330"></canvas>
+        <div class="hint">&#8596; drag on this graph to change t</div>
+        <div class="eq" id="eqVnow"></div>
+        <table id="tblV"><tr><th>t</th><th>&minus;(b/m)t</th><th>e^that</th><th>v(t)</th></tr></table>
+      </div>
+      <div>
+        <h3>(a) separate the variables</h3><div class="eq" id="d1"></div>
+        <h3>(b) integrate both sides in t</h3><div class="eq" id="d2"></div>
+        <h3>(c) undo the logarithm</h3><div class="eq" id="d3"></div>
+        <h3>(d) drop the absolute value</h3><div class="eq" id="d4"></div>
+        <h3>(e) use t = 0 to find c</h3><div class="eq" id="d5"></div>
+        <h3>check by differentiating</h3><div class="eq" id="d6"></div>
+        <h3>half-life of the speed</h3><div class="eq" id="d7"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="p4">
+  <div class="card">
+    <h2>The six statements, checked numerically</h2>
+    <p class="note">Verdicts are computed from the current sliders. Raise k past the threshold and watch 1 and 2 flip.</p>
+    <canvas id="cvStmt" class="drag" width="900" height="260"></canvas>
+    <div class="hint">&#8596; drag to move t &mdash; the marker is the cart's current velocity</div>
+    <div id="stmts"></div>
+  </div>
+</div>
+
+<div class="panel" id="pw">
+  <div class="card">
+    <h2>Why a complex root means the cart oscillates</h2>
+    <p>Every solution is built from <b>e<sup>rt</sup></b>. So the whole question is: what does e<sup>rt</sup> look like when r is real, and what does it look like when r has an imaginary part? Write the root as</p>
+    <div class="eq">r = &alpha; + i&omega; &nbsp;&nbsp;&nbsp; &alpha; = real part (decay or growth rate) &nbsp;&nbsp;&nbsp; &omega; = imaginary part (turning rate)</div>
+    <div class="row">
+      <span class="note">Set &alpha; and &omega; by hand here &mdash; independent of m, b, k &mdash; so you can isolate what each one does.</span>
+    </div>
+    <div class="pgrid">
+      <div class="p"><label>real part <span class="val">&alpha; = <span id="lal"></span></span></label><input type="range" id="al" min="-1" max="0.3" step="0.01" value="-0.25"></div>
+      <div class="p"><label>imaginary part <span class="val">&omega; = <span id="lom"></span></span></label><input type="range" id="om" min="0" max="4" step="0.01" value="0"></div>
+      <div class="p" style="justify-content:end"><div class="row" style="margin:0">
+        <button class="act ghost" id="omzero">Set &omega; = 0 (real root)</button>
+        <button class="act ghost" id="linkroot">Use my current m, b, k</button>
+      </div></div>
+    </div>
+    <div class="eq" id="whyEuler"></div>
+
+    <h3>Step 1 &mdash; Euler's formula: the imaginary part makes the point <em>rotate</em></h3>
+    <p class="note">Left: the complex number e<sup>rt</sup> plotted as a point, traced out as t runs forward. Right: its <b>shadow on the real axis</b> &mdash; that is what the cart's motion actually is. Drag either graph or press Play.</p>
+    <div class="grid2">
+      <div>
+        <canvas id="cvSpiral" class="drag" width="440" height="360"></canvas>
+        <div class="hint">&#8596; drag to change t</div>
+        <div class="eq" id="whyPoint"></div>
+      </div>
+      <div>
+        <canvas id="cvShadow" class="drag" width="440" height="360"></canvas>
+        <div class="hint">&#8596; drag to change t</div>
+        <div class="eq" id="whyShadow"></div>
+      </div>
+    </div>
+    <div class="warn" id="whyVerdict"></div>
+
+    <h3>Step 2 &mdash; why a real root can cross zero at most once</h3>
+    <p class="note">With two real roots the solution is c&#8321;e<sup>r&#8321;t</sup> + c&#8322;e<sup>r&#8322;t</sup>. Setting it to zero and dividing gives e<sup>(r&#8321;&minus;r&#8322;)t</sup> = &minus;c&#8322;/c&#8321;. The left side is a <b>strictly monotone</b> curve, so it can hit the flat target line at most one time &mdash; no matter what the constants are. Drag the target line to test it.</p>
+    <div class="pgrid">
+      <div class="p"><label>target value <span class="val">&minus;c&#8322;/c&#8321; = <span id="lrat"></span></span></label><input type="range" id="rat" min="-3" max="6" step="0.05" value="1.6"></div>
+    </div>
+    <canvas id="cvMono" class="drag" width="900" height="300"></canvas>
+    <div class="hint">&#8596; drag to change the target value</div>
+    <div class="eq" id="whyMono"></div>
+
+    <h3>Step 3 &mdash; the frequency is literally the imaginary part</h3>
+    <div class="eq" id="whyFreq"></div>
+    <canvas id="cvFreq" width="900" height="250"></canvas>
+    <div class="eq" id="whyFreq2"></div>
+  </div>
+</div>
+
+<div class="panel" id="p5">
+  <div class="card">
+    <h2>Characteristic roots: real or complex?</h2>
+    <div class="eq" id="charEq"></div>
+    <div class="eq" id="discEq"></div>
+    <div class="eq" id="rootsEq"></div>
+    <div class="eq" id="solEq"></div>
+    <div class="grid2">
+      <div>
+        <h3>Roots in the complex plane</h3>
+        <canvas id="cvRoots" class="drag" width="440" height="330"></canvas>
+        <div class="hint">&#8596; drag left/right to change k and watch the roots move</div>
+        <div class="note">Real roots sit on the horizontal axis. Raise k and they slide together, collide, then split off the axis &mdash; the instant they gain an imaginary part is the instant oscillation starts.</div>
+      </div>
+      <div>
+        <h3>The resulting motion x(t)</h3>
+        <canvas id="cvX" class="drag" width="440" height="330"></canvas>
+        <div class="hint">&#8596; drag to change t</div>
+        <div class="eq" id="crossEq"></div>
+      </div>
+    </div>
+    <h3>Discriminant D = b&sup2; &minus; 4mk as k varies</h3>
+    <canvas id="cvDisc" class="drag" width="900" height="230"></canvas>
+    <div class="hint">&#8596; drag on this graph to set k directly</div>
+    <div class="eq" id="kcritEq"></div>
+  </div>
+</div>
+
+<div class="panel" id="p6">
+  <div class="card">
+    <h2>Position: never stops, yet travels a finite distance</h2>
+    <div class="grid2">
+      <div>
+        <canvas id="cvPos" class="drag" width="480" height="330"></canvas>
+        <div class="hint">&#8596; drag to change t</div>
+      </div>
+      <div>
+        <div class="eq" id="posEq1"></div>
+        <div class="eq" id="posEq2"></div>
+        <div class="eq" id="posEq3"></div>
+        <div class="note" id="posNote"></div>
+      </div>
+    </div>
+    <h3>How much of the trip is left</h3>
+    <canvas id="cvRemain" class="drag" width="900" height="200"></canvas>
+    <div class="hint">&#8596; drag to change t</div>
+    <div class="eq" id="remEq"></div>
+  </div>
+</div>
+
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const F=(x,n=3)=>{ if(!isFinite(x))return '\u221e'; const a=Math.abs(x);
+  if(a!==0&&(a<1e-4||a>=1e6))return x.toExponential(3); return (+x.toFixed(n)).toString(); };
+const P={};
+function readP(){P.m=+$('m').value;P.b=+$('b').value;P.k=+$('k').value;P.v0=+$('v0').value;P.t=+$('t').value;
+  P.px=+$('px').value;P.pv=+$('pv').value;}
+
+function model(){
+  const m=P.m,b=P.b,k=P.k,v0=P.v0,D=b*b-4*m*k,o={D:D,m:m,b:b,k:k,v0:v0};
+  if(D>1e-9){const s=Math.sqrt(D),r1=(-b+s)/(2*m),r2=(-b-s)/(2*m),c1=v0/(r1-r2),c2=-c1;
+    o.kind='real';o.r1=r1;o.r2=r2;o.c1=c1;o.c2=c2;
+    o.x=t=>c1*Math.exp(r1*t)+c2*Math.exp(r2*t);
+    o.v=t=>c1*r1*Math.exp(r1*t)+c2*r2*Math.exp(r2*t);}
+  else if(Math.abs(D)<=1e-9){const r=-b/(2*m);o.kind='repeat';o.r1=r;o.r2=r;
+    o.x=t=>v0*t*Math.exp(r*t);o.v=t=>v0*Math.exp(r*t)*(1+r*t);}
+  else{const al=-b/(2*m),w=Math.sqrt(4*m*k-b*b)/(2*m);o.kind='complex';o.al=al;o.w=w;
+    o.x=t=>(v0/w)*Math.exp(al*t)*Math.sin(w*t);
+    o.v=t=>(v0/w)*Math.exp(al*t)*(al*Math.sin(w*t)+w*Math.cos(w*t));}
+  return o;
+}
+function plot(cv,opt){
+  const c=cv.getContext('2d'),W=cv.width,H=cv.height,L=62,R=16,T=30,B=42;
+  c.clearRect(0,0,W,H);
+  const xs=opt.xmin,xe=opt.xmax,lg=!!opt.logy;
+  const tr=v=>lg?Math.log10(Math.max(v,1e-300)):v;
+  const ys=tr(opt.ymin),ye=tr(opt.ymax);
+  const X=v=>L+(v-xs)/(xe-xs)*(W-L-R), Y=v=>H-B-(tr(v)-ys)/(ye-ys)*(H-T-B);
+  cv._map={inv:px=>xs+(px-L)/(W-L-R)*(xe-xs)};
+  c.strokeStyle='#e5ebf6';c.lineWidth=1;c.fillStyle='#5b6784';c.font='11px Segoe UI';
+  for(let i=0;i<=5;i++){const vx=xs+(xe-xs)*i/5,vy=ys+(ye-ys)*i/5,py=H-B-(vy-ys)/(ye-ys)*(H-T-B);
+    c.beginPath();c.moveTo(X(vx),T);c.lineTo(X(vx),H-B);c.stroke();
+    c.beginPath();c.moveTo(L,py);c.lineTo(W-R,py);c.stroke();
+    c.fillText(F(vx,2),X(vx)-12,H-B+15);
+    c.fillText(lg?('1e'+(+vy.toFixed(1))):F(vy,2),4,py+4);}
+  c.strokeStyle='#8a96b3';c.lineWidth=1.5;
+  if(!lg&&opt.ymin<0&&opt.ymax>0){c.beginPath();c.moveTo(L,Y(0));c.lineTo(W-R,Y(0));c.stroke();}
+  if(xs<0&&xe>0){c.beginPath();c.moveTo(X(0),T);c.lineTo(X(0),H-B);c.stroke();}
+  c.strokeStyle='#c3cbdd';c.strokeRect(L,T,W-L-R,H-T-B);
+  c.fillStyle='#1d2540';c.font='bold 12px Segoe UI';c.fillText(opt.title||'',L,20);
+  c.fillStyle='#5b6784';c.font='11px Segoe UI';
+  c.fillText(opt.xlab||'',(L+W-R)/2-16,H-6);
+  c.save();c.translate(14,H/2+18);c.rotate(-Math.PI/2);c.fillText(opt.ylab||'',0,0);c.restore();
+  c.save();c.beginPath();c.rect(L,T,W-L-R,H-T-B);c.clip();
+  (opt.curves||[]).forEach(cu=>{c.strokeStyle=cu.color;c.lineWidth=cu.lw||2.6;
+    if(cu.dash)c.setLineDash(cu.dash);c.beginPath();let st=false;
+    for(let i=0;i<=600;i++){const vx=xs+(xe-xs)*i/600,vy=cu.f(vx);
+      if(!isFinite(vy)||(lg&&vy<=0)){st=false;continue;}
+      const px=X(vx),py=Y(vy);
+      if(!isFinite(py)){st=false;continue;}
+      st?c.lineTo(px,py):c.moveTo(px,py);st=true;}
+    c.stroke();c.setLineDash([]);});
+  (opt.vlines||[]).forEach(v=>{c.strokeStyle=v.color||'#f28c28';c.lineWidth=1.6;c.setLineDash([4,4]);
+    c.beginPath();c.moveTo(X(v.x),T);c.lineTo(X(v.x),H-B);c.stroke();c.setLineDash([]);});
+  (opt.points||[]).forEach(p=>{const py=Y(p.y);if(!isFinite(py))return;
+    c.fillStyle=p.color||'#f28c28';c.beginPath();c.arc(X(p.x),py,p.r||6.5,0,7);c.fill();
+    c.strokeStyle='#fff';c.lineWidth=2;c.stroke();
+    if(p.label){c.fillStyle=p.color||'#f28c28';c.font='bold 11px Segoe UI';
+      c.fillText(p.label,Math.min(X(p.x)+9,W-R-110),Math.max(py-9,T+12));}});
+  c.restore();
+}
+function attachDrag(cv,cb){
+  let down=false;
+  const go=e=>{const r=cv.getBoundingClientRect();
+    const px=(e.clientX-r.left)*(cv.width/r.width);
+    if(cv._map)cb(cv._map.inv(px));};
+  cv.addEventListener('pointerdown',e=>{down=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}
+    playing=false;setPlayLabel();go(e);});
+  cv.addEventListener('pointermove',e=>{if(down)go(e);});
+  cv.addEventListener('pointerup',()=>{down=false;});
+  cv.addEventListener('pointercancel',()=>{down=false;});
+}
+function clampSet(id,v){const el=$(id);el.value=Math.max(+el.min,Math.min(+el.max,v));refresh();}
+
+function drawSetup(){
+  const cv=$('cvSetup'),c=cv.getContext('2d'),W=cv.width,H=cv.height;
+  c.clearRect(0,0,W,H);
+  const M=model(),xn=M.x(P.t),vn=M.v(P.t);
+  const gy=200,home=W/2,cw=118,ch=74;
+  let scale=26;
+  if($('autozoom').checked){
+    // scale so the motion over the next few seconds fills the frame
+    let peak=0; for(let i=0;i<=200;i++)peak=Math.max(peak,Math.abs(M.x(P.t+3*i/200)));
+    peak=Math.max(peak,Math.abs(xn));
+    if(peak>1e-12)scale=Math.max(1,Math.min(1e9,140/peak));
+  }
+  $('zoomnote').innerHTML='view scale: <b>'+(scale>=1000?scale.toExponential(2):F(scale,1))+
+    '</b> pixels per unit'+($('autozoom').checked?' <span class="note">(auto-zoomed so the motion stays visible \u2014 uncheck to see the true physical size)</span>':'');
+  const cxp=home+Math.max(-160,Math.min(160,xn*scale));
+  c.strokeStyle='#5b6784';c.lineWidth=2.5;c.beginPath();c.moveTo(30,gy);c.lineTo(W-30,gy);c.stroke();
+  for(let x=35;x<W-30;x+=26){c.strokeStyle='#c9d2e4';c.lineWidth=1.2;c.beginPath();c.moveTo(x,gy);c.lineTo(x-14,gy+14);c.stroke();}
+  c.fillStyle='#e5ebf6';c.strokeStyle='#5b6784';c.lineWidth=1.5;
+  c.fillRect(30,gy-115,22,115);c.strokeRect(30,gy-115,22,115);
+  c.fillRect(W-52,gy-115,22,115);c.strokeRect(W-52,gy-115,22,115);
+  c.strokeStyle='#c9b8f5';c.setLineDash([4,5]);c.lineWidth=1.5;
+  c.beginPath();c.moveTo(home,gy-135);c.lineTo(home,gy);c.stroke();c.setLineDash([]);
+  c.fillStyle='#7b5cd6';c.font='11px Segoe UI';c.fillText('x = 0',home-14,gy-140);
+  const sy=gy-88,sx0=52,sx1=cxp-cw/2,ac=P.k>0?'#7b5cd6':'#c8cfe0';
+  c.strokeStyle=ac;c.lineWidth=2.5;c.beginPath();
+  for(let i=0;i<=200;i++){const u=i/200,x=sx0+(sx1-sx0)*u,y=sy+((u>0.06&&u<0.94)?11*Math.sin(u*11*2*Math.PI):0);
+    i?c.lineTo(x,y):c.moveTo(x,y);}c.stroke();
+  c.fillStyle=ac;c.font='bold 11px Segoe UI';
+  c.fillText(P.k>0?('spring k = '+F(P.k,2)):'NO spring (k = 0)',(sx0+sx1)/2-48,sy-18);
+  const dy=gy-38,dx0=cxp+cw/2,dx1=W-52;
+  c.strokeStyle='#f28c28';c.lineWidth=2.5;c.beginPath();c.moveTo(dx0,dy);c.lineTo(dx1,dy);c.stroke();
+  const bx=dx0+(dx1-dx0)*0.42,bw=Math.max(30,(dx1-dx0)*0.32);
+  c.fillStyle='#fff0e3';c.fillRect(bx,dy-15,bw,30);c.strokeRect(bx,dy-15,bw,30);
+  c.fillStyle='#f28c28';c.fillRect(bx+bw*0.4,dy-12,5,24);
+  c.fillText('dashpot b = '+F(P.b,2),bx-4,dy+32);
+  // trail: where the cart has been over the last 2 seconds
+  for(let i=1;i<=20;i++){const tp=P.t-i*0.1; if(tp<0)break;
+    const xp=home+Math.max(-160,Math.min(160,M.x(tp)*scale));
+    c.fillStyle='rgba(18,165,160,'+(0.30*(1-i/20)).toFixed(3)+')';
+    c.beginPath();c.arc(xp,gy-ch/2-13,7,0,7);c.fill();}
+  c.fillStyle='#e1f6f5';c.strokeStyle='#12a5a0';c.lineWidth=2.5;
+  c.fillRect(cxp-cw/2,gy-ch-13,cw,ch);c.strokeRect(cxp-cw/2,gy-ch-13,cw,ch);
+  c.fillStyle='#12a5a0';c.font='bold 13px Segoe UI';c.fillText('m = '+F(P.m,2),cxp-26,gy-ch/2-8);
+  [cxp-32,cxp+32].forEach(w=>{c.beginPath();c.arc(w,gy-6,7,0,7);c.fillStyle='#fff';c.fill();c.strokeStyle='#12a5a0';c.lineWidth=2;c.stroke();});
+  const Fs=-P.k*xn,Fd=-P.b*vn;
+  function arrow(y0,len,col,lab){
+    if(Math.abs(len)<1.5){c.fillStyle=col;c.font='11px Segoe UI';c.fillText(lab,cxp+8,y0+4);
+      c.beginPath();c.arc(cxp,y0,3.5,0,7);c.fill();return;}
+    const L2=Math.max(-140,Math.min(140,len));
+    c.strokeStyle=col;c.fillStyle=col;c.lineWidth=3;
+    c.beginPath();c.moveTo(cxp,y0);c.lineTo(cxp+L2,y0);c.stroke();
+    c.beginPath();c.moveTo(cxp+L2,y0);c.lineTo(cxp+L2-Math.sign(L2)*10,y0-5);c.lineTo(cxp+L2-Math.sign(L2)*10,y0+5);c.fill();
+    c.font='bold 11px Segoe UI';c.fillText(lab,cxp+L2/2-32,y0-8);}
+  const d=$('freeze').checked?2:4;
+  arrow(gy-ch-28,Fs*22,'#7b5cd6','spring '+F(Fs,d));
+  arrow(gy-ch-50,Fd*22,'#f28c28','dashpot '+F(Fd,d));
+  $('eqSetup').innerHTML='at <i class="v">t = '+F(P.t,2)+'</i>: &nbsp; x = <b>'+F(xn,d)+'</b> &nbsp; &#7819; = <b>'+F(vn,d)+'</b> &nbsp; &#7821; = <b>'+F((Fs+Fd)/P.m,d)+'</b>';
+  $('eqNewton').innerHTML='m&#183;&#7821; = &minus;k&#183;x &minus; b&#183;&#7819; &nbsp;&#8594;&nbsp; '+F(P.m,2)+'&#183;&#7821; = &minus;'+F(P.k,2)+'&#183;('+F(xn,d)+') &minus; '+F(P.b,2)+'&#183;('+F(vn,d)+') = <b>'+F(Fs+Fd,d)+'</b>';
+}
+function drawMicro(){
+  const cv=$('cvMicro'),c=cv.getContext('2d'),W=cv.width,H=cv.height;
+  c.clearRect(0,0,W,H);
+  const M=model(),t=P.t,x0=M.x(t),x1=M.x(t+1);
+  const step=Math.abs(x1-x0),half=Math.max(step*1.6,1e-15);
+  const cen=(x0+x1)/2,xs=cen-half,xe=cen+half;
+  const X=v=>65+(v-xs)/(xe-xs)*(W-95),gy=100;
+  c.strokeStyle='#5b6784';c.lineWidth=2;c.beginPath();c.moveTo(55,gy);c.lineTo(W-25,gy);c.stroke();
+  for(let i=0;i<=4;i++){const v=xs+(xe-xs)*i/4;
+    c.strokeStyle='#dfe6f3';c.lineWidth=1;c.beginPath();c.moveTo(X(v),40);c.lineTo(X(v),gy);c.stroke();
+    c.fillStyle='#5b6784';c.font='10px Consolas';c.fillText(v.toPrecision(8),X(v)-34,gy+17);}
+  [0.25,0.5,0.75,1].forEach(dt=>{const xx=M.x(t+dt);
+    c.fillStyle='rgba(18,165,160,0.3)';c.beginPath();c.arc(X(xx),gy-24,9,0,7);c.fill();
+    c.fillStyle='#7fc9c6';c.font='9px Segoe UI';c.fillText('+'+dt+'s',X(xx)-10,gy-40);});
+  c.fillStyle='#12a5a0';c.beginPath();c.arc(X(x0),gy-24,11,0,7);c.fill();
+  c.fillStyle='#fff';c.beginPath();c.arc(X(x0),gy-24,4,0,7);c.fill();
+  c.fillStyle='#12a5a0';c.font='bold 11px Segoe UI';c.fillText('now',X(x0)-11,gy-44);
+  const zoom=(W-95)/(2*half)/26;
+  c.fillStyle='#7b5cd6';c.font='bold 12px Segoe UI';
+  c.fillText('magnification \u00d7'+(zoom>=1000?zoom.toExponential(1):F(zoom,1)),62,24);
+  c.fillStyle='#5b6784';c.font='11px Segoe UI';c.fillText('position (units)',W/2-38,H-6);
+  $('eqMicro').innerHTML= step>1e-300
+   ? 'Between t = '+F(t,2)+' and t = '+F(t+1,2)+' the cart advances <b class="mono">'+step.toExponential(4)+'</b> units &mdash; small, but <b>not zero</b>. '+
+     'Speed right now: v = <b class="mono">'+M.v(t).toExponential(4)+'</b>. '+
+     '<span class="note">Play forward: the magnification keeps rising and the cart is still crawling. That is what &ldquo;never stops&rdquo; means &mdash; the speed shrinks toward 0 without ever equalling it.</span>'
+   : 'The cart is genuinely at rest here (v&#8320; = 0).';
+}
+function drawForces(){
+  const M=model();
+  if($('follow').checked){
+    $('px').value=Math.max(-3,Math.min(3,M.x(P.t)));
+    $('pv').value=Math.max(-3,Math.min(3,M.v(P.t)));
+    readP();
+    $('lpx').textContent=F(P.px,2);$('lpv').textContent=F(P.pv,2);
+  }
+  const k=P.k,b=P.b,px=P.px,pv=P.pv,lim=3,yl=Math.max(1,Math.max(k,b)*lim);
+  plot($('cvFs'),{xmin:-lim,xmax:lim,ymin:-yl,ymax:yl,
+    title:'Spring:  F = \u2212k\u00b7x   (slope = \u2212k = '+F(-k,2)+')',xlab:'position x',ylab:'force on cart',
+    curves:[{f:x=>-k*x,color:'#7b5cd6'}],vlines:[{x:px}],
+    points:[{x:px,y:-k*px,color:'#f28c28',label:'F = '+F(-k*px,3)},{x:0,y:0,color:'#b03a3a',r:5}]});
+  plot($('cvFd'),{xmin:-lim,xmax:lim,ymin:-yl,ymax:yl,
+    title:'Dashpot:  F = \u2212b\u00b7\u1e8b   (slope = \u2212b = '+F(-b,2)+')',xlab:'velocity \u1e8b',ylab:'force on cart',
+    curves:[{f:x=>-b*x,color:'#f28c28'}],vlines:[{x:pv,color:'#7b5cd6'}],
+    points:[{x:pv,y:-b*pv,color:'#7b5cd6',label:'F = '+F(-b*pv,3)},{x:0,y:0,color:'#b03a3a',r:5}]});
+  $('eqFs').innerHTML='F<sub>spring</sub> = &minus;k&#183;x = &minus;'+F(k,2)+'&#183;('+F(px,2)+') = <b>'+F(-k*px,3)+'</b> '+
+    (k===0?'<span class="note">&mdash; k = 0, so no spring force at any position</span>'
+      :(Math.abs(px)<1e-9?'<span class="note">&mdash; at the relaxed spot, so zero</span>'
+      :'<span class="note">&mdash; cart is '+(px>0?'right of home, pulled left':'left of home, pushed right')+'</span>'));
+  $('eqFd').innerHTML='F<sub>dashpot</sub> = &minus;b&#183;&#7819; = &minus;'+F(b,2)+'&#183;('+F(pv,2)+') = <b>'+F(-b*pv,3)+'</b> '+
+    (Math.abs(pv)<1e-9?'<span class="note">&mdash; at rest, so zero, wherever it sits</span>'
+      :'<span class="note">&mdash; moving '+(pv>0?'right, dragged left':'left, dragged right')+'</span>');
+  const cv=$('cvProbeCart'),c=cv.getContext('2d'),W=cv.width,H=cv.height;
+  c.clearRect(0,0,W,H);
+  // vertical lanes, each label gets its own row so nothing overlaps
+  const LANE={vel:74,spring:126,dash:172},gy=246,cartTop=196,cartH=42;
+  const home=W/2,sc=42,cxp=Math.max(90,Math.min(W-90,home+px*sc)),cw=104;
+  c.strokeStyle='#5b6784';c.lineWidth=2;c.beginPath();c.moveTo(25,gy);c.lineTo(W-25,gy);c.stroke();
+  for(let x=30;x<W-25;x+=26){c.strokeStyle='#c9d2e4';c.lineWidth=1;c.beginPath();c.moveTo(x,gy);c.lineTo(x-12,gy+12);c.stroke();}
+  c.strokeStyle='#c9b8f5';c.setLineDash([4,5]);c.lineWidth=1.5;
+  c.beginPath();c.moveTo(home,46);c.lineTo(home,gy);c.stroke();c.setLineDash([]);
+  c.fillStyle='#7b5cd6';c.font='11px Segoe UI';
+  c.fillText('home   x = 0',home-32,38);
+  // line of action: shows the arrows all act on the cart
+  c.strokeStyle='#dfe6f3';c.setLineDash([2,4]);c.lineWidth=1;
+  c.beginPath();c.moveTo(cxp,LANE.vel-8);c.lineTo(cxp,cartTop);c.stroke();c.setLineDash([]);
+  // cart
+  c.fillStyle='#e1f6f5';c.strokeStyle='#12a5a0';c.lineWidth=2.5;
+  c.fillRect(cxp-cw/2,cartTop,cw,cartH);c.strokeRect(cxp-cw/2,cartTop,cw,cartH);
+  [cxp-30,cxp+30].forEach(w=>{c.beginPath();c.arc(w,gy-6,6,0,7);c.fillStyle='#fff';c.fill();
+    c.strokeStyle='#12a5a0';c.lineWidth=2;c.stroke();});
+  c.fillStyle='#12a5a0';c.font='bold 12px Segoe UI';
+  const cl='x = '+F(px,2); c.fillText(cl,cxp-c.measureText(cl).width/2,cartTop+26);
+  // one labelled arrow per lane, label centred over the arrow and kept inside the canvas
+  function lane(y,len,col,lab,zero){
+    c.font='bold 11px Segoe UI';
+    const tw=c.measureText(lab).width;
+    if(Math.abs(len)<2){
+      c.fillStyle=col;c.beginPath();c.arc(cxp,y,4.5,0,7);c.fill();
+      c.fillText(lab,Math.max(6,Math.min(W-tw-6,cxp-tw/2)),y-11);
+      if(zero){c.fillStyle='#b03a3a';c.font='10px Segoe UI';c.fillText(zero,Math.max(6,Math.min(W-140,cxp+12)),y+4);}
+      return;}
+    const L2=Math.max(-230,Math.min(230,len));
+    c.strokeStyle=col;c.fillStyle=col;c.lineWidth=4;
+    c.beginPath();c.moveTo(cxp,y);c.lineTo(cxp+L2,y);c.stroke();
+    c.beginPath();c.moveTo(cxp+L2,y);c.lineTo(cxp+L2-Math.sign(L2)*11,y-6);c.lineTo(cxp+L2-Math.sign(L2)*11,y+6);c.fill();
+    c.fillText(lab,Math.max(6,Math.min(W-tw-6,cxp+L2/2-tw/2)),y-11);
+  }
+  lane(LANE.vel, pv*34,'#5b6784','velocity \u1e8b = '+F(pv,2), Math.abs(pv)<1e-9?'held still':'');
+  lane(LANE.spring, -k*px*26,'#7b5cd6','spring force \u2212kx = '+F(-k*px,2),
+       Math.abs(k*px)<1e-9?(k===0?'no spring at all':'at home, so zero'):'');
+  lane(LANE.dash, -b*pv*26,'#f28c28','dashpot force \u2212b\u1e8b = '+F(-b*pv,2),
+       Math.abs(b*pv)<1e-9?(b===0?'no dashpot at all':'at rest, so zero'):'');
+  // lane captions on the left, clear of the arrows
+  c.font='10px Segoe UI';c.fillStyle='#9aa4bb';
+  c.fillText('how it moves',8,LANE.vel+4);
+  c.fillText('spring lane',8,LANE.spring+4);
+  c.fillText('dashpot lane',8,LANE.dash+4);
+  $('eqProbe').innerHTML='Hold it <b>still</b> (&#7819; = 0) at x = '+F(px,2)+': spring gives <b>'+F(-k*px,3)+'</b>, dashpot gives <b>0</b>. &nbsp;|&nbsp; '+
+    'Move it at &#7819; = '+F(pv,2)+' through <b>home</b> (x = 0): spring gives <b>0</b>, dashpot gives <b>'+F(-b*pv,3)+'</b>. '+
+    '<span class="note">That asymmetry is the whole reason one law reads x and the other reads &#7819;.</span>';
+}
+function drawDecay(){
+  const m=P.m,b=P.b,v0=P.v0,t=P.t,lam=b/m,vt=s=>v0*Math.exp(-lam*s);
+  $('k0warn').innerHTML=P.k>0?'<div class="warn">k = '+F(P.k,2)+' is not zero, so the live cart also has a spring. This tab shows the k = 0 mathematics &mdash; press <b>Set k = 0</b> to make them agree.</div>':'';
+  const tmax=Math.max(8,6/Math.max(lam,0.08));
+  const log=$('logv').checked&&v0!==0&&lam>0;
+  const yl=Math.max(0.2,Math.abs(v0)*1.15);
+  plot($('cvV'),log
+    ?{xmin:0,xmax:tmax,ymin:Math.abs(v0)*1e-9,ymax:Math.abs(v0)*1.5,logy:true,
+      title:'|v(t)| on a log scale \u2014 a straight line that never arrives at zero',xlab:'t',ylab:'|v| (log)',
+      curves:[{f:s=>Math.abs(vt(s)),color:'#12a5a0'}],vlines:[{x:Math.min(t,tmax)}],
+      points:[{x:Math.min(t,tmax),y:Math.abs(vt(Math.min(t,tmax))),color:'#f28c28',label:'|v| = '+Math.abs(vt(t)).toExponential(3)}]}
+    :{xmin:0,xmax:tmax,ymin:v0>=0?-yl*0.35:-yl,ymax:v0>=0?yl:yl*0.35,
+      title:'v(t) = v\u2080\u00b7e^(\u2212(b/m)t)',xlab:'time t',ylab:'velocity v',
+      curves:[{f:vt,color:'#12a5a0'}],vlines:[{x:Math.min(t,tmax)}],
+      points:[{x:Math.min(t,tmax),y:vt(Math.min(t,tmax)),color:'#f28c28',label:'v = '+F(vt(t),4)}]});
+  $('eqVnow').innerHTML='v(<i class="v">'+F(t,2)+'</i>) = '+F(v0,2)+'&#183;e^(&minus;('+F(b,2)+'/'+F(m,2)+')&#183;'+F(t,2)+') = '+F(v0,2)+'&#183;e^('+F(-lam*t,4)+') = '+F(v0,2)+'&#183;'+F(Math.exp(-lam*t),6)+' = <b>'+F(vt(t),6)+'</b>';
+  $('d1').innerHTML='dv/dt = &minus;(b/m)v = &minus;'+F(lam,4)+'&#183;v &nbsp;&#8658;&nbsp; (1/v)(dv/dt) = &minus;<b>'+F(lam,4)+'</b>';
+  $('d2').innerHTML='&#8747;(1/v)(dv/dt)dt = &#8747;&minus;&lambda; dt &nbsp;&#8658;&nbsp; ln|v| = &minus;'+F(lam,4)+'&#183;t + C';
+  $('d3').innerHTML='|v| = e^(&minus;&lambda;t+C) = e^C&#183;e^(&minus;'+F(lam,4)+'t)';
+  $('d4').innerHTML='v(t) = c&#183;e^(&minus;'+F(lam,4)+'t) &nbsp;<span class="note">c = &plusmn;e^C</span>';
+  $('d5').innerHTML='v(0) = c&#183;e&#8304; = c = v&#8320; = <b>'+F(v0,2)+'</b> &nbsp;&#8658;&nbsp; v(t) = <b>'+F(v0,2)+'&#183;e^(&minus;'+F(lam,4)+'t)</b>';
+  $('d6').innerHTML='d/dt[v] at t = '+F(t,2)+': &nbsp;'+F(v0,2)+'&#183;(&minus;'+F(lam,4)+')&#183;e^(&minus;'+F(lam,4)+'t) = <b>'+F(-lam*vt(t),6)+'</b>'+
+    '<br>&minus;&lambda;&#183;v(t) = &minus;'+F(lam,4)+'&#183;'+F(vt(t),6)+' = <b>'+F(-lam*vt(t),6)+'</b> &nbsp;<b>&#10003; equal</b>';
+  $('d7').innerHTML=lam>0?'T = ln2/&lambda; = 0.6931/'+F(lam,4)+' = <b>'+F(Math.LN2/lam,4)+'</b> &nbsp;<span class="note">the speed halves every '+F(Math.LN2/lam,3)+' time units &mdash; forever, so it never reaches 0</span>'
+    :'b = 0 so &lambda; = 0: no decay, v stays '+F(v0,2)+' forever.';
+  const tb=$('tblV');while(tb.rows.length>1)tb.deleteRow(1);
+  [0,1,2,5,10,20,30].forEach(s=>{const e=-lam*s,r=tb.insertRow();
+    if(Math.abs(s-t)<0.06)r.style.background='#fff5ea';
+    r.innerHTML='<td>'+s+'</td><td>'+F(e,3)+'</td><td class="mono">'+Math.exp(e).toExponential(3)+'</td><td class="mono">'+vt(s).toExponential(3)+'</td>';});
+}
+function drawStmts(){
+  const M=model(),m=P.m,b=P.b,k=P.k,v0=P.v0;
+  const rate=(M.kind==='complex')?-M.al:-Math.max(M.r1,M.r2);
+  const tmax=Math.max(10,6/Math.max(rate,0.08));
+  let amp=0;for(let i=0;i<=400;i++)amp=Math.max(amp,Math.abs(M.v(tmax*i/400)));amp=Math.max(amp,0.15)*1.2;
+  const TT=tmax*3;
+  let cross=0,prev=Math.sign(M.v(0));
+  for(let i=1;i<=6000;i++){const s=Math.sign(M.v(TT*i/6000));if(s!==0&&s!==prev){cross++;prev=s;}}
+  plot($('cvStmt'),{xmin:0,xmax:tmax,ymin:-amp,ymax:amp,
+    title:'v(t) \u2014 the function every statement is about',xlab:'t',ylab:'velocity',
+    curves:[{f:M.v,color:M.kind==='complex'?'#7b5cd6':'#12a5a0'}],vlines:[{x:Math.min(P.t,tmax)}],
+    points:[{x:Math.min(P.t,tmax),y:M.v(Math.min(P.t,tmax)),color:'#f28c28',label:'v = '+F(M.v(P.t),5)}]});
+  const osc=(M.kind==='complex'),vBig=M.v(TT);
+  const rows=[
+   {n:1,txt:'The cart never changes direction',ok:!osc&&cross===0,
+    why:osc?'v contains a cosine, and a numerical scan over t in [0, '+F(TT,1)+'] counts <b>'+cross+'</b> sign changes. The spring (k = '+F(k,2)+') pulls it back, so it turns around.'
+           :'v(t) = '+F(v0,2)+'&#183;e^(&minus;'+F(b/m,3)+'t) is a constant times a strictly positive exponential, so the sign never changes. Scan over [0, '+F(TT,1)+']: <b>'+cross+'</b> sign changes.'},
+   {n:2,txt:'The cart oscillates, changing direction infinitely many times',ok:osc,
+    why:osc?'Complex roots &alpha; &plusmn; i&omega; with &omega; = '+F(M.w,4)+', so v crosses zero every &pi;/&omega; = '+F(Math.PI/M.w,3)+', forever.'
+           :'Roots are real, so no cosine appears and v can change sign at most once. Counted: <b>'+cross+'</b>.'},
+   {n:3,txt:'The cart never stops moving',ok:true,
+    why:'v at t = '+F(P.t,2)+' is <b class="mono">'+M.v(P.t).toExponential(4)+'</b>; at t = '+F(TT,1)+' it is <b class="mono">'+vBig.toExponential(4)+'</b>. Nonzero at both. An exponential is never 0, so no finite time makes v exactly 0. <span class="note">Use the microscope on tab 1 to watch this rather than just read it.</span>'},
+   {n:4,txt:"The cart's speed tends to 0",ok:b>0,
+    why:b>0?'|v| falls from '+F(Math.abs(v0),3)+' to <b class="mono">'+Math.abs(vBig).toExponential(3)+'</b> by t = '+F(TT,1)+' &mdash; heading to 0 without arriving.'
+           :'b = 0: nothing damps the motion, so the speed does not decay. Raise b above 0.'},
+   {n:5,txt:"The cart's acceleration tends to 0",ok:b>0,
+    why:'a = (&minus;k&#183;x &minus; b&#183;&#7819;)/m. Now: (&minus;'+F(k,2)+'&#183;'+F(M.x(P.t),4)+' &minus; '+F(b,2)+'&#183;'+F(M.v(P.t),4)+')/'+F(m,2)+' = <b>'+F((-k*M.x(P.t)-b*M.v(P.t))/m,5)+'</b>. At t = '+F(TT,1)+': <b class="mono">'+((-k*M.x(TT)-b*M.v(TT))/m).toExponential(3)+'</b>.'},
+   {n:6,txt:'The ODE governing the motion is a homogeneous linear ODE',ok:true,
+    why:F(m,2)+'&#7821; + '+F(b,2)+'&#7819; + '+F(k,2)+'x = 0 &mdash; linear (constants times x and its derivatives only) and homogeneous (right side 0). True for every m, b, k.'}
+  ];
+  $('stmts').innerHTML=rows.map(r=>'<div class="verdict '+(r.ok?'tru':'fal')+'"><b>'+r.n+'. '+r.txt+'</b> &mdash; <span class="tag '+(r.ok?'t':'f')+'">'+(r.ok?'TRUE':'FALSE')+'</span> at these settings<div class="note" style="margin-top:3px">'+r.why+'</div></div>').join('');
+}
+
+function drawWhy(){
+  const al=+$('al').value, om=+$('om').value, t=P.t, rat=+$('rat').value;
+  $('lal').textContent=F(al,2); $('lom').textContent=F(om,2); $('lrat').textContent=F(rat,2);
+  const T=Math.max(12,6/Math.max(Math.abs(al),0.08));
+  const tc=Math.min(t,T);
+  const re=s=>Math.exp(al*s)*Math.cos(om*s), im=s=>Math.exp(al*s)*Math.sin(om*s);
+  const isOsc=om>1e-9;
+
+  $('whyEuler').innerHTML='e^(rt) = e^(('+F(al,2)+' + i&#183;'+F(om,2)+')t) = e^('+F(al,2)+'t)&#183;e^(i&#183;'+F(om,2)+'t) '+
+    '= e^('+F(al,2)+'t)&#183;( cos('+F(om,2)+'t) + i&#183;sin('+F(om,2)+'t) ) '+
+    '<span class="note">&mdash; the real part of the exponent gives the size e^(&alpha;t); the imaginary part gives the angle &omega;t</span>';
+
+  // ---- spiral in the complex plane (custom, parametric) ----
+  const cv=$('cvSpiral'), c=cv.getContext('2d'), W=cv.width, H=cv.height;
+  c.clearRect(0,0,W,H);
+  let R=0; for(let i=0;i<=400;i++)R=Math.max(R,Math.hypot(re(T*i/400),im(T*i/400)));
+  R=Math.max(R,1)*1.15;
+  const cx=W*0.52, cy=H*0.52, sc=Math.min(W,H)*0.40/R;
+  c.strokeStyle='#e5ebf6';c.lineWidth=1;
+  for(let g=1;g<=3;g++){c.beginPath();c.arc(cx,cy,R*g/3*sc,0,7);c.stroke();}
+  c.strokeStyle='#8a96b3';c.lineWidth=1.4;
+  c.beginPath();c.moveTo(20,cy);c.lineTo(W-14,cy);c.stroke();
+  c.beginPath();c.moveTo(cx,16);c.lineTo(cx,H-30);c.stroke();
+  c.fillStyle='#5b6784';c.font='11px Segoe UI';
+  c.fillText('Re',W-30,cy-7);c.fillText('Im',cx+7,24);
+  c.fillStyle='#1d2540';c.font='bold 12px Segoe UI';
+  c.fillText('the number e^(rt) in the complex plane',18,16);
+  // path so far
+  c.strokeStyle='#c9b8f5';c.lineWidth=2.4;c.beginPath();
+  for(let i=0;i<=600;i++){const s2=tc*i/600,X=cx+re(s2)*sc,Y=cy-im(s2)*sc;i?c.lineTo(X,Y):c.moveTo(X,Y);}
+  c.stroke();
+  // future path, faint
+  c.strokeStyle='#e6ddfb';c.lineWidth=1.6;c.beginPath();
+  for(let i=0;i<=600;i++){const s2=tc+(T-tc)*i/600,X=cx+re(s2)*sc,Y=cy-im(s2)*sc;i?c.lineTo(X,Y):c.moveTo(X,Y);}
+  c.stroke();
+  const PX=cx+re(tc)*sc, PY=cy-im(tc)*sc;
+  // radius + angle
+  c.strokeStyle='#7b5cd6';c.setLineDash([5,4]);c.lineWidth=1.5;
+  c.beginPath();c.moveTo(cx,cy);c.lineTo(PX,PY);c.stroke();c.setLineDash([]);
+  // projection down to the real axis  <-- the shadow
+  c.strokeStyle='#f28c28';c.setLineDash([3,3]);c.lineWidth=2;
+  c.beginPath();c.moveTo(PX,PY);c.lineTo(PX,cy);c.stroke();c.setLineDash([]);
+  c.fillStyle='#f28c28';c.beginPath();c.arc(PX,cy,7.5,0,7);c.fill();
+  c.fillStyle='#fff';c.beginPath();c.arc(PX,cy,3,0,7);c.fill();
+  c.fillStyle='#f28c28';c.font='bold 11px Segoe UI';
+  c.fillText('shadow on Re axis = '+F(re(tc),3),Math.max(6,Math.min(W-160,PX-70)),cy+22);
+  c.fillStyle='#7b5cd6';c.beginPath();c.arc(PX,PY,8,0,7);c.fill();
+  c.fillStyle='#fff';c.beginPath();c.arc(PX,PY,3.4,0,7);c.fill();
+  c.fillStyle='#7b5cd6';c.font='bold 11px Segoe UI';
+  c.fillText('e^(rt)',Math.min(PX+11,W-50),Math.max(PY-11,26));
+  c.fillStyle='#5b6784';c.font='11px Segoe UI';
+  c.fillText(isOsc?('angle \u03c9t = '+F(om*tc,2)+' rad = '+F(om*tc*180/Math.PI,0)+'\u00b0'):'angle stays 0 \u2014 no rotation',18,H-10);
+  cv._map={inv:px=>T*(px-20)/(W-34)};
+
+  $('whyPoint').innerHTML='at <i class="v">t = '+F(tc,2)+'</i>: &nbsp; size e^(&alpha;t) = e^('+F(al*tc,3)+') = <b>'+F(Math.exp(al*tc),4)+'</b>, &nbsp; angle &omega;t = <b>'+F(om*tc,3)+'</b> rad'+
+    '<br>e^(rt) = '+F(Math.exp(al*tc),4)+'&#183;(cos '+F(om*tc,3)+' + i sin '+F(om*tc,3)+') = <b>'+F(re(tc),4)+'</b> + <b>'+F(im(tc),4)+'</b>i';
+
+  // ---- shadow vs time ----
+  let amp=0; for(let i=0;i<=400;i++)amp=Math.max(amp,Math.abs(re(T*i/400)));
+  amp=Math.max(amp,0.3)*1.2;
+  let cross=0,prev=Math.sign(re(1e-6)),first=[];
+  for(let i=1;i<=8000;i++){const s2=T*i/8000,sg=Math.sign(re(s2));
+    if(sg!==0&&sg!==prev){cross++;if(first.length<4)first.push(s2);prev=sg;}}
+  plot($('cvShadow'),{xmin:0,xmax:T,ymin:-amp,ymax:amp,
+    title:'the shadow over time:  e^(\u03b1t)\u00b7cos(\u03c9t)',xlab:'t',ylab:'real part',
+    curves:[{f:re,color:'#7b5cd6'},
+      {f:s2=>Math.exp(al*s2),color:'#c9b8f5',dash:[5,5],lw:1.6},
+      {f:s2=>-Math.exp(al*s2),color:'#c9b8f5',dash:[5,5],lw:1.6}],
+    vlines:[{x:tc}],
+    points:[{x:tc,y:re(tc),color:'#f28c28',label:'= '+F(re(tc),4)}]});
+  $('whyShadow').innerHTML='zero crossings on [0, '+F(T,1)+']: <b>'+cross+'</b>'+
+    (isOsc?' &nbsp;<span class="note">first four at t = '+first.map(x=>F(x,2)).join(', ')+' &mdash; one every &pi;/&omega; = '+F(Math.PI/om,3)+', forever</span>'
+          :' &nbsp;<span class="note">&omega; = 0, so the cosine is the constant 1 and the curve is a plain exponential &mdash; it never reaches the axis</span>');
+  $('whyVerdict').innerHTML= isOsc
+    ? '<b>&omega; = '+F(om,2)+' &ne; 0 &#8658; the point rotates.</b> The dashed radius sweeps around, so the orange shadow slides back and forth across the origin &mdash; that back-and-forth <b>is</b> the oscillation. The size e^(&alpha;t) only shrinks the swings; being never zero, it can never cancel a crossing.'
+    : '<b>&omega; = 0 &#8658; no rotation at all.</b> The point stays on the real axis and just slides toward (or away from) the origin. The shadow never crosses the axis, so the cart never reverses. Push &omega; above 0 and watch the rotation, and the oscillation, switch on together.';
+
+  // ---- monotone / at-most-one-crossing demo ----
+  const M=model(); let r1,r2,haveReal=(M.kind!=='complex');
+  if(haveReal){r1=M.r1;r2=M.r2;} else {r1=-0.4;r2=-1.4;}
+  const dr=r1-r2||1e-6;
+  const Tm=Math.max(8,6/Math.max(Math.abs(dr),0.1));
+  let hit=null;
+  if(rat>0){const th=Math.log(rat)/dr; if(th>=0&&th<=Tm)hit=th;}
+  let ymax=Math.max(6,Math.abs(rat)*1.4,Math.exp(dr*Tm),Math.exp(0));
+  ymax=Math.min(ymax,40);
+  plot($('cvMono'),{xmin:0,xmax:Tm,ymin:Math.min(-1,rat-1),ymax:ymax,
+    title:'e^((r\u2081\u2212r\u2082)t)  versus the flat target \u2212c\u2082/c\u2081',xlab:'t',ylab:'value',
+    curves:[{f:s2=>Math.exp(dr*s2),color:'#12a5a0'},{f:()=>rat,color:'#b03a3a',dash:[6,5],lw:2}],
+    vlines:hit!==null?[{x:hit}]:[],
+    points:hit!==null?[{x:hit,y:rat,color:'#f28c28',r:7,label:'the ONLY crossing, t = '+F(hit,3)}]:[]});
+  $('whyMono').innerHTML='Using your current roots r&#8321; = '+F(r1,3)+', r&#8322; = '+F(r2,3)+' &#8658; r&#8321;&minus;r&#8322; = <b>'+F(dr,3)+'</b>. '+
+    (haveReal?'':'<span class="note">(your current settings give complex roots, so illustrative real roots are shown here)</span>')+
+    '<br>Solve e^('+F(dr,3)+'t) = '+F(rat,2)+': &nbsp;'+
+    (rat<=0?'<b>no solution at all</b> &mdash; an exponential is always positive, so it never equals a value &le; 0. Zero crossings.'
+      :'t = ln('+F(rat,2)+')/'+F(dr,3)+' = <b>'+F(Math.log(rat)/dr,3)+'</b>'+(hit===null?' <span class="note">(outside the window shown, i.e. never for t &ge; 0)</span>':'')+
+       ' &mdash; <b>exactly one</b> value of t. A strictly monotone curve meets a flat line at most once, whatever the constants are.');
+
+  // ---- frequency vs omega ----
+  $('whyFreq').innerHTML='period = 2&pi;/&omega; = 6.283/'+F(om,2)+' = <b>'+(om>1e-9?F(2*Math.PI/om,3):'\u221e (no repeat)')+
+    '</b> &nbsp;|&nbsp; time between direction changes = &pi;/&omega; = <b>'+(om>1e-9?F(Math.PI/om,3):'\u221e')+'</b>'+
+    ' &nbsp;|&nbsp; direction changes per 10 time units = <b>'+(om>1e-9?F(10*om/Math.PI,2):'0')+'</b>';
+  plot($('cvFreq'),{xmin:0,xmax:4,ymin:0,ymax:12,
+    title:'how many direction changes per 10 time units, as a function of \u03c9',xlab:'\u03c9 (imaginary part of the root)',ylab:'reversals / 10 units',
+    curves:[{f:w=>10*w/Math.PI,color:'#7b5cd6'}],vlines:[{x:om}],
+    points:[{x:om,y:10*om/Math.PI,color:'#f28c28',r:7,label:'\u03c9 = '+F(om,2)}]});
+  $('whyFreq2').innerHTML='At &omega; = 0 the count is exactly <b>0</b> &mdash; and &omega; = 0 is precisely what &ldquo;the root is real&rdquo; means. '+
+    'So &ldquo;the roots are complex&rdquo; and &ldquo;the solution oscillates&rdquo; are not two facts joined by a rule; they are the same fact written two ways. '+
+    '<span class="note">Tab 6 then shows the separate question of when m, b, k actually produce a nonzero &omega;.</span>';
+}
+function drawRoots(){
+  const M=model(),m=P.m,b=P.b,k=P.k,v0=P.v0,D=M.D;
+  $('charEq').innerHTML='Try x = e^(rt): (m r&sup2; + b r + k)e^(rt) = 0, and an exponential is never 0, so &nbsp;<b>'+F(m,2)+'r&sup2; + '+F(b,2)+'r + '+F(k,2)+' = 0</b>';
+  $('discEq').innerHTML='D = b&sup2; &minus; 4mk = '+F(b,2)+'&sup2; &minus; 4&#183;'+F(m,2)+'&#183;'+F(k,2)+' = '+F(b*b,3)+' &minus; '+F(4*m*k,3)+' = <b>'+F(D,4)+'</b> &#8658; '+
+    (D>1e-9?'<b style="color:#12a5a0">D &gt; 0: two real roots, no oscillation</b>'
+      :(Math.abs(D)<=1e-9?'<b>D = 0: repeated real root (critically damped)</b>'
+      :'<b style="color:#7b5cd6">D &lt; 0: complex roots, oscillation</b>'));
+  if(M.kind==='real')
+    $('rootsEq').innerHTML='r = (&minus;b &plusmn; &radic;D)/(2m) = (&minus;'+F(b,2)+' &plusmn; '+F(Math.sqrt(D),4)+')/'+F(2*m,2)+' &#8658; r&#8321; = <b>'+F(M.r1,4)+'</b>, r&#8322; = <b>'+F(M.r2,4)+'</b> <span class="note">(imaginary part 0)</span>';
+  else if(M.kind==='repeat')
+    $('rootsEq').innerHTML='r = &minus;b/(2m) = <b>'+F(M.r1,4)+'</b> (repeated, real)';
+  else
+    $('rootsEq').innerHTML='&radic;D = i&radic;'+F(-D,4)+' = i&#183;'+F(Math.sqrt(-D),4)+' &#8658; r = <b>'+F(M.al,4)+' &plusmn; i&#183;'+F(M.w,4)+'</b> <span class="note">&alpha; = &minus;b/2m = '+F(M.al,4)+', &omega; = &radic;(4mk&minus;b&sup2;)/2m = '+F(M.w,4)+'</span>';
+  if(M.kind==='real')
+    $('solEq').innerHTML='x(t) = '+F(M.c1,3)+'&#183;e^('+F(M.r1,4)+'t) + '+F(M.c2,3)+'&#183;e^('+F(M.r2,4)+'t)<br><span class="note">Setting it to 0 gives e^((r&#8321;&minus;r&#8322;)t) = &minus;c&#8322;/c&#8321;; the left side is strictly monotone, so at most ONE zero crossing ever.</span>';
+  else if(M.kind==='repeat')
+    $('solEq').innerHTML='x(t) = '+F(v0,2)+'&#183;t&#183;e^('+F(M.r1,4)+'t) <span class="note">&mdash; zero only at t = 0</span>';
+  else
+    $('solEq').innerHTML='x(t) = (v&#8320;/&omega;)e^(&alpha;t)sin(&omega;t) = '+F(v0/M.w,3)+'&#183;e^('+F(M.al,4)+'t)&#183;sin('+F(M.w,4)+'t)<br><span class="note">Euler: e^((&alpha;+i&omega;)t) = e^(&alpha;t)(cos &omega;t + i sin &omega;t). The sine oscillates; e^(&alpha;t) only scales it and is never 0. Period 2&pi;/&omega; = '+F(2*Math.PI/M.w,3)+'.</span>';
+  const sp=Math.max(0.6,Math.abs(b/(2*m))*1.7,(M.kind==='complex'?M.w:Math.abs(Math.min(M.r1,M.r2)))*1.4);
+  const pts=(M.kind==='complex')
+    ?[{x:M.al,y:M.w,color:'#7b5cd6',label:'\u03b1+i\u03c9'},{x:M.al,y:-M.w,color:'#7b5cd6',label:'\u03b1\u2212i\u03c9'}]
+    :[{x:M.r1,y:0,color:'#12a5a0',label:'r\u2081 = '+F(M.r1,3)},{x:M.r2,y:0,color:'#12a5a0',label:'r\u2082 = '+F(M.r2,3)}];
+  plot($('cvRoots'),{xmin:-sp,xmax:sp*0.45,ymin:-sp,ymax:sp,title:'roots of  m r\u00b2 + b r + k = 0',
+    xlab:'Re r  (decay rate)',ylab:'Im r  (frequency \u03c9)',curves:[],points:pts});
+  const rate=(M.kind==='complex')?-M.al:-Math.max(M.r1,M.r2);
+  const tmax=Math.max(9,6/Math.max(rate,0.08));
+  let amp=0;for(let i=0;i<=400;i++)amp=Math.max(amp,Math.abs(M.x(tmax*i/400)));amp=Math.max(amp,0.2)*1.25;
+  let n=0,prev=Math.sign(M.x(0.001));
+  for(let i=1;i<=4000;i++){const s=Math.sign(M.x(tmax*i/4000));if(s!==0&&s!==prev){n++;prev=s;}}
+  plot($('cvX'),{xmin:0,xmax:tmax,ymin:-amp,ymax:amp,title:'x(t)',xlab:'t',ylab:'x',
+    curves:[{f:M.x,color:M.kind==='complex'?'#7b5cd6':'#12a5a0'}].concat(M.kind==='complex'?[
+      {f:s=>Math.abs(v0/M.w)*Math.exp(M.al*s),color:'#c9b8f5',dash:[5,5],lw:1.6},
+      {f:s=>-Math.abs(v0/M.w)*Math.exp(M.al*s),color:'#c9b8f5',dash:[5,5],lw:1.6}]:[]),
+    vlines:[{x:Math.min(P.t,tmax)}],
+    points:[{x:Math.min(P.t,tmax),y:M.x(Math.min(P.t,tmax)),color:'#f28c28',label:'x = '+F(M.x(P.t),4)}]});
+  $('crossEq').innerHTML='Zero crossings of x(t) on [0, '+F(tmax,1)+']: <b>'+n+'</b> '+
+    (M.kind==='complex'?'<span class="note">and it continues forever, one every &pi;/&omega; = '+F(Math.PI/M.w,3)+'</span>'
+     :'<span class="note">real roots can never produce more than one</span>');
+  const kc=b*b/(4*m),kmax=Math.max(1,4*P.k,kc*2.5);
+  plot($('cvDisc'),{xmin:0,xmax:kmax,ymin:Math.min(-0.3,b*b-4*m*kmax),ymax:Math.max(0.4,b*b*1.3),
+    title:'D = b\u00b2 \u2212 4mk   (drag to set k)',xlab:'spring constant k',ylab:'D',
+    curves:[{f:kk=>b*b-4*m*kk,color:'#1d2540'}],vlines:[{x:kc,color:'#b03a3a'}],
+    points:[{x:P.k,y:D,color:'#f28c28',r:7.5,label:'k = '+F(P.k,2)+',  D = '+F(D,3)}]});
+  $('kcritEq').innerHTML='D &lt; 0 needs 4mk &gt; b&sup2;, i.e. &nbsp;k &gt; b&sup2;/(4m) = '+F(b*b,3)+'/'+F(4*m,2)+' = <b>'+F(kc,4)+'</b> (red line). '+
+    'Since m &gt; 0 and b&sup2; &ge; 0, this forces <b>k &gt; 0</b>. With k = 0, D = b&sup2; = '+F(b*b,3)+' &ge; 0 always &mdash; real roots no matter what b is.'+
+    '<br><span class="note">Your k = '+F(P.k,2)+' is '+(P.k>kc?'above':'below')+' the threshold, so the cart '+(P.k>kc?'oscillates':'does not oscillate')+'. Note k &gt; 0 alone is not enough.</span>';
+}
+function drawPos(){
+  const M=model(),m=P.m,b=P.b,v0=P.v0,k=P.k,t=P.t;
+  const rate=(M.kind==='complex')?-M.al:-Math.max(M.r1,M.r2);
+  const tmax=Math.max(9,6/Math.max(rate,0.08));
+  let amp=0;for(let i=0;i<=400;i++)amp=Math.max(amp,Math.abs(M.x(tmax*i/400)));amp=Math.max(amp,0.2)*1.25;
+  const lim=(k===0&&b>0)?m*v0/b:null;
+  plot($('cvPos'),{xmin:0,xmax:tmax,ymin:Math.min(-amp*0.35,-amp),ymax:amp,title:'x(t)',xlab:'t',ylab:'position',
+    curves:[{f:M.x,color:'#7b5cd6'}].concat(lim!==null?[{f:()=>lim,color:'#b03a3a',dash:[6,5],lw:2}]:[]),
+    vlines:[{x:Math.min(t,tmax)}],
+    points:[{x:Math.min(t,tmax),y:M.x(Math.min(t,tmax)),color:'#f28c28',label:'x = '+F(M.x(t),4)}]});
+  if(k===0&&b>0){
+    $('posEq1').innerHTML='x(t) = &#8747;&#8320;&#7511; v&#8320;e^(&minus;(b/m)s)ds = (m&#183;v&#8320;/b)(1 &minus; e^(&minus;(b/m)t))';
+    $('posEq2').innerHTML='= '+F(m*v0/b,4)+'&#183;(1 &minus; '+F(Math.exp(-b/m*t),6)+') = <b>'+F(M.x(t),6)+'</b>';
+    $('posEq3').innerHTML='limit = m&#183;v&#8320;/b = '+F(m,2)+'&#183;'+F(v0,2)+'/'+F(b,2)+' = <b>'+F(m*v0/b,4)+'</b>';
+    $('posNote').innerHTML='Never stops, yet the total distance is the finite number '+F(m*v0/b,4)+'. Covered so far: '+F(100*M.x(t)/(m*v0/b),3)+'%.';
+  } else if(b===0){
+    $('posEq1').innerHTML='b = 0: no damping.';
+    $('posEq2').innerHTML=k>0?'Undamped oscillation &mdash; constant amplitude forever.':'x(t) = v&#8320;&#183;t, coasting at constant speed.';
+    $('posEq3').innerHTML='No finite limit.';$('posNote').innerHTML='';
+  } else {
+    $('posEq1').innerHTML='k = '+F(k,2)+' &gt; 0, so the drift formula m&#183;v&#8320;/b does not apply.';
+    $('posEq2').innerHTML='x('+F(t,2)+') = <b>'+F(M.x(t),5)+'</b>';
+    $('posEq3').innerHTML='The spring pulls the cart back, so x &#8594; <b>0</b>. Set k = 0 for the homework case.';
+    $('posNote').innerHTML='';
+  }
+  const cvR=$('cvRemain');
+  if(k===0&&b>0&&v0!==0){
+    const L2=m*v0/b,rem=s=>Math.max(Math.abs(L2-M.x(s)),1e-300);
+    plot(cvR,{xmin:0,xmax:tmax*2,ymin:Math.abs(L2)*1e-8,ymax:Math.abs(L2)*1.3,logy:true,
+      title:'distance still to travel, |limit \u2212 x(t)|, on a log scale',xlab:'t',ylab:'remaining (log)',
+      curves:[{f:rem,color:'#12a5a0'}],vlines:[{x:Math.min(t,tmax*2)}],
+      points:[{x:Math.min(t,tmax*2),y:rem(Math.min(t,tmax*2)),color:'#f28c28',label:rem(t).toExponential(3)}]});
+    $('remEq').innerHTML='remaining = '+F(L2,4)+' &minus; '+F(M.x(t),6)+' = <b class="mono">'+Math.abs(L2-M.x(t)).toExponential(5)+'</b>. '+
+      '<span class="note">A straight line on a log scale means the gap shrinks by a constant factor each second &mdash; it approaches zero but no finite t reaches it, which is exactly why the cart keeps moving forever.</span>';
+  } else {
+    const c=cvR.getContext('2d');c.clearRect(0,0,cvR.width,cvR.height);
+    c.fillStyle='#5b6784';c.font='13px Segoe UI';
+    c.fillText('This view applies to the k = 0, b > 0, v0 \u2260 0 case.',30,cvR.height/2-10);
+    c.fillText('Press "Set k = 0" and give b and v\u2080 nonzero values.',30,cvR.height/2+12);
+    cvR._map=null;$('remEq').innerHTML='';
+  }
+}
+function settleTime(M){
+  const r=(M.kind==='complex')?-M.al:-Math.max(M.r1,M.r2);
+  return r>1e-6?5/r:Infinity;
+}
+function refresh(){
+  readP();
+  $('lm').textContent=F(P.m,2);$('lb').textContent=F(P.b,2);$('lk').textContent=F(P.k,2);
+  $('lv').textContent=F(P.v0,2);$('lt').textContent=F(P.t,2);
+  $('lpx').textContent=F(P.px,2);$('lpv').textContent=F(P.pv,2);
+  const M=model();
+  $('regime').innerHTML=F(P.m,2)+'&#7821; + '+F(P.b,2)+'&#7819; + '+F(P.k,2)+'x = 0 &nbsp;|&nbsp; D = <b style="color:'+(M.D<0?'#7b5cd6':'#12a5a0')+'">'+F(M.D,3)+'</b> &nbsp;|&nbsp; '+
+    (M.kind==='complex'?'<b style="color:#7b5cd6">complex roots &#8594; OSCILLATES</b> (&omega; = '+F(M.w,3)+')':'<b style="color:#12a5a0">real roots &#8594; does NOT oscillate</b>')+
+    (P.k===0?' &nbsp;|&nbsp; <b style="color:#b03a3a">k = 0 &mdash; the homework problem</b>':'')+
+    ' &nbsp;|&nbsp; motion mostly over by t \u2248 <b>'+F(settleTime(M),1)+'</b>';
+  drawSetup();drawMicro();drawForces();drawDecay();drawStmts();drawWhy();drawRoots();drawPos();
+}
+let playing=false;
+function setPlayLabel(){$('play').textContent=playing?'\u23f8 Pause':'\u25b6 Play';}
+let dirty=false;
+['m','b','k','v0','t','px','pv'].forEach(id=>$(id).addEventListener('input',()=>{
+  if(id==='px'||id==='pv')$('follow').checked=false;
+  if(id==='m'||id==='b'||id==='k'||id==='v0')dirty=true;
+  if(id==='t')dirty=false;
+  playing=false;setPlayLabel();refresh();}));
+['follow','logv','freeze','autozoom'].forEach(id=>$(id).addEventListener('change',refresh));
+attachDrag($('cvFs'),v=>{$('follow').checked=false;clampSet('px',v);});
+attachDrag($('cvFd'),v=>{$('follow').checked=false;clampSet('pv',v);});
+['cvV','cvX','cvPos','cvStmt','cvRemain'].forEach(id=>attachDrag($(id),v=>clampSet('t',v)));
+attachDrag($('cvDisc'),v=>clampSet('k',Math.max(0,v)));
+['al','om','rat'].forEach(id=>$(id).addEventListener('input',()=>{playing=false;setPlayLabel();refresh();}));
+attachDrag($('cvSpiral'),v=>clampSet('t',Math.max(0,v)));
+attachDrag($('cvShadow'),v=>clampSet('t',Math.max(0,v)));
+attachDrag($('cvMono'),()=>{});
+$('cvMono').addEventListener('pointerdown',e=>{
+  const r=$('cvMono').getBoundingClientRect();
+  const py=(e.clientY-r.top)*($('cvMono').height/r.height);
+  const H=$('cvMono').height,T=30,B=42;
+  const el=$('rat'),lo=+el.min,hi=+el.max;
+  const frac=1-(py-T)/(H-T-B);
+  clampSet('rat',lo+(hi-lo)*Math.max(0,Math.min(1,frac)));});
+$('omzero').onclick=()=>{$('om').value=0;refresh();};
+$('linkroot').onclick=()=>{const M=model();
+  if(M.kind==='complex'){$('al').value=Math.max(-1,Math.min(0.3,M.al));$('om').value=Math.max(0,Math.min(4,M.w));}
+  else {$('al').value=Math.max(-1,Math.min(0.3,M.r1));$('om').value=0;}
+  refresh();};
+attachDrag($('cvRoots'),v=>{const kc=P.b*P.b/(4*P.m);clampSet('k',Math.max(0,kc+(v+P.b/(2*P.m))*1.2));});
+document.querySelectorAll('.tabs button').forEach(btn=>btn.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  btn.classList.add('on');$(btn.dataset.p).classList.add('on');refresh();});
+$('k0').onclick=()=>{$('k').value=0;refresh();};
+$('reset').onclick=()=>{playing=false;setPlayLabel();dirty=false;$('m').value=1;$('b').value=0.5;$('k').value=0;$('v0').value=2;$('t').value=0;refresh();};
+$('restart').onclick=()=>{$('t').value=0;dirty=false;refresh();};
+$('play').onclick=()=>{playing=!playing;setPlayLabel();last=0;
+  if(playing){ if(dirty||+$('t').value>=30){$('t').value=0;dirty=false;} requestAnimationFrame(tick);} };
+let last=0;
+function tick(ts){ if(!playing)return;
+  if(!last)last=ts;
+  const dt=Math.min(0.06,(ts-last)/1000);last=ts;
+  let v=+$('t').value+dt*(+$('spd').value)*3;
+  if(v>=30){v=30;playing=false;setPlayLabel();}
+  $('t').value=v;refresh();
+  if(playing)requestAnimationFrame(tick); }
+refresh();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>

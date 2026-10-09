@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spring-mass-dashpot — 18.03 Recitation 6, Problem 2</title>
+<style>
+:root{
+  --bg:#E8EDF1;
+  --panel:#FFFFFF;
+  --ink:#12212E;
+  --muted:#5A6B78;
+  --line:#C7D2DA;
+  --spring:#5A4FCF;
+  --damp:#0F7D66;
+  --vel:#C6522A;
+  --massfill:#DDE7F1;
+  --massline:#41719C;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:16px;
+  line-height:1.65;
+  padding:32px 20px 64px;
+}
+.wrap{max-width:880px;margin:0 auto}
+h1{font-size:24px;font-weight:600;letter-spacing:-0.01em;margin:0 0 4px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 24px}
+.eq{font-family:Georgia,"Times New Roman",serif;font-style:italic}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
+.panel + .panel{margin-top:16px}
+.setup{font-size:15px;margin:0 0 16px}
+.setup p{margin:0 0 10px}
+.setup p:last-child{margin-bottom:0}
+svg{display:block;width:100%;height:auto}
+.controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px}
+button{
+  font:inherit;font-size:14px;padding:8px 16px;border-radius:6px;cursor:pointer;
+  border:1px solid var(--massline);background:var(--massline);color:#fff;
+}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+button:hover{filter:brightness(1.08)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--vel);outline-offset:2px}
+input[type=range]{flex:1;min-width:180px;accent-color:var(--massline)}
+.clock{font-family:Georgia,serif;font-size:15px;color:var(--muted);white-space:nowrap}
+.clock b{color:var(--ink);font-style:normal}
+.readouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px}
+.ro{border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.ro span{display:block;font-size:12px;color:var(--muted)}
+.ro b{font-family:Georgia,serif;font-size:19px;font-weight:400;font-variant-numeric:tabular-nums}
+.ro.spring b{color:var(--spring)}
+.ro.damp b{color:var(--damp)}
+.ro.vel b{color:var(--vel)}
+canvas{display:block;width:100%;height:250px}
+.note{font-size:14px;color:var(--muted);margin:12px 0 0}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:10px}
+.legend i{display:inline-block;width:14px;height:2px;vertical-align:middle;margin-right:6px}
+@media (max-width:520px){body{padding:20px 12px 48px}h1{font-size:20px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>The mass at the moment of release</h1>
+<p class="sub">18.03 Recitation 6, Problem 2 — <span class="eq">m</span> = 1 kg, <span class="eq">k</span> = 17/16 N/m, <span class="eq">b</span> = 1/2 N&middot;s/m</p>
+
+<div class="panel">
+  <div class="setup">
+    <p>The mass is held 1 m to the right of equilibrium and shoved outward at 0.75 m/s, then let go. Press release to start the clock at that instant.</p>
+    <p class="eq" style="font-style:normal">m&#8202;x&#8243; + b&#8202;x&#8242; + k&#8202;x = 0 &nbsp;&nbsp;with&nbsp;&nbsp; x(0) = 1, &nbsp; x&#8242;(0) = 0.75</p>
+  </div>
+
+<svg id="scene" viewBox="0 0 680 372" role="img" aria-label="A one kilogram block on rollers between two walls, held by a spring on the left and an oil dashpot on the right.">
+<defs>
+  <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+
+<line x1="56" y1="278" x2="624" y2="278" stroke="#8FA0AD" stroke-width="1.2"/>
+<g id="ground" stroke="#8FA0AD" stroke-width="0.8" opacity="0.7"></g>
+
+<rect x="40" y="100" width="16" height="178" rx="2" fill="#D3DCE3" stroke="#8FA0AD" stroke-width="0.8"/>
+<rect x="624" y="100" width="16" height="178" rx="2" fill="#D3DCE3" stroke="#8FA0AD" stroke-width="0.8"/>
+<g id="walls" stroke="#8FA0AD" stroke-width="0.8" opacity="0.7"></g>
+
+<line x1="300" y1="104" x2="300" y2="326" stroke="#7E8F9C" stroke-width="0.9" stroke-dasharray="5 5"/>
+<text x="300" y="344" text-anchor="middle" font-size="12" fill="#5A6B78">equilibrium, x = 0</text>
+
+<path id="spring" fill="none" stroke="#5A4FCF" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="150" y="160" text-anchor="middle" font-size="12" fill="#5A4FCF">spring, k = 17/16 N/m</text>
+
+<rect x="445" y="176" width="179" height="40" rx="4" fill="#DCEDE7" stroke="#0F7D66" stroke-width="0.8"/>
+<line id="rod" y1="196" y2="196" stroke="#0F7D66" stroke-width="3" stroke-linecap="round"/>
+<rect id="piston" y="179" width="8" height="34" rx="2" fill="#0F7D66"/>
+<text x="534" y="160" text-anchor="middle" font-size="12" fill="#0F7D66">dashpot, b = 1/2 N&#183;s/m</text>
+
+<g id="cart">
+  <rect x="250" y="140" width="100" height="122" rx="6" fill="#DDE7F1" stroke="#41719C" stroke-width="1"/>
+  <text x="300" y="201" text-anchor="middle" font-size="15" fill="#12212E">m = 1 kg</text>
+  <circle cx="275" cy="270" r="8" fill="#FFFFFF" stroke="#41719C" stroke-width="1.2"/>
+  <circle cx="325" cy="270" r="8" fill="#FFFFFF" stroke="#41719C" stroke-width="1.2"/>
+</g>
+
+<line id="varr" y1="122" y2="122" stroke="#C6522A" stroke-width="2.6" marker-end="url(#ah)"/>
+<text id="vlab" y="110" text-anchor="middle" font-size="12" fill="#C6522A"></text>
+
+<line id="xarr" y1="312" y2="312" stroke="#5A6B78" stroke-width="1.4" marker-start="url(#ah)" marker-end="url(#ah)"/>
+<text id="xlab" y="304" text-anchor="middle" font-size="12" fill="#5A6B78"></text>
+</svg>
+
+  <div class="controls">
+    <button id="play">Release the mass</button>
+    <button id="reset" class="ghost">Back to t = 0</button>
+    <input id="slider" type="range" min="0" max="24" step="0.01" value="0" aria-label="Time in seconds">
+    <span class="clock">t = <b id="tv">0.00</b> s</span>
+  </div>
+
+  <div class="readouts">
+    <div class="ro"><span>position x</span><b id="xv">1.000</b> m</div>
+    <div class="ro vel"><span>velocity x&#8242;</span><b id="vv">0.750</b> m/s</div>
+    <div class="ro spring"><span>spring force &#8722;kx</span><b id="fs">&#8722;1.063</b> N</div>
+    <div class="ro damp"><span>damping force &#8722;bx&#8242;</span><b id="fd">&#8722;0.375</b> N</div>
+  </div>
+</div>
+
+<div class="panel">
+  <canvas id="graph" aria-label="Graph of position against time, with the decaying envelope."></canvas>
+  <div class="legend">
+    <span><i style="background:#41719C"></i>x(t) = &#8730;2&#8202;e<sup>&#8722;t/4</sup>cos(t &#8722; &#960;/4)</span>
+    <span><i style="background:#C0392B"></i>envelope &#177;&#8730;2&#8202;e<sup>&#8722;t/4</sup></span>
+    <span><i style="background:#7E8F9C"></i>equilibrium crossings</span>
+  </div>
+  <p class="note">The bar at the far left is the mass&#8217;s own track, stood upright so that right in the apparatus becomes up on the page. The block slides along it and never sideways; the curve appears only because time carries the pen rightward across the page.</p>
+  <p class="note">The four marked crossings are at 3&#960;/4, 7&#960;/4, 11&#960;/4 and 15&#960;/4 seconds — evenly spaced by &#960;, which is half the pseudoperiod of 2&#960; &#8776; 6.28 s.</p>
+</div>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var M = 1, B = 0.5, K = 17 / 16;
+  var P = B / (2 * M);                    // decay rate 1/4
+  var W = Math.sqrt(K / M - P * P);       // circular frequency 1
+  var AMP = Math.SQRT2;                   // amplitude
+  var PHI = Math.PI / 4;                  // phase lag
+  var TMAX = 24;
+
+  // x(t) = e^{-t/4} (cos t + sin t) = sqrt(2) e^{-t/4} cos(t - pi/4)
+  function xOf(t) { return Math.exp(-P * t) * (Math.cos(W * t) + Math.sin(W * t)); }
+  function vOf(t) {
+    var e = Math.exp(-P * t), c = Math.cos(W * t), s = Math.sin(W * t);
+    return e * (-P * (c + s) + W * (c - s));
+  }
+
+  var SCALE = 60;   // pixels per metre
+  var EQ = 300;     // pixel position of x = 0 (block centre)
+  var ROD = 130;    // dashpot rod length in pixels
+
+  var el = function (id) { return document.getElementById(id); };
+  var spring = el("spring"), rod = el("rod"), piston = el("piston"), cart = el("cart");
+  var varr = el("varr"), vlab = el("vlab"), xarr = el("xarr"), xlab = el("xlab");
+  var slider = el("slider"), play = el("play"), reset = el("reset");
+  var canvas = el("graph"), ctx = canvas.getContext("2d");
+
+  // hatching on the ground and the two walls
+  (function hatch() {
+    var g = el("ground"), w = el("walls"), i, ln;
+    function line(x1, y1, x2, y2, parent) {
+      ln = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      ln.setAttribute("x1", x1); ln.setAttribute("y1", y1);
+      ln.setAttribute("x2", x2); ln.setAttribute("y2", y2);
+      parent.appendChild(ln);
+    }
+    for (i = 76; i < 624; i += 30) line(i, 278, i - 8, 288, g);
+    for (i = 112; i < 278; i += 30) { line(40, i, 28, i + 12, w); line(640, i, 652, i + 12, w); }
+  })();
+
+  function coil(x1, x2, y, amp, n) {
+    var a = x1 + 14, b = x2 - 14, step = (b - a) / n;
+    var d = "M" + x1 + " " + y + " L" + a.toFixed(1) + " " + y;
+    for (var i = 0; i < n; i++) {
+      d += " L" + (a + step * (i + 0.5)).toFixed(1) + " " + (y + (i % 2 ? amp : -amp));
+    }
+    return d + " L" + b.toFixed(1) + " " + y + " L" + x2.toFixed(1) + " " + y;
+  }
+
+  function fmt(v) {
+    var s = Math.abs(v) < 0.0005 ? 0 : v;
+    return (s < 0 ? "\u2212" : "") + Math.abs(s).toFixed(3);
+  }
+
+  function drawScene(t) {
+    var x = xOf(t), v = vOf(t), dx = SCALE * x;
+    var left = 250 + dx, right = 350 + dx, centre = EQ + dx;
+
+    cart.setAttribute("transform", "translate(" + dx.toFixed(2) + ",0)");
+    spring.setAttribute("d", coil(56, left, 196, 13, 16));
+
+    var p = Math.max(455, Math.min(614, right + ROD));
+    rod.setAttribute("x1", right.toFixed(1));
+    rod.setAttribute("x2", p.toFixed(1));
+    piston.setAttribute("x", (p - 4).toFixed(1));
+
+    if (Math.abs(v) < 0.03) {
+      varr.setAttribute("opacity", 0); vlab.setAttribute("opacity", 0);
+    } else {
+      varr.setAttribute("opacity", 1); vlab.setAttribute("opacity", 1);
+      var sgn = v > 0 ? 1 : -1, len = Math.min(54, 12 + 42 * Math.abs(v));
+      var a = centre + sgn * 58, b = centre + sgn * (58 + len);
+      varr.setAttribute("x1", a.toFixed(1));
+      varr.setAttribute("x2", b.toFixed(1));
+      vlab.setAttribute("x", ((a + b) / 2).toFixed(1));
+      vlab.textContent = Math.abs(v).toFixed(2) + " m/s " + (v > 0 ? "right" : "left");
+    }
+
+    if (Math.abs(dx) < 7) {
+      xarr.setAttribute("opacity", 0); xlab.setAttribute("opacity", 0);
+    } else {
+      xarr.setAttribute("opacity", 1); xlab.setAttribute("opacity", 1);
+      xarr.setAttribute("x1", EQ);
+      xarr.setAttribute("x2", centre.toFixed(1));
+      xlab.setAttribute("x", (EQ + dx / 2).toFixed(1));
+      xlab.textContent = fmt(x) + " m";
+    }
+
+    el("tv").textContent = t.toFixed(2);
+    el("xv").textContent = fmt(x);
+    el("vv").textContent = fmt(v);
+    el("fs").textContent = fmt(-K * x);
+    el("fd").textContent = fmt(-B * v);
+  }
+
+  var gw = 0, gh = 0;
+  function sizeCanvas() {
+    var dpr = window.devicePixelRatio || 1;
+    gw = canvas.clientWidth; gh = canvas.clientHeight;
+    canvas.width = Math.round(gw * dpr);
+    canvas.height = Math.round(gh * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function drawGraph(t) {
+    var padL = 104, padR = 14, padT = 14, padB = 26;
+    var w = gw - padL - padR, h = gh - padT - padB;
+    var YMAX = 1.85;
+    var X = function (tt) { return padL + (tt / TMAX) * w; };
+    var Y = function (xx) { return padT + h / 2 - (xx / YMAX) * (h / 2); };
+
+    ctx.clearRect(0, 0, gw, gh);
+
+    ctx.strokeStyle = "#D8E0E6"; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (var g = -1; g <= 1; g++) { ctx.moveTo(padL, Y(g)); ctx.lineTo(padL + w, Y(g)); }
+    ctx.stroke();
+
+    ctx.strokeStyle = "#8FA0AD";
+    ctx.beginPath(); ctx.moveTo(padL, Y(0)); ctx.lineTo(padL + w, Y(0)); ctx.stroke();
+
+    ctx.fillStyle = "#5A6B78";
+    ctx.font = "12px -apple-system, Segoe UI, Roboto, sans-serif";
+    ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.fillText("1", padL - 8, Y(1));
+    ctx.fillText("0", padL - 8, Y(0));
+    ctx.fillText("\u22121", padL - 8, Y(-1));
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    for (var s = 0; s <= TMAX; s += 4) ctx.fillText(String(s), X(s), padT + h + 6);
+    ctx.textAlign = "right";
+    ctx.fillText("seconds", padL + w, padT + h + 6);
+
+    ctx.strokeStyle = "#C0392B"; ctx.setLineDash([4, 4]); ctx.lineWidth = 1.2;
+    var k, tt;
+    for (var sign = -1; sign <= 1; sign += 2) {
+      ctx.beginPath();
+      for (k = 0; k <= 400; k++) {
+        tt = TMAX * k / 400;
+        var e = sign * AMP * Math.exp(-P * tt);
+        if (k === 0) ctx.moveTo(X(tt), Y(e)); else ctx.lineTo(X(tt), Y(e));
+      }
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    ctx.strokeStyle = "#C3CED6"; ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    for (k = 0; k <= 900; k++) {
+      tt = TMAX * k / 900;
+      if (k === 0) ctx.moveTo(X(tt), Y(xOf(tt))); else ctx.lineTo(X(tt), Y(xOf(tt)));
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = "#41719C"; ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    var n = Math.max(1, Math.round(900 * t / TMAX));
+    for (k = 0; k <= n; k++) {
+      tt = t * k / n;
+      if (k === 0) ctx.moveTo(X(tt), Y(xOf(tt))); else ctx.lineTo(X(tt), Y(xOf(tt)));
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = "#7E8F9C";
+    for (var i = 0; i < 4; i++) {
+      var z = 3 * Math.PI / 4 + i * Math.PI;
+      ctx.beginPath(); ctx.arc(X(z), Y(0), 3.5, 0, 2 * Math.PI); ctx.fill();
+    }
+
+    // the mass's own track, stood upright so that "right" points up the page
+    var tx = 44, xt = xOf(t), yt = Y(xt);
+
+    ctx.strokeStyle = "#8FA0AD"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(tx, Y(1.5)); ctx.lineTo(tx, Y(-1.5)); ctx.stroke();
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(tx - 7, Y(0)); ctx.lineTo(tx + 7, Y(0)); ctx.stroke();
+
+    ctx.fillStyle = "#5A6B78"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("right", tx, Y(1.72));
+    ctx.fillText("left", tx, Y(-1.72));
+
+    ctx.setLineDash([3, 3]); ctx.strokeStyle = "#8FA0AD"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(tx + 15, yt); ctx.lineTo(X(t), yt); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = "#DDE7F1"; ctx.strokeStyle = "#41719C"; ctx.lineWidth = 1.2;
+    ctx.fillRect(tx - 14, yt - 11, 28, 22);
+    ctx.strokeRect(tx - 14, yt - 11, 28, 22);
+
+    ctx.fillStyle = "#41719C";
+    ctx.beginPath(); ctx.arc(X(t), Y(xOf(t)), 5, 0, 2 * Math.PI); ctx.fill();
+  }
+
+  var t = 0, running = false, last = null;
+
+  function render() { drawScene(t); drawGraph(t); }
+
+  function setLabel() {
+    if (running) play.textContent = "Pause";
+    else play.textContent = (t === 0) ? "Release the mass" : "Resume";
+  }
+
+  function frame(ts) {
+    if (last === null) last = ts;
+    var dt = (ts - last) / 1000;
+    last = ts;
+    if (running) {
+      t += dt;
+      if (t >= TMAX) { t = TMAX; running = false; setLabel(); }
+      slider.value = t;
+      render();
+    }
+    requestAnimationFrame(frame);
+  }
+
+  play.addEventListener("click", function () {
+    if (t >= TMAX) t = 0;
+    running = !running;
+    last = null;
+    setLabel();
+    render();
+  });
+
+  reset.addEventListener("click", function () {
+    running = false; t = 0; slider.value = 0; setLabel(); render();
+  });
+
+  slider.addEventListener("input", function () {
+    running = false;
+    t = parseFloat(slider.value);
+    setLabel();
+    render();
+  });
+
+  window.addEventListener("resize", function () { sizeCanvas(); drawGraph(t); });
+
+  sizeCanvas();
+  setLabel();
+  render();
+  requestAnimationFrame(frame);
+})();
+</script>
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>
