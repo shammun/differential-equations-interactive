@@ -33,7 +33,12 @@ DESCRIPTIONS = {
     "phase_direction_explorer": "Which way does the phase-plane ellipse turn, and why? Drag the dot, change the damping and watch the arrows.",
     "spiral_sink_walkthrough": "A step-by-step construction of the direction field and the trajectories spiralling into the origin.",
     "recitation5_walkthrough": "The system ẋ = sin(x + y), ẏ = sin(x − y), linearized from first principles.",
-    "trig_identity_mathlet": "a cos(ωt) + b sin(ωt) = A cos(ωt − φ): see how two sinusoids combine into one.",
+    "3_6_13_pendulum_energy_portrait": "The frictionless pendulum θ̇ = ω, ω̇ = −sin θ: its phase portrait built from level curves of the energy E, step by step.",
+    "3_6_14_pendulum_energy_portrait": "The pendulum's phase portrait from level curves of E, extended: with damping, the eigenvalues show why the bottom becomes a spiral sink.",
+    "nodal_source_explorer": "ẋ = 3x, ẏ = y: watch the fast and slow directions of a nodal source as time runs forwards and backwards.",
+    "recitation6_population_models": "18.03x Recitation 6: population models, stability and structural stability, every part solved step by step.",
+    "saddle_eigenline_explorer": "The deer–wolf saddle at (3, 0): follow a solution in along the λ = −3 eigenline and out along the λ = 4 one.",
+    "trig_identity_mathlet":"a cos(ωt) + b sin(ωt) = A cos(ωt − φ): see how two sinusoids combine into one.",
 }
 
 

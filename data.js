@@ -315,6 +315,14 @@ window.COURSES = [
     "name": "The geometry of solutions",
     "items": [
      {
+      "id": "c2-u2-3-6-14-pendulum-energy-portrait",
+      "title": "Pendulum energy portrait",
+      "desc": "The pendulum's phase portrait from level curves of E, extended: with damping, the eigenvalues show why the bottom becomes a spiral sink.",
+      "lesson": "",
+      "src": "explorers/c2/u2/3-6-14-pendulum-energy-portrait.html",
+      "kb": 2474
+     },
+     {
       "id": "c2-u2-critical-parabola-walkthrough",
       "title": "On the critical parabola: degenerate and star nodes",
       "desc": "Degenerate node and star node, built up from scratch, one step at a time.",
@@ -345,12 +353,44 @@ window.COURSES = [
     "name": "Nonlinear 2×2 systems",
     "items": [
      {
+      "id": "c2-u3-3-6-13-pendulum-energy-portrait",
+      "title": "Pendulum energy portrait",
+      "desc": "The frictionless pendulum θ̇ = ω, ω̇ = −sin θ: its phase portrait built from level curves of the energy E, step by step.",
+      "lesson": "",
+      "src": "explorers/c2/u3/3-6-13-pendulum-energy-portrait.html",
+      "kb": 2466
+     },
+     {
+      "id": "c2-u3-nodal-source-explorer",
+      "title": "Nodal Source Explorer",
+      "desc": "ẋ = 3x, ẏ = y: watch the fast and slow directions of a nodal source as time runs forwards and backwards.",
+      "lesson": "",
+      "src": "explorers/c2/u3/nodal-source-explorer.html",
+      "kb": 25
+     },
+     {
       "id": "c2-u3-recitation5-walkthrough",
       "title": "Linearization, step by step: Recitation 5",
       "desc": "The system ẋ = sin(x + y), ẏ = sin(x − y), linearized from first principles.",
       "lesson": "",
       "src": "explorers/c2/u3/recitation5-walkthrough.html",
       "kb": 2449
+     },
+     {
+      "id": "c2-u3-recitation6-population-models",
+      "title": "Deer, Wolves, Sharks and Squids",
+      "desc": "18.03x Recitation 6: population models, stability and structural stability, every part solved step by step.",
+      "lesson": "",
+      "src": "explorers/c2/u3/recitation6-population-models.html",
+      "kb": 2675
+     },
+     {
+      "id": "c2-u3-saddle-eigenline-explorer",
+      "title": "Saddle Eigenline Explorer",
+      "desc": "The deer–wolf saddle at (3, 0): follow a solution in along the λ = −3 eigenline and out along the λ = 4 one.",
+      "lesson": "",
+      "src": "explorers/c2/u3/saddle-eigenline-explorer.html",
+      "kb": 27
      }
     ]
    }

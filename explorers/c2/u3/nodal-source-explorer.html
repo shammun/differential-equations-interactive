@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>html,body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<title>Nodal Source Explorer</title>
+<style>
+/* Layout: one-screen app on laptops (viz + controls left, live-calc panel right); stacked and scrollable on phones. Floating explanation overlay over the viz. */
+:root{
+  --bg:#eef3fb; --card:#ffffff; --fg:#1d2433; --muted:#5b6578; --line:#d6deec;
+  --shadow:0 6px 22px rgba(104,86,201,.14);
+  --orange:#e8832a; --teal:#1a9c8d; --purple:#6b5bd2; --purpleSoft:#ebe7fb; --red:#d4454a;
+  --grid:#dbe3f2; --axis:#8e9ab3; --curve:#9bb0d4;
+  --font:"Source Sans 3",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#121829; --card:#1b2238; --fg:#e8ecf5; --muted:#a3adc4; --line:#2e3852;
+  --shadow:0 6px 22px rgba(0,0,0,.35); --purpleSoft:#2a2550; --grid:#242d45; --axis:#7784a3; --curve:#4c5d85; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#121829; --card:#1b2238; --fg:#e8ecf5; --muted:#a3adc4; --line:#2e3852;
+  --shadow:0 6px 22px rgba(0,0,0,.35); --purpleSoft:#2a2550; --grid:#242d45; --axis:#7784a3; --curve:#4c5d85; color-scheme:dark }
+
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.45;margin:0}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+#app{height:100%;display:grid;grid-template-columns:minmax(0,1fr) 360px;grid-template-rows:auto minmax(0,1fr);gap:12px;padding:12px 16px}
+header{grid-column:1/-1;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+header h1{font-size:19px;margin:0;font-weight:600}
+header .sys{font-family:var(--mono);font-size:13px;color:var(--muted)}
+header .spacer{flex:1}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:8px;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer;text-decoration:none}
+.btn.primary{background:var(--purple);border-color:var(--purple);color:#fff}
+.btn:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+
+#left{min-width:0;min-height:0;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:10px;position:relative}
+#vizwrap{position:relative;min-height:0;background:var(--card);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+canvas{display:block;width:100%;height:100%}
+#legend{position:absolute;left:10px;top:8px;font-size:12px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;pointer-events:none}
+#legend span::before{content:"";display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle;background:var(--c)}
+
+#controls{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:10px 14px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 16px}
+.ctl label{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.ctl label b{font-family:var(--mono);color:var(--fg);font-weight:500}
+.ctl input[type=range]{width:100%;accent-color:var(--purple)}
+.toggles{grid-column:1/-1;display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.toggles label{display:flex;align-items:center;gap:5px}
+
+#live{min-height:0;overflow:auto;background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px}
+#live h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:600}
+.row{display:grid;grid-template-columns:1fr;gap:2px;padding:6px 0;border-top:1px solid var(--line);font-size:14px}
+.row:first-of-type{border-top:0}
+.row .k{font-family:var(--mono);font-size:13px;color:var(--muted);white-space:nowrap}
+.row .v{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
+.row .v b{font-weight:600}
+.note{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--purpleSoft);font-size:13.5px}
+.note b{color:var(--purple)}
+.tx{color:var(--orange)} .ty{color:var(--teal)}
+
+/* floating explanation */
+#explain{position:absolute;inset:10px;background:var(--card);border-radius:14px;box-shadow:var(--shadow);border:1px solid var(--line);display:flex;flex-direction:column;z-index:5}
+#explain .bar{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+#explain .tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:4px 11px;font:inherit;font-size:13px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--purple);border-color:var(--purple);color:#fff}
+#explain .bar .spacer{flex:1}
+#explain .body{overflow:auto;padding:14px 18px;font-size:15px;max-width:72ch}
+.body h3{margin:0 0 8px;font-size:18px;text-wrap:balance}
+.body p{margin:0 0 10px}
+.body table{border-collapse:collapse;font-family:var(--mono);font-size:13px;margin:8px 0 12px;font-variant-numeric:tabular-nums}
+.body td,.body th{border:1px solid var(--line);padding:4px 9px;text-align:right}
+.body th{color:var(--muted);font-weight:500}
+.key{padding:10px 12px;border-left:4px solid var(--orange);background:var(--purpleSoft);border-radius:8px;margin:10px 0}
+mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.step{display:none}.step.on{display:block}
+
+body.solo #app{grid-template-columns:1fr}
+body.solo #left,body.solo #live,body.solo #openTab,body.solo #explainBtn{display:none}
+body.solo #explainSolo{display:block;background:var(--card);border-radius:14px;box-shadow:var(--shadow);overflow:auto;min-height:0}
+#explainSolo{display:none}
+
+@media (max-width:900px){
+  html,body{height:auto}
+  #app{height:auto;grid-template-columns:1fr;grid-template-rows:auto auto auto}
+  #vizwrap{aspect-ratio:1/1;max-width:100%}
+  #controls{grid-template-columns:1fr 1fr}
+  #explain{position:fixed;inset:8px;z-index:50}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<script>
+window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg:{fontCache:'global'}};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js"></script>
+
+<div id="app">
+<header>
+  <h1>Nodal Source Explorer</h1>
+  <span class="sys">ẋ = 3x, ẏ = y &nbsp;·&nbsp; λ = 3 (x-axis), λ = 1 (y-axis)</span>
+  <span class="spacer"></span>
+  <button class="btn primary" id="explainBtn">Explain, step by step</button>
+</header>
+
+<div id="left">
+  <div id="vizwrap">
+    <canvas id="cv"></canvas>
+    <div id="legend">
+      <span style="--c:var(--orange)">x-axis, fast direction (λ=3)</span>
+      <span style="--c:var(--teal)">y-axis, slow direction (λ=1)</span>
+      <span style="--c:var(--purple)">chosen solution</span>
+      <span style="--c:var(--curve)">other solutions</span>
+    </div>
+    <div id="explain" hidden>
+      <div class="bar">
+        <div class="tabs" role="tablist" id="tabs"></div>
+        <span class="spacer"></span>
+        <a class="btn" id="openTab" href="#explain" target="_blank">Open in new tab</a>
+        <button class="btn" id="closeExplain">Close</button>
+      </div>
+      <div class="body" id="explainBody"></div>
+    </div>
+  </div>
+  <div id="controls">
+    <div class="ctl"><label>time t <b id="tv">0.00</b></label><input type="range" id="t" min="-3" max="1.5" step="0.01" value="0"></div>
+    <div class="ctl"><label>start x₀ <b id="x0v">1.0</b></label><input type="range" id="x0" min="-3" max="3" step="0.1" value="1"></div>
+    <div class="ctl"><label>start y₀ <b id="y0v">1.0</b></label><input type="range" id="y0" min="-3" max="3" step="0.1" value="1"></div>
+    <div class="ctl"><label>zoom (window half-width) <b id="Lv">3.00</b></label><input type="range" id="L" min="-2.3" max="1.1" step="0.01" value="1.1"></div>
+    <div class="toggles">
+      <label><input type="checkbox" id="showField" checked> direction field</label>
+      <label><input type="checkbox" id="showFamily" checked> other solutions</label>
+      <label><input type="checkbox" id="showVel" checked> velocity arrow</label>
+      <button class="btn" id="play" type="button">▶ Play t</button>
+    </div>
+  </div>
+</div>
+
+<div id="live">
+  <h2>Live calculation</h2>
+  <div id="liveRows"></div>
+  <div class="note" id="liveNote"></div>
+</div>
+
+<div id="explainSolo"></div>
+</div>
+
+<script>
+// ---------- state ----------
+const S={t:0,x0:1,y0:1,L:3,field:true,family:true,vel:true};
+const $=id=>document.getElementById(id);
+const solo=location.hash==='#explain';
+const chan=('BroadcastChannel' in window)?new BroadcastChannel('nodal-source-explorer'):null;
+let step=0;
+
+// ---------- math ----------
+const X=t=>S.x0*Math.exp(3*t), Y=t=>S.y0*Math.exp(t);
+const f=(x,y)=>[3*x,y];
+const fmt=(v,d=4)=>{ if(!isFinite(v))return '—'; const a=Math.abs(v); if(a!==0&&(a<1e-3||a>=1e4)) return v.toExponential(2); return v.toFixed(d); };
+
+// ---------- canvas ----------
+const cv=$('cv'); const ctx=cv.getContext('2d');
+let W=0,H=0,dpr=1;
+function resize(){ const r=cv.getBoundingClientRect(); dpr=window.devicePixelRatio||1; W=r.width;H=r.height; cv.width=W*dpr;cv.height=H*dpr; draw(); }
+new ResizeObserver(resize).observe($('vizwrap'));
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function map(x,y){ const s=Math.min(W,H)/2/S.L; return [W/2+x*s, H/2-y*s]; }
+function inBox(x,y){ return Math.abs(x)<=S.L*1.05 && Math.abs(y)<=S.L*1.05; }
+
+function arrowHead(px,py,ang,size,color){
+  ctx.save();ctx.translate(px,py);ctx.rotate(ang);ctx.fillStyle=color;
+  ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-size,size*0.5);ctx.lineTo(-size,-size*0.5);ctx.closePath();ctx.fill();ctx.restore();
+}
+function drawCurve(C,color,width,withArrow){
+  // orbit x = C y^3, both y>0 and y<0 branches; moving outward as t increases
+  for(const sgn of [1,-1]){
+    ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=width; let first=true; let pts=[];
+    const N=200;
+    for(let i=0;i<=N;i++){ const y=sgn*S.L*1.05*i/N; const x=C*y*y*y; if(!inBox(x,y)) break; const [px,py]=map(x,y); pts.push([px,py]); if(first){ctx.moveTo(px,py);first=false;} else ctx.lineTo(px,py); }
+    ctx.stroke();
+    if(withArrow&&pts.length>40){ const k=Math.floor(pts.length*0.55); const [a,b]=pts[k],[c,d]=pts[k+1]; arrowHead(c,d,Math.atan2(d-b,c-a),7,color); }
+  }
+}
+function draw(){
+  if(!W) return;
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+  const cOr=css('--orange'),cTe=css('--teal'),cPu=css('--purple'),cCu=css('--curve'),cGr=css('--grid'),cAx=css('--axis'),cFg=css('--fg'),cMu=css('--muted');
+  // grid
+  ctx.strokeStyle=cGr;ctx.lineWidth=1;
+  const stepG=niceStep(S.L);
+  for(let v=-Math.ceil(S.L/stepG)*stepG; v<=S.L+1e-9; v+=stepG){ const [px,py]=map(v,v); ctx.beginPath();ctx.moveTo(px,0);ctx.lineTo(px,H);ctx.stroke(); ctx.beginPath();ctx.moveTo(0,py);ctx.lineTo(W,py);ctx.stroke(); }
+  // direction field
+  if(S.field){ const n=16; for(let i=0;i<n;i++)for(let j=0;j<n;j++){ const x=-S.L+(i+0.5)*2*S.L/n, y=-S.L+(j+0.5)*2*S.L/n; const [u,v]=f(x,y); const m=Math.hypot(u,v); if(m<1e-12)continue; const len=Math.min(W,H)/n*0.42; const [px,py]=map(x,y); const dx=u/m*len,dy=-v/m*len; ctx.strokeStyle=cAx;ctx.globalAlpha=.55;ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(px-dx/2,py-dy/2);ctx.lineTo(px+dx/2,py+dy/2);ctx.stroke(); arrowHead(px+dx/2,py+dy/2,Math.atan2(dy,dx),4,cAx); ctx.globalAlpha=1; } }
+  // family of orbits: through (±L, ±sL) and (±sL, ±L) at the current zoom
+  if(S.family){ const Cs=[]; for(const s of [0.12,0.25,0.4,0.6,0.8,1]) Cs.push(S.L/Math.pow(s*S.L,3)); for(const s of [0.08,0.25,0.5]) Cs.push(s*S.L/Math.pow(S.L,3)); for(const C of Cs){ drawCurve(C,cCu,1.4,true); drawCurve(-C,cCu,1.4,true);} }
+  // eigen-directions (axes), both are orbits
+  const [ox,oy]=map(0,0);
+  ctx.lineWidth=2.5;ctx.strokeStyle=cOr;ctx.beginPath();ctx.moveTo(0,oy);ctx.lineTo(W,oy);ctx.stroke();
+  arrowHead(W-8,oy,0,8,cOr);arrowHead(8,oy,Math.PI,8,cOr);
+  ctx.strokeStyle=cTe;ctx.beginPath();ctx.moveTo(ox,0);ctx.lineTo(ox,H);ctx.stroke();
+  arrowHead(ox,8,-Math.PI/2,8,cTe);arrowHead(ox,H-8,Math.PI/2,8,cTe);
+  // axis labels
+  ctx.fillStyle=cMu;ctx.font='12px '+css('--mono');
+  const m0=Math.min(W,H); ctx.fillText('x', W-14, oy-6); ctx.fillText('y', ox+6, 40);
+  ctx.fillText((S.L*W/m0).toPrecision(2), W-44, oy+14); ctx.fillText((S.L*H/m0).toPrecision(2), ox+6, 54);
+  // chosen solution path
+  if(S.x0!==0||S.y0!==0){
+    ctx.strokeStyle=cPu;ctx.lineWidth=3;ctx.beginPath(); let first=true;
+    for(let t=-12;t<=4;t+=0.01){ const x=X(t),y=Y(t); if(!inBox(x,y)){ if(!first)break; continue;} const [px,py]=map(x,y); if(first){ctx.moveTo(px,py);first=false;} else ctx.lineTo(px,py); }
+    ctx.stroke();
+    // moving point
+    const x=X(S.t),y=Y(S.t); const [px,py]=map(x,y);
+    if(S.vel){ const [u,v]=f(x,y); const m=Math.hypot(u,v); const len=Math.min(W,H)*0.11; const dx=u/m*len,dy=-v/m*len; ctx.strokeStyle=cPu;ctx.lineWidth=2;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px+dx,py+dy);ctx.stroke(); arrowHead(px+dx,py+dy,Math.atan2(dy,dx),8,cPu); }
+    // projections onto axes
+    ctx.setLineDash([4,4]);ctx.lineWidth=1.2;
+    ctx.strokeStyle=cOr;ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px,oy);ctx.stroke();
+    ctx.strokeStyle=cTe;ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(ox,py);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle=cPu;ctx.beginPath();ctx.arc(px,py,6,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle=css('--card');ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle=cFg;ctx.font='12px '+css('--mono'); ctx.fillText('('+fmt(x,3)+', '+fmt(y,3)+')', px+10, py-10);
+  }
+}
+function niceStep(L){ const raw=L/3; const p=Math.pow(10,Math.floor(Math.log10(raw))); const m=raw/p; return (m<1.5?1:m<3.5?2:m<7.5?5:10)*p; }
+
+// ---------- live panel ----------
+function live(){
+  const t=S.t,x=X(t),y=Y(t); const [u,v]=f(x,y);
+  const ratio=(S.y0!==0)?x/y:NaN;
+  const rows=[
+    ['t', fmt(t,2)],
+    ['x(t) = x₀·exp(3t)', `${fmt(S.x0,1)} × exp(${fmt(3*t,2)}) = ${fmt(S.x0,1)} × ${fmt(Math.exp(3*t))} = <b class="tx">${fmt(x)}</b>`],
+    ['y(t) = y₀·exp(t)', `${fmt(S.y0,1)} × exp(${fmt(t,2)}) = ${fmt(S.y0,1)} × ${fmt(Math.exp(t))} = <b class="ty">${fmt(y)}</b>`],
+    ['x/y = (x₀/y₀)·exp(2t)', S.y0!==0?`${fmt(S.x0/S.y0,2)} × ${fmt(Math.exp(2*t))} = <b>${fmt(ratio)}</b>`:'undefined (y₀ = 0, stays on x-axis)'],
+    ['distance to origin', `√(x²+y²) = <b>${fmt(Math.hypot(x,y))}</b>`],
+    ['velocity (ẋ, ẏ) = (3x, y)', `(<span class="tx">${fmt(u)}</span>, <span class="ty">${fmt(v)}</span>)`],
+    ['direction of motion', (x||y)?`angle from x-axis = <b>${fmt(Math.atan2(v,u)*180/Math.PI,1)}°</b>`:'—'],
+  ];
+  $('liveRows').innerHTML=rows.map(r=>`<div class="row"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`).join('');
+  let note;
+  if(S.x0===0&&S.y0===0) note='Start exactly at the origin: the equilibrium. Nothing moves.';
+  else if(S.y0===0) note='Start on the x-axis: y stays 0 forever, the point slides straight out along the x-axis (the λ=3 eigenvector line).';
+  else if(S.x0===0) note='Start on the y-axis: x stays 0 forever, the point slides straight out along the y-axis (the λ=1 eigenvector line).';
+  else if(t<-1.2) note=`<b>Near the origin (t = ${fmt(t,2)}, going back in time):</b> exp(3t) has crushed x to ${fmt(x)} while exp(t) left y at ${fmt(y)}. The ratio x/y = ${fmt(ratio)} is tiny, so the point sits almost on the y-axis. That is what "tangent to the y-axis near (0,0)" means.`;
+  else if(t>0.6) note=`<b>Far from the origin (t = ${fmt(t,2)}):</b> now exp(3t) makes x explode (${fmt(x)}) while y only grows to ${fmt(y)}. x/y = ${fmt(ratio)} is large, so the motion is nearly parallel to the x-axis, the fast direction.`;
+  else note=`<b>Middle of the journey:</b> both coordinates grow (x ×${fmt(Math.exp(3*t),2)} vs y ×${fmt(Math.exp(t),2)} since t = 0). The velocity arrow points away from the origin: this is a <b>source</b>. Drag t left to see the tangency, right to see the fast direction take over.`;
+  $('liveNote').innerHTML=note;
+}
+
+// ---------- explanation ----------
+const steps=[
+ {title:'1 · What the two equations say', html:()=>`
+ <h3>Two separate, very simple equations</h3>
+ <p>The linearized system is \\(\\dot x = 3x\\), \\(\\dot y = y\\). Because the matrix \\(\\begin{pmatrix}3&0\\\\0&1\\end{pmatrix}\\) is diagonal, \\(x\\) and \\(y\\) do not talk to each other at all. Each one is a one-variable equation of the form "rate of change is proportional to the amount".</p>
+ <p>The eigenvectors \\(\\binom{1}{0}\\) and \\(\\binom{0}{1}\\) are just the two axes. So the <span class="tx"><b>x-axis is the eigen-direction for λ = 3</b></span> and the <span class="ty"><b>y-axis is the eigen-direction for λ = 1</b></span>. A point that starts on an axis stays on that axis forever (try x₀ = 0 or y₀ = 0 on the sliders).</p>
+ <p>Read \\(\\dot x = 3x\\) as: "x grows at 3 per unit of x". Read \\(\\dot y = y\\) as: "y grows at 1 per unit of y". <b>x is the fast coordinate, y is the slow coordinate.</b> Everything below follows from that one sentence.</p>`},
+ {title:'2 · Write down the solutions', html:()=>`
+ <h3>Solve each equation on its own</h3>
+ <p>\\(\\dot x = 3x\\) has solution \\(x(t) = x_0\\,\\exp(3t)\\) and \\(\\dot y = y\\) has solution \\(y(t) = y_0\\,\\exp(t)\\). So every solution is</p>
+ \\[\\binom{x(t)}{y(t)} = x_0\\exp(3t)\\binom{1}{0} + y_0\\exp(t)\\binom{0}{1}.\\]
+ <p>Concrete numbers, starting at \\((x_0,y_0)=(${fmt(S.x0,1)},\\,${fmt(S.y0,1)})\\) (the current sliders):</p>
+ ${table()}
+ <p>Watch the two columns: going <b>forward</b> in time x races ahead of y; going <b>backward</b> in time x collapses to zero long before y does. Everything about the picture is in this table.</p>`},
+ {title:'3 · Why "nodal source"', html:()=>`
+ <h3>Source: everything flows out of the origin</h3>
+ <p>Both \\(\\exp(3t)\\) and \\(\\exp(t)\\) <b>grow</b> as \\(t\\) increases. So whatever point you start from (other than the origin itself), both coordinates get bigger in size and the point moves away from \\((0,0)\\). Press <b>Play</b> and watch the dot: it always runs outward. A point everything runs away from is a <b>source</b>.</p>
+ <p>Going backward in time (\\(t\\to-\\infty\\)) both factors shrink to zero, so every curve, traced backward, ends up at the origin. That is why all the curves in the picture seem to be born at \\((0,0)\\).</p>
+ <h3>Node: no spinning, no saddle</h3>
+ <p>The word <b>node</b> says what kind of source it is. The eigenvalues are real (no complex part, so no rotation, so not a spiral) and they have the <b>same sign</b> (both positive, so not a saddle, where one direction pulls in and the other pushes out). Real, distinct, same-sign eigenvalues always give a node. Positive sign makes it a nodal <b>source</b>; if both were negative every arrow would reverse and it would be a nodal <b>sink</b>.</p>`},
+ {title:'4 · Why tangent to the y-axis', html:()=>`
+ <h3>The part that feels backwards</h3>
+ <p>"Near the origin" means we are looking at the curve as \\(t\\to-\\infty\\), because that is when the point is close to \\((0,0)\\). Compare the two coordinates there:</p>
+ \\[x(t)=x_0\\exp(3t),\\qquad y(t)=y_0\\exp(t),\\qquad \\frac{x}{y}=\\frac{x_0}{y_0}\\exp(2t).\\]
+ <p>As \\(t\\to-\\infty\\), \\(\\exp(2t)\\to 0\\), so \\(x/y\\to 0\\): <b>x becomes negligible compared with y</b>. The point has almost no x-coordinate but still a noticeable y-coordinate, i.e. it is hugging the y-axis. Numbers for \\((x_0,y_0)=(1,1)\\):</p>
+ <table><tr><th>t</th><th>x = exp(3t)</th><th>y = exp(t)</th><th>x / y</th></tr>
+ <tr><td>−1</td><td>0.0498</td><td>0.368</td><td>0.135</td></tr>
+ <tr><td>−2</td><td>0.00248</td><td>0.135</td><td>0.018</td></tr>
+ <tr><td>−3</td><td>0.000123</td><td>0.0498</td><td>0.0025</td></tr></table>
+ <p>At \\(t=-3\\) the point is at about \\((0.0001,\\ 0.05)\\). Draw that: it is essentially <em>on</em> the y-axis. The curve arrives at the origin along the y-axis, which is exactly what "tangent to the y-axis" means.</p>
+ <div class="key"><b>Rule to remember.</b> Near a node, trajectories are tangent to the eigenvector of the eigenvalue with the <b>smaller</b> absolute value (the slow direction, here λ = 1, the y-axis). Far from the node they become parallel to the eigenvector of the <b>larger</b> one (the fast direction, λ = 3, the x-axis).<br><br>Why: near the origin the fast coordinate has already decayed to nothing, so the slow one is all that is left. Far away the fast coordinate has exploded, so it dominates. "Bigger eigenvalue wins" is true far out; "smaller eigenvalue wins" is true close in.</div>
+ <h3>Same thing without t</h3>
+ <p>Since \\(\\exp(3t) = (\\exp t)^3\\), we get \\(x = \\frac{x_0}{y_0^{3}}\\,y^{3}\\), i.e. every trajectory is a <b>cubic</b> \\(x = C y^3\\) in the phase plane. A cubic has slope zero at the origin when x is plotted against y, which is the same as saying the curve is vertical there: tangent to the y-axis. Use the <b>zoom</b> slider: the closer you look, the flatter every curve lies against the y-axis.</p>`},
+ {title:'5 · Stable, unstable or semistable?', html:()=>`
+ <h3>Unstable</h3>
+ <p><b>Stable</b> would mean: start close to the equilibrium and you stay close (for a sink you even return to it). <b>Unstable</b> means: start arbitrarily close and you are still carried away. Here both eigenvalues are positive, so every solution grows without bound in both coordinates. Start the dot at \\((0.01,0.01)\\) in your head: by \\(t=2\\) it is at \\((0.01\\exp 6,\\ 0.01\\exp 2)\\approx(4.0,\\ 0.07)\\), already far away. So the origin is <b>unstable</b>.</p>
+ <p><b>Semistable</b> is a word for borderline cases (typically a zero eigenvalue), where some nearby points approach and others leave. With two strictly positive eigenvalues there is nothing borderline: everything leaves.</p>
+ <h3>What it means for the deer and wolves</h3>
+ <p>Near (0, 0) both populations are tiny. The linearization says each one grows on its own, deer three times faster than wolves. Tiny populations therefore never die out in this model; they grow, and a small population of both starts out with wolves "ahead" (y-axis tangency) before the deer explosion takes over (x-axis far away).</p>`}
+];
+function table(){ const ts=[-2,-1,0,1]; return `<table><tr><th>t</th><th>exp(3t)</th><th>x(t)</th><th>exp(t)</th><th>y(t)</th><th>x / y</th></tr>`+ts.map(t=>`<tr><td>${t}</td><td>${fmt(Math.exp(3*t))}</td><td class="tx">${fmt(X(t))}</td><td>${fmt(Math.exp(t))}</td><td class="ty">${fmt(Y(t))}</td><td>${S.y0!==0?fmt(X(t)/Y(t)):'—'}</td></tr>`).join('')+'</table>'; }
+
+function renderExplain(target){
+  target.innerHTML=`<div class="bar"><div class="tabs" role="tablist">${steps.map((s,i)=>`<button class="tab" role="tab" aria-selected="${i===step}" data-i="${i}">${s.title}</button>`).join('')}</div>${solo?'':'<span class="spacer"></span><a class="btn" id="openTab" href="#explain" target="_blank">Open in new tab</a><button class="btn" id="closeExplain">Close</button>'}</div><div class="body">${steps[step].html()}</div>`;
+  target.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{ setStep(+b.dataset.i,true); });
+  const c=target.querySelector('#closeExplain'); if(c) c.onclick=()=>{ $('explain').hidden=true; };
+  const o=target.querySelector('#openTab'); if(o) o.onclick=()=>{ setTimeout(()=>{ $('explain').hidden=true; },50); };
+  if(window.MathJax&&MathJax.typesetPromise) MathJax.typesetPromise([target]).catch(()=>{});
+}
+function setStep(i,broadcast){ step=i; if(solo) renderExplain($('explainSolo')); else if(!$('explain').hidden) renderExplain($('explain')); if(broadcast&&chan) chan.postMessage({type:'state',step,S}); }
+
+// ---------- wiring ----------
+function sync(){ $('tv').textContent=S.t.toFixed(2); $('x0v').textContent=S.x0.toFixed(1); $('y0v').textContent=S.y0.toFixed(1); $('Lv').textContent=S.L.toFixed(2); draw(); live(); if(chan) chan.postMessage({type:'state',step,S}); }
+function update(){ S.t=+$('t').value; S.x0=+$('x0').value; S.y0=+$('y0').value; S.L=Math.exp(+$('L').value); S.field=$('showField').checked; S.family=$('showFamily').checked; S.vel=$('showVel').checked; sync(); if(!$('explain').hidden) renderStepNumbersOnly(); }
+let lastStepRender=-1;
+function renderStepNumbersOnly(){ /* steps 2 uses live numbers; re-render it cheaply */ if(step===1) renderExplain($('explain')); }
+['t','x0','y0','L','showField','showFamily','showVel'].forEach(id=>$(id).addEventListener('input',update));
+$('explainBtn').onclick=()=>{ $('explain').hidden=false; renderExplain($('explain')); };
+let playing=false,raf;
+$('play').onclick=()=>{ playing=!playing; $('play').textContent=playing?'❚❚ Pause':'▶ Play t'; if(playing){ if(+$('t').value>=1.5) $('t').value=-3; loop(); } else cancelAnimationFrame(raf); };
+function loop(){ if(!playing)return; let t=+$('t').value+0.012; if(t>1.5){t=1.5;playing=false;$('play').textContent='▶ Play t';} $('t').value=t; update(); raf=requestAnimationFrame(loop); }
+const mq=matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener?.('change',draw);
+
+if(solo){
+  document.body.classList.add('solo');
+  renderExplain($('explainSolo'));
+  if(chan) chan.onmessage=e=>{ const m=e.data; if(m&&m.type==='state'){ Object.assign(S,m.S); if(m.step!==step||step===1){ step=m.step; renderExplain($('explainSolo')); } } };
+}else{
+  update();
+}
+</script>
+
+
+<script>
+/* Phone-width safety net, inlined into every explorer by build.py.
+   On narrow screens, anything wider than the page (a long equation, a table,
+   a fixed-width figure) is shrunk to fit or given its own sideways scroll, so
+   the page itself never scrolls horizontally. Does nothing on wide screens. */
+(function () {
+  var LIMIT = 820, MEDIA = { CANVAS: 1, IMG: 1, VIDEO: 1, svg: 1, IFRAME: 1 };
+
+  function scrollsItself(el) {
+    for (var p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowX;
+      if (o === 'auto' || o === 'scroll') return true;
+    }
+    return false;
+  }
+
+  function fix(el, vw, depth) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'fixed' || depth > 14) return;
+    if (MEDIA[el.tagName]) {
+      el.style.maxWidth = '100%';
+      if (el.tagName !== 'IFRAME' && !el.style.height) el.style.height = 'auto';
+      return;
+    }
+    if (el.tagName === 'TABLE' || cs.display === 'table') {
+      el.style.display = 'block'; el.style.maxWidth = '100%'; el.style.overflowX = 'auto';
+      return;
+    }
+    if (cs.display === 'inline') el.style.display = 'inline-block';
+    el.style.minWidth = '0'; el.style.maxWidth = '100%'; el.style.boxSizing = 'border-box';
+    var edge = Math.min(el.getBoundingClientRect().right, vw) + 1;
+    function tooWide() {
+      return [].filter.call(el.children, function (c) {
+        var r = c.getBoundingClientRect();
+        return r.width && r.right > edge && !c.ownerSVGElement;
+      });
+    }
+    var wide = tooWide();
+    if (wide.length && cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap === 'nowrap') {
+      el.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+      wide = tooWide();
+    }
+    if (wide.length && cs.whiteSpace !== 'nowrap') {
+      wide.forEach(function (c) { fix(c, vw, depth + 1); });
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.style.overflowX = 'auto';
+      if (el.style.display === 'inline-block') el.style.verticalAlign = 'bottom';
+    }
+  }
+
+  function run() {
+    var root = document.documentElement, vw = root.clientWidth;
+    if (vw > LIMIT || !document.body) return;
+    for (var pass = 0; pass < 4 && root.scrollWidth > vw + 1; pass++) {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i], r = el.getBoundingClientRect();
+        if (!r.width || r.right <= vw + 1 || el.ownerSVGElement) continue;
+        var p = el.parentElement;
+        if (p !== document.body && p.getBoundingClientRect().right > vw + 1) continue; // start at the outermost offender
+        if (scrollsItself(el)) continue;
+        var ps = getComputedStyle(p);
+        if (ps.display.indexOf('flex') >= 0 && ps.flexDirection.indexOf('row') === 0 && ps.flexWrap === 'nowrap') {
+          p.style.flexWrap = 'wrap';   // a row of controls too long for the screen: let it wrap
+          if (el.getBoundingClientRect().right <= vw + 1) continue;
+        }
+        fix(el, vw, 0);
+      }
+    }
+  }
+
+  var timer;
+  function soon() { clearTimeout(timer); run(); timer = setTimeout(function () { run(); timer = setTimeout(run, 700); }, 300); }
+  window.addEventListener('load', soon);
+  window.addEventListener('resize', soon);
+  ['click', 'change', 'toggle'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(soon, 30); }, true);
+  });
+  if (document.readyState !== 'loading') soon(); else document.addEventListener('DOMContentLoaded', soon);
+})();
+</script>
+</body>
+</html>
