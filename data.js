@@ -328,7 +328,7 @@ window.COURSES = [
       "desc": "Degenerate node and star node, built up from scratch, one step at a time.",
       "lesson": "",
       "src": "explorers/c2/u2/critical-parabola-walkthrough.html",
-      "kb": 512
+      "kb": 569
      },
      {
       "id": "c2-u2-phase-direction-explorer",
@@ -382,7 +382,7 @@ window.COURSES = [
       "desc": "18.03x Recitation 6: population models, stability and structural stability, every part solved step by step.",
       "lesson": "",
       "src": "explorers/c2/u3/recitation6-population-models.html",
-      "kb": 2675
+      "kb": 2774
      },
      {
       "id": "c2-u3-saddle-eigenline-explorer",

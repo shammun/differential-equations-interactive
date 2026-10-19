@@ -1252,12 +1252,13 @@ STEPS.push({
 \[\dot x=3x-x^2-xy=x\,(3-x-y),\qquad \dot y=y-y^2+xy=y\,(1-y+x).\]
 <p>(Check by multiplying back out: $x\cdot3-x\cdot x-x\cdot y=3x-x^2-xy$. ✓)</p>
 <section class="layer" data-layer="1"><span class="layertag">Stage 1 · the line x = 0</span>
-<p>$\dot x=x(3-x-y)=0$ if the first factor is zero: $x=0$, the vertical axis. With no deer, no deer are born and none are eaten, so the deer count stays at $0$ forever. This has an important consequence: <b>a trajectory that starts on the axis $x=0$ stays on it</b>. Along this axis only the wolves change ($\dot y=y(1-y)$), so the state slides up or down the axis towards $y=1$. This is why Problem 2 says "assume both populations are nonzero to start with": a population that starts at zero stays at zero, whatever happens to the food.</p></section>
+<p>$\dot x=x(3-x-y)=0$ if the first factor is zero: $x=0$, the vertical axis. With no deer, no deer are born and none are eaten, so the deer count stays at $0$ forever. This has an important consequence: <b>a trajectory that starts on the axis $x=0$ stays on it</b>. Along this axis only the wolves change ($\dot y=y(1-y)$), so the state slides up or down the axis towards $y=1$. This is why Problem 2 says "assume both populations are nonzero to start with": a population that starts at zero stays at zero, whatever happens to the food.</p>
+<p>In the figure this nullcline is drawn <i>dotted</i>, lying exactly on the vertical axis. Keep it in mind: it looks like "just the axis", but it is a full member of the nullcline family, and in step 3 two of the four critical points sit on it.</p></section>
 <section class="layer" data-layer="2"><span class="layertag">Stage 2 · the line x + y = 3</span>
 <p>$\dot x=0$ also if the second factor is zero: $3-x-y=0$, that is $x+y=3$ (equivalently $y=3-x$): a straight line with slope $-1$ through $(3,0)$ and $(0,3)$. On this line the deer births exactly balance crowding plus predation. Check at $(1,2)$: $3-1-2=0$, so $\dot x=0$ there. ✓</p>
 <p>Because $\dot x=0$ on these orange lines, the arrows there have no horizontal part: they point <b>straight up or straight down</b>.</p></section>
 <section class="layer" data-layer="3"><span class="layertag">Stage 3 · the line y = 0</span>
-<p>$\dot y=y(1-y+x)=0$ if $y=0$, the horizontal axis. No wolves stay no wolves; along this axis only the deer change ($\dot x=x(3-x)$), sliding towards $x=3$.</p></section>
+<p>$\dot y=y(1-y+x)=0$ if $y=0$, the horizontal axis. No wolves stay no wolves; along this axis only the deer change ($\dot x=x(3-x)$), sliding towards $x=3$. Like $x=0$, this nullcline is drawn dotted, exactly on the axis — easy to overlook, but two critical points sit on it.</p></section>
 <section class="layer" data-layer="4"><span class="layertag">Stage 4 · the line y = 1 + x</span>
 <p>$\dot y=0$ also if $1-y+x=0$, that is $y=1+x$: a line with slope $+1$ through $(0,1)$. On it the wolves' own growth plus their gain from deer exactly balances their crowding. On the teal lines the arrows have no vertical part: they point <b>straight left or straight right</b>.</p>
 <p>Notice: the number $3$ (the deer growth rate) appears only in the orange line $x+y=3$. When Problems 1 and 2 change it to $3\pm k$, only the orange line moves. <b>The teal line $y=1+x$ never moves.</b> Much of Problems 1 and 2 follows from this one observation.</p></section>
@@ -1342,14 +1343,20 @@ STEPS.push({
 <p>A <b>critical point</b> (also called an equilibrium or a stationary point) is a state where $\dot x=0$ <i>and</i> $\dot y=0$ at the same time. If the populations start exactly there, nothing ever changes: the constant functions $x(t)=x^*,\ y(t)=y^*$ solve the equations. In the picture, a critical point is a place where an orange nullcline meets a teal one.</p>
 <p>To cover Problems 1 and 2 at once, write the deer growth rate as a letter $a$ (so $a=3$ is the original system, $a=3+k$ is Problem 1, $a=3-k$ is Problem 2):</p>
 \[\dot x=x\,(a-x-y),\qquad \dot y=y\,(1-y+x).\]
+<h3>Warm-up: a point versus a condition</h3>
+<p>$(0,1)$ and "$x=0$ and $y=1+x$" look like the same kind of statement, but they are two different kinds of thing. $(0,1)$ is a <b>point</b>: the single spot whose coordinates are $x=0,\ y=1$. An equation such as $y=1+x$ is a <b>condition</b> — a test that each point of the plane either passes or fails. Try a few: $(2,3)$ passes, because $3=1+2$. ✓ $(2,5)$ fails, because $5\ne1+2$. $(0,1)$ passes, because $1=1+0$. ✓ The points that pass are not one point but a whole <i>line</i> — that is what "the line $y=1+x$" means. Asking for two conditions at once keeps only the points on <i>both</i> lines, and two crossing lines share exactly one point. So "$x=0$ and $y=1+x$" is a <b>question</b> (which point passes both tests?), and $(0,1)$ is its <b>answer</b> — found by solving the two equations together.</p>
 <p>We need ($x=0$ <b>or</b> $x+y=a$) <b>and</b> ($y=0$ <b>or</b> $y=1+x$). Two choices times two choices: four combinations, one per stage.</p>
-<section class="layer" data-layer="1"><span class="layertag">Stage 1 · x = 0 and y = 0</span>
-<p>Both conditions are already numbers: the point $(0,0)$. No deer, no wolves: an empty habitat stays empty.</p></section>
-<section class="layer" data-layer="2"><span class="layertag">Stage 2 · x = 0 and y = 1 + x</span>
-<p>Substitute $x=0$ into $y=1+x$: $y=1+0=1$. The point $(0,1)$: no deer, and the wolves at their own carrying capacity $1$ (living on other food).</p></section>
-<section class="layer" data-layer="3"><span class="layertag">Stage 3 · x + y = a and y = 0</span>
-<p>Substitute $y=0$ into $x+y=a$: $x=a$. The point $(a,0)$: no wolves, and the deer at their carrying capacity $a$. For $a=3$ this is $(3,0)$.</p></section>
-<section class="layer" data-layer="4"><span class="layertag">Stage 4 · x + y = a and y = 1 + x</span>
+<div class="box clar"><b>How each point is named here</b>A pair like "$x=0$ and $y=1+x$" is not the point itself: it names the <i>two lines</i> whose crossing is the point. Solving the pair gives the coordinates the recitation lists — here $(0,1)$. The two lines are the <i>reason</i> the point is an equilibrium (one makes $\dot x=0$, the other makes $\dot y=0$), so selecting a stage highlights that pair of lines, and the purple ring sits where they cross. Watch the axes: two of the four lines are the axes themselves ($x=0$ is the vertical axis, $y=0$ the horizontal axis, both drawn dotted), so a highlighted line can be hiding right on an axis.</div>
+<section class="layer" data-layer="1"><span class="layertag">Stage 1 · the point (0, 0): where x = 0 meets y = 0</span>
+<p>Both conditions are already numbers: the point $(0,0)$. No deer, no wolves: an empty habitat stays empty. Both highlighted "lines" are the axes here: $\dot x=0$ because $x=0$, and $\dot y=0$ because $y=0$.</p></section>
+<section class="layer" data-layer="2"><span class="layertag">Stage 2 · the point (0, 1): where x = 0 meets y = 1 + x</span>
+<p>Substitute $x=0$ into $y=1+x$: $y=1+0=1$. The point $(0,1)$: no deer, and the wolves at their own carrying capacity $1$ (living on other food).</p>
+<p>Why these two lines: at $(0,1)$, $\dot x=x(a-x-y)=0$ because of the factor $x=0$ (the point sits on the vertical axis), and $\dot y=y(1-y+x)=0$ <i>not</i> because $y$ vanishes — $y=1$ — but because the bracket vanishes: $(0,1)$ lies on the teal line $y=1+x$, since $1=1+0$. That is why this stage highlights the teal line: it is the wolves' reason for standing still. The deer's reason, the line $x=0$, is highlighted too, but it lies exactly on the axis, so it is easy to miss. In numbers, for $a=3$: $\dot x=0\cdot(3-0-1)=0$ and $\dot y=1\cdot(1-1+0)=1\cdot0=0$.</p>
+<p>Contrast with $(0,2)$, which also sits on the axis $x=0$: there $\dot x=0\cdot(3-0-2)=0$ still, but $\dot y=2\cdot(1-2+0)=-2\ne0$ — the wolves are shrinking. $(0,2)$ passes the deer test but fails both wolf tests ($y=2\ne0$, and $2\ne1+0$), so it is <i>not</i> a critical point. A critical point must pass one orange test <b>and</b> one teal test at the same moment, and that happens only at the crossings.</p></section>
+<section class="layer" data-layer="3"><span class="layertag">Stage 3 · the point (a, 0): where x + y = a meets y = 0</span>
+<p>Substitute $y=0$ into $x+y=a$: $x=a$. The point $(a,0)$: no wolves, and the deer at their carrying capacity $a$. For $a=3$ this is $(3,0)$.</p>
+<p>Why these two lines: at $(3,0)$, $\dot y=0$ because of the factor $y=0$ (the horizontal axis), and $\dot x=0$ <i>not</i> because $x$ vanishes — $x=3$ — but because the bracket does: $(3,0)$ lies on the orange line $x+y=3$, since $3+0=3$. Hence the highlighted orange line, with the point's other line, $y=0$, lying on the axis underneath it. In numbers: $\dot x=3\cdot(3-3-0)=3\cdot0=0$ and $\dot y=0\cdot(1-0+3)=0$.</p></section>
+<section class="layer" data-layer="4"><span class="layertag">Stage 4 · the coexistence point: where x + y = a meets y = 1 + x</span>
 <p>Two linear equations in two unknowns. Substitute the second into the first, then solve step by step:</p>
 \[\begin{aligned} x+(1+x)&=a &&\text{(replace }y\text{ by }1+x)\\ 2x+1&=a &&\text{(collect the }x\text{'s)}\\ 2x&=a-1 &&\text{(subtract 1)}\\ x&=\frac{a-1}{2} &&\text{(divide by 2)}\\ y&=1+x=1+\frac{a-1}{2}=\frac{2+a-1}{2}=\frac{a+1}{2}.\end{aligned}\]
 <p>For $a=3$: $x=\tfrac{3-1}{2}=1$ and $y=\tfrac{3+1}{2}=2$, the point $(1,2)$ named in the recitation. Both species live here together: the <b>coexistence point</b>.</p>
@@ -1357,15 +1364,33 @@ STEPS.push({
 <section class="layer" data-layer="5"><span class="layertag">Stage 5 · check and list</span>
 <p>Always check by substituting back. At $(1,2)$ with $a=3$: $\dot x=1\cdot(3-1-2)=1\cdot0=0$ and $\dot y=2\cdot(1-2+1)=2\cdot0=0$. ✓ The live panel repeats the check for the current $a$.</p>
 <table class="num"><tr><th>point</th><th>for a = 3</th><th>meaning</th></tr><tr><td>$(0,0)$</td><td>$(0,0)$</td><td>no animals</td></tr><tr><td>$(0,1)$</td><td>$(0,1)$</td><td>wolves only</td></tr><tr><td>$(a,0)$</td><td>$(3,0)$</td><td>deer only</td></tr><tr><td>$\big(\tfrac{a-1}{2},\tfrac{a+1}{2}\big)$</td><td>$(1,2)$</td><td>coexistence</td></tr></table>
+<p>And the reason each rate is zero, point by point (for $a=3$) — each entry is one of the two highlighted lines:</p>
+<table class="num"><tr><th>point</th><th>ẋ = x(3 − x − y) = 0 because…</th><th>ẏ = y(1 − y + x) = 0 because…</th></tr>
+<tr><td>$(0,0)$</td><td>factor $x=0$</td><td>factor $y=0$</td></tr>
+<tr><td>$(0,1)$</td><td>factor $x=0$</td><td>on $y=1+x$: bracket $1-1+0=0$</td></tr>
+<tr><td>$(3,0)$</td><td>on $x+y=3$: bracket $3-3-0=0$</td><td>factor $y=0$</td></tr>
+<tr><td>$(1,2)$</td><td>on $x+y=3$: bracket $3-1-2=0$</td><td>on $y=1+x$: bracket $1-2+1=0$</td></tr></table>
 <p>The recitation also says what <i>kind</i> of point each one is: $(0,0)$ nodal source, $(0,1)$ and $(3,0)$ saddles, $(1,2)$ spiral sink. Steps 4 and 5 explain what these words mean and how they are computed.</p></section>
+<details class="qa"><summary>Only (1, 2) looks like a crossing of coloured lines — are the other three really "orange meets teal"?</summary><div><p>Yes, once the dotted lines are counted. Each colour has <b>two</b> nullclines, and one of each lies exactly on an axis: orange $x=0$ on the vertical axis, teal $y=0$ on the horizontal axis (both drawn dotted, so they are easy to read as "just axes"). With them, every critical point is an orange–teal crossing:</p>
+<table class="num"><tr><th>point</th><th>orange line through it</th><th>teal line through it</th></tr>
+<tr><td>$(0,0)$</td><td>$x=0$ (vertical axis)</td><td>$y=0$ (horizontal axis)</td></tr>
+<tr><td>$(0,1)$</td><td>$x=0$</td><td>$y=1+x$</td></tr>
+<tr><td>$(3,0)$</td><td>$x+y=3$</td><td>$y=0$</td></tr>
+<tr><td>$(1,2)$</td><td>$x+y=3$</td><td>$y=1+x$</td></tr></table>
+<p>And the rule has teeth: a <b>same-colour</b> crossing is <i>not</i> a critical point. The two orange lines cross at $(0,3)$ — there $\dot x=0$ twice over, but $\dot y=3\,(1-3+0)=-6\ne0$: the wolves still move, and the state slides down the axis. Stopping the wolves needs a <i>teal</i> line, which is exactly why the criterion is "one orange <b>and</b> one teal".</p></div></details>
 <details class="qa"><summary>Could there be more than four critical points?</summary><div>No. Every critical point must satisfy one of the two deer conditions and one of the two wolf conditions; we tried all four combinations and each gave exactly one point. (Two of them could coincide for special $a$: at $a=1$ the coexistence point lands on $(0,1)$, see step 11.)</div></details>
 <details class="qa"><summary>Why is a critical point a "solution" of the equations?</summary><div>A solution is a pair of functions $x(t),y(t)$ whose derivatives equal the right-hand sides. The constants $x(t)=1,\ y(t)=2$ have derivative $0$, and at $(1,2)$ the right-hand sides are also $0$. So the constant functions solve the system: a trajectory that is a single point.</div></details>`,
   controls: () => [
-    {type: 'stages', key: 'st3', labels: ['x = 0, y = 0', 'x = 0, y = 1 + x', 'x + y = a, y = 0', 'x + y = a, y = 1 + x', 'Check and list']},
+    {type: 'stages', key: 'st3', labels: ['(0, 0): x = 0 meets y = 0', '(0, 1): x = 0 meets y = 1 + x', '(a, 0): x + y = a meets y = 0', 'Coexistence: x + y = a meets y = 1 + x', 'Check and list']},
     {type: 'range', key: 'a', label: 'Deer growth rate a', min: 0.4, max: 6, step: 0.01, fmt: v => f(v, 2)},
     {type: 'chips', items: [{type: 'button', label: 'a = 3 (original)', on: () => { P.a = 3; }}, {type: 'button', label: 'a = 4', on: () => { P.a = 4; }}, {type: 'button', label: 'a = 0.6', on: () => { P.a = 0.6; }}, {type: 'check', key: 'showField', label: 'Direction field'}]}
   ],
-  figeq: () => { const a = P.a; return R`x+y=${f(a, 2)}\ \text{and}\ y=1+x\ \Rightarrow\ (x^*,y^*)=\Big(\tfrac{${f(a, 2)}-1}{2},\ \tfrac{${f(a, 2)}+1}{2}\Big)=(${fs((a - 1) / 2, 3)},\ ${f((a + 1) / 2, 3)})`; },
+  figeq: () => { const a = P.a, s = P.st3;
+    if (s === 1) return R`\text{Stage 1:}\ \ x=0\ \text{and}\ y=0\ \Rightarrow\ (x^*,y^*)=(0,\ 0)`;
+    if (s === 2) return R`\text{Stage 2:}\ \ x=0\ \text{and}\ y=1+x\ \Rightarrow\ y=1+0=1\ \Rightarrow\ (x^*,y^*)=(0,\ 1)`;
+    if (s === 3) return R`\text{Stage 3:}\ \ x+y=${f(a, 2)}\ \text{and}\ y=0\ \Rightarrow\ x=${f(a, 2)}\ \Rightarrow\ (x^*,y^*)=(${f(a, 2)},\ 0)`;
+    if (s === 5) return R`\text{All four: }(0,\,0),\quad (0,\,1),\quad (${f(a, 2)},\,0),\quad (${fs((a - 1) / 2, 2)},\ ${f((a + 1) / 2, 2)})`;
+    return R`\text{Stage 4:}\ \ x+y=${f(a, 2)}\ \text{and}\ y=1+x\ \Rightarrow\ (x^*,y^*)=\Big(\tfrac{${f(a, 2)}-1}{2},\ \tfrac{${f(a, 2)}+1}{2}\Big)=(${fs((a - 1) / 2, 3)},\ ${f((a + 1) / 2, 3)})`; },
   legend: () => [{k: 'line', c: COL.deer, t: 'ẋ = 0 nullclines'}, {k: 'line', c: COL.wolf, t: 'ẏ = 0 nullclines'}, {k: 'dot', c: COL.red, t: 'stable critical point'}, {k: 'ring', c: COL.red, t: 'unstable critical point'}, {k: 'ring', c: COL.pur, t: 'the point of this stage'}],
   draw(){
     const L = layout2(); const a = P.a; const v = pv(-0.9, 6.4, -0.15, 4.4, L.plane); LV.v = v; const s = P.st3;
@@ -1380,16 +1405,16 @@ STEPS.push({
   },
   calc(){
     const a = P.a, cps = dwCrit(a); let h = C.ln(R`a=${f(a, 2)}`, a === 3 ? 'the original system' : 'deer growth rate');
-    h += '<div class="cblk" data-layer="1">' + C.h4('1. x = 0 and y = 0') + C.res('(0, 0)') + '</div>';
-    h += '<div class="cblk" data-layer="2">' + C.h4('2. x = 0 and y = 1 + x') + C.ln(R`y=1+0=1`) + C.res('(0, 1)') + '</div>';
-    h += '<div class="cblk" data-layer="3">' + C.h4('3. x + y = a and y = 0') + C.ln(R`x+0=${f(a, 2)}\ \Rightarrow\ x=${f(a, 2)}`) + C.res('(' + f(a, 2) + ', 0)') + '</div>';
+    h += '<div class="cblk" data-layer="1">' + C.h4('1. The point (0, 0) — where x = 0 meets y = 0') + C.res('(0, 0)') + '</div>';
+    h += '<div class="cblk" data-layer="2">' + C.h4('2. The point (0, 1) — where x = 0 meets y = 1 + x') + C.ln(R`y=1+0=1`) + C.res('(0, 1)') + '</div>';
+    h += '<div class="cblk" data-layer="3">' + C.h4('3. The point (' + f(a, 2) + ', 0) — where x + y = a meets y = 0') + C.ln(R`x+0=${f(a, 2)}\ \Rightarrow\ x=${f(a, 2)}`) + C.res('(' + f(a, 2) + ', 0)') + '</div>';
     const xs = (a - 1) / 2, ys = (a + 1) / 2;
-    h += '<div class="cblk" data-layer="4">' + C.h4('4. x + y = a and y = 1 + x') + C.ln(R`x+(1+x)=${f(a, 2)}\ \Rightarrow\ 2x=${f(a, 2)}-1=${fs(a - 1, 2)}`) + C.ln(R`x^*=\frac{${fs(a - 1, 2)}}{2}=${fs(xs, 3)},\qquad y^*=1+x^*=${fs(ys, 3)}`) + C.res('(' + fs(xs, 3) + ', ' + fs(ys, 3) + ')' + (xs < -1e-9 ? ': x* < 0, outside the first quadrant, no biological meaning.' : xs < 1e-9 ? ': it sits on the axis x = 0, on top of (0, 1).' : ': inside the first quadrant.'), xs < -1e-9 ? 'bad' : xs < 1e-9 ? 'warn' : '') + '</div>';
+    h += '<div class="cblk" data-layer="4">' + C.h4('4. The point (' + fs(xs, 2) + ', ' + fs(ys, 2) + ') — where x + y = a meets y = 1 + x') + C.ln(R`x+(1+x)=${f(a, 2)}\ \Rightarrow\ 2x=${f(a, 2)}-1=${fs(a - 1, 2)}`) + C.ln(R`x^*=\frac{${fs(a - 1, 2)}}{2}=${fs(xs, 3)},\qquad y^*=1+x^*=${fs(ys, 3)}`) + C.res('(' + fs(xs, 3) + ', ' + fs(ys, 3) + ')' + (xs < -1e-9 ? ': x* < 0, outside the first quadrant, no biological meaning.' : xs < 1e-9 ? ': it sits on the axis x = 0, on top of (0, 1).' : ': inside the first quadrant.'), xs < -1e-9 ? 'bad' : xs < 1e-9 ? 'warn' : '') + '</div>';
     h += '<div class="cblk" data-layer="5">' + C.h4('5. Check: both rates vanish at each point');
     h += '<table><tr><th>point</th><th>ẋ = x(a − x − y)</th><th>ẏ = y(1 − y + x)</th></tr>' + cps.map(c => { const [u, w] = DW(a)(c.x, c.y); return '<tr class="ok"><td>(' + fs(c.x, 2) + ', ' + fs(c.y, 2) + ')</td><td>' + fs(c.x, 2) + ' × ' + fs(a - c.x - c.y, 2) + ' = ' + fs(u, 3) + '</td><td>' + fs(c.y, 2) + ' × ' + fs(1 - c.y + c.x, 2) + ' = ' + fs(w, 3) + '</td></tr>'; }).join('') + '</table></div>';
     return h;
   },
-  explain: () => R`<p>Both nullcline families (faint when not used by the current stage). The purple ring marks the critical point solved in the current stage; every critical point is red, filled when it attracts (stable) and hollow otherwise (step 5 explains how this is decided). The grey band on the left is $x\lt 0$, where populations would be negative.</p>` + TAPHINT,
+  explain: () => R`<p>Both nullcline families (faint when not used by the current stage). The two lines in full colour are the pair named by the current stage, and the stage's point is where they cross; note that $x=0$ lies on the vertical axis and $y=0$ on the horizontal axis (both dotted), so a highlighted line can sit right on an axis. The purple ring marks the critical point solved in the current stage; every critical point is red, filled when it attracts (stable) and hollow otherwise (step 5 explains how this is decided). The grey band on the left is $x\lt 0$, where populations would be negative.</p>` + TAPHINT,
   parts: {cp_o: {name: '(0, 0)', color: '#c43434', desc: 'No animals.'}, cp_w: {name: '(0, 1)', color: '#c43434', desc: 'Wolves only, at their carrying capacity 1.'}, cp_d: {name: '(a, 0)', color: '#c43434', desc: 'Deer only, at their carrying capacity $a$.'}, cp_c: {name: 'Coexistence point', color: '#c43434', desc: '$\\big(\\tfrac{a-1}{2},\\tfrac{a+1}{2}\\big)$: where $x+y=a$ meets $y=1+x$.'}, null_x0: {name: 'x = 0', color: '#cc7014', desc: 'A deer nullcline.'}, null_xa: {name: 'x + y = a', color: '#cc7014', desc: 'A deer nullcline; moves with $a$.'}, null_y0: {name: 'y = 0', color: '#0e8f8e', desc: 'A wolf nullcline.'}, null_y1: {name: 'y = 1 + x', color: '#0e8f8e', desc: 'A wolf nullcline; does not depend on $a$.'}}
 });
 
@@ -1532,7 +1557,8 @@ STEPS.push({
 <p>So $\lambda$ must be an <b>eigenvalue</b> of $A$ and $\mathbf w$ an <b>eigenvector</b>. Every solution is a combination of these special ones, so the eigenvalues decide everything:</p>
 <ul><li>a real $\lambda\lt 0$: $\exp(\lambda t)\to0$, motion along $\mathbf w$ <b>towards</b> the point;</li>
 <li>a real $\lambda>0$: $\exp(\lambda t)$ grows, motion <b>away</b> from the point;</li>
-<li>a complex pair $\lambda=p\pm q\,i$: by Euler's formula $\exp((p+qi)t)=\exp(pt)\,(\cos qt+i\sin qt)$, so solutions <b>rotate</b> (the $\cos$ and $\sin$) while their size changes like $\exp(pt)$: shrinking if $p\lt 0$, growing if $p>0$.</li></ul></section>
+<li>a complex pair $\lambda=p\pm q\,i$: by Euler's formula $\exp((p+qi)t)=\exp(pt)\,(\cos qt+i\sin qt)$, so solutions <b>rotate</b> (the $\cos$ and $\sin$) while their size changes like $\exp(pt)$: shrinking if $p\lt 0$, growing if $p>0$. <i>(But what exactly rotates, when there is an $i$ in the formula? ${GL('5c', '', 'Step 5c')} answers this with moving pictures.)</i></li></ul>
+<div class="box clar"><b>Where the full story lives</b>How $\mathbf u$ actually moves for each kind of eigenvalue pair — both real negative, both real positive, opposite signs, and the complex case with its hands-on answer to "does $\mathbf u$ move along $\mathbf w$?" — has a step of its own: ${GL('5c', '', 'step 5c, the eigenvalue gallery')}. There each case is a stage with live examples to play, the eigenvectors drawn, and a moving state to watch.</div></section>
 <section class="layer" data-layer="2"><span class="layertag">Stage 2 · the characteristic equation</span>
 <p>$A\mathbf w=\lambda\mathbf w$ means $(A-\lambda I)\mathbf w=\mathbf 0$ with $\mathbf w\ne\mathbf 0$, which is possible only if $\det(A-\lambda I)=0$. For $A=\begin{pmatrix}p_{11}&p_{12}\\p_{21}&p_{22}\end{pmatrix}$:</p>
 \[\det\begin{pmatrix}p_{11}-\lambda&p_{12}\\p_{21}&p_{22}-\lambda\end{pmatrix}=(p_{11}-\lambda)(p_{22}-\lambda)-p_{12}p_{21}=\lambda^2-(p_{11}+p_{22})\lambda+(p_{11}p_{22}-p_{12}p_{21}).\]
@@ -2482,7 +2508,7 @@ STEPS.push({
     if (Math.abs(p.a) < 1e-9 && Math.abs(p.b) < 1e-9) h += C.res('a = b = 0: ẋ = c·x·y vanishes on the whole axis y = 0, and so does ẏ: every point (x, 0) is critical (a line of equilibria).', 'warn');
     else if (Math.abs(p.d) < 1e-9 && Math.abs(p.f) < 1e-9) h += C.res('d = f = 0: every point (0, y) is critical (a line of equilibria).', 'warn');
     else { const D = p.b * p.f - p.c * p.h; h += C.ln(R`D=bf-ch=(${fs(p.b, 2)})(${fs(p.f, 2)})-(${fs(p.c, 2)})(${fs(p.h, 2)})=${fs(D, 3)}`, Math.abs(D) < 1e-9 ? 'zero: the two slanted nullclines are parallel, no interior point' : 'nonzero: one interior point');
-      h += '<table><tr><th>point</th><th>from</th></tr>' + genCrit(p).map(c => '<tr><td>(' + fs(c.x, 3) + ', ' + fs(c.y, 3) + ')</td><td style="text-align:left">' + c.how + '</td></tr>').join('') + '</table>'; }
+      h += '<table><tr><th>point</th><th>the two nullclines that cross there</th></tr>' + genCrit(p).map(c => '<tr><td>(' + fs(c.x, 3) + ', ' + fs(c.y, 3) + ')</td><td style="text-align:left">' + c.how + '</td></tr>').join('') + '</table>'; }
     h += '</div><div class="cblk" data-layer="3">' + C.h4('Jacobian and type at each point');
     if (!(Math.abs(p.a) < 1e-9 && Math.abs(p.b) < 1e-9) && !(Math.abs(p.d) < 1e-9 && Math.abs(p.f) < 1e-9)) for (const c of genCrit(p)){ const J = JGEN(p, c.x, c.y), li = linInfo(J); h += C.ln(R`(${fs(c.x, 2)},\,${fs(c.y, 2)}):\ ${matTex(J)}`) + C.ln(R`\operatorname{tr}=${fs(li.tr, 2)},\ \det=${fs(li.det, 2)},\ \Delta=${fs(li.D, 2)}`, typeName(li) + (li.stable ? ' (stable)' : '') + (c.x < -1e-9 || c.y < -1e-9 ? ' — outside the first quadrant' : '')); }
     h += '</div><div class="cblk" data-layer="4">' + C.h4('Recitation parts') + C.p('Use the preset buttons; the table in the text says what to look for in each.') + '</div>';
@@ -2958,7 +2984,7 @@ const CHECK = (id, q, opts, ok, why) => () => '<div class="box checkq"><b>Check 
 const KEYS = {
   1: ['A phase portrait turns two equations into one picture: each point is a state (deer, wolves) and the arrow there shows where the state moves next.', ['say what each of the six terms means', 'compute ẋ and ẏ at any state by hand', 'read the direction of motion from the signs of ẋ and ẏ']],
   2: ['Factoring each rate shows where it is zero: on the orange lines the deer stop changing, on the teal lines the wolves stop changing. The lines split the plane into regions with fixed directions.', ['find nullclines by factoring', 'tell which side of a nullcline a population grows on', 'explain why a population that starts at 0 stays at 0']],
-  3: ['A critical point is where an orange nullcline meets a teal one: both rates are zero, so nothing ever changes. The deer–wolf system has four.', ['solve for all four critical points for any growth rate a', 'check a critical point by substituting it back']],
+  3: ['A critical point is where an orange nullcline meets a teal one — remembering that each colour has TWO lines, and that one of each lies dotted on an axis (orange x = 0 on the vertical axis, teal y = 0 on the horizontal). All four critical points are such orange–teal crossings; only (1, 2) uses the two slanted lines.', ['solve for all four critical points for any growth rate a', 'check a critical point by substituting it back']],
   4: ['Very close to a critical point the curved system behaves like a linear one, u̇ = A u, where A is the Jacobian matrix of partial derivatives evaluated at the point.', ['compute partial derivatives and the Jacobian', 'use the shortcut at the coexistence point', 'explain why the leftover terms do not matter close to the point']],
   5: ['Three numbers computed from A, the trace, the determinant and the discriminant, decide the type (saddle, node, spiral) and the stability of a critical point.', ['compute tr, det and Δ', 'classify a critical point with them', 'read its position on the trace–determinant map']],
   6: ['Optional proof: orbits with positive populations stay positive, stay bounded and cannot circle forever, so they must settle at the only attracting point, (1, 2).', ['name the four facts that force every orbit to (1, 2)', 'see why the same argument works in Problems 1 and 2']],
@@ -3060,30 +3086,66 @@ const PLAY = {
   num: '5b', grp: 'set-up', nav: 'Matrix playground', title: 'Matrix playground: move a point on the trace–determinant map and watch the portrait change', layerKey: 'stpl',
   key: 'Every 2 × 2 linear system is described, up to its shape, by two numbers: its trace and its determinant. Where that point sits on the map decides the picture.',
   goals: ['predict the portrait from (tr, det)', 'see what happens when a boundary is crossed'],
-  figtitle: 'Left: the trace–determinant map (drag the blue point or click anywhere on it). Right: the phase portrait of a linear system with that trace and determinant.', figsub: 'The stage buttons move the point across each boundary.',
+  figtitle: 'Left: the trace–determinant map — press anywhere on it and drag: the point follows your finger and the portrait on the right redraws live, the whole way.', figsub: 'The stage buttons are a guided tour: each parks the point just beside one boundary so you can drag across it and watch the type change.',
   text: () => R`
 <p>For any trace $T$ and determinant $D$, the matrix $A=\begin{pmatrix}0&1\\-D&T\end{pmatrix}$ has exactly that trace ($0+T$) and that determinant ($0\cdot T-1\cdot(-D)=D$), so its characteristic equation is $\lambda^2-T\lambda+D=0$. The right panel draws $\dot{\mathbf u}=A\mathbf u$ for the point you choose. (Other matrices with the same $T$ and $D$ give a stretched or rotated version of the same kind of picture.)</p>
+<div class="box clar"><b>What are the bold green and red lines in the portrait?</b>They are the <b>eigenlines</b>: lines through an eigenvector $\mathbf w$ of $A$. Their colour is the <i>sign of that line's own eigenvalue</i> — <b style="color:#1d8a4b">green: $\lambda\lt 0$, motion along the line goes IN</b>; <b style="color:#c43434">red: $\lambda>0$, motion goes OUT</b>. So a nodal sink shows two green lines (both $\lambda\lt 0$), a nodal source two red ones, a saddle one of each — and a <b>spiral or center shows none at all</b>, because complex $\lambda$ has a complex eigenvector: no real direction maps to itself, so no straight-line solution exists to draw. For this playground's matrix the eigenvector of $\lambda$ is $\mathbf w=(1,\ \lambda)$. To check it, multiply $A$ by that vector <b>row by row</b> — each entry of $A\mathbf w$ is one row of $A$ dotted with the vector: row 1 gives $0\cdot1+1\cdot\lambda=\lambda$, row 2 gives $-D\cdot1+T\cdot\lambda=-D+T\lambda$. So
+\[A\binom1\lambda=\begin{pmatrix}0&1\\-D&T\end{pmatrix}\binom1\lambda=\binom{0\cdot1+1\cdot\lambda}{-D\cdot1+T\cdot\lambda}=\binom{\lambda}{-D+T\lambda}=\binom{\lambda}{\lambda^2}=\lambda\binom1\lambda,\]
+where the last rewriting uses the characteristic equation: $\lambda$ solves $\lambda^2-T\lambda+D=0$, i.e. $\lambda^2=T\lambda-D$, which is exactly the second entry. The output is the input stretched by $\lambda$: eigenvector confirmed. This is also why the lines here are slanted (slope $=\lambda$), while a diagonal matrix of the same type (as in ${GL('5c', '', 'step 5c')}) has its eigenlines on the axes: <i>the type comes from the eigenvalues; the directions come from the eigenvectors of the particular matrix</i>. ${GL('5d', '', 'Step 5d')} builds these lines from scratch, step by step.</div>
+<div class="box clar"><b>What the five stage buttons are</b>They are a guided tour of the map's three boundaries, not different modes. "Cross det = 0", "Cross the parabola" and "Cross tr = 0" each do one small thing: they <i>park the blue point at a convenient starting spot just on one side of that boundary</i> (that is why each button jumps to a particular point), and the highlighted text explains what to watch while <b>you</b> drag the point across. The boundaries are where the portrait changes kind: the red line $\det=0$ (an eigenvalue passes through $0$: node ↔ saddle), the purple parabola $\Delta=0$ (real ↔ complex eigenvalues: node ↔ spiral), and the vertical axis $\operatorname{tr}=0$ (sink ↔ source, with a center on the axis). Stage 5's buttons park the point at the matrices this recitation actually meets — each is spelled out in stage 5 below, so nothing from the recitation is needed to follow along.</div>
 <section class="layer" data-layer="1"><span class="layertag">Stage 1 · explore</span><p>Drag the point around. Watch the curves on the right: in the teal region they spiral, in the purple region they come straight in or out, below the red line they form a saddle (an X shape). On the left half everything moves in (sinks); on the right half it moves out (sources).</p></section>
 <section class="layer" data-layer="2"><span class="layertag">Stage 2 · crossing det = 0</span><p>The button for this stage puts the point at $\det=0.15$, just above the red line, at $\operatorname{tr}=-1$ (a nodal sink, slow in one direction). Drag it down through the red line: one eigenvalue passes through 0 and changes sign, and the node becomes a saddle. This is Problem 2(d) at $k=2$.</p></section>
 <section class="layer" data-layer="3"><span class="layertag">Stage 3 · crossing the parabola</span><p>The point starts just above the purple parabola at $\operatorname{tr}=-1.414$. Drag it down through the parabola: the spiral stops turning and becomes a node. Both are sinks: stability does not change. This is Problem 2(c) at $k=3-\sqrt2$.</p></section>
 <section class="layer" data-layer="4"><span class="layertag">Stage 4 · crossing tr = 0</span><p>The point starts at $\operatorname{tr}=-0.3$, $\det=1$: a slow spiral sink. Drag it right through the vertical axis: at $\operatorname{tr}=0$ the curves close into loops (a center), and beyond they spiral outward (a source). This is the borderline of the lecture's shark–food fish cycles.</p></section>
-<section class="layer" data-layer="5"><span class="layertag">Stage 5 · the recitation’s matrices</span><p>The preset buttons put the point at matrices met in the recitation: the deer–wolf resting point for several $k$, the shark–squid saddle, the lecture’s center, the source at the origin. Compare each picture with the step where it appears.</p></section>`,
+<section class="layer" data-layer="5"><span class="layertag">Stage 5 · the recitation’s matrices, derived from scratch</span>
+<p>Each preset parks the point at the $(\operatorname{tr},\det)$ of a matrix from this recitation. Nothing below is quoted from elsewhere — every number is derived here, in order, so this stage stands on its own (the same pieces are built more slowly in ${GL(3)}, ${GL(4)} and ${GL(5)}).</p>
+<p><b>Step A · why the growth rate is $3-k$.</b> In the original system the deer's natural growth rate is $3$. Problem 2 restricts their food, which lowers that rate by a small amount $k$: the rate becomes $3-k$. (Problem 1 feeds them instead: $3+k$ — identical algebra with the sign of $k$ flipped.) To handle every case at once, write $a=3-k$, so the system is</p>
+\[\dot x=x\,(a-x-y),\qquad \dot y=y\,(1-y+x).\]
+<p><b>Step B · the coexistence point for growth rate $a$.</b> "Both species hold steady" means both rates are zero at once: $\dot x=0$ <i>and</i> $\dot y=0$. Each rate in Step A is already a product, and a product is zero exactly when one of its factors is:</p>
+\[\dot x=x\,(a-x-y)=0\ \Rightarrow\ x=0\ \text{ or }\ x+y=a,\qquad \dot y=y\,(1-y+x)=0\ \Rightarrow\ y=0\ \text{ or }\ y=1+x.\]
+<p><b>Coexistence</b> means both populations are present, $x>0$ and $y>0$ — so the options $x=0$ and $y=0$ are ruled out, and the only way left to make both rates vanish is the pair of bracket conditions:</p>
+\[x+y=a\quad\text{together with}\quad y=1+x.\]
+<p>Two equations, two unknowns. Substitute the second into the first: $x+(1+x)=a$, so $2x+1=a$, so $2x=a-1$, giving</p>
+\[x^*=\frac{a-1}{2},\qquad y^*=1+x^*=\frac{a+1}{2}.\]
+<p><b>Step C · the matrix $A$ at that point.</b> The Jacobian of the system is $J=\begin{pmatrix}a-2x-y&-x\\y&1-2y+x\end{pmatrix}$. At the coexistence point both brackets of Step A vanish, $a-x^*-y^*=0$ and $1-y^*+x^*=0$, and each diagonal entry can be rewritten around them:</p>
+\[a-2x^*-y^*=\underbrace{(a-x^*-y^*)}_{=\,0}-\,x^*=-x^*,\qquad 1-2y^*+x^*=\underbrace{(1-y^*+x^*)}_{=\,0}-\,y^*=-y^*,\]
+\[\text{so}\qquad A=\begin{pmatrix}-x^*&-x^*\\ y^*&-y^*\end{pmatrix}.\]
+<p><b>Step D · the trace.</b> The trace is the sum of the diagonal entries:</p>
+\[\operatorname{tr}A=(-x^*)+(-y^*)=-(x^*+y^*)=-\Big(\frac{a-1}{2}+\frac{a+1}{2}\Big)=-\frac{2a}{2}=-a=-(3-k).\]
+<p><b>Step E · the determinant.</b> For a $2\times2$ matrix, $\det\begin{pmatrix}p&q\\r&s\end{pmatrix}=ps-qr$. Here $p=-x^*$, $q=-x^*$, $r=y^*$, $s=-y^*$:</p>
+\[\begin{aligned}\det A&=(-x^*)(-y^*)-(-x^*)(y^*)=x^*y^*+x^*y^*=2\,x^*y^*\\&=2\cdot\frac{a-1}{2}\cdot\frac{a+1}{2}=\frac{(a-1)(a+1)}{2}=\frac{a^2-1}{2}\ \ \xrightarrow{\ a=3-k\ }\ \ \frac{(3-k)^2-1}{2}.\end{aligned}\]
+<p>(The step $(a-1)(a+1)=a^2-1$ is the difference of squares.)</p>
+<p><b>Step F · plug a number into $k$ — that is the whole table.</b> Every deer–wolf row is just Steps D and E evaluated at one value of $k$; the last three presets are small matrices whose trace and determinant can be read off directly, and their arithmetic is shown too.</p>
+<table class="num"><tr><th>preset</th><th>where (tr, det) comes from</th><th>(tr, det)</th><th>type</th></tr>
+<tr><td>deer–wolf k = 0</td><td>$a=3-0=3$: $\operatorname{tr}=-3$, $\det=\tfrac{3^2-1}{2}=\tfrac{8}{2}=4$ (the matrix is $\begin{pmatrix}-1&-1\\2&-2\end{pmatrix}$ at $(1,2)$)</td><td>(−3, 4)</td><td>spiral sink</td></tr>
+<tr><td>k = 3 − √2</td><td>$a=3-(3-\sqrt2)=\sqrt2$: $\operatorname{tr}=-\sqrt2\approx-1.41$, $\det=\tfrac{2-1}{2}=0.5$; and $\Delta=\operatorname{tr}^2-4\det=2-2=0$: exactly on the parabola (Problem 2(c))</td><td>(−1.41, 0.5)</td><td>spiral → node</td></tr>
+<tr><td>k = 1.8</td><td>$a=1.2$: $\operatorname{tr}=-1.2$, $\det=\tfrac{1.44-1}{2}=0.22$</td><td>(−1.2, 0.22)</td><td>nodal sink</td></tr>
+<tr><td>k = 2</td><td>$a=1$: $\operatorname{tr}=-1$, $\det=\tfrac{1-1}{2}=0$: exactly on the red line, one eigenvalue is $0$ — the coexistence point is colliding with $(0,1)$ (Problem 2(d))</td><td>(−1, 0)</td><td>det = 0</td></tr>
+<tr><td>k = 2.5</td><td>$a=0.5$: $\operatorname{tr}=-0.5$, $\det=\tfrac{0.25-1}{2}=-0.375$: negative determinant — the point has left the first quadrant</td><td>(−0.5, −0.38)</td><td>saddle</td></tr>
+<tr><td>shark saddle</td><td>$\begin{pmatrix}0&1\\1&0\end{pmatrix}$ at the shark–squid point $(1,-1)$: $\operatorname{tr}=0+0=0$, $\det=0\cdot0-1\cdot1=-1$ (Problem 3)</td><td>(0, −1)</td><td>saddle</td></tr>
+<tr><td>lecture center</td><td>$\begin{pmatrix}0&1\\-1&0\end{pmatrix}$, the lecture's shark–food-fish point: $\operatorname{tr}=0+0=0$, $\det=0\cdot0-1\cdot(-1)=1$</td><td>(0, 1)</td><td>center</td></tr>
+<tr><td>origin (source)</td><td>$\begin{pmatrix}3&0\\0&1\end{pmatrix}$, the deer–wolf origin $(0,0)$: $\operatorname{tr}=3+1=4$, $\det=3\cdot1-0\cdot0=3$</td><td>(4, 3)</td><td>nodal source</td></tr></table>
+<p>The portrait drawn in this playground uses the stand-in matrix $\begin{pmatrix}0&1\\-D&T\end{pmatrix}$ with the same trace and determinant — same type, possibly sheared. A good exercise: start at "deer–wolf k = 0" and drag the point slowly through the presets in order of $k$ — that drag <i>is</i> Problem 2 happening on the map: spiral sink → parabola → nodal sink → red line → saddle.</p></section>`,
   controls: () => [
     {type: 'stages', key: 'stpl', labels: ['Explore', 'Cross det = 0', 'Cross the parabola', 'Cross tr = 0', 'Recitation matrices'], on: () => { const s = P.stpl; if (s === 2){ P.ptr = -1; P.pdet = 0.15; } if (s === 3){ P.ptr = -1.414; P.pdet = 0.6; } if (s === 4){ P.ptr = -0.3; P.pdet = 1; } }},
     {type: 'range', key: 'ptr', label: 'Trace T', min: -4, max: 4, step: 0.01}, {type: 'range', key: 'pdet', label: 'Determinant D', min: -3, max: 6, step: 0.01},
     {type: 'chips', items: PLAY_PRESETS.map(p => ({type: 'button', label: p[0], on: () => { P.ptr = p[1]; P.pdet = p[2]; }}))}],
   tap(X, Y){ const t = LV.td; if (t && t.inside(X, Y)){ P.ptr = clamp(Math.round(t.x(X) * 100) / 100, -4, 4); P.pdet = clamp(Math.round(t.y(Y) * 100) / 100, -3, 6); } },
   figeq: () => { const li = linInfo([[0, 1], [-P.pdet, P.ptr]]); return R`A=\begin{pmatrix}0&1\\${fs(-P.pdet, 2)}&${fs(P.ptr, 2)}\end{pmatrix}:\ \ \lambda^2-(${fs(P.ptr, 2)})\lambda+(${fs(P.pdet, 2)})=0,\ \ ${eigTex(li)}`; },
-  legend: () => [{k: 'dot', c: COL.blue, t: 'the matrix (drag)'}, {k: 'line', c: COL.pur, t: 'parabola Δ = 0'}, {k: 'line', c: COL.red, t: 'det = 0'}],
+  legend: () => [{k: 'dot', c: COL.blue, t: 'the matrix (drag)'}, {k: 'line', c: COL.pur, t: 'parabola Δ = 0'}, {k: 'line', c: COL.red, t: 'det = 0'}, {k: 'line', c: COL.green, t: 'eigenline, λ < 0 (in)'}, {k: 'line', c: COL.red, t: 'eigenline, λ > 0 (out)'}],
   draw(){
     const L = layout2({second: true, frac: 0.46, hfrac: 0.46}); const T = P.ptr, D = P.pdet, A = [[0, 1], [-D, T]], li = linInfo(A);
     const tv = drawTrDet(L.plane, {tr: [-4.2, 4.2], det: [-3.2, 6.2], pts: PLAY_PRESETS.map(p => ({tr: p[1], det: p[2], c: '#b9c0cc', r: 4})).concat([{tr: T, det: D, c: COL.blue, r: 8, id: 'pl_pt', label: typeName(li)}]), title: 'trace–determinant map'});
     const X = tv.X(T), Y = tv.Y(D); drag('pl_pt', X, Y, 22, (sx, sy) => { P.ptr = clamp(Math.round(tv.x(sx) * 100) / 100, -4, 4); P.pdet = clamp(Math.round(tv.y(sy) * 100) / 100, -3, 6); syncControls(); });
+    { let mapOK = false; drag('pl_map', tv.l + tv.w / 2, tv.t + tv.h / 2, Math.hypot(tv.w, tv.h) / 2, (sx, sy, first) => { if (first) mapOK = tv.inside(sx, sy); if (!mapOK) return; P.ptr = clamp(Math.round(tv.x(sx) * 100) / 100, -4, 4); P.pdet = clamp(Math.round(tv.y(sy) * 100) / 100, -3, 6); syncControls(); }); }
     const r = L.box; panel(r); const pr = {l: r.l + 10, t: r.t + 22, w: r.w - 20, h: r.h - 30}; const v = pvc(0, 0, 1, pr); const fn = (x, y) => [A[0][0] * x + A[0][1] * y, A[1][0] * x + A[1][1] * y];
     v.clip(() => { drawField(v, fn, 16, 'rgba(170,178,191,.7)'); line(v.l, v.Y(0), v.l + v.w, v.Y(0), COL.axis, 1); line(v.X(0), v.t, v.X(0), v.t + v.h, COL.axis, 1); });
     const sz = Math.max(0.3, Math.abs(T) / 2 + Math.sqrt(Math.abs(D)));
     for (let k = 0; k < 14; k++){ const an = TAU * k / 14 + 0.17; const pts = cached('pl|' + f(T, 2) + '|' + f(D, 2) + '|' + k, () => flow(fn, 0.85 * Math.cos(an), 0.85 * Math.sin(an), {T: 40 / sz, dt: 0.01 / sz, back: true, box: [-1.3, 1.3, -1.3, 1.3]})); drawCurve(v, pts, COL.pur, 1.3, {id: 'pl_traj'}); }
-    if (li.l1 != null && li.type !== 'star'){ for (const lam of (Math.abs(li.l1 - li.l2) < 1e-7 ? [li.l1] : [li.l1, li.l2])){ const e = eigvec(A, lam); v.clip(() => line(v.X(-e[0] * 2), v.Y(-e[1] * 2), v.X(e[0] * 2), v.Y(e[1] * 2), lam > 1e-9 ? COL.red : lam < -1e-9 ? COL.green : COL.mut, 2.4)); } }
+    if (li.l1 != null && li.type !== 'star'){ (Math.abs(li.l1 - li.l2) < 1e-7 ? [li.l1] : [li.l1, li.l2]).forEach((lam, i) => { const e = eigvec(A, lam); const cE = lam > 1e-9 ? COL.red : lam < -1e-9 ? COL.green : COL.mut;
+      v.clip(() => line(v.X(-e[0] * 2), v.Y(-e[1] * 2), v.X(e[0] * 2), v.Y(e[1] * 2), cE, 2.4));
+      lbl(['eigenline: λ = ' + fs(lam, 2) + (lam < -1e-9 ? ' (in)' : lam > 1e-9 ? ' (out)' : '')], v.X(e[0] * (i ? -0.62 : 0.62)), v.Y(e[1] * (i ? -0.62 : 0.62)), v, {color: cE, size: 10.5, dy: i ? 10 : -24}); }); }
+    else if (li.l1 == null) txt('complex λ: no real eigenvector, so no eigenlines — everything turns', r.l + 8, r.t + r.h - 8, {size: 10.5, color: COL.mut});
     dot(v.X(0), v.Y(0), 6, li.stable ? COL.red : '#fff', COL.red, 2);
     txt('portrait of u̇ = A u: ' + typeName(li), r.l + 8, r.t + 14, {size: 11, color: COL.mut});
     LEG_AT = {left: L.plane.l + 40, top: L.plane.t + 24};
@@ -3141,8 +3203,481 @@ const SUMMARY = {
 };
 
 /* ---------- insert the new steps and number every step ---------- */
+
+/* ---------- step 5c: the eigenvalue gallery ---------- */
+Object.assign(P, {stlg: 1, lgx0: 1.6, lgy0: 1.1,
+  g1l1: -1, g1l2: -2, g1t1: 0, g1t2: 90,
+  g2l1: 1, g2l2: 2, g2t1: 0, g2t2: 90,
+  g3ln: -1, g3lp: 1, g3tn: 0, g3tp: 90,
+  g4p: -0.2, g4q: 1, g4al: 0, g4be: 90, g4r: 1,
+  g5l: -1, g5s: 1, g5t: 0});
+const LG_RAD = Math.PI / 180;
+function lgCols(c1, c2, w1, w2){   // the matrix A with A·w1 = c1 and A·w2 = c2
+  const dt = w1[0] * w2[1] - w1[1] * w2[0];
+  const m = [[w2[1] / dt, -w2[0] / dt], [-w1[1] / dt, w1[0] / dt]];
+  const z = x => Math.abs(x) < 5e-13 ? 0 : x;
+  return [[z(c1[0] * m[0][0] + c2[0] * m[1][0]), z(c1[0] * m[0][1] + c2[0] * m[1][1])],
+          [z(c1[1] * m[0][0] + c2[1] * m[1][0]), z(c1[1] * m[0][1] + c2[1] * m[1][1])]];
+}
+function lgBuild(){   // build A from the slider-chosen eigen-data of the current stage
+  const s = P.stlg;
+  if (s === 4){
+    let be = P.g4be; if (Math.abs(be) < 20) be = be >= 0 ? 20 : -20;
+    const p = P.g4p, q = P.g4q, al = P.g4al * LG_RAD, r = P.g4r;
+    const a = [Math.cos(al), Math.sin(al)], b = [r * Math.cos(al + be * LG_RAD), r * Math.sin(al + be * LG_RAD)];
+    const A = lgCols([p * a[0] - q * b[0], p * a[1] - q * b[1]], [q * a[0] + p * b[0], q * a[1] + p * b[1]], a, b);
+    return {A, a, b, p, q, nudged: be !== P.g4be};
+  }
+  if (s === 5){
+    const lam = P.g5l, sh = P.g5s, th = P.g5t * LG_RAD, c = Math.cos(th), si = Math.sin(th);
+    const rj = [[c * lam, c * sh - si * lam], [si * lam, si * sh + c * lam]];
+    const z = x => Math.abs(x) < 5e-13 ? 0 : x;
+    const A = [[z(rj[0][0] * c - rj[0][1] * si), z(rj[0][0] * si + rj[0][1] * c)],
+               [z(rj[1][0] * c - rj[1][1] * si), z(rj[1][0] * si + rj[1][1] * c)]];
+    return {A, w: [c, si], lam, sh, star: Math.abs(sh) < 1e-9};
+  }
+  const l1 = s === 1 ? P.g1l1 : s === 2 ? P.g2l1 : P.g3ln, l2 = s === 1 ? P.g1l2 : s === 2 ? P.g2l2 : P.g3lp;
+  const t1 = s === 1 ? P.g1t1 : s === 2 ? P.g2t1 : P.g3tn; let t2 = s === 1 ? P.g1t2 : s === 2 ? P.g2t2 : P.g3tp;
+  const t2o = t2, d = ((t2 - t1) % 180 + 180) % 180; if (d < 10) t2 = t1 + 10; else if (d > 170) t2 = t1 + 170;
+  const w1 = [Math.cos(t1 * LG_RAD), Math.sin(t1 * LG_RAD)], w2 = [Math.cos(t2 * LG_RAD), Math.sin(t2 * LG_RAD)];
+  const A = lgCols([l1 * w1[0], l1 * w1[1]], [l2 * w2[0], l2 * w2[1]], w1, w2);
+  return {A, w1, w2, l1, l2, nudged: t2 !== t2o};
+}
+const lgFn = A => (x, y) => [A[0][0] * x + A[0][1] * y, A[1][0] * x + A[1][1] * y];
+const lgKey = A => [A[0][0], A[0][1], A[1][0], A[1][1]].map(x => f(x, 3)).join(',');
+const lgOrbit = A => cached('lgo|' + lgKey(A) + '|' + f(P.lgx0, 2) + ',' + f(P.lgy0, 2), () => orbitT(lgFn(A), P.lgx0, P.lgy0, 8, 0.01));
+const LG_PRE = {
+  1: [['off-diagonal 0: diag(−1, −2)', {g1l1: -1, g1l2: -2, g1t1: 0, g1t2: 90}], ['off-diagonal ≠ 0: same λ, w₂ at 45°', {g1l1: -1, g1l2: -2, g1t1: 0, g1t2: 45}], ['nearly equal rates', {g1l1: -1, g1l2: -1.1, g1t1: 0, g1t2: 90}], ['same shape, 1.5× faster', {g1l1: -1.5, g1l2: -3, g1t1: 0, g1t2: 90}]],
+  2: [['off-diagonal 0: diag(1, 2)', {g2l1: 1, g2l2: 2, g2t1: 0, g2t2: 90}], ['off-diagonal ≠ 0: same λ, w₂ at 45°', {g2l1: 1, g2l2: 2, g2t1: 0, g2t2: 45}]],
+  3: [['off-diagonal 0: diag(−1, 1)', {g3ln: -1, g3lp: 1, g3tn: 0, g3tp: 90}], ['zero diagonal: all coupling', {g3ln: -1, g3lp: 1, g3tn: -45, g3tp: 45}], ['strong in, weak out', {g3ln: -2.5, g3lp: 0.3, g3tn: 0, g3tp: 90}]],
+  4: [['spiral sink', {g4p: -0.2, g4q: 1, g4al: 0, g4be: 90, g4r: 1}], ['spiral source', {g4p: 0.2, g4q: 1, g4al: 0, g4be: 90, g4r: 1}], ['center: zero diagonal', {g4p: 0, g4q: 1, g4al: 0, g4be: 90, g4r: 1}], ['deer–wolf at (1, 2)', {g4p: -1.5, g4q: 1.3229, g4al: -92.4006, g4be: -64.5708, g4r: 0.80346}]],
+  5: [['star: A = λI (shear 0)', {g5l: -1, g5s: 0, g5t: 0}], ['degenerate node (shear 1)', {g5l: -1, g5s: 1, g5t: 0}], ['unstable star (λ = +1)', {g5l: 1, g5s: 0, g5t: 0}], ['tilted, shear −1.5', {g5l: -1, g5s: -1.5, g5t: 30}]]
+};
+const LGAL = {
+  num: '5c', grp: 'set-up', nav: 'Eigenvalue gallery', T: 8,
+  title: 'The eigenvalue gallery: choose λ and w, watch how u moves', layerKey: 'stlg',
+  figtitle: 'One linear system u̇ = Au around its critical point at the origin — with A built from the eigen-data on the sliders.', figsub: 'Each stage is one kind of eigenvalue pair. The sliders choose the eigenvalues and the eigenvectors; A is rebuilt from them and everything redraws live. Drag the hollow dot (or click the plane) to choose a start, press Play to watch u(t). The small map shows where the current A sits among the types.',
+  enter(){ P.tA = 0; P.play = false; },
+  tick(dt){ return tickAnim(dt); },
+  text: () => R`
+<p>Step 5 says the eigenvalues decide everything. This step shows it — and it runs the logic <b>backwards, on purpose</b>: instead of starting from a matrix $A$ and computing $\lambda$ and $\mathbf w$, the sliders choose the eigenvalues and the eigenvectors, and the step builds the matrix that has exactly those ($A=W\,\mathrm{diag}(\lambda_1,\lambda_2)\,W^{-1}$ in the real cases — the box right after this list derives that formula from scratch — and the rotation form below in the complex case). So three experiments are always available, in every stage:</p>
+<ul><li>move only the $\lambda$ sliders: the skeleton of lines stays put, the <i>schedule</i> changes — $\lambda$ sets the <b>rates</b>;</li>
+<li>move only the direction sliders: the rates stay, the skeleton rotates and shears — $\mathbf w$ sets the <b>geometry</b>;</li>
+<li>move both and watch the matrix $A$, the map point and the motion change together.</li></ul>
+<div class="box clar"><b>Where does A = W diag(λ₁, λ₂) W⁻¹ come from?</b>
+<p>It is nothing more than the two eigenvector equations, packed into one matrix equation and then solved for $A$. The wish list is</p>
+\[A\mathbf w_1=\lambda_1\mathbf w_1\qquad\text{and}\qquad A\mathbf w_2=\lambda_2\mathbf w_2.\]
+<p><b>Pack the two wishes into one.</b> Put the two arrows side by side as the <i>columns</i> of one matrix, $W=(\mathbf w_1\ \ \mathbf w_2)$. Two facts about matrix multiplication do the packing: multiplying $A$ by $W$ acts column by column, so $AW$ is the matrix whose columns are $A\mathbf w_1$ and $A\mathbf w_2$; and multiplying $W$ on the <i>right</i> by $\mathrm{diag}(\lambda_1,\lambda_2)$ scales $W$'s first column by $\lambda_1$ and its second by $\lambda_2$, giving the matrix with columns $\lambda_1\mathbf w_1$ and $\lambda_2\mathbf w_2$. So the two wishes say, column for column, exactly</p>
+\[A\,W=W\,\mathrm{diag}(\lambda_1,\lambda_2).\]
+<p><b>Solve for $A$.</b> The sliders keep the two directions at least $10°$ apart, so $\mathbf w_1,\mathbf w_2$ span the plane and $W$ has an inverse. Multiply both sides on the right by $W^{-1}$ — the $W\,W^{-1}$ on the left side cancels to the identity:</p>
+\[A=W\,\mathrm{diag}(\lambda_1,\lambda_2)\,W^{-1}.\]
+<p><b>Check it with numbers</b>, on the "off-diagonal ≠ 0" preset: $\mathbf w_1=(1,\,0)$, $\mathbf w_2=(0.71,\,0.71)$, $\lambda_1=-1$, $\lambda_2=-2$. Then</p>
+\[W=\begin{pmatrix}1&0.71\\0&0.71\end{pmatrix},\quad \det W=0.71,\quad W^{-1}=\frac{1}{0.71}\begin{pmatrix}0.71&-0.71\\0&1\end{pmatrix}=\begin{pmatrix}1&-1\\0&1.41\end{pmatrix},\]
+\[W\,\mathrm{diag}(-1,-2)=\begin{pmatrix}-1&-1.42\\0&-1.42\end{pmatrix},\qquad \begin{pmatrix}-1&-1.42\\0&-1.42\end{pmatrix}\begin{pmatrix}1&-1\\0&1.41\end{pmatrix}=\begin{pmatrix}-1&-1\\0&-2\end{pmatrix}\]
+<p>— exactly the matrix that preset shows in the equation strip and the live panel. And the quick sanity check from the reading guide closes the loop: this $A$ really sends $(0.71,\,0.71)$ to $-2\,(0.71,\,0.71)$.</p>
+<p><b>How to read the formula</b> (right to left — the order in which matrices act on a vector): $W^{-1}$ translates a state into eigen-coordinates ($c_1,c_2$: how much of $\mathbf w_1$, how much of $\mathbf w_2$ it contains), $\mathrm{diag}(\lambda_1,\lambda_2)$ scales each coordinate at its own rate, and $W$ translates the result back into $u,v$ coordinates. A matrix with prescribed eigen-behaviour is built as "go to the eigenbasis, act simply there, come back". The complex case (stage 4) uses the very same recipe with the rotation block $\begin{pmatrix}p&q\\-q&p\end{pmatrix}$ in the middle instead of a diagonal, and stage 5's repeated-$\lambda$ case with the shear block $\begin{pmatrix}\lambda&s\\0&\lambda\end{pmatrix}$.</p></div>
+<p>The moving dot <i>is</i> $\mathbf u(t)$; the faint curves show the whole flow for the current $A$.</p>
+<h3>Reading guide: u and v, w₁ and w₂, the angles, and u(t)</h3>
+<p><b>Where did x and y go?</b> The deer–wolf problem lives in the $(x,y)$ plane. Near a critical point $(x^*,y^*)$, step 4 zooms in on the <i>deviations</i> $u=x-x^*$ and $v=y-y^*$ — how far the state is from the critical point, coordinate by coordinate. This step's plane is that deviation plane: the red dot at the origin is the critical point itself (deviation zero), $u$ measures deviation in the deer coordinate, $v$ in the wolf coordinate.</p>
+<p><b>What are $\mathbf w_1$ and $\mathbf w_2$?</b> Not states, and not points on the trajectory: two fixed <b>directions</b> in this plane — the eigenvectors of $A$. A pair of numbers like $\mathbf w_1=(0.93,\ 0.36)$ names a unit arrow from the origin: $0.93$ across, $0.36$ up. What makes the arrow special: a deviation pointing along $\mathbf w_1$ is not rotated by $A$ at all, only <i>scaled</i>, at the rate $\lambda_{\mathbf w_1}$ — each $\mathbf w$ comes with its own $\lambda$, the growth or decay rate along its line.</p>
+<p><b>How are $\mathbf w_1,\mathbf w_2$ calculated?</b> In this step, deliberately, they are not calculated — they are <b>chosen</b>. The direction sliders set the arrows, the $\lambda$ sliders set the rates, and the matrix is then built to match: $A=W\,\mathrm{diag}(\lambda_1,\lambda_2)\,W^{-1}$ with $W=(\mathbf w_1\ \mathbf w_2)$. (The forward direction — given $A$ first, find its $\mathbf w$ by solving $(A-\lambda I)\mathbf w=\mathbf 0$ — is the whole subject of step 5d, hunted by hand and then computed.) Two checks that the chosen arrows really are eigenvectors of the built matrix:</p>
+<ul><li>Default sink, $A=\mathrm{diag}(-1,-2)$, $\mathbf w_1=(1,\,0)$: row by row, $A\mathbf w_1=(-1\cdot1+0\cdot0,\ \ 0\cdot1-2\cdot0)=(-1,\ 0)=-1\cdot\mathbf w_1$ ✓ — scaled by $-1$, not turned.</li>
+<li>"Off-diagonal ≠ 0" preset, $A=\begin{pmatrix}-1&-1\\0&-2\end{pmatrix}$, $\mathbf w_2=(0.71,\ 0.71)$ (the $45°$ arrow): $A\mathbf w_2=(-0.71-0.71,\ \ 0-1.42)=(-1.42,\ -1.42)=-2\cdot\mathbf w_2$ ✓ — scaled by $-2$, not turned.</li></ul>
+<p><b>The angle sliders: measured from what, turning which way?</b> Each "direction" slider is the compass bearing of its arrow, measured <b>from the positive $u$-axis</b> (the horizontal axis, pointing right), turning <b>anticlockwise</b>: $0°$ is the arrow $(1,\,0)$; $90°$ is $(0,\,1)$, straight up; $21°$ is $(\cos21°,\ \sin21°)=(0.93,\ 0.36)$ — compare any direction slider with the $\mathbf w$ printed in the live panel. The angle is a one-number way of pointing an arrow — it is <i>not</i> an angle between two things — and $\theta$ and $\theta+180°$ point along the same line.</p>
+<p><b>How is each line drawn from $\mathbf w$ and $\lambda$?</b> The eigenline is the set of all multiples $c\,\mathbf w$ — every multiple of an eigenvector is an eigenvector with the same $\lambda$, since $A(c\mathbf w)=c\,A\mathbf w=\lambda\,(c\mathbf w)$ — so the figure simply plots the segment from $-4\,\mathbf w$ to $+4\,\mathbf w$ through the origin. $\lambda$ contributes no geometry to the line; it chooses the <b>colour and the arrowheads</b>: $\lambda\lt 0$ green with arrows pointing in towards the point, $\lambda>0$ red with arrows pointing out, and its value is printed in the line's label.</p>
+<p><b>And what is $\mathbf u(t)$ — how is it different from $\mathbf w$?</b> $\mathbf u(t)$ is the <b>state</b>: the actual deviation at time $t$, the moving blue dot, with a past and a future. $\mathbf w_1,\mathbf w_2$ are fixed <b>directions</b>, the skeleton of the picture; they never move. The two are linked by the recipe</p>
+\[\mathbf u(t)=c_1\exp(\lambda_1t)\,\mathbf w_1+c_2\exp(\lambda_2t)\,\mathbf w_2:\]
+<p>the $\mathbf w$'s are the ingredients, the $\exp(\lambda t)$'s the schedule, $\mathbf u(t)$ the resulting motion — and $c_1,c_2$ in the live panel are the current amounts of each ingredient. Worked at the default: the start $(1.6,\ 1.1)$ with $\mathbf w_1=(1,0)$, $\mathbf w_2=(0,1)$ gives simply $c_1=1.6$, $c_2=1.1$. With $\mathbf w_2$ tilted to $45°$ instead: the $v$-coordinate must come entirely from $\mathbf w_2$, so $c_2\cdot0.71=1.1$ forces $c_2=1.55$, and then $c_1=1.6-1.55\cdot0.71=0.5$. Check: $0.5\,(1,\,0)+1.55\,(0.71,\,0.71)=(1.6,\ 1.1)$ ✓. In general, writing $\mathbf u=c_1\mathbf w_1+c_2\mathbf w_2$ out by components gives two ordinary equations in the two unknowns $c_1,c_2$; the live panel solves them by Cramer's rule at every instant and prints the result.</p>
+<h3>The live panel's formulas, derived line by line</h3>
+<p>Three quantities in the live panel — $c_1$, the frozen "name-tag", and $t^*$ — each come from a short derivation. Here is each one, every step written out.</p>
+<p><b>Derivation 1 · the formula for $c_1$ (where Cramer's rule comes from).</b> To keep the algebra readable, name the components: $\mathbf w_1=(p,\ q)$, $\mathbf w_2=(r,\ s)$, and the dot's position $\mathbf u=(u,\ v)$. The statement $\mathbf u=c_1\mathbf w_1+c_2\mathbf w_2$, read component by component, is two ordinary equations:</p>
+\[\text{(i)}\ \ u=c_1\,p+c_2\,r,\qquad \text{(ii)}\ \ v=c_1\,q+c_2\,s.\]
+<p>To get $c_1$, eliminate $c_2$: multiply (i) by $s$, multiply (ii) by $r$,</p>
+\[u\,s=c_1\,p\,s+c_2\,r\,s,\qquad v\,r=c_1\,q\,r+c_2\,s\,r,\]
+<p>and subtract — the two $c_2$ terms are identical ($c_2rs=c_2sr$) and cancel:</p>
+\[u\,s-v\,r=c_1\,(p\,s-q\,r)\qquad\Longrightarrow\qquad c_1=\frac{u\,s-v\,r}{p\,s-q\,r}.\]
+<p>Now recognise both pieces: the denominator $ps-qr$ is the determinant of the matrix with columns $\mathbf w_1,\mathbf w_2$, and the numerator $us-vr$ is the determinant of the matrix with columns $\mathbf u,\mathbf w_2$. That recognition <i>is</i> Cramer's rule — "replace the $c_1$ column by $\mathbf u$ and divide by the determinant":</p>
+\[c_1=\frac{\det(\mathbf u\ \ \mathbf w_2)}{\det(\mathbf w_1\ \ \mathbf w_2)}.\]
+<p>Eliminating $c_1$ instead (multiply (i) by $q$, (ii) by $p$, subtract) gives $c_2=\det(\mathbf w_1\ \,\mathbf u)/\det(\mathbf w_1\ \mathbf w_2)$. Numbers, default stage 1: $\mathbf w_1=(1,0)$, $\mathbf w_2=(0,1)$, $\mathbf u=(1.6,\,1.1)$: $c_1=(1.6\cdot1-1.1\cdot0)/(1\cdot1-0\cdot0)=1.6$ and $c_2=1.1$. With $\mathbf w_2$ at $45°$, $(r,s)=(0.71,\,0.71)$: denominator $=1\cdot0.71-0\cdot0.71=0.71$, $c_1=(1.6\cdot0.71-1.1\cdot0.71)/0.71=0.5$, $c_2=(1\cdot1.1-0\cdot1.6)/0.71=1.55$ — the same numbers the reading guide found by inspection.</p>
+<p><b>Derivation 2 · the frozen name-tag $|c_2|\,|c_1|^{-\lambda_2/\lambda_1}$.</b> Start from what case texts established: along a trajectory each ingredient runs its own exponential,</p>
+\[c_1(t)=c_1(0)\exp(\lambda_1t),\qquad c_2(t)=c_2(0)\exp(\lambda_2t).\]
+<p>Step 1 — the key move: raise the first equation to the power $\lambda_2/\lambda_1$, chosen <i>precisely</i> so its exponential turns into the second one's. Using $(\exp(\lambda_1t))^{\lambda_2/\lambda_1}=\exp(\lambda_1t\cdot\lambda_2/\lambda_1)=\exp(\lambda_2t)$:</p>
+\[|c_1(t)|^{\lambda_2/\lambda_1}=|c_1(0)|^{\lambda_2/\lambda_1}\,\exp(\lambda_2t).\]
+<p>Step 2 — divide the $c_2$ equation by this: the factor $\exp(\lambda_2t)$ now appears on top and bottom and cancels — this is exactly what "the $t$'s cancel" means:</p>
+\[\frac{|c_2(t)|}{|c_1(t)|^{\lambda_2/\lambda_1}}=\frac{|c_2(0)|\,\exp(\lambda_2t)}{|c_1(0)|^{\lambda_2/\lambda_1}\,\exp(\lambda_2t)}=\frac{|c_2(0)|}{|c_1(0)|^{\lambda_2/\lambda_1}}.\]
+<p>The right side contains no $t$: however long the dot runs, this combination keeps its start value. Step 3 — why "name-tag of the power curve": rearranged, $|c_2|=K\,|c_1|^{\lambda_2/\lambda_1}$ with $K$ that constant — an equation between the two coordinates with <b>no time in it</b>, i.e. the equation of the path itself, exactly as $y=Kx^2$ is a parabola. Each start gets its own $K$, its own curve of the family; the dot can slide along its curve but can never change $K$ — that is why the number sits still during Play while everything else moves. Numbers, default: $\lambda_2/\lambda_1=(-2)/(-1)=2$, $K=1.1/1.6^2=0.430$. Verify at a later time, $t=1$: $c_1=1.6\exp(-1)=0.589$, $c_2=1.1\exp(-2)=0.149$, and $0.430\cdot0.589^2=0.430\cdot0.347=0.149$ ✓ — same tag, later point of the same parabola.</p>
+<p><b>Derivation 3 · the tie equation and $t^*$.</b> The question: the dot's direction is controlled by whichever ingredient is larger in size, so <i>when do the two sizes tie?</i> That moment is the corner of the curve. Step 1 — write the question as an equation (one unknown, $t$):</p>
+\[|c_1(0)|\exp(\lambda_1t)=|c_2(0)|\exp(\lambda_2t).\]
+<p>Step 2 — take the natural logarithm of both sides, using $\ln(ab)=\ln a+\ln b$ and $\ln\exp(x)=x$:</p>
+\[\ln|c_1(0)|+\lambda_1t=\ln|c_2(0)|+\lambda_2t.\]
+<p>Step 3 — collect the $t$ terms on one side and the logarithms on the other:</p>
+\[\ln|c_1(0)|-\ln|c_2(0)|=(\lambda_2-\lambda_1)\,t.\]
+<p>Step 4 — use $\ln a-\ln b=\ln(a/b)$ and divide by $(\lambda_2-\lambda_1)$:</p>
+\[t^*=\frac{\ln|c_1(0)/c_2(0)|}{\lambda_2-\lambda_1}.\]
+<p>Use and interpretation: before $t^*$ one ingredient dominates and the path runs near its eigenline; after $t^*$ the other takes over — $t^*$ timestamps the handover, the visible bend of the trajectory (and, for a saddle started near the in-line, also the moment of closest approach). Numbers, default: $t^*=\ln(1.6/1.1)/(-2-(-1))=0.375/(-1)=-0.37$ — negative, so the tie lies <i>before</i> the chosen start and the visible run is all after the corner. For the saddle start $(1,\,0.01)$ of stage 3: $t^*=\ln(1/0.01)/(1-(-1))=\ln(100)/2\approx2.30$, exactly where its table turns.</p>
+<h3>Off-diagonal zero versus non-zero: what changes, and what does not</h3>
+<p>Written out, $\dot{\mathbf u}=A\mathbf u$ is the pair</p>
+\[\dot u=a_{11}\,u+a_{12}\,v,\qquad \dot v=a_{21}\,u+a_{22}\,v.\]
+<p>The off-diagonal entries $a_{12},a_{21}$ are the <b>coupling</b>: how much each variable's rate depends on the <i>other</i> variable. Every stage has preset buttons for both situations, so the comparison can be watched live:</p>
+<ul>
+<li><b>Off-diagonal zero (a diagonal $A$).</b> The equations decouple — $u$ never feels $v$. Each coordinate evolves alone, $u=u_0\exp(a_{11}t)$ and $v=v_0\exp(a_{22}t)$; the eigenvalues are simply the diagonal entries, and the eigenvectors are the axes. Only cases 1–3 can look like this, and the eigenvalues are forced to be <b>real</b>: a decoupled system cannot rotate.</li>
+<li><b>Off-diagonal non-zero, same λ (press "off-diagonal ≠ 0: same λ" and compare with "off-diagonal 0").</b> The live panel shows the same eigenvalues, the same rates, the same type, the same shrink factors — <i>nothing about the dynamics changed</i>. Only the coordinates did: the eigenlines are no longer the axes, so in the $u,v$ bookkeeping the variables now feed each other. Along each eigenline the motion still decouples perfectly. Coupling of this kind tilts and shears the picture; it creates nothing new.</li>
+<li><b>Off-diagonal entries of opposite signs: coupling that circulates.</b> This is the kind that creates rotation. For any $2\times2$ matrix the discriminant can be rewritten as \[\Delta=(\operatorname{tr}A)^2-4\det A=(a_{11}-a_{22})^2+4\,a_{12}a_{21},\] and complex eigenvalues need $\Delta\lt 0$ — impossible unless $a_{12}a_{21}\lt 0$: one entry positive and the other negative, so $v$ pushes $u$ one way while $u$ pushes $v$ back the other. The cleanest comparison in this step is a pair of matrices that differ in a single sign:</li></ul>
+<table class="num"><tr><th></th><th>stage 3 · "zero diagonal"</th><th>stage 4 · "center"</th></tr>
+<tr><td>matrix</td><td>$\begin{pmatrix}0&1\\1&0\end{pmatrix}$</td><td>$\begin{pmatrix}0&-1\\1&0\end{pmatrix}$</td></tr>
+<tr><td>$a_{12}a_{21}$</td><td>$+1$</td><td>$-1$</td></tr>
+<tr><td>$\Delta=(0-0)^2+4a_{12}a_{21}$</td><td>$+4$</td><td>$-4$</td></tr>
+<tr><td>eigenvalues</td><td>$\lambda=\pm1$ (real)</td><td>$\lambda=\pm i$ (complex)</td></tr>
+<tr><td>motion of u</td><td>in–out <b>saddle</b> on the $\pm45°$ diagonals</td><td>pure <b>rotation</b>: closed circles</td></tr></table>
+<p>Four entries of the same size; flipping one sign turns in-and-out motion into circulation. Deer–wolf check: at the coexistence point $a_{12}a_{21}=(-1)(2)=-2\lt 0$, which is why it can spiral; at $(3,0)$ the matrix is triangular, $a_{12}a_{21}=(-3)(0)=0$, so $\Delta\ge0$ — that point cannot rotate, and indeed it is a saddle.</p>
+<h3>Why these shapes? λ's ratios draw the curves</h3>
+<p>Every solution is a sum of two exponential movements, $\mathbf u(t)=c_1\exp(\lambda_1t)\,\mathbf w_1+c_2\exp(\lambda_2t)\,\mathbf w_2$ (or rotation times $\exp(pt)$), so every shape in the figure is the outcome of a <b>race between two exponentials</b>. Which racer is ahead, and by how much, is set by <i>ratios</i> — and that is what draws each shape.</p>
+<p><b>Nodes are power curves that hug the slow line.</b> For the default sink $\mathrm{diag}(-1,-2)$, eliminate time: $u=u_0\exp(-t)$ and $v=v_0\exp(-2t)=v_0\big(\exp(-t)\big)^2$, so along every trajectory</p>
+\[v=c\,u^{2}:\]
+<p>the curves are literally parabolas. Check it on case 1's table from $(1,1)$: $0.37^2=0.14$ ✓ and $0.14^2\approx0.018$ ✓ — each position's $v$ is the square of its $u$. In general $v=c\,u^{\lambda_2/\lambda_1}$ (in eigen-coordinates): <b>the ratio of the eigenvalues is the exponent of the curve</b>. Ratio near $1$ (preset "nearly equal rates"): power $\approx1$, almost straight rays — a star-like node. Large ratio: curves like $v=u^5$, flattened hard against the slow axis. And why does every curve arrive <i>tangent to the slow eigenline</i>? The fast component dies first — in the mix $c_1\exp(-t)\mathbf w_1+c_2\exp(-2t)\mathbf w_2$ the component ratio is $\propto\exp(-t)\to0$ — so near the point only the slow direction is left. Fast dies first; slow has the last word.</p>
+<p><b>An experiment the sliders make easy:</b> run the default, then press "same shape, 1.5× faster" ($\lambda=-1.5,-3$). The exponent $\lambda_2/\lambda_1=2$ is unchanged, so the dot runs <i>exactly the same roads</i>, only 1.5× faster. Sizes of $\lambda$ set the speed; the ratio draws the shape; $\mathbf w$ places it in the plane.</p>
+<p><b>Sources are the same film run backwards.</b> Replacing $t$ by $-t$ turns $\mathrm{diag}(1,2)$ into $\mathrm{diag}(-1,-2)$: identical roads, reversed arrows. So the source picture is the sink picture with the travel direction flipped — trajectories <i>leave</i> tangent to the slow line and bend towards the fast one far away.</p>
+<p><b>Saddles are hyperbolas, and carry a conserved label.</b> For $\mathrm{diag}(-1,1)$: $u=u_0\exp(-t)$ and $v=v_0\exp(t)$, so the product</p>
+\[u\,v=u_0v_0\ \text{ never changes.}\]
+<p>The trajectories are the level curves $uv=c$: hyperbolas with the two eigenlines as asymptotes. Check it on case 3's table from $(1,\,0.01)$: $1\times0.01=0.010$, $\ 0.37\times0.027=0.010$, $\ 0.14\times0.074=0.010$, $\ 0.018\times0.55=0.010$ — constant all the way round the bend, even while each coordinate changes a hundredfold. That conservation <i>is</i> the hyperbola: the curve is the set of points sharing the start's label. With unequal rates ("strong in, weak out", $\lambda=-2.5,\,0.3$) the exponent changes and the hyperbolas go lopsided: trajectories hug the in-line a long while before swinging out. The live panel computes this label, $|c_2|\,|c_1|^{-\lambda_2/\lambda_1}$, for the moving dot in every real case — press Play and watch the number sit still while everything else moves. Where does that expression come from? Along one trajectory each ingredient runs its own exponential, $c_1(t)=c_1(0)\exp(\lambda_1t)$ and $c_2(t)=c_2(0)\exp(\lambda_2t)$. Raise the first to the power $\lambda_2/\lambda_1$: its exponential becomes $\exp(\lambda_2t)$, the same as the second's. Divide, and time cancels completely:
+\[\frac{|c_2(t)|}{|c_1(t)|^{\lambda_2/\lambda_1}}=\frac{|c_2(0)|\exp(\lambda_2t)}{|c_1(0)|^{\lambda_2/\lambda_1}\exp(\lambda_2t)}=\frac{|c_2(0)|}{|c_1(0)|^{\lambda_2/\lambda_1}}\ \ \text{for ever.}\]
+That frozen number is the curve's <b>name-tag</b>: it is the constant $c$ in $c_2=c\,c_1^{\lambda_2/\lambda_1}$, the equation of the power curve (or hyperbola, when the exponent is negative) that the dot rides. Different starts get different tags — different curves of the same family. For the default sink from $(1.6,\,1.1)$: exponent $\lambda_2/\lambda_1=2$, tag $=1.1/1.6^2=0.430$ — the number in the live panel.</p>
+<p><b>Spirals are self-similar: each loop is a scaled copy of the last.</b> In the complex case the two racers are the radius $\exp(pt)$ and the clock $qt$. One full turn takes $2\pi/q$, and in that time the radius is multiplied by the fixed factor</p>
+\[\exp\!\big(2\pi p/q\big),\]
+<p>the <i>same factor every loop</i> — a logarithmic spiral, which looks the same at every zoom. The shape knob is the ratio $p/q$: slide $p$ close to $0$ and the factor is close to $1$ — tightly wound loops, nearly closed; at $p=0$ exactly the factor is $1$ and the loops close: the center's ellipses. The deer–wolf preset has $\exp(2\pi p/q)=\exp(-7.12)\approx0.0008$: each loop a thousandth of the one before, so barely one turn is visible before the curve hugs the point. Whether the loops are circles or tilted ellipses is $\mathbf w$'s department — the pair $\mathbf a,\mathbf b$ is the stencil the rotation is drawn through.</p>
+<p>In one sentence: <b>the sizes of the eigenvalues set speeds; their ratios draw the shapes — the exponent of a node's power curves, the constancy of a saddle's hyperbola label, the winding tightness of a spiral — and $\mathbf w$ places the stencil in the plane.</b></p>
+<h3>Early versus late: when is the trajectory parallel to an eigenline?</h3>
+<p>(A word on words first: the straight lines in this step are <b>eigenlines</b> — the lines through the eigenvectors. They are not the nullclines of steps 2–3: the nullcline $\dot u=0$ of a linear system is the different line $a_{11}u+a_{12}v=0$. Trajectory geometry is organised by the eigenlines.)</p>
+<p>Write the solution as a tug-of-war, $\mathbf u(t)=c_1\exp(\lambda_1t)\,\mathbf w_1+c_2\exp(\lambda_2t)\,\mathbf w_2$. Both terms are always present; what changes is their ratio,</p>
+\[\frac{\big|c_2\exp(\lambda_2t)\big|}{\big|c_1\exp(\lambda_1t)\big|}=\Big|\frac{c_2}{c_1}\Big|\,\exp\big((\lambda_2-\lambda_1)\,t\big),\]
+<p>which moves in one direction for ever. So one sentence covers every real case: <b>as $t\to+\infty$ the algebraically larger $\lambda$ wins and the trajectory turns parallel to its eigenline; looking backwards along the curve ($t\to-\infty$) the smaller $\lambda$ wins.</b> "Algebraically larger" means further right on the number line — $-1>-2$ and $1>-1$ — <i>not</i> larger in magnitude; that distinction is where most confusion lives. The handover is centred at the <b>tie time</b></p>
+\[t^*=\frac{\ln\big|c_1(0)/c_2(0)\big|}{\lambda_2-\lambda_1},\]
+<p>the moment the two components are equal. Where the formula comes from: set the two sizes equal, $|c_1(0)|\exp(\lambda_1t)=|c_2(0)|\exp(\lambda_2t)$, take the logarithm of both sides, $\ln|c_1(0)|+\lambda_1t=\ln|c_2(0)|+\lambda_2t$, and solve: $(\lambda_2-\lambda_1)\,t^*=\ln|c_1(0)/c_2(0)|$. Before $t^*$ the direction is close to one eigenline, after $t^*$ close to the other. A <i>negative</i> $t^*$ simply means the tie happened before the chosen start, so the visible run shows only the settled part — the default sink's start gives $t^*=\ln(1.6/1.1)/(-2-(-1))=-0.37$, matching the live panel. The live panel shows $c_1$, $c_2$ and $t^*$ for the moving dot. Case by case:</p>
+<ul>
+<li><b>Sink ($\lambda=-1$ and $-2$):</b> the algebraically larger eigenvalue is $-1$ — the <i>slow</i> one. Late in time, which for a sink means <i>near the point</i>, the slow line wins: trajectories arrive tangent to it. Early and far away, the fast line wins: the outer parts of the curves run parallel to the fast eigenline. Watch the default run from $(1,1)$: the first stride, $(1,1)\to(0.37,\,0.14)$, drops mostly in the fast direction; the last stretch creeps in flat along the slow axis.</li>
+<li><b>Source ($\lambda=1$ and $2$):</b> the same geometry with time reversed. Near the point — which for a source is the $t\to-\infty$ end of the curve — the smaller $\lambda=1$, again the slow one, dominates: trajectories are <i>born</i> tangent to the slow line, then straighten out parallel to the fast one far away. So for every node, sink or source alike: <b>near the point, the slow eigenline; far from it, the fast one.</b></li>
+<li><b>Saddle ($\lambda=-1$ and $+1$):</b> the larger eigenvalue is $+1$, the out-direction. Early the curve runs nearly parallel to the <i>in</i>-line, heading inwards; after $t^*$ it runs parallel to the <i>out</i>-line, heading away — these are the two asymptotes of the hyperbola. For the start $(1,\ 0.01)$: $t^*=\ln(1/0.01)/(1-(-1))=\ln(100)/2\approx2.30$ — exactly the corner between $t=2$ and $t=4$ in case 3's table, and also the moment of closest approach to the point.</li>
+<li><b>Start exactly on an eigenline:</b> then $c_2=0$ (or $c_1=0$), there is no tug-of-war, and the trajectory <i>is</i> the eigenline — parallel for ever, by itself. Drag the hollow dot onto a line and watch.</li>
+<li><b>Complex pair:</b> no eigenline exists and nothing settles: the direction turns for ever, passing parallel to $\mathbf a$ at $qt=0,\,\pi,\,2\pi,\dots$ and parallel to $\mathbf b$ at $qt=\tfrac\pi2,\,\tfrac{3\pi}2,\dots$ — every half-turn, with no last word. A node has a limiting direction; a spiral never does. That contrast is precisely what switches on the $\Delta=0$ parabola: in Problem 2(c), at $k=3-\sqrt2$, the spiral's endless turning freezes into a limiting direction and the point becomes a node.</li>
+<li><b>Repeated λ (case 5):</b> the tug-of-war ratio $\exp((\lambda_2-\lambda_1)t)$ equals $1$ for ever — no exponential wins. For the star every direction is an eigenline, so "parallel to an eigenline" holds trivially, always. For the degenerate node the single eigenline wins at <i>both</i> ends: far away the trajectory runs parallel to it, and it returns tangent to it — the gentle turning in between is done by the polynomial factor $t$, not by an exponential race.</li></ul>
+<section class="layer" data-layer="1"><span class="layertag">Case 1 · both λ real and negative → nodal sink</span>
+<p>The default sliders say: $\lambda_1=-1$ along $\mathbf w_1=(1,\,0)$ and $\lambda_2=-2$ along $\mathbf w_2=(0,\,1)$, which builds $A=\mathrm{diag}(-1,-2)$. The two special solutions keep their direction and only shrink — the green eigenlines. A mixed start shrinks in both coordinates at once (for the default):</p>
+<table class="num"><tr><th>t</th><th>0</th><th>1</th><th>2</th><th>4</th></tr><tr><td>u(t) from (1, 1)</td><td>(1, 1)</td><td>(0.37, 0.14)</td><td>(0.14, 0.018)</td><td>(0.018, 0.0003)</td></tr></table>
+<p>The faster eigenvalue dies first, so the path bends towards the <b>slow</b> eigenline and slides in along it. Now experiment: make $\lambda_2$ barely faster than $\lambda_1$ (preset "nearly equal rates") and the bending almost disappears; press "off-diagonal ≠ 0" — the <i>same</i> $\lambda$, only $\mathbf w_2$ tilted to $45°$ — and the matrix gains a non-zero corner while the same funnel appears tilted — trajectories still hug the slow line. $\lambda$ decides <i>how fast and which line wins</i>; $\mathbf w$ decides <i>where the lines are</i>.</p>
+<p><b>Timing:</b> far from the point the curve is parallel to the <i>fast</i> eigenline ($\lambda_2=-2$); near the point it is tangent to the <i>slow</i> one ($\lambda_1=-1$, the algebraically larger). The live panel's $c_1,c_2$ show the handover, and $t^*$ marks the corner — details in "Early versus late" above.</p></section>
+<section class="layer" data-layer="2"><span class="layertag">Case 2 · both λ real and positive → nodal source</span>
+<p>Same skeleton, signs flipped: with the default $\lambda=1,\,2$ the curves of case 1 run backwards. From $(0.1,\,0.1)$: $u(t)=(0.1\exp(t),\ 0.1\exp(2t))$ goes $(0.1,0.1)\to(0.27,\,0.74)\to(0.74,\,5.5)$ at $t=0,1,2$ — everything <b>outward</b> along frozen directions (red eigenlines). Slide a $\lambda$ towards $0.1$ and that direction leaves slowly; tilt a $\mathbf w$ and the escape routes tilt with it.</p>
+<p>In the deer–wolf system this is the origin $(0,0)$, where $\lambda=a,\ 1$ — both positive — so any tiny population grows away from "no animals".</p>
+<p><b>Timing:</b> a source is the sink film reversed, so the roles swap ends: trajectories are <i>born</i> tangent to the slow eigenline ($\lambda=1$) next to the point, and far away straighten out parallel to the fast one ($\lambda=2$).</p></section>
+<section class="layer" data-layer="3"><span class="layertag">Case 3 · one λ negative, one positive → saddle</span>
+<p>Default: $\lambda_{\text{in}}=-1$ along the green line, $\lambda_{\text{out}}=+1$ along the red line, so $A=\mathrm{diag}(-1,1)$. Use the "Start (1, 0.01)" button — a start just barely off the in-direction:</p>
+<table class="num"><tr><th>t</th><th>0</th><th>1</th><th>2</th><th>4</th><th>6</th></tr><tr><td>u(t)</td><td>(1, 0.01)</td><td>(0.37, 0.027)</td><td>(0.14, 0.074)</td><td>(0.018, 0.55)</td><td>(0.0025, 4.03)</td></tr></table>
+<p>First the state rushes <i>towards</i> the point hugging the green line; then the growing exponential takes over and it is flung <i>out</i> along the red one. Approach-then-escape is the saddle's signature. Try "strong in, weak out" ($\lambda=-2.5$ and $+0.3$): the approach is dramatic and the escape lazy, <b>but any positive eigenvalue wins in the end</b> — slide $\lambda_{\text{out}}$ as small as the slider allows and Play still ends with the dot leaving. The deer–wolf points $(0,1)$ ($\lambda=2,\,-1$) and $(3,0)$ ($\lambda=-3,\,4$) are saddles like this.</p>
+<p><b>Timing:</b> before the tie time $t^*=\ln|c_1(0)/c_2(0)|/(\lambda_{\text{out}}-\lambda_{\text{in}})$ the path is nearly parallel to the <i>in</i>-line; after it, to the <i>out</i>-line. From $(1,\,0.01)$: $t^*=\ln(100)/2\approx2.30$ — the corner of the table, and the closest approach to the point. The live panel computes $t^*$ for any start.</p>
+<p>The "zero diagonal: all coupling" preset builds $\begin{pmatrix}0&1\\1&0\end{pmatrix}$: nothing on the diagonal, all the action in the coupling. Both off-diagonal entries have the <i>same</i> sign, so $\Delta=0^2+4\cdot1\cdot1=4>0$ and the eigenvalues stay real, $\lambda=\pm1$ — still an in–out saddle, just rotated onto the $\pm45°$ diagonals. Flip the sign of one entry and rotation appears: that single-sign comparison with stage 4's center is worked out in the table above.</p></section>
+<section class="layer" data-layer="4"><span class="layertag">Case 4 · a complex pair λ = p ± qi → spiral or center</span>
+<div class="box prob"><b>Question</b>When $\lambda$ is complex, does $\mathbf u=\exp(\lambda t)\,\mathbf w$ mean that $\mathbf u$ moves along $\mathbf w$, following a rotational movement of $\mathbf w$? ($\exp(\lambda t)$ matters because it is the time-dependent factor <i>inside the solution</i> $\mathbf u$ — so what exactly happens to $\mathbf u$?)</div>
+<p>Short answer: <b>no</b>, and the missing piece — the piece everyone trips on — is that <b>when $\lambda$ is complex, the eigenvector $\mathbf w$ is complex too</b>. What is actually seen in the plane is the <i>real part</i> of $\exp(\lambda t)\,\mathbf w$, and it is a spiral, not motion along any arrow. Four small steps:</p>
+<p><b>A · w must be complex.</b> $\mathbf w$ solves $(A-\lambda I)\mathbf w=\mathbf 0$; if $\lambda=p+qi$ has an $i$ in it, so does $\mathbf w$. A complex vector splits into two <b>real</b> arrows, $\mathbf w=\mathbf a+i\,\mathbf b$ — so $\mathbf u$ cannot "move along $\mathbf w$": $\mathbf w$ is not one drawable arrow but a <b>package of two</b>. Here the sliders choose that package directly: $p$ and $q$ are the eigenvalue, and the three geometry sliders place $\mathbf a$ (purple) and $\mathbf b$ (teal). The matrix is then built as $A=M\begin{pmatrix}p&q\\-q&p\end{pmatrix}M^{-1}$ with $M=(\mathbf a\ \ \mathbf b)$, which is exactly the statement $A\mathbf a=p\mathbf a-q\mathbf b$, $A\mathbf b=q\mathbf a+p\mathbf b$, i.e. $A\mathbf w=\lambda\mathbf w$. The default ($p=-0.2$, $q=1$, $\mathbf a=(1,0)$, $\mathbf b=(0,1)$) builds $A=\begin{pmatrix}-0.2&1\\-1&-0.2\end{pmatrix}$.</p>
+<p><b>B · multiply it out.</b> With Euler's formula and $i^2=-1$:</p>
+\[\begin{aligned}\exp(\lambda t)\,\mathbf w&=\exp(pt)(\cos qt+i\sin qt)(\mathbf a+i\,\mathbf b)\\&=\exp(pt)(\mathbf a\cos qt-\mathbf b\sin qt)+i\,\exp(pt)(\mathbf a\sin qt+\mathbf b\cos qt).\end{aligned}\]
+<p>Complex-valued: bookkeeping, not yet a trajectory.</p>
+<p><b>C · real and imaginary parts are the real solutions.</b> $A$ is real, so the real and imaginary parts each solve $\dot{\mathbf u}=A\mathbf u$ on their own:</p>
+\[\mathbf u_1(t)=\exp(pt)(\mathbf a\cos qt-\mathbf b\sin qt),\qquad \mathbf u_2(t)=\exp(pt)(\mathbf a\sin qt+\mathbf b\cos qt).\]
+<p>The $i$ has done its job — packaging the rotation — and disappears. For the default this collapses to $\mathbf u_1(t)=\exp(-0.2t)(\cos t,\ -\sin t)$: a circle walk (clockwise here) times a shrinking radius.</p>
+<p><b>D · watch it, then move the sliders.</b> Press Play: the dot's direction rotates for ever — $\mathbf a\to-\mathbf b\to-\mathbf a\to\mathbf b\to\mathbf a\cdots$, trading between the two arrows of the package — while its distance from the point follows $\exp(pt)$ (the live panel shows the factor per quarter-turn, $\exp(p\pi/2q)=0.73$ for the default). <b>No frozen direction exists</b>, which is why this case has no eigenlines. Now the experiments:</p>
+<ul><li><b>Slide $p$ through $0$:</b> the rotation does not change at all; only the breathing does — inward for $p\lt 0$ (spiral sink), closed loops at exactly $p=0$ (center), outward for $p>0$ (spiral source).</li>
+<li><b>Slide $q$:</b> faster or slower turning, one loop every $2\pi/q$; the shrink <i>per loop</i> changes because the loop takes a different time.</li>
+<li><b>Rotate the pair, change the ratio $|\mathbf b|/|\mathbf a|$, or the angle from $\mathbf a$ to $\mathbf b$:</b> $\lambda$ untouched, but the circle shears into a tilted ellipse — the geometry of the spiral belongs to $\mathbf w$. The <i>sign</i> of the angle from $\mathbf a$ to $\mathbf b$ sets the turning direction.</li></ul>
+<p><b>Timing:</b> when is the dot parallel to the drawn arrows? Every half-turn, for ever: $\mathbf u_1\parallel\mathbf a$ at $qt=0,\,\pi,\,2\pi,\dots$ and $\mathbf u_1\parallel\mathbf b$ at $qt=\tfrac\pi2,\,\tfrac{3\pi}2,\dots$ It never settles on any line — a node has a limiting direction, a spiral never does, and that is exactly what changes at the $\Delta=0$ boundary (Problem 2(c)).</p>
+<div class="box clar"><b>Answer — does u move along w?</b>No. The rotation lives in the solution $\mathbf u$, not in $\mathbf w$: $\cos qt$ and $\sin qt$ steer $\mathbf u$ between $\mathbf a$ and $\mathbf b$, and $\exp(pt)$ scales its size. Change $p,q$ and only the schedule changes; change the $\mathbf a,\mathbf b$ sliders and only the shape does.</div>
+<p>The "deer–wolf at (1, 2)" preset dials in the exact matrix $\begin{pmatrix}-1&-1\\2&-2\end{pmatrix}$ of the coexistence point: $\lambda=-1.5\pm1.323\,i$, with $\mathbf a,\mathbf b$ sheared (ratio $0.8$, angle $-64.6°$), so the loops are tilted ellipses — and $p=-1.5$ is so strongly negative that each loop is over a thousand times smaller than the last: damped oscillations, deer and wolves overshooting less and less.</p></section>
+<section class="layer" data-layer="5"><span class="layertag">Case 5 · Δ = 0: one repeated λ — degenerate node or star</span>
+<div class="box prob"><b>Question</b>When $\Delta=0$ the square root in the quadratic formula vanishes and the eigenvalue is repeated: $\lambda_1=\lambda_2=\operatorname{tr}A/2$. Will there still be two different eigenlines? How could a single repeated $\lambda$ have two?</div>
+<p><b>The calculation, on a concrete pair.</b> Both matrices below have the double eigenvalue $\lambda=-1$ — same characteristic polynomial $(\lambda+1)^2$, same trace $-2$, same determinant $1$, same $\Delta=0$:</p>
+\[A_{\text{deg}}=\begin{pmatrix}-1&1\\0&-1\end{pmatrix},\qquad A_{\text{star}}=\begin{pmatrix}-1&0\\0&-1\end{pmatrix}.\]
+<p>Eigenvectors come from $(A-\lambda I)\mathbf w=\mathbf 0$ with $\lambda=-1$, i.e. from $A+I$:</p>
+\[A_{\text{deg}}+I=\begin{pmatrix}0&1\\0&0\end{pmatrix}:\qquad 0\cdot w_1+1\cdot w_2=0\ \Rightarrow\ w_2=0.\]
+<p>Only $\mathbf w=(1,\,0)$ and its multiples: <b>one eigenline, not two</b>. That is the generic outcome for a repeated eigenvalue — think of it as the two eigenlines of an ordinary node having <i>merged</i> as $\lambda_2$ slid onto $\lambda_1$.</p>
+\[A_{\text{star}}+I=\begin{pmatrix}0&0\\0&0\end{pmatrix}:\qquad\text{every }\mathbf w\text{ solves it.}\]
+<p><b>So the direct answer: a repeated λ can never have exactly two eigenlines.</b> Suppose two independent eigenvectors shared the one $\lambda$. Any combination $c\mathbf w+c'\mathbf w'$ would then also be an eigenvector — and since $\mathbf w,\mathbf w'$ span the plane, <i>every</i> vector would be one, which forces $A\mathbf u=\lambda\mathbf u$ for all $\mathbf u$, i.e. $A=\lambda I$. The choice at $\Delta=0$ is stark: <b>one eigenline (the degenerate node) or all of them at once (the star)</b> — never exactly two.</p>
+<p><b>The star node.</b> $A=\lambda I$ says $\dot{\mathbf u}=\lambda\mathbf u$: the velocity is always parallel to the position, so nothing can ever turn. Every trajectory is a straight ray, $\mathbf u(t)=\exp(\lambda t)\,\mathbf u_0$, and every line through the point is an eigenline — the figure draws a sheaf of them, which is why it is called a star. In the power-curve language of the shapes section: $\lambda_2/\lambda_1=1$, so $v=c\,u^1$ — straight lines. Press "star: A = λI" and drag the start anywhere: the path is always the ray through the start, inward for $\lambda\lt 0$, outward for $\lambda>0$.</p>
+<p><b>The degenerate node.</b> With shear $s\ne0$ there is only the one eigenline, and the missing direction is replaced by a <i>generalized</i> eigenvector $\mathbf v$, solving $(A-\lambda I)\mathbf v=\mathbf w$ instead of $=\mathbf 0$. The second independent solution then carries a factor of $t$:</p>
+\[\mathbf u(t)=\exp(\lambda t)\,\big(c_1\mathbf w+c_2(t\,\mathbf w+\mathbf v)\big).\]
+<p>Because of that $t$ — polynomial, not exponential — every trajectory makes one slow sweep and comes in (or goes out) <b>tangent to the single eigenline, from both of its sides</b>: it looks like a spiral that gave up after half a turn. Fitting, because on the trace–determinant map $\Delta=0$ is the parabola <i>between</i> nodes and spirals, and this is the exact boundary creature — a node whose eigenlines merged, equally a spiral that stopped rotating. Slide the shear through $0$ and watch the sheaf of star rays collapse into one line as the curling appears.</p>
+<p><b>Reaching Δ = 0 from the other stages:</b> in stage 1, slide $\lambda_2$ onto $\lambda_1$ (both $-1$): whatever the direction sliders say, $W\,\mathrm{diag}(-1,-1)\,W^{-1}=-I$ — always the star. The degenerate node is unreachable there, because it would need the two eigenvectors to become parallel, exactly what the 10° guard forbids; it needs this stage's shear slider.</p></section>
+<table class="num"><tr><th>λ pair</th><th>how u moves</th><th>name</th></tr>
+<tr><td>both real, negative</td><td>frozen directions, all inward</td><td>nodal sink</td></tr>
+<tr><td>both real, positive</td><td>frozen directions, all outward</td><td>nodal source</td></tr>
+<tr><td>real, opposite signs</td><td>in along one eigenline, out along the other</td><td>saddle</td></tr>
+<tr><td>complex, p &lt; 0</td><td>rotates while shrinking</td><td>spiral sink</td></tr>
+<tr><td>complex, p &gt; 0</td><td>rotates while growing</td><td>spiral source</td></tr>
+<tr><td>complex, p = 0</td><td>rotates at constant size: closed loops</td><td>center</td></tr>
+<tr><td>real, repeated (Δ = 0)</td><td>one eigenline: curls in tangent to it — or, if A = λI, straight rays</td><td>degenerate node / star</td></tr></table>
+<p>One line to keep: <b>real eigenvalues move $\mathbf u$ along frozen directions; complex eigenvalues rotate $\mathbf u$ while its size follows $\exp(pt)$ — and in both cases $\lambda$ sets the rates while $\mathbf w$ sets the geometry.</b> These cases are exactly the regions of the trace–determinant map (step 5, stage 4): watch the blue point cross a boundary as a slider passes a special value.</p>
+<details class="qa"><summary>Where is the second solution u₂ in the complex case?</summary><div>It is the same spiral started a quarter-turn later. Every solution near the point is a mix $c_1\mathbf u_1+c_2\mathbf u_2$, so everything nearby spirals the same way — drag the start dot anywhere and the shape repeats, only scaled and rotated.</div></details>
+<details class="qa"><summary>Why must w₂ stay at least 10° away from w₁?</summary><div>Two parallel eigenvectors cannot span the plane, so no matrix has them as an eigenbasis ($W$ would not be invertible). As the angle shrinks the matrix entries blow up; the step quietly keeps the two directions $10°$ apart (a note appears in the live panel when it does).</div></details>
+<details class="qa"><summary>Why do the default matrices come out diagonal — except in the complex case?</summary><div><p>Only the <i>defaults</i> are diagonal, and on purpose. The default direction sliders put $\mathbf w_1$ at $0°$ and $\mathbf w_2$ at $90°$ — the axes — and a matrix is diagonal exactly when its eigenvectors are the coordinate axes. Diagonal means the equations <b>decouple</b>: $\dot u=-u+0\cdot v$, $\dot v=0\cdot u-2v$ — the zeros say that $u$ does not feel $v$ and $v$ does not feel $u$, so each solves alone ($u=u_0\exp(-t)$, $v=v_0\exp(-2t)$), which is what makes the hand-checked tables possible.</p>
+<p>Now drag "direction of $\mathbf w_2$" to $45°$ in stage 1: the matrix becomes $\begin{pmatrix}-1&-1\\0&-2\end{pmatrix}$ — an off-diagonal entry has appeared, yet $\lambda$ is still $-1,-2$ and the motion is the same funnel, tilted. Move $\mathbf w_1$ off $0°$ too and all four entries fill in. The lesson: <b>every matrix is diagonal in its own eigenvector coordinates</b>; off-diagonal entries do not mean different dynamics, they measure <b>coupling</b> — how much each variable's rate feeds on the other — and they appear whenever the eigenvectors are not lined up with the axes the matrix is written in.</p>
+<p>The complex case can <i>never</i> be diagonal with real entries: a real diagonal matrix $\mathrm{diag}(d_1,d_2)$ has eigenvalues $d_1,d_2$ — real, always. Rotation means $u$ pushes $v$ up while $v$ pushes $u$ down, a circulation between the variables, and the off-diagonal entries <i>are</i> that mutual pushing: no coupling, no rotation. The closest it gets is the rotation form $\begin{pmatrix}p&q\\-q&p\end{pmatrix}$, with the $\pm q$ coupling irreducibly there. In the deer–wolf Jacobian the off-diagonal entries $-x$ and $y$ are exactly the predation coupling — nonzero at $(1,2)$, which is why that point can spiral; at $(3,0)$ one of them vanishes, the matrix goes triangular, and the eigenvalues fall back to the diagonal: a saddle, no rotation.</p></div></details>`,
+  controls: () => { const s = P.stlg; const deg = v => f(v, 0) + '°'; const n2 = v => f(v, 2);
+    const rows = [{type: 'stages', key: 'stlg', labels: ['Both λ < 0: sink', 'Both λ > 0: source', 'Opposite signs: saddle', 'Complex pair: spiral', 'Repeated λ: Δ = 0']}];
+    if (s === 1) rows.push({type: 'range', key: 'g1l1', label: 'λ₁ (rate along w₁)', min: -3, max: -0.1, step: 0.05, fmt: n2}, {type: 'range', key: 'g1t1', label: 'direction of w₁ (° from +u-axis)', min: -90, max: 90, step: 1, fmt: deg}, {type: 'range', key: 'g1l2', label: 'λ₂ (rate along w₂)', min: -3, max: -0.1, step: 0.05, fmt: n2}, {type: 'range', key: 'g1t2', label: 'direction of w₂ (° from +u-axis)', min: 0, max: 180, step: 1, fmt: deg});
+    if (s === 2) rows.push({type: 'range', key: 'g2l1', label: 'λ₁ (rate along w₁)', min: 0.1, max: 3, step: 0.05, fmt: n2}, {type: 'range', key: 'g2t1', label: 'direction of w₁ (° from +u-axis)', min: -90, max: 90, step: 1, fmt: deg}, {type: 'range', key: 'g2l2', label: 'λ₂ (rate along w₂)', min: 0.1, max: 3, step: 0.05, fmt: n2}, {type: 'range', key: 'g2t2', label: 'direction of w₂ (° from +u-axis)', min: 0, max: 180, step: 1, fmt: deg});
+    if (s === 3) rows.push({type: 'range', key: 'g3ln', label: 'λ_in (negative: towards)', min: -3, max: -0.1, step: 0.05, fmt: n2}, {type: 'range', key: 'g3tn', label: 'direction of w_in (° from +u-axis)', min: -90, max: 90, step: 1, fmt: deg}, {type: 'range', key: 'g3lp', label: 'λ_out (positive: away)', min: 0.1, max: 3, step: 0.05, fmt: n2}, {type: 'range', key: 'g3tp', label: 'direction of w_out (° from +u-axis)', min: 0, max: 180, step: 1, fmt: deg});
+    if (s === 4) rows.push({type: 'range', key: 'g4p', label: 'p = Re λ (breathe in / out)', min: -1.6, max: 1.6, step: 0.02, fmt: n2}, {type: 'range', key: 'g4q', label: 'q = Im λ (turning speed)', min: 0.3, max: 3, step: 0.02, fmt: n2}, {type: 'range', key: 'g4al', label: 'rotate the pair a, b', min: -180, max: 180, step: 1, fmt: deg}, {type: 'range', key: 'g4be', label: 'angle from a to b (sign = turn direction)', min: -160, max: 160, step: 1, fmt: deg}, {type: 'range', key: 'g4r', label: 'length ratio |b| / |a|', min: 0.3, max: 2.5, step: 0.02, fmt: n2});
+    if (s === 5) rows.push({type: 'range', key: 'g5l', label: 'λ (repeated twice)', min: -2, max: 2, step: 0.05, fmt: n2}, {type: 'range', key: 'g5s', label: 'shear s (0 = star)', min: -2, max: 2, step: 0.05, fmt: n2}, {type: 'range', key: 'g5t', label: 'direction of the eigenline (° from +u-axis)', min: -90, max: 90, step: 1, fmt: deg});
+    rows.push({type: 'chips', items: LG_PRE[s].map(pr => ({type: 'button', label: pr[0], on: () => { Object.assign(P, pr[1]); P.tA = 0; P.play = false; }})).concat([{type: 'check', key: 'showField', label: 'Direction field'}])});
+    rows.push(...animCtl([
+      s === 3 ? {type: 'button', label: 'Start (1, 0.01)', on: () => { P.lgx0 = 1; P.lgy0 = 0.01; P.tA = 0; P.play = true; }} : {type: 'button', label: 'Start (1.6, 1.1)', on: () => { P.lgx0 = 1.6; P.lgy0 = 1.1; P.tA = 0; P.play = true; }},
+      {type: 'hint', label: 'Drag the hollow dot, or click the plane, to start elsewhere.'}]));
+    return rows; },
+  tap(X, Y){ const v = LV.v; if (!v || !v.inside(X, Y)) return; P.lgx0 = Math.round(v.x(X) * 100) / 100; P.lgy0 = Math.round(v.y(Y) * 100) / 100; P.tA = 0; P.play = true; },
+  figeq: () => { const A = lgBuild().A, li = linInfo(A); return R`A=${matTex(A)}\ \Rightarrow\ ${eigTex(li)}\ \Rightarrow\ \text{${typeName(li)}}`; },
+  legend: () => { const B = lgBuild(); const li = linInfo(B.A); const it = [];
+    if (P.stlg === 5){ it.push({k: 'line', c: B.lam < -1e-9 ? COL.green : COL.red, t: B.star ? 'eigenlines: every direction' : 'the single eigenline'}); }
+    else if (li.l1 != null){ it.push({k: 'line', c: COL.green, t: 'eigenline, λ < 0 (in)'}); it.push({k: 'line', c: COL.red, t: 'eigenline, λ > 0 (out)'}); }
+    else { it.push({k: 'arrow', c: COL.pur, t: 'a = Re w'}); it.push({k: 'arrow', c: COL.wolf, t: 'b = Im w'}); }
+    it.push({k: 'line', c: COL.blue, t: 'the solution u(t) from the start'}); it.push({k: 'dot', c: COL.blue, t: 'u(t) now (Play)'});
+    if (P.showField) it.push({k: 'arrow', c: COL.fieldArrow, t: 'direction field'}); return it; },
+  draw(){
+    const L = layout2({second: true, frac: 0.34, hfrac: 0.4}); const B = lgBuild(), A = B.A, li = linInfo(A), fn = lgFn(A);
+    const v = pvc(0, 0, 3.1, L.plane); LV.v = v; frame(v); drawAxes(v, {step: 1, xl: 'u', yl: 'v'});
+    if (P.showField) v.clip(() => drawField(v, fn, 20, 'rgba(170,178,191,.65)'));
+    const box = [v.x0 - 1, v.x1 + 1, v.y0 - 1, v.y1 + 1];
+    const bg = cached('lgbg|' + lgKey(A), () => { const out = []; for (let k = 0; k < 12; k++){ const an = TAU * k / 12 + 0.26; out.push(flow(fn, 2.6 * Math.cos(an), 2.6 * Math.sin(an), {T: 10, dt: 0.012, back: true, box})); } return out; });
+    for (const ptsb of bg) drawCurve(v, ptsb, 'rgba(124,58,196,.30)', 1.1);
+    if (P.stlg === 5){
+      const wv = B.w, lam = B.lam, cE = lam < -1e-9 ? COL.green : lam > 1e-9 ? COL.red : COL.mut;
+      if (B.star){
+        ctx.save(); ctx.globalAlpha = 0.55;
+        for (let k = 0; k < 12; k++){ const an = Math.PI * k / 12, exx = Math.cos(an), eyy = Math.sin(an); line(v.X(-exx * 4), v.Y(-eyy * 4), v.X(exx * 4), v.Y(eyy * 4), cE, 1.6); }
+        ctx.restore();
+        lbl(['every line through the point is an eigenline', 'λ = ' + fs(lam, 2) + ' (twice): the star'], v.X(0.4), v.Y(2.6), v, {color: cE});
+      } else {
+        line(v.X(-wv[0] * 4), v.Y(-wv[1] * 4), v.X(wv[0] * 4), v.Y(wv[1] * 4), cE, 2.8); hitSeg('lg_e1', [[v.X(-wv[0] * 3), v.Y(-wv[1] * 3)], [v.X(wv[0] * 3), v.Y(wv[1] * 3)]], 7);
+        lbl(['the ONLY eigenline: w = (' + f(wv[0], 2) + ', ' + fs(wv[1], 2) + '),  λ = ' + fs(lam, 2) + ' (twice)'], v.X(-wv[0] * 2.1), v.Y(-wv[1] * 2.1), v, {color: cE, dy: 12});
+      }
+    } else if (li.l1 != null){
+      [[B.l1, B.w1, 1], [B.l2, B.w2, 2]].forEach(([lam, e, i]) => { const c = lam < -1e-9 ? COL.green : lam > 1e-9 ? COL.red : COL.mut;
+        line(v.X(-e[0] * 4), v.Y(-e[1] * 4), v.X(e[0] * 4), v.Y(e[1] * 4), c, 2.6); hitSeg('lg_e' + i, [[v.X(-e[0] * 3), v.Y(-e[1] * 3)], [v.X(e[0] * 3), v.Y(e[1] * 3)]], 7);
+        const d = lam > 0 ? 1 : -1;
+        arrow(v.X(e[0] * 2.5 - d * e[0] * 0.5), v.Y(e[1] * 2.5 - d * e[1] * 0.5), v.X(e[0] * 2.5), v.Y(e[1] * 2.5), c, 2.6, 9);
+        arrow(v.X(-e[0] * 2.5 + d * e[0] * 0.5), v.Y(-e[1] * 2.5 + d * e[1] * 0.5), v.X(-e[0] * 2.5), v.Y(-e[1] * 2.5), c, 2.6, 9);
+        lbl(['w' + i + ' = (' + f(e[0], 2) + ', ' + fs(e[1], 2) + '),  λ' + i + ' = ' + fs(lam, 2) + (lam < 0 ? '  (in)' : '  (out)')], v.X(-e[0] * 1.9), v.Y(-e[1] * 1.9), v, {dy: i === 1 ? -30 : 12, color: c}); });
+    } else {
+      const a = B.a, b = B.b; const n = Math.max(Math.hypot(a[0], a[1]), Math.hypot(b[0], b[1])) || 1; const sc = 1.5 / n;
+      arrow(v.X(0), v.Y(0), v.X(a[0] * sc), v.Y(a[1] * sc), COL.pur, 3.4, 11); hit('lg_a', v.X(a[0] * sc), v.Y(a[1] * sc), 12);
+      arrow(v.X(0), v.Y(0), v.X(b[0] * sc), v.Y(b[1] * sc), COL.wolf, 3.4, 11); hit('lg_b', v.X(b[0] * sc), v.Y(b[1] * sc), 12);
+      lbl(['a = Re w'], v.X(a[0] * sc), v.Y(a[1] * sc), v, {color: COL.pur, dy: -26});
+      lbl(['b = Im w'], v.X(b[0] * sc), v.Y(b[1] * sc), v, {color: COL.wolf, dy: 12});
+    }
+    const pts = lgOrbit(A); drawCurve(v, pts, COL.blue, 2.2);
+    const i0 = idxT(pts, P.tA, 0.01); const [ux, uy] = pts[i0];
+    dot(v.X(pts[0][0]), v.Y(pts[0][1]), 7, '#fff', COL.blue, 2.2); hit('lg_s', v.X(pts[0][0]), v.Y(pts[0][1]), 13);
+    drag('lg_s', v.X(pts[0][0]), v.Y(pts[0][1]), 24, (sx, sy) => { P.lgx0 = clamp(Math.round(v.x(sx) * 100) / 100, v.x0, v.x1); P.lgy0 = clamp(Math.round(v.y(sy) * 100) / 100, v.y0, v.y1); P.tA = 0; P.play = false; syncControls(); });
+    if (v.inside(v.X(ux), v.Y(uy))){ dot(v.X(ux), v.Y(uy), 7.5, COL.blue, '#fff', 2); hit('lg_u', v.X(ux), v.Y(uy), 13);
+      lbl(['u(' + f(P.tA, 1) + ') = (' + fs(ux, 2) + ', ' + fs(uy, 2) + ')'], v.X(ux), v.Y(uy), v, {border: COL.blue}); }
+    dot(v.X(0), v.Y(0), 7, li.stable ? COL.red : '#fff', COL.red, 2.2); hit('lg_o', v.X(0), v.Y(0), 12);
+    drawTrDet(L.box, {tr: [-3.6, 3.6], det: [-2.2, 4.4], pts: [{tr: li.tr, det: li.det, c: COL.blue, r: 7, id: 'lg_td', label: typeName(li)}], title: 'trace–determinant map'});
+    LEG_AT = {right: v.l + v.w - 4, top: v.t + 4};
+  },
+  calc(){
+    const s = P.stlg, B = lgBuild(), A = B.A, li = linInfo(A);
+    let h = '';
+    if (s === 5) h += C.ln(R`A=R\begin{pmatrix}\lambda&s\\0&\lambda\end{pmatrix}R^{-1}=${matTex(A)}`, 'built from the sliders; R rotates the eigenline');
+    else if (s === 4) h += C.ln(R`A=M\begin{pmatrix}p&q\\-q&p\end{pmatrix}M^{-1}=${matTex(A)}`, 'built from the sliders; M = (a  b)');
+    else h += C.ln(R`A=W\begin{pmatrix}\lambda_1&0\\0&\lambda_2\end{pmatrix}W^{-1}=${matTex(A)}`, 'built from the sliders; W = (w₁  w₂)');
+    if (B.nudged) h += C.res(s === 4 ? 'the angle between a and b is kept at least 20° — a and b must span the plane' : 'w₂ is kept 10° away from w₁ — parallel eigenvectors cannot span the plane', 'warn');
+    h += C.ln(R`\operatorname{tr}=${fs(li.tr, 2)},\quad\det=${fs(li.det, 2)},\quad\Delta=${fs(li.D, 2)}`);
+    h += C.ln(eigTex(li), typeName(li));
+    h += '<div class="cblk" data-layer="' + s + '">';
+    if (s === 5){
+      const lam = B.lam;
+      h += C.ln(R`A-\lambda I=${matTex([[A[0][0] - lam, A[0][1]], [A[1][0], A[1][1] - lam]])}`, B.star ? 'the ZERO matrix: every w solves (A − λI)w = 0 — every direction is an eigenvector' : 'rank 1: (A − λI)w = 0 forces w onto a single line — one eigenline only');
+      if (B.star) h += C.res('star: u̇ = λu, velocity always parallel to position — every trajectory a straight ray', '');
+      else h += C.ln(R`\mathbf u(t)=\exp(${fs(lam, 2)}\,t)\,\big(c_1\mathbf w+c_2(t\,\mathbf w+\mathbf v)\big)`, 'the factor t (no second eigenline) curls trajectories tangent to the one line');
+    } else if (li.l1 != null){
+      [[B.l1, B.w1, 1], [B.l2, B.w2, 2]].forEach(([lam, e, i]) => {
+        const thv = ((Math.atan2(e[1], e[0]) / LG_RAD) % 360 + 360) % 360;
+        h += C.ln(R`\mathbf w_{${i}}=(\cos ${f(thv, 0)}°,\ \sin ${f(thv, 0)}°)=(${f(e[0], 2)},\ ${fs(e[1], 2)}),\quad \lambda_{\mathbf w_{${i}}}=${fs(lam, 2)}`, 'the unit arrow at the direction slider\u2019s bearing; ' + (lam < 0 ? 'motion along its line goes IN' : 'motion along its line goes OUT')); });
+    } else {
+      h += C.ln(R`\mathbf w=\mathbf a+i\,\mathbf b:\quad \mathbf a=(${fs(B.a[0], 2)},\ ${fs(B.a[1], 2)}),\quad \mathbf b=(${fs(B.b[0], 2)},\ ${fs(B.b[1], 2)})`, 'two real arrows, no frozen direction');
+      h += C.ln(R`p=${fs(li.re, 2)},\qquad q=${f(li.im, 3)}`);
+      h += C.ln(R`\text{one turn every } 2\pi/q=${f(TAU / li.im, 2)}`, 'turning comes from q');
+      h += C.ln(R`\text{size per quarter-turn: } \exp(p\,\pi/2q)=${f(Math.exp(li.re * Math.PI / (2 * li.im)), 3)}`, li.re < -1e-9 ? 'shrinking: spiral sink' : li.re > 1e-9 ? 'growing: spiral source' : 'constant: center');
+    }
+    const pts = lgOrbit(A); const i0 = idxT(pts, P.tA, 0.01); const [ux, uy] = pts[i0];
+    h += C.ln(R`t=${f(P.tA, 2)}:\quad \mathbf u(t)=(${fs(ux, 3)},\ ${fs(uy, 3)}),\quad |\mathbf u|=${f(Math.hypot(ux, uy), 3)}`, 'the moving dot');
+    if (li.l1 != null && B.w1){
+      const dW = B.w1[0] * B.w2[1] - B.w1[1] * B.w2[0];
+      const cc1 = (B.w2[1] * ux - B.w2[0] * uy) / dW, cc2 = (-B.w1[1] * ux + B.w1[0] * uy) / dW;
+      h += C.ln(R`\mathbf u(t)=c_1\mathbf w_1+c_2\mathbf w_2:\ \ \text{two equations (the }u\text{- and }v\text{-components), two unknowns}`, 'what c\u2081, c\u2082 mean: how much of each ingredient the dot currently contains');
+      h += C.ln(R`c_1=\frac{\det(\mathbf u\ \,\mathbf w_2)}{\det(\mathbf w_1\,\mathbf w_2)}=\frac{${fs(ux, 2)}\cdot${pp(B.w2[1], 2)}-${fs(uy, 2)}\cdot${pp(B.w2[0], 2)}}{${fs(dW, 2)}}=${fs(cc1, 3)}`, 'Cramer\u2019s rule; c\u2082 likewise, with u in the second column instead');
+      h += C.ln(R`c_1=${fs(cc1, 3)},\qquad c_2=${fs(cc2, 3)}`, Math.abs(cc1) > Math.abs(cc2) ? 'the w\u2081 term is winning: direction near the w\u2081 line' : 'the w\u2082 term is winning: direction near the w\u2082 line');
+      if (Math.abs(cc1) > 0.02 && Math.abs(cc2) > 1e-6){
+        const exK = -B.l2 / B.l1;
+        h += C.ln(R`c_1(t)=c_1(0)\exp(\lambda_{\mathbf w_1}t),\quad c_2(t)=c_2(0)\exp(\lambda_{\mathbf w_2}t)`, 'each ingredient runs its own exponential; combine them so that t cancels:');
+        h += C.ln(R`|c_2|\,|c_1|^{${fs(exK, 2)}}=${f(Math.abs(cc2) * Math.pow(Math.abs(cc1), exK), 3)}`, 'the t\u2019s cancel, so this number never changes: it is the name-tag of ' + (s === 3 ? 'the hyperbola the dot rides' : 'the power curve the dot rides') + ' \u2014 press Play and watch it sit still');
+      }
+      const o1 = (B.w2[1] * pts[0][0] - B.w2[0] * pts[0][1]) / dW, o2 = (-B.w1[1] * pts[0][0] + B.w1[0] * pts[0][1]) / dW;
+      if (Math.abs(o1) > 1e-6 && Math.abs(o2) > 1e-6 && Math.abs(B.l2 - B.l1) > 1e-9){
+        const ts = Math.log(Math.abs(o1 / o2)) / (B.l2 - B.l1);
+        h += C.ln(R`\text{tie: }|c_1(0)|\exp(\lambda_{\mathbf w_1}t)=|c_2(0)|\exp(\lambda_{\mathbf w_2}t)`, 'when do the two ingredients have equal size? take ln of both sides and solve for t:');
+        h += C.ln(R`t^*=\frac{\ln|c_1(0)/c_2(0)|}{\lambda_{\mathbf w_2}-\lambda_{\mathbf w_1}}=${fs(ts, 2)}`, ts > 1e-9 ? 'the components tie here: the corner of the curve' : ts < -1e-9 ? 'tie time before the start: this run shows only the settled part' : 'components tie at the start');
+      }
+    }
+    h += '</div>';
+    return h;
+  },
+  explain: () => R`<p>The plane of the linear system $\dot{\mathbf u}=A\mathbf u$, where $A$ is built live from the sliders' eigen-data: faint purple curves are solutions from a ring of starts, the blue curve is the solution from the draggable hollow start dot, and the filled blue dot is the state $\mathbf u(t)$ at the current time (press Play). In the real cases the green/red lines are the chosen eigenlines with arrows showing in/out; in the complex case the purple and teal arrows are $\mathbf a=\operatorname{Re}\mathbf w$ and $\mathbf b=\operatorname{Im}\mathbf w$, the two real arrows packaged inside the complex eigenvector, exactly as placed by the sliders. The side panel places the current matrix on the trace–determinant map — watch it cross a boundary as a slider passes a special value.</p>` + TAPHINT
+};
+
+/* ---------- step 5d: eigenlines built from scratch ---------- */
+Object.assign(P, {sted: 1, ed11: -1, ed12: 0, ed21: 0, ed22: -2, edth: 30, edx0: 1.4, edy0: 0.9});
+const edA = () => [[P.ed11, P.ed12], [P.ed21, P.ed22]];
+const edG = (A, th) => { const c = Math.cos(th), sn = Math.sin(th); return A[1][0] * c * c + (A[1][1] - A[0][0]) * c * sn - A[0][1] * sn * sn; };
+function edZeros(A){ const out = []; let prev = edG(A, 0); for (let d = 0.5; d <= 180.0001; d += 0.5){ const g = edG(A, d * LG_RAD); if (prev === 0 || (prev < 0) !== (g < 0)){ let lo = (d - 0.5), hi = d; for (let k = 0; k < 25; k++){ const mid = (lo + hi) / 2; if ((edG(A, lo * LG_RAD) < 0) !== (edG(A, mid * LG_RAD) < 0)) hi = mid; else lo = mid; } out.push((lo + hi) / 2); } prev = g; } return out.filter((z, i, a) => i === 0 || z - a[i - 1] > 0.5); }
+const ED_PRE = [
+  ['easiest: diag(−1, −2)', [-1, 0, 0, -2]],
+  ['5b nodal sink (0 1; −0.89 −2.52)', [0, 1, -0.89, -2.52]],
+  ['5b nodal source (0 1; −1.36 3.24)', [0, 1, -1.36, 3.24]],
+  ['5b saddle (0 1; 1.38 −2.02)', [0, 1, 1.38, -2.02]],
+  ['5b spiral sink (0 1; −3.32 −1.31)', [0, 1, -3.32, -1.31]],
+  ['deer–wolf at (1, 2)', [-1, -1, 2, -2]]
+];
+const EIGL = {
+  num: '5d', grp: 'set-up', nav: 'Eigenlines step by step', T: 6,
+  title: 'Where the green and red lines come from: building an eigenline from scratch', layerKey: 'sted',
+  figtitle: 'Left: the plane, with a test direction w you can rotate. Right: the mismatch f(θ) = w × Aw — an eigendirection is exactly a zero of this curve.', figsub: 'Drag the tip of the purple arrow (or the θ slider, or click the plane) and hunt for the directions where A·w falls back onto the line of w. The stages then compute those directions and draw the lines.',
+  enter(){ P.tA = 0; P.play = false; },
+  tick(dt){ return tickAnim(dt); },
+  text: () => R`
+<div class="box clar"><b>What this step answers</b>In the portraits of ${GL('5b', '', 'step 5b')} and ${GL('5c', '', 'step 5c')}, bold lines appear: two green for a nodal sink, two red for a nodal source, one of each for a saddle — and none for spirals. They are <b>eigenlines</b>: lines through an eigenvector of $A$. The colour is the sign of that line's own eigenvalue (green $\lambda\lt 0$: motion along the line goes in; red $\lambda>0$: out). Where they <i>point</i> depends on the particular matrix: step 5b's matrix $\begin{pmatrix}0&1\\-D&T\end{pmatrix}$ has eigenvectors $(1,\lambda)$ — slanted lines — while a diagonal matrix of the same type has its eigenlines on the axes. This step builds the lines from scratch: hunt them by hand (stage 1), compute $\lambda$ (stage 2), solve for $\mathbf w$ and draw (stage 3), ride the line (stage 4), and see why spirals have none (stage 5).</div>
+<section class="layer" data-layer="1"><span class="layertag">Stage 1 · the hunt: a direction that maps onto itself</span>
+<p>Forget formulas for a moment. Take a <b>test direction</b> $\mathbf w=(\cos\theta,\ \sin\theta)$ — the purple arrow — and ask the matrix what it does to it: the orange arrow is $A\mathbf w$. Usually the orange arrow points <i>off</i> the purple line: the matrix pushes that direction sideways. But for special $\theta$ the orange arrow falls exactly <b>on the line of</b> $\mathbf w$ (same way or exactly opposite). Such a $\mathbf w$ is an <b>eigenvector</b>, and the stretch factor is its eigenvalue: $A\mathbf w=\lambda\mathbf w$.</p>
+<p><b>What exactly is θ?</b> It is <i>not</i> an angle between two vectors. It is the compass bearing of the test arrow alone: $\theta$ is measured anticlockwise from the positive $u$-axis, and $\mathbf w=(\cos\theta,\ \sin\theta)$ is the unit arrow pointing that way — $\theta=0°$ points right, $\theta=90°$ points up, $\theta=45°$ along the diagonal. One dial, one arrow. Only $0°$ to $180°$ is needed, because $\theta+180°$ gives $-\mathbf w$, which lies on the <i>same line</i>. (The angle between $\mathbf w$ and $A\mathbf w$ is a different, derived quantity — that is the mismatch, next.)</p>
+<p><b>Mismatch of what against what?</b> Of the two arrows' <i>directions</i>: where $\mathbf w$ points versus where $A\mathbf w$ points. $A\mathbf w$ splits into a part along the line of $\mathbf w$ (harmless — stretching) and a part <b>sideways</b>, perpendicular to it (the part that would push a state off the line). The cross product $f(\theta)=\mathbf w\times A\mathbf w=|A\mathbf w|\sin(\text{angle between them})$ measures exactly that sideways part: $f=0$ means no sideways push at all — $A\mathbf w$ lies on the line of $\mathbf w$, an eigendirection. The right-hand chart plots $f$ for <i>every</i> bearing $\theta$ at once, so instead of hunting blindly you can read off where the zeros sit (the marked dots) — and in stage 5, see that for a spiral there are none. The live panel also reports the mismatch as an angle.</p>
+<p>The sideways push is measured by the cross product $f(\theta)=\mathbf w\times A\mathbf w$ (the right panel plots it): $f=0$ exactly at the eigendirections. Drag the arrow until the panel shouts <b>ALIGNED</b> — for the default $\mathrm{diag}(-1,-2)$ you will find $\theta=0°$ and $\theta=90°$. The live panel shows $f(\theta)$ and the stretch $\mathbf w\cdot A\mathbf w$ as you turn.</p>
+<p>Worked by hand at $\theta=0°$, $\mathbf w=(1,0)$: $A\mathbf w=(-1\cdot1+0,\ 0\cdot1+0)=(-1,\ 0)=-1\cdot\mathbf w$. On the line, flipped backwards: eigenvector with $\lambda=-1$. At $\theta=45°$, $\mathbf w=(0.71,0.71)$: $A\mathbf w=(-0.71,\ -1.41)$ — slope $2$, not slope $1$: off the line, not an eigenvector.</p></section>
+<section class="layer" data-layer="2"><span class="layertag">Stage 2 · find the stretch factors λ first</span>
+<p>Hunting by hand works, but algebra finds all answers at once. $A\mathbf w=\lambda\mathbf w$ means $(A-\lambda I)\mathbf w=\mathbf 0$ with $\mathbf w\ne\mathbf 0$, which needs $\det(A-\lambda I)=0$:</p>
+\[\lambda^2-(\operatorname{tr}A)\,\lambda+\det A=0\qquad\Longrightarrow\qquad \lambda=\frac{\operatorname{tr}A\pm\sqrt{\Delta}}{2},\quad \Delta=(\operatorname{tr}A)^2-4\det A.\]
+<p>The live panel runs these numbers for the current matrix. For $\mathrm{diag}(-1,-2)$: $\operatorname{tr}=-3$, $\det=2$, $\Delta=9-8=1$, $\lambda=\tfrac{-3\pm1}{2}=-1,\ -2$ — two real stretch factors, so two eigenlines will exist.</p></section>
+<section class="layer" data-layer="3"><span class="layertag">Stage 3 · solve (A − λI)w = 0 and draw the line</span>
+<p>Now take each $\lambda$ in turn, subtract it from the diagonal, and solve. For the 5b nodal-sink preset $A=\begin{pmatrix}0&1\\-0.89&-2.52\end{pmatrix}$ ($\lambda_1=-0.43,\ \lambda_2=-2.09$), take $\lambda_1$:</p>
+\[A-\lambda_1I=\begin{pmatrix}0.43&1\\-0.89&-2.09\end{pmatrix}:\quad \text{row 1 says } 0.43\,w_1+1\cdot w_2=0\ \Rightarrow\ w_2=-0.43\,w_1.\]
+<p>Choose $w_1=1$: $\mathbf w_1=(1,\ -0.43)$ — note the pattern $(1,\ \lambda)$ promised in step 5b. <b>The eigenline is simply the line through the origin in this direction</b>, drawn green because $\lambda_1\lt 0$. The same recipe with $\lambda_2$ gives the second line. The figure now draws both, each labelled with its $\lambda$, and on the mismatch chart you can check they sit exactly at the zeros found in stage 1. The live panel repeats this calculation, with numbers, for whatever matrix the sliders say.</p>
+<p><b>But w is a single point — how does it become a straight line?</b> A vector like $\mathbf w=(1,\ -0.43)$ fixes a <i>direction from the origin</i>, and the eigenline is the set of <b>all its multiples</b> $c\,\mathbf w$, for every number $c$, positive and negative:</p>
+\[\dots,\ (-2,\ 0.86),\ (-1,\ 0.43),\ (0,\ 0),\ (1,\ -0.43),\ (2,\ -0.86),\ (3,\ -1.29),\ \dots\]
+<p>— infinitely many points that line up exactly on the straight line through the origin with slope $-0.43$. They all deserve to be there, because every multiple of an eigenvector is an eigenvector with the <i>same</i> $\lambda$:</p>
+\[A\,(c\,\mathbf w)=c\,A\mathbf w=c\,\lambda\,\mathbf w=\lambda\,(c\,\mathbf w).\]
+<p>Eigenvectors never come alone; they come as a whole line through the origin (that is also why the choice "$w_1=1$" above was free — any scaling names the same line). The drawing recipe is then just two endpoints: the figure plots the segment from $-4\,\mathbf w$ to $+4\,\mathbf w$ and connects them, which within the window looks like the full infinite line.</p></section>
+<section class="layer" data-layer="4"><span class="layertag">Stage 4 · life on an eigenline (press Play)</span>
+<p>Why do these lines deserve to be drawn so boldly? Because on an eigenline the whole system collapses to one dimension: if $\mathbf u$ is on the line, $\dot{\mathbf u}=A\mathbf u=\lambda\mathbf u$ — the velocity points <i>along the line</i>, so the state can never leave it. The solution is pure exponential, $\mathbf u(t)=\exp(\lambda t)\,\mathbf u_0$: sliding in for $\lambda\lt 0$ (green), out for $\lambda>0$ (red).</p>
+<p>Use the buttons to put the start dot exactly on line 1 or line 2 and press Play: the dot runs dead straight. Nudge it off the line (drag it, or "start off the lines") and the path bends — a mixture of the two lines' exponentials, exactly the curves of step 5c. The eigenlines are the <b>skeleton</b>; every other trajectory is fleshed around them.</p></section>
+<section class="layer" data-layer="5"><span class="layertag">Stage 5 · why spirals have no lines at all</span>
+<p>Press the "5b spiral sink" preset and hunt again: the orange arrow is <i>always</i> pushed to the same side of the purple one. Look at the right panel: the mismatch $f(\theta)$ now <b>never crosses zero</b> — it keeps one sign for all $180°$. No direction maps onto itself, so there is no real eigenvector, no eigenline, and no straight-line solution: that is why the portraits of spirals and centers in steps 5b and 5c show no bold lines. The permanent sideways push <i>is</i> the rotation.</p>
+<p>The algebra agrees: the zeros of $f(\theta)$ solve $a_{21}+ (a_{22}-a_{11})m-a_{12}m^2=0$ with $m=\tan\theta$, whose discriminant is $(a_{11}-a_{22})^2+4a_{12}a_{21}=\Delta$ — the same $\Delta$ as the eigenvalues'. $\Delta>0$: two zeros, two eigenlines. $\Delta=0$: one (the degenerate node of step 5c, case 5). $\Delta\lt 0$: none — complex $\lambda$, a spiral or center. One number decides both the count of the lines and the realness of the eigenvalues, because they are the same question.</p></section>
+<details class="qa"><summary>In 5c's nodal source the red lines were the axes, but in 5b they were slanted. Which is right?</summary><div>Both. The <i>type</i> (nodal source, two red lines) is set by the eigenvalues; the <i>directions</i> of the lines are set by the eigenvectors of the particular matrix. 5c's default $\mathrm{diag}(1,2)$ has eigenvectors $(1,0)$ and $(0,1)$ — the axes. 5b's companion matrix $\begin{pmatrix}0&1\\-D&T\end{pmatrix}$ has eigenvectors $(1,\lambda)$ — slanted, slope equal to the eigenvalue. Load both presets here and watch the same two-red-line skeleton swing around as the matrix changes.</div></details>
+<details class="qa"><summary>Is θ the angle between w and A·w?</summary><div>No. $\theta$ only <i>places</i> the test arrow: it is the bearing of $\mathbf w$ from the positive $u$-axis, nothing else. The angle between $\mathbf w$ and $A\mathbf w$ is a separate, derived quantity — the mismatch — and the live panel shows it in degrees next to $f(\theta)$. At an eigendirection that angle is $0°$ (or $180°$, when $\lambda\lt 0$ flips the arrow backwards along the same line — still aligned with the <i>line</i>).</div></details>`,
+  controls: () => { const st = P.sted; const n2 = v => f(v, 2), deg = v => f(v, 0) + '°';
+    const rows = [{type: 'stages', key: 'sted', labels: ['The hunt', 'Find λ', 'Solve for w: draw', 'Ride the line', 'Why spirals have none']}];
+    rows.push({type: 'range', key: 'edth', label: 'test direction θ', min: 0, max: 180, step: 1, fmt: deg});
+    rows.push({type: 'range', key: 'ed11', label: 'a₁₁', min: -3.5, max: 3.5, step: 0.01, fmt: n2}, {type: 'range', key: 'ed12', label: 'a₁₂', min: -3.5, max: 3.5, step: 0.01, fmt: n2}, {type: 'range', key: 'ed21', label: 'a₂₁', min: -3.5, max: 3.5, step: 0.01, fmt: n2}, {type: 'range', key: 'ed22', label: 'a₂₂', min: -3.5, max: 3.5, step: 0.01, fmt: n2});
+    rows.push({type: 'chips', items: ED_PRE.map(pr => ({type: 'button', label: pr[0], on: () => { [P.ed11, P.ed12, P.ed21, P.ed22] = pr[1]; P.tA = 0; P.play = false; }})).concat([{type: 'check', key: 'showField', label: 'Direction field'}])});
+    if (st === 4){ const A = edA(), li = linInfo(A);
+      const onLine = i => { if (li.l1 == null) return; const e = eigvec(A, i === 1 ? li.l1 : li.l2); P.edx0 = Math.round(e[0] * 150) / 100; P.edy0 = Math.round(e[1] * 150) / 100; P.tA = 0; P.play = true; };
+      rows.push(...animCtl([{type: 'button', label: 'start ON line 1', on: () => onLine(1)}, {type: 'button', label: 'start ON line 2', on: () => onLine(2)}, {type: 'button', label: 'start OFF the lines', on: () => { P.edx0 = 1.4; P.edy0 = 0.9; P.tA = 0; P.play = true; }}]));
+    } else rows.push({type: 'chips', items: [{type: 'hint', label: 'Drag the purple arrow tip, or click the plane, to turn the test direction.'}]});
+    return rows; },
+  tap(X, Y){ const v = LV.v; if (!v || !v.inside(X, Y)) return;
+    if (P.sted === 4){ P.edx0 = Math.round(v.x(X) * 100) / 100; P.edy0 = Math.round(v.y(Y) * 100) / 100; P.tA = 0; P.play = true; }
+    else { let d = Math.atan2(v.y(Y), v.x(X)) / LG_RAD; if (d < 0) d += 180; P.edth = Math.round(d); } },
+  figeq: () => { const A = edA(), li = linInfo(A); return R`A=${matTex(A)}:\ \ ${eigTex(li)}\ \Rightarrow\ \text{${typeName(li)}}`; },
+  legend: () => { const it = [{k: 'arrow', c: COL.pur, t: 'test direction w (drag the tip)'}, {k: 'arrow', c: COL.deer, t: 'A·w: where the matrix sends w'}];
+    if (P.sted >= 3){ it.push({k: 'line', c: COL.green, t: 'eigenline, λ < 0 (in)'}); it.push({k: 'line', c: COL.red, t: 'eigenline, λ > 0 (out)'}); }
+    if (P.sted === 4) it.push({k: 'line', c: COL.blue, t: 'solution from the start dot'});
+    return it; },
+  draw(){
+    const L = layout2({second: true, frac: 0.38, hfrac: 0.42}); const A = edA(), li = linInfo(A), st = P.sted;
+    const fn = (x, y) => [A[0][0] * x + A[0][1] * y, A[1][0] * x + A[1][1] * y];
+    const v = pvc(0, 0, 2.3, L.plane); LV.v = v; frame(v); drawAxes(v, {step: 1, xl: 'u', yl: 'v'});
+    if (P.showField) v.clip(() => drawField(v, fn, 18, 'rgba(170,178,191,.6)'));
+    if (st >= 3 && li.l1 != null && li.type !== 'star'){
+      (Math.abs(li.l1 - li.l2) < 1e-7 ? [li.l1] : [li.l1, li.l2]).forEach((lam, i) => { const e = eigvec(A, lam); const cE = lam > 1e-9 ? COL.red : lam < -1e-9 ? COL.green : COL.mut;
+        v.clip(() => line(v.X(-e[0] * 4), v.Y(-e[1] * 4), v.X(e[0] * 4), v.Y(e[1] * 4), cE, 2.6)); hitSeg('ed_l' + i, [[v.X(-e[0] * 2), v.Y(-e[1] * 2)], [v.X(e[0] * 2), v.Y(e[1] * 2)]], 7);
+        lbl(['line ' + (i + 1) + ':  w = (' + f(e[0], 2) + ', ' + fs(e[1], 2) + '),  λ = ' + fs(lam, 2) + (lam < 0 ? ' (in)' : ' (out)')], v.X(-e[0] * 1.55), v.Y(-e[1] * 1.55), v, {color: cE, dy: i ? 12 : -28}); });
+    }
+    if (st === 4){
+      const pts = cached('ed4|' + [A[0][0], A[0][1], A[1][0], A[1][1], f(P.edx0, 2), f(P.edy0, 2)].join(','), () => orbitT(fn, P.edx0, P.edy0, 6, 0.01));
+      drawCurve(v, pts, COL.blue, 2.2); const i0 = idxT(pts, P.tA, 0.01); const [ux, uy] = pts[i0];
+      dot(v.X(pts[0][0]), v.Y(pts[0][1]), 7, '#fff', COL.blue, 2.2); hit('ed_s', v.X(pts[0][0]), v.Y(pts[0][1]), 13);
+      drag('ed_s', v.X(pts[0][0]), v.Y(pts[0][1]), 24, (sx, sy) => { P.edx0 = clamp(Math.round(v.x(sx) * 100) / 100, v.x0, v.x1); P.edy0 = clamp(Math.round(v.y(sy) * 100) / 100, v.y0, v.y1); P.tA = 0; P.play = false; syncControls(); });
+      if (v.inside(v.X(ux), v.Y(uy))){ dot(v.X(ux), v.Y(uy), 7, COL.blue, '#fff', 2); lbl(['u(' + f(P.tA, 1) + ') = (' + fs(ux, 2) + ', ' + fs(uy, 2) + ')'], v.X(ux), v.Y(uy), v, {border: COL.blue}); }
+    } else {
+      const th = P.edth * LG_RAD, w = [Math.cos(th), Math.sin(th)]; const Aw = fn(w[0], w[1]); const mag = Math.hypot(Aw[0], Aw[1]);
+      const cr = w[0] * Aw[1] - w[1] * Aw[0], dt = w[0] * Aw[0] + w[1] * Aw[1];
+      const alin = Math.asin(clamp(Math.abs(cr) / Math.max(1e-9, mag), 0, 1)) / LG_RAD;
+      const aligned = mag > 1e-6 && alin < 3;
+      ctx.save(); ctx.globalAlpha = 0.5; line(v.X(-w[0] * 4), v.Y(-w[1] * 4), v.X(w[0] * 4), v.Y(w[1] * 4), COL.pur, 1.2, [5, 5]); ctx.restore();
+      if (aligned){ const cE = dt < 0 ? COL.green : COL.red; v.clip(() => line(v.X(-w[0] * 4), v.Y(-w[1] * 4), v.X(w[0] * 4), v.Y(w[1] * 4), cE, 3));
+        lbl(['ALIGNED — an eigendirection!', 'stretch λ ≈ ' + fs(dt, 2) + (dt < 0 ? ' (in)' : ' (out)')], v.X(w[0] * 1.9), v.Y(w[1] * 1.9), v, {color: cE, bold: true}); }
+      arrow(v.X(0), v.Y(0), v.X(w[0] * 1.5), v.Y(w[1] * 1.5), COL.pur, 3.4, 11); hit('ed_w', v.X(w[0] * 1.5), v.Y(w[1] * 1.5), 14);
+      drag('ed_w', v.X(w[0] * 1.5), v.Y(w[1] * 1.5), 26, (sx, sy) => { let d = Math.atan2(v.y(sy), v.x(sx)) / LG_RAD; if (d < 0) d += 180; P.edth = Math.round(d); syncControls(); });
+      const sc = Math.min(0.6, 1.9 / Math.max(0.3, mag));
+      arrow(v.X(0), v.Y(0), v.X(Aw[0] * sc), v.Y(Aw[1] * sc), COL.deer, 3, 10); hit('ed_aw', v.X(Aw[0] * sc), v.Y(Aw[1] * sc), 12);
+      lbl(['w  (θ = ' + f(P.edth, 0) + '°)'], v.X(w[0] * 1.5), v.Y(w[1] * 1.5), v, {color: COL.pur, dy: -26});
+      if (mag > 1e-6) lbl(['A·w = (' + fs(Aw[0], 2) + ', ' + fs(Aw[1], 2) + ')' + (aligned ? '' : '  — off the line')], v.X(Aw[0] * sc), v.Y(Aw[1] * sc), v, {color: COL.deer, dy: 12});
+    }
+    dot(v.X(0), v.Y(0), 6, li.stable ? COL.red : '#fff', COL.red, 2);
+    const ptsf = []; let mx = 0.5; for (let d = 0; d <= 180; d += 2){ const g = edG(A, d * LG_RAD); ptsf.push([d, g]); mx = Math.max(mx, Math.abs(g)); }
+    const zs = edZeros(A);
+    const marks = zs.map(z => { const thz = z * LG_RAD, wz = [Math.cos(thz), Math.sin(thz)]; const az = fn(wz[0], wz[1]); const lamz = wz[0] * az[0] + wz[1] * az[1];
+      return {x: z, y: 0, c: lamz < 0 ? COL.green : COL.red, r: 6, id: 'ed_z' + Math.round(z)}; });
+    if (P.sted !== 4) marks.push({x: P.edth, y: edG(A, P.edth * LG_RAD), c: COL.pur, r: 5});
+    drawChart(L.box, {x0: 0, x1: 180, y0: -mx * 1.15, y1: mx * 1.15, xl: 'θ°', title: 'sideways push of A·w off the line of w:  f(θ) = w × A·w', nx: 6, ny: 4,
+      series: [{pts: ptsf, c: COL.pur, w: 2.2, id: 'ed_f'}], refs: [{y: 0, c: '#9aa1ad', dash: [1, 0]}].concat(zs.map(z => ({x: z, c: '#9aa1ad', t: f(z, 0) + '°'}))), marks});
+    LEG_AT = {right: v.l + v.w - 4, top: v.t + 4};
+  },
+  calc(){
+    const A = edA(), li = linInfo(A), st = P.sted;
+    const th = P.edth * LG_RAD, w = [Math.cos(th), Math.sin(th)]; const Aw = [A[0][0] * w[0] + A[0][1] * w[1], A[1][0] * w[0] + A[1][1] * w[1]];
+    const cr = w[0] * Aw[1] - w[1] * Aw[0], dt = w[0] * Aw[0] + w[1] * Aw[1];
+    let h = C.ln(R`A=${matTex(A)}`);
+    h += '<div class="cblk" data-layer="1">' + C.h4('1. The test, at the current θ');
+    h += C.ln(R`\mathbf w=(\cos${f(P.edth, 0)}°,\ \sin${f(P.edth, 0)}°)=(${fs(w[0], 2)},\ ${fs(w[1], 2)})`);
+    h += C.ln(R`A\mathbf w=(${fs(Aw[0], 3)},\ ${fs(Aw[1], 3)})`);
+    h += C.ln(R`f(\theta)=\mathbf w\times A\mathbf w=${fs(cr, 3)}`, Math.abs(cr) < 0.02 ? 'zero: ALIGNED — an eigendirection' : 'not zero: A pushes this direction sideways');
+    const magc = Math.hypot(Aw[0], Aw[1]); const alinc = magc > 1e-9 ? Math.asin(clamp(Math.abs(cr) / magc, 0, 1)) / LG_RAD : 0;
+    h += C.ln(R`\angle\big(A\mathbf w,\ \text{line of }\mathbf w\big)=${f(alinc, 1)}°`, 'the mismatch as an angle: 0° means aligned');
+    h += C.ln(R`\mathbf w\cdot A\mathbf w=${fs(dt, 3)}`, Math.abs(cr) < 0.02 ? 'and this is its eigenvalue λ' : 'the stretch along w (only meaningful when aligned)') + '</div>';
+    h += '<div class="cblk" data-layer="2">' + C.h4('2. Characteristic equation');
+    h += C.ln(R`\operatorname{tr}=${fs(li.tr, 2)},\quad \det=${fs(li.det, 2)},\quad \Delta=${fs(li.D, 2)}`);
+    h += C.ln(eigTex(li), li.l1 != null ? 'real: eigenlines will exist' : 'complex: no real eigenline will exist') + '</div>';
+    h += '<div class="cblk" data-layer="3">' + C.h4('3. Solve (A − λI)w = 0');
+    if (li.l1 != null){ (Math.abs(li.l1 - li.l2) < 1e-7 ? [li.l1] : [li.l1, li.l2]).forEach((lam, i) => {
+        const e = eigvec(A, lam); const m = Math.max(Math.abs(e[0]), Math.abs(e[1])) || 1;
+        h += C.ln(R`\lambda=${fs(lam, 2)}:\ A-\lambda I=${matTex([[A[0][0] - lam, A[0][1]], [A[1][0], A[1][1] - lam]])}\ \Rightarrow\ \mathbf w=(${f(e[0] / m, 2)},\ ${fs(e[1] / m, 2)})`, 'line ' + (i + 1) + ': θ = ' + f(((Math.atan2(e[1], e[0]) / LG_RAD) + 180) % 180, 0) + '° — ' + (lam < 0 ? 'green (in)' : 'red (out)')); });
+    } else h += C.res('λ is complex: (A − λI)w = 0 has no real solution — nothing to draw', 'warn');
+    h += '</div>';
+    if (st === 4){ h += '<div class="cblk" data-layer="4">' + C.h4('4. The start dot and the lines');
+      if (li.l1 != null){ const chk = (Math.abs(li.l1 - li.l2) < 1e-7 ? [li.l1] : [li.l1, li.l2]).map((lam, i) => { const e = eigvec(A, lam); return Math.abs(P.edx0 * e[1] - P.edy0 * e[0]); });
+        const on = chk.findIndex(c => c < 0.03);
+        h += C.ln(R`\mathbf u_0=(${fs(P.edx0, 2)},\ ${fs(P.edy0, 2)})`, on >= 0 ? 'ON line ' + (on + 1) + ': the motion will be a straight exponential slide' : 'off both lines: the motion is a mix of the two exponentials and bends'); }
+      h += '</div>'; }
+    h += '<div class="cblk" data-layer="5">' + C.h4('5. Zero crossings of f(θ)');
+    const zs = edZeros(A);
+    h += C.ln(R`\text{zeros found: } ${zs.length ? zs.map(z => f(z, 0) + '°').join(',\\ ') : '\\text{none}'}`, zs.length === 2 ? 'two eigendirections (Δ > 0)' : zs.length === 1 ? 'one eigendirection (Δ = 0: the degenerate case)' : 'f keeps one sign: no eigendirection (Δ < 0, complex λ) — the permanent sideways push is the rotation') + '</div>';
+    return h;
+  },
+  explain: () => R`<p>Left: the plane of $\dot{\mathbf u}=A\mathbf u$. The purple arrow is the test direction $\mathbf w$ (drag its tip); the orange arrow is $A\mathbf w$, where the matrix sends it. When the orange arrow lands back on the purple line, that direction is an eigenvector, the line lights up green ($\lambda\lt 0$) or red ($\lambda>0$), and in stage 3 the computed eigenlines are drawn with their $\lambda$ labels. Right: the mismatch $f(\theta)=\mathbf w\times A\mathbf w$ for every direction at once — its zeros (marked dots) are exactly the eigendirections, and for complex eigenvalues it never crosses zero. In stage 4 the blue curve is the solution from the draggable start dot.</p>` + TAPHINT
+};
+
 STEPS.unshift(START);
 STEPS.splice(STEPS.indexOf(ST(5)) + 1, 0, PLAY);
+STEPS.splice(STEPS.indexOf(PLAY) + 1, 0, LGAL);
+STEPS.splice(STEPS.indexOf(LGAL) + 1, 0, EIGL);
 STEPS.push(SUMMARY);
 { let n = 0; for (const s of STEPS){ if (s.num == null) s.num = String(++n); } }
 

@@ -294,7 +294,8 @@ const P = {
   run: true, speed: 1, playT: false, tbView: false, ptype: 'spiralSink', g1: -0.6, g2: 2, g3: 0, px: 0.26, py: 2.1, tstage: 1, h10: 1, h20: 3, tk: 0, playTk: false, kf: 1, emat: 'tanks', estage: 1, es: 1.5, cl2: -2, ca1: 45, ca2: -45, cx: 1, cy: 3, ct: 0, playC: false, fstar: false, smode: 'free', sa: -1.5, sb: -0.5, ssmode: 'leak', lb: 0.3, nbase: 'centre', neps: 0.1, nk: 0, nshow: 'nudge', nseed: 1,
   fa: -6,
   qb: 2, qx0: 1, qy0: 1, qt: 0, qplay: false,
-  q3: 1, q3d: 0
+  q3: 1, q3d: 0,
+  wcase: 'nsource', wstage: 1, wl1: 1, wl2: 3, wa1: 0, wa2: 90, wlam: 1, wb: 2, wth: 0, wph: 90, wx: 0.9, wy: 0.25, wt: 0, wplay: false, wfield: false
 };
 
 /* ============ maths typesetting ============ */
@@ -627,6 +628,7 @@ function tStar(){ // where x'(t) = 0 (vertical tangent)
    STEPS
    =================================================================== */
 const STEPS = [];
+const stepNo = nav => STEPS.findIndex(s => s.nav === nav) + 1;   // the step's number after the final ordering
 
 /* the trace-determinant plane: regions, parabola, centre line and labels (used by steps 1 and 2) */
 function tdPlane(v, opt){
@@ -2453,7 +2455,7 @@ $$\exp\bigl((a+bi)t\bigr)=\exp(at)\bigl(\cos(bt)+i\sin(bt)\bigr):$$
 <li>Example $(-3,2)$: $\lambda^2+3\lambda+2=0$ gives $\lambda=-1,-2$. Both shrink: <b>nodal sink</b>. Note $\Tr=-3&lt;0$.</li>
 <li>Example $(3,2)$: $\lambda=1,2$. Both grow: <b>nodal source</b>. $\Tr=3&gt;0$.</li>
 </ul>
-<p>The slower one ($|\lambda|$ smaller) wins near the origin and the faster one wins far away, which is why node curves bend from one eigenline towards the other.</p>
+<p>The slower one ($|\lambda|$ smaller) wins near the origin and the faster one wins far away, which is why node curves bend from one eigenline towards the other. Step ${stepNo('Which eigenline')} (Which eigenline) turns this into a rule for every sign pattern, with the two eigenlines drawn layer by layer and the race between the two pieces of the solution played out in time.</p>
 <h3>Below the Tr axis: saddles</h3>
 <p>$\Det&lt;0$ means $\lambda_1\lambda_2&lt;0$: one eigenvalue is negative, the other positive, whatever the trace. One eigenline pulls trajectories in, the other pushes them out, so a typical trajectory comes in along the first line, swerves, and leaves along the second. Example $(1,-2)$: $\lambda^2-\lambda-2=0$ gives $\lambda=-1,2$.</p>
 <h3>On the parabola</h3>
@@ -2777,7 +2779,7 @@ STEPS.push({
 <p><b>On the map.</b> On the Tr axis. <b>Example.</b> $\begin{bmatrix}-1&1\\0&0\end{bmatrix}$: $\lambda=-1,0$; the equilibria lie along $(1,1)$.</p>
 <p>A fully worked physical example, two connected tanks with $\lambda_1=0,\ \lambda_2=-2$, is in step 16.</p>
 <h3>How to use this step</h3>
-<p>Pick a type, then move its sliders and watch three things at once: the portrait changes shape, the point on the map slides inside its region, and the eigenvalue dots move. When a slider carries you to a border (λ₁ = λ₂, or Det → 0) the verdict under the portrait changes name. Tap any curve or empty spot in the portrait to see the full calculation for that trajectory.</p>`,
+<p>Pick a type, then move its sliders and watch three things at once: the portrait changes shape, the point on the map slides inside its region, and the eigenvalue dots move. When a slider carries you to a border (λ₁ = λ₂, or Det → 0) the verdict under the portrait changes name. Tap any curve or empty spot in the portrait to see the full calculation for that trajectory. To predict which eigenline a node or a saddle hugs near the origin and which one it follows far away, go to step ${stepNo('Which eigenline')}.</p>`,
   explain: () => R`<p>${ptype().name}: ${ptype().guide}</p>` + TAPHINT,
   parts(){
     const A = galA(), E = eig(A), L = eigenlines(A), out = [
@@ -2997,7 +2999,7 @@ STEPS.push({
   text: () => R`
 <h2>A zero eigenvalue: two connected fluid tanks</h2>
 <h3>The degenerate cases: boundaries between the regions</h3>
-<p>The big regions of the trace–determinant plane correspond to nodes, saddles and spirals. What are the system behaviours on the <b>boundaries</b> of these regions? These cases are called <b>degenerate</b> cases. So far: systems on the upper vertical axis are centres (step 3), and systems on the critical parabola are degenerate or star nodes (steps 6 to 15). This step and the next two treat the remaining boundary, the horizontal Tr axis. There $\det\bA=\lambda_1\lambda_2=0$, so one of the eigenvalues is zero; the other is $\operatorname{tr}\bA=\lambda_1+\lambda_2$, which is nonzero except at the origin. (Step 19 shows the whole map with every boundary labelled.)</p>
+<p>The big regions of the trace–determinant plane correspond to nodes, saddles and spirals. What are the system behaviours on the <b>boundaries</b> of these regions? These cases are called <b>degenerate</b> cases. So far: systems on the upper vertical axis are centres (step 3), and systems on the critical parabola are degenerate or star nodes (steps 6 to 15). This step and the next two treat the remaining boundary, the horizontal Tr axis. There $\det\bA=\lambda_1\lambda_2=0$, so one of the eigenvalues is zero; the other is $\operatorname{tr}\bA=\lambda_1+\lambda_2$, which is nonzero except at the origin. (Step 20 shows the whole map with every boundary labelled.)</p>
 <p>The textbook's example is a pair of connected tanks. Its phase portrait looks like neither a node nor a saddle: it is a two-sided <b>comb</b>. Each piece of the picture is derived below, so that nothing has to be taken on trust. Step 17 shows the general method for finding and drawing any line labelled with an eigenvalue, such as “$\lambda_1=0$” and “$\lambda_2=-2$” here: these lines are <b>eigenlines</b>.</p>
 <h3>The system</h3>
 <p>Two tanks hold fluid at heights $h_1$ and $h_2$ and are joined by a pipe at the bottom. Fluid flows from the higher tank to the lower one, faster when the difference is bigger. With flow rate 1:</p>
@@ -3279,7 +3281,7 @@ function snapTd(v, X, Y){
 function boundaryNote(T, D){
   const t = typeOf(T, D);
   const onB = ['comb', 'degen', 'centre', 'origin'].includes(t.k);
-  return C.res(onB ? 'This point is on a <b>boundary</b>: a degenerate case (' + t.n + '). It sits on a single curve of the map, so the slightest change in the matrix moves it off: structurally unstable (step 21).' : 'This point is inside a big region (' + t.n + '). Small changes in the matrix keep it there: structurally stable (step 21).', onB);
+  return C.res(onB ? 'This point is on a <b>boundary</b>: a degenerate case (' + t.n + '). It sits on a single curve of the map, so the slightest change in the matrix moves it off: structurally unstable (step 22).' : 'This point is inside a big region (' + t.n + '). Small changes in the matrix keep it there: structurally stable (step 22).', onB);
 }
 /* a small portrait of any 2×2 matrix, including the zero-eigenvalue and zero-matrix cases */
 function anyPortrait(w, A, id){
@@ -3367,7 +3369,7 @@ $$\begin{bmatrix}-1&1\\1&-1\end{bmatrix}\begin{pmatrix}v_1\\v_2\end{pmatrix}=\ma
 <li>$\lambda&lt;0$: arrows point towards the origin (points slide in). Tanks: $-2$, so the orange line has arrows pointing in, and points halve their distance every $0.35$ time units.</li>
 <li>$\lambda=0$: no arrows at all; every point is a stationary point, drawn as an open circle. Tanks: the blue line.</li></ul>
 <h3>Stage 6. The rest of the portrait</h3>
-<p>Every other solution is a combination $c_1\exp(\lambda_1t)\bv_1+c_2\exp(\lambda_2t)\bv_2$, and its curve is shaped by the two lines: as time runs, the term with the larger $\lambda$ dominates, so curves end up parallel to that line, and near the origin (or in the past) the other line wins. For the tanks one term never changes, so the curves are straight segments parallel to the orange line, ending on the blue one: the comb of step 16 and step 18.</p>
+<p>Every other solution is a combination $c_1\exp(\lambda_1t)\bv_1+c_2\exp(\lambda_2t)\bv_2$, and its curve is shaped by the two lines: as time runs, the term with the larger $\lambda$ dominates, so curves end up parallel to that line, and near the origin (or in the past) the other line wins; step ${stepNo('Which eigenline')} (Which eigenline) spells this out for every sign pattern, with the race between the two terms played out in time. For the tanks one term never changes, so the curves are straight segments parallel to the orange line, ending on the blue one: the comb of step 16 and step 19.</p>
 <div class="box try"><b>Try it</b>Choose “Slanted comb” and go through the stages: the two lines are no longer the diagonals, but the same three calculations (subtract λ, read one row, take multiples) place them. Then choose “Custom” and make your own matrix: the live panel solves it line by line.</div>`,
   explain: () => R`<p>Stage ${P.estage} of 6. Blue is the eigenline of the larger eigenvalue, orange the smaller. Dots mark the multiples $s\bv$; the ringed point is the test point at multiple $s=${f(P.es)}$.</p>` + TAPHINT,
   parts(){
@@ -3589,9 +3591,9 @@ STEPS.push({
 <ul>
 <li><b>The upper vertical axis</b> ($\Tr=0$, $\Det&gt;0$): <b>centres</b>, between spiral sinks and spiral sources (step 3).</li>
 <li><b>The critical parabola</b> ($\Det=\Tr^2/4$): <b>degenerate nodes and star nodes</b>, between nodes and spirals (steps 6 to 15). Both kinds sit at the same point: the map cannot tell them apart. Tick the box under the figure to switch the portrait between them.</li>
-<li><b>The horizontal Tr axis</b> ($\Det=\lambda_1\lambda_2=0$): one eigenvalue is zero. The other is $\Tr=\lambda_1+\lambda_2$, nonzero except at the origin. These are <b>combs</b>: attracting on the left half, repelling on the right half (steps 16 and 18).</li>
+<li><b>The horizontal Tr axis</b> ($\Det=\lambda_1\lambda_2=0$): one eigenvalue is zero. The other is $\Tr=\lambda_1+\lambda_2$, nonzero except at the origin. These are <b>combs</b>: attracting on the left half, repelling on the right half (steps 16 and 19).</li>
 </ul>
-<p>Each boundary is defined by an <b>equation</b> ($\Tr=0$, $\Det=\Tr^2/4$, $\Det=0$), while each big region is defined by <b>inequalities</b>. A point satisfying an equation is a needle in a haystack: almost any small change to the matrix knocks it off. That is the idea of structural stability (step 21).</p>
+<p>Each boundary is defined by an <b>equation</b> ($\Tr=0$, $\Det=\Tr^2/4$, $\Det=0$), while each big region is defined by <b>inequalities</b>. A point satisfying an equation is a needle in a haystack: almost any small change to the matrix knocks it off. That is the idea of structural stability (step 22).</p>
 <h3>The origin</h3>
 <p>At $(0,0)$ both eigenvalues are zero. Two quite different systems live there: $\bA=\mathbf0$, where every point is stationary, and nonzero matrices like $\begin{bmatrix}0&1\\0&0\end{bmatrix}$, where $\dot x=y,\ \dot y=0$: trajectories are horizontal lines travelled at constant speed (step 15). The origin of the map is drawn as an open circle because it belongs to none of the named types.</p>
 <div class="box try"><b>Try it</b>Use the preset buttons to visit each boundary, then drag the point a tiny distance off it in each direction: the portrait on the right changes type. Inside a big region, dragging changes the portrait's shape but never its type.</div>`,
@@ -3794,7 +3796,7 @@ STEPS.push({
   focusSecs(){ return P.ssmode === 'leak' ? ['System with one leaky tank'] : ['Structurally stable systems']; },
   text: () => R`
 <h2>Structural stability</h2>
-<p>Stability (step 20) is a question about the solutions of one fixed system. There is a different, equally important question: what happens if the <b>system itself</b> is changed slightly, by perturbing the matrix $\bA$? Real coefficients are measured, rounded and approximated, so a picture that falls apart under the tiniest change in $\bA$ cannot be trusted. This is the <b>structural stability</b> of the system.</p>
+<p>Stability (step 21) is a question about the solutions of one fixed system. There is a different, equally important question: what happens if the <b>system itself</b> is changed slightly, by perturbing the matrix $\bA$? Real coefficients are measured, rounded and approximated, so a picture that falls apart under the tiniest change in $\bA$ cannot be trusted. This is the <b>structural stability</b> of the system.</p>
 <h3>Definition</h3>
 <p><b>Definition.</b> If the phase portrait type is robust, in the sense that small perturbations in the entries of $\bA$ do not change the type of the phase portrait, then the system is called <b>structurally stable</b>.</p>
 <h3>Structurally stable systems</h3>
@@ -3931,7 +3933,7 @@ function famCalc(a){
     h += C.ln(R`\bA - (${f(E.l)})\bI = ${mat(a - E.l, 2, -2, -1 - E.l)} \neq \mathbf 0`, 'not the zero matrix, so only ONE eigenline (step 7): a defective (degenerate) node, not a star node');
   }
   if (Math.abs(D) < 1e-9 && E.type === 'real'){
-    h += C.ln(R`\lambda_1 = 0`, 'Det = 0 always forces one zero eigenvalue, because Det = λ₁λ₂: a whole line of fixed points, so the portrait is a comb (step 18)');
+    h += C.ln(R`\lambda_1 = 0`, 'Det = 0 always forces one zero eigenvalue, because Det = λ₁λ₂: a whole line of fixed points, so the portrait is a comb (step 19)');
   }
   if (E.type === 'complex'){
     h += C.h('Direction of rotation') + C.ln(R`\bA\begin{pmatrix}1\\0\end{pmatrix} = \begin{pmatrix}(${f(a)})(1) + (2)(0)\\ (-2)(1) + (-1)(0)\end{pmatrix} = \begin{pmatrix}${f(a)}\\ -2\end{pmatrix}`, 'the velocity at the test point (1, 0) on the positive x-axis');
@@ -3961,7 +3963,7 @@ STEPS.push({
 <p>$\dot\bx=\bA\bx$ is a <b>rule of motion</b>. Put a point anywhere in the plane; the matrix looks at where the point is and tells it which way to drift and how fast. The point then traces out a path. Draw many such paths at once and the picture is the <b>phase portrait</b>.</p>
 <p>Each value of $a$ gives a different matrix, so a different rule, so a different picture. The exercise asks three things about each of the eight pictures:</p>
 <ul>
-<li><b>Which picture is it?</b> The possible shapes all appear in this app: node (step 2), spiral, centre, saddle, comb (step 18), defective/degenerate node (steps 7–12), star node (step 14).</li>
+<li><b>Which picture is it?</b> The possible shapes all appear in this app: node (step 2), spiral, centre, saddle, comb (step 19), defective/degenerate node (steps 7–12), star node (step 14).</li>
 <li><b>Is it stable?</b> Three words, in plain language:</li>
 </ul>
 <table class="num" style="text-align:left"><tr><th style="text-align:left">word</th><th style="text-align:left">what actually happens</th></tr>
@@ -4036,7 +4038,7 @@ $$\Det = 4-a = 4-(\Tr+1) = 3-\Tr.$$
 <ul>
 <li><b>The critical parabola.</b> Set $3-\Tr=\Tr^2/4$, i.e. $\Tr^2+4\Tr-12=0$, which factors as $(\Tr+6)(\Tr-2)=0$: crossings at $\Tr=-6$ ($a=-5$) and $\Tr=2$ ($a=3$), the two repeated-eigenvalue cases of section 3.</li>
 <li><b>The Det axis</b> ($\Tr=0$): at $a=1$, with $\Det=3&gt;0$: a <b>centre</b>.</li>
-<li><b>The Tr axis</b> ($\Det=0$): at $a=4$, with the other eigenvalue $\Tr=3&gt;0$: a <b>repelling comb</b> (step 18).</li>
+<li><b>The Tr axis</b> ($\Det=0$): at $a=4$, with the other eigenvalue $\Tr=3&gt;0$: a <b>repelling comb</b> (step 19).</li>
 </ul>
 <p>Reading the line from left to right, the family visits, in order: nodal sink → defective node (sink) → spiral sink → centre → spiral source → defective node (source) → comb → saddle. Slide $a$ with the slider and watch exactly this sequence.</p>
 <h3>5. Why every rotation here is clockwise</h3>
@@ -4066,8 +4068,8 @@ $$\bA\begin{pmatrix}1\\0\end{pmatrix}=\begin{pmatrix}(a)(1)+(2)(0)\\ (-2)(1)+(-1
 <ul>
 <li><b>node</b> means a nodal source or nodal sink only — the exercise says so in its note — not the degenerate or star kind.</li>
 <li><b>defective node</b> is this app's <b>degenerate node</b>: two names for the same portrait (the glossary lists “improper node” as a third).</li>
-<li><b>neutrally stable</b> is this app's <b>semistable</b> (step 20): bounded solutions that do not all tend to $(0,0)$. Only the centre at $a=1$ earns it here.</li>
-<li><b>stable</b> means every solution tends to $(0,0)$: the test is $\operatorname{tr}\bA&lt;0$ and $\det\bA&gt;0$ (step 20), which holds for $a=-6,-5,-2$ and fails from $a=1$ onwards.</li>
+<li><b>neutrally stable</b> is this app's <b>semistable</b> (step 21): bounded solutions that do not all tend to $(0,0)$. Only the centre at $a=1$ earns it here.</li>
+<li><b>stable</b> means every solution tends to $(0,0)$: the test is $\operatorname{tr}\bA&lt;0$ and $\det\bA&gt;0$ (step 21), which holds for $a=-6,-5,-2$ and fails from $a=1$ onwards.</li>
 </ul>
 <div class="box try"><b>Try it</b>Press the eight buttons in order and watch three things at once: the dot sliding down the dashed line through region after region, the portrait on the right changing type at exactly $a=-5,\ 1,\ 3,\ 4$, and the magenta arrow at $(1,0)$ pointing down the whole time. Then drag $a$ slowly across $3$: two eigenlines close like scissors into one ($a=3$), then vanish as the spiralling starts — the same collapse as step 13, approached from the other side.</div>`,
   explain: () => R`<p>Left: the trace–determinant map. The magenta dashed line $\Det=3-\Tr$ is the whole family; the small circles are the eight asked values of $a$, and the dark dot is the current one. Right: the phase portrait of the matrix at this $a$, with the direction test at $(1,0)$ drawn in magenta.</p>` + TAPHINT,
@@ -4357,7 +4359,7 @@ function q3Calc(b, c){
   h += C.ln(R`\bA = ${mat(0, 1, -c, -b)}`, 'stack the two rows into one matrix equation u̇ = A u: the companion matrix (step 5). Check: its bottom row times (y, ẏ) is −c·y − b·ẏ, which the ODE says is exactly ÿ');
   h += C.ln(R`\operatorname{tr}\bA = 0 + (${f(-b)}) = -b = ${f(T)},\qquad \det\bA = (0)(${f(-b)}) - (1)(${f(-c)}) = c = ${f(D)}`, 'so trace = minus the damping, determinant = the stiffness');
   h += C.ln(R`s^2 ${sg(b)}\,s ${sg(c)} = 0 \ \Rightarrow\ ${eigTex(E, 3).replace(/\\lambda/g, 's')}`, 'the SAME polynomial comes from trying y = exp(st) in the ODE and from the eigenvalues of A — that is why the companion system can stand in for the ODE');
-  h += C.h('Stability: two sign checks') + C.ln(R`b = ${f(b)} ${b > 1e-9 ? '> 0' : b < -1e-9 ? '< 0' : '= 0'},\qquad c = ${f(c)} ${c > 1e-9 ? '> 0' : c < -1e-9 ? '< 0' : '= 0'}`, b > 1e-9 && c > 1e-9 ? 'both positive, so trA < 0 and detA > 0: every root has a negative real part and every solution dies out (step 20)' : 'NOT both positive: some root has a positive real part, so some solution grows');
+  h += C.h('Stability: two sign checks') + C.ln(R`b = ${f(b)} ${b > 1e-9 ? '> 0' : b < -1e-9 ? '< 0' : '= 0'},\qquad c = ${f(c)} ${c > 1e-9 ? '> 0' : c < -1e-9 ? '< 0' : '= 0'}`, b > 1e-9 && c > 1e-9 ? 'both positive, so trA < 0 and detA > 0: every root has a negative real part and every solution dies out (step 21)' : 'NOT both positive: some root has a positive real part, so some solution grows');
   h += C.res('<span class="tag" style="background:' + STABCOL[sv.v] + '">' + sv.v.toUpperCase() + '</span> ' + esc(sv.why) + '.', sv.v !== 'stable');
   h += C.h('Structural stability: stay off the three boundary curves');
   h += C.ln(R`\operatorname{tr}\bA = ${f(T)} \neq 0,\qquad \det\bA = ${f(D)} \neq 0`, 'not on the Det axis (centres) and not on the Tr axis (combs) — true for all three ODEs, which is why the printed solution only checks the parabola');
@@ -4381,7 +4383,7 @@ STEPS.push({
   text: () => R`
 <h2>Three ODEs: stability and structural stability</h2>
 <div class="box ask"><b>Question: determine the stability and the structural stability of $\ddot y+5\dot y+6y=0$, of $\ddot y+\dot y-6y=0$, and of $\ddot y+2\dot y+y=0$, by considering their companion systems.</b>
-<p>Read $\ddot y + b\,\dot y + c\,y = 0$ as a mass on a spring: $b$ is the friction (damping) and $c$ the spring stiffness. Two separate questions are asked about each equation. <b>Stability</b> (step 20): for THIS equation, does every motion die out? <b>Structural stability</b> (step 21): if the coefficients $b,c$ were measured a tiny bit differently, would the <i>type</i> of the phase portrait stay the same? These are genuinely different questions, and the second ODE below proves it.</p></div>
+<p>Read $\ddot y + b\,\dot y + c\,y = 0$ as a mass on a spring: $b$ is the friction (damping) and $c$ the spring stiffness. Two separate questions are asked about each equation. <b>Stability</b> (step 21): for THIS equation, does every motion die out? <b>Structural stability</b> (step 22): if the coefficients $b,c$ were measured a tiny bit differently, would the <i>type</i> of the phase portrait stay the same? These are genuinely different questions, and the second ODE below proves it.</p></div>
 <h3>1. From one second-order ODE to a system</h3>
 <p>The ODE talks about one quantity $y$ and its derivatives; a phase-plane system wants a <b>pair</b> of first-order equations. The bridge is a pure relabelling — four small moves, done here in full for the first ODE, $\ddot y+5\dot y+6y=0$.</p>
 <p><b>Move 1: name the state.</b> Let $u_1=y$ (the position) and $u_2=\dot y$ (the velocity). Nothing is solved here: two things that already exist are simply given names. (The app's figure calls them $x$ and $y$; the printed solution writes the state as $(y,\dot y)$ — same idea, different letters.)</p>
@@ -4406,9 +4408,9 @@ $$\bA=\begin{bmatrix}0&1\\-c&-b\end{bmatrix},\qquad \operatorname{tr}\bA=-b,\qqu
 <h3>2. Why the ODE and the system have the same characteristic polynomial</h3>
 <p>Try $y=\exp(st)$ in the ODE: each dot multiplies by $s$, so $s^2+b\,s+c=0$. The eigenvalues of $\bA$ solve $\lambda^2-\operatorname{tr}\bA\,\lambda+\det\bA=\lambda^2+b\lambda+c=0$ — the <b>same polynomial</b>. So the exponents of the ODE and the eigenvalues of the system are the same numbers, and anything decided by eigenvalues (stability, portrait type) can be read off either one. That is the entire point of the solution's opening paragraph.</p>
 <h3>3. The stability test: two plus signs</h3>
-<p>Stable means every solution dies out, which needs every root of $s^2+bs+c$ to have a negative real part. Step 20 showed the clean test: that happens <b>exactly when $b&gt;0$ and $c&gt;0$</b> — positive friction and a genuine restoring spring. Equivalently $\operatorname{tr}\bA=-b&lt;0$ and $\det\bA=c&gt;0$: the stable upper-left quadrant of the map.</p>
+<p>Stable means every solution dies out, which needs every root of $s^2+bs+c$ to have a negative real part. Step 21 showed the clean test: that happens <b>exactly when $b&gt;0$ and $c&gt;0$</b> — positive friction and a genuine restoring spring. Equivalently $\operatorname{tr}\bA=-b&lt;0$ and $\det\bA=c&gt;0$: the stable upper-left quadrant of the map.</p>
 <h3>4. The structural-stability test: stay off the boundary curves</h3>
-<p>Step 21: a system is structurally UNstable exactly when its point sits on one of the map's boundary curves — the positive Det axis ($\operatorname{tr}\bA=0$, centres), the Tr axis ($\det\bA=0$, combs), or the critical parabola ($(\operatorname{tr}\bA)^2=4\det\bA$). With $\operatorname{tr}\bA=-b$ and $\det\bA=c$ the three checks become, in ODE language:</p>
+<p>Step 22: a system is structurally UNstable exactly when its point sits on one of the map's boundary curves — the positive Det axis ($\operatorname{tr}\bA=0$, centres), the Tr axis ($\det\bA=0$, combs), or the critical parabola ($(\operatorname{tr}\bA)^2=4\det\bA$). With $\operatorname{tr}\bA=-b$ and $\det\bA=c$ the three checks become, in ODE language:</p>
 $$b\neq0\ ?\qquad c\neq0\ ?\qquad b^2-4c\neq0\ ?$$
 <p>All three ODEs here have $b\neq0$ and $c\neq0$, so — as the printed solution says — “it remains to check if $b^2-4c=0$”: only the parabola can still bite.</p>
 <h3>5. The three ODEs, every digit</h3>
@@ -4503,6 +4505,429 @@ $$b\neq0\ ?\qquad c\neq0\ ?\qquad b^2-4c\neq0\ ?$$
   }
 });
 /* ===================================================================
+   STEP: which eigenline does a trajectory hug, near the origin and far away
+   =================================================================== */
+const WCASES = [
+  {id: 'nsource', name: 'Both positive: nodal source', col: '#c2571a'},
+  {id: 'nsink', name: 'Both negative: nodal sink', col: '#8a5a0a'},
+  {id: 'saddle', name: 'Opposite signs: saddle', col: '#5a6373'},
+  {id: 'degpos', name: 'Repeated λ > 0: one eigenline', col: '#b02a72'},
+  {id: 'degneg', name: 'Repeated λ < 0: one eigenline', col: '#6a4fc9'}
+];
+const WDEF = {
+  nsource: {wl1: 1, wl2: 3, wa1: 0, wa2: 90, wx: 0.9, wy: 0.25},
+  nsink: {wl1: -1, wl2: -3, wa1: 0, wa2: 90, wx: 2.4, wy: 2.4},
+  saddle: {wl1: -1, wl2: 2, wa1: 0, wa2: 90, wx: 2.6, wy: 0.15},
+  degpos: {wlam: 1, wb: 2, wth: 0, wph: 90, wx: 0, wy: 1},
+  degneg: {wlam: -1, wb: 2, wth: 0, wph: 90, wx: 0, wy: 1}
+};
+const WPRESETS = {
+  nsource: [['Diagonal: λ = 1 and 3 on the axes', {wl1: 1, wl2: 3, wa1: 0, wa2: 90, wx: 0.9, wy: 0.25}], ['Textbook [1 1; 0 2]: λ = 1 and 2', {wl1: 1, wl2: 2, wa1: 0, wa2: 45, wx: 1, wy: 0.5}], ['Tilted lines: λ = 0.5 and 2.5 at 20° and 110°', {wl1: 0.5, wl2: 2.5, wa1: 20, wa2: 110, wx: 0.9, wy: 0.6}], ['Nearly equal: λ = 2 and 2.3 (close to the parabola)', {wl1: 2, wl2: 2.3, wa1: 0, wa2: 90, wx: 0.9, wy: 0.25}]],
+  nsink: [['Diagonal: λ = −1 and −3 on the axes', {wl1: -1, wl2: -3, wa1: 0, wa2: 90, wx: 2.4, wy: 2.4}], ['Textbook [−1 1; 0 −2]: λ = −1 and −2', {wl1: -1, wl2: -2, wa1: 0, wa2: -45, wx: 0, wy: 1}], ['Tilted lines: λ = −0.5 and −2.5 at 20° and 110°', {wl1: -0.5, wl2: -2.5, wa1: 20, wa2: 110, wx: 2.4, wy: 2.4}], ['Nearly equal: λ = −2 and −2.3', {wl1: -2, wl2: -2.3, wa1: 0, wa2: 90, wx: 2.4, wy: 2.4}]],
+  saddle: [['Diagonal: λ = −1 and 2 on the axes', {wl1: -1, wl2: 2, wa1: 0, wa2: 90, wx: 2.6, wy: 0.15}], ['Textbook [1 2; 2 1]: λ = −1 and 3', {wl1: -1, wl2: 3, wa1: -45, wa2: 45, wx: 2, wy: 0}], ['Slow escape: λ = −2 and 0.3', {wl1: -2, wl2: 0.3, wa1: 0, wa2: 90, wx: 2.6, wy: 0.15}], ['Tilted lines: λ = −1 and 1.5 at 20° and 110°', {wl1: -1, wl2: 1.5, wa1: 20, wa2: 110, wx: 2.6, wy: 0.6}]],
+  degpos: [['Textbook [1 2; 0 1]: λ = 1 along the x-axis', {wlam: 1, wb: 2, wth: 0, wph: 90, wx: 0, wy: 1}], ['[3 −1; 1 1]: λ = 2 along (1, 1)', {wlam: 2, wb: 1.4142, wth: 45, wph: 0, wx: 0, wy: 1}], ['Tilted line at 30°, strong push', {wlam: 1, wb: 3, wth: 30, wph: 120, wx: 0, wy: 1}]],
+  degneg: [['Mirror of the textbook [−1 2; 0 −1]', {wlam: -1, wb: 2, wth: 0, wph: 90, wx: 0, wy: 1}], ['Critically damped ẍ + 2ẋ + x = 0: [0 1; −1 −2]', {wlam: -1, wb: 1.4142, wth: -45, wph: 0, wx: 1, wy: 1}], ['Tilted line at 30°, strong push', {wlam: -1, wb: 3, wth: 30, wph: 120, wx: 0, wy: 1}]]
+};
+const WSTAGES = ['The matrix and its eigenvalues', 'Draw the eigenlines', 'One trajectory: the race between its two pieces', 'The rule, and the whole family'];
+const WCOL = [COL.amb, COL.teal];
+const wcase = () => WCASES.find(c => c.id === P.wcase) || WCASES[0];
+const wIdx = () => Math.max(0, WCASES.findIndex(c => c.id === P.wcase)) + 1;
+const wIsRep = () => P.wcase === 'degpos' || P.wcase === 'degneg';
+function pickWCase(id){ if (!WDEF[id]) return; P.wcase = id; Object.assign(P, WDEF[id]); P.wt = 0; P.wplay = false; }
+function wVecs(){
+  const a = (wIsRep() ? P.wth : P.wa1) * Math.PI / 180, b = (wIsRep() ? P.wph : P.wa2) * Math.PI / 180;
+  return [[Math.cos(a), Math.sin(a)], [Math.cos(b), Math.sin(b)]];
+}
+const wDet = () => { const [v1, v2] = wVecs(); return v1[0] * v2[1] - v1[1] * v2[0]; };
+// the matrix is BUILT from the chosen eigen-pairs: A = V diag(λ1, λ2) V⁻¹, or λI + N with N w = b v for the repeated case
+function wA(){
+  const [v1, v2] = wVecs(), det = wDet(); if (Math.abs(det) < 0.12) return null;
+  const a = v1[0], b = v1[1], c = v2[0], d = v2[1];
+  if (wIsRep()){ const l = P.wlam, k = P.wb / det; return [l - k * a * b, k * a * a, -k * b * b, l + k * a * b]; }
+  const l1 = P.wl1, l2 = P.wl2;
+  return [(a * d * l1 - b * c * l2) / det, a * c * (l2 - l1) / det, b * d * (l1 - l2) / det, (a * d * l2 - b * c * l1) / det];
+}
+function wCoords(p){ const [v1, v2] = wVecs(), det = wDet(); return [(v2[1] * p[0] - v2[0] * p[1]) / det, (v1[0] * p[1] - v1[1] * p[0]) / det]; }
+function wPieces(t, p){
+  const [v1, v2] = wVecs();
+  if (wIsRep()){
+    const A = wA(), l = P.wlam, e = Math.exp(l * t);
+    const Np = [A[0] * p[0] + A[1] * p[1] - l * p[0], A[2] * p[0] + A[3] * p[1] - l * p[1]];
+    const q1 = [e * p[0], e * p[1]], q2 = [t * e * Np[0], t * e * Np[1]];
+    return {e, Np, q1, q2, s1: e * Math.hypot(p[0], p[1]), s2: Math.abs(t) * e * Math.hypot(Np[0], Np[1]), x: [q1[0] + q2[0], q1[1] + q2[1]]};
+  }
+  const [c1, c2] = wCoords(p), e1 = Math.exp(P.wl1 * t), e2 = Math.exp(P.wl2 * t);
+  const q1 = [c1 * e1 * v1[0], c1 * e1 * v1[1]], q2 = [c2 * e2 * v2[0], c2 * e2 * v2[1]];
+  return {c1, c2, e1, e2, q1, q2, s1: Math.abs(c1) * e1, s2: Math.abs(c2) * e2, x: [q1[0] + q2[0], q1[1] + q2[1]]};
+}
+function wT(){ const r = wIsRep() ? Math.abs(P.wlam) : Math.max(Math.abs(P.wl1), Math.abs(P.wl2)); return clamp(5 / Math.max(r, 0.4), 1.6, 10); }
+function wCross(p){
+  if (wIsRep()){ const q = wPieces(0, p), n = Math.hypot(q.Np[0], q.Np[1]), r = Math.hypot(p[0], p[1]); if (n < 1e-9 || r < 1e-9) return []; return [-r / n, r / n]; }
+  const [c1, c2] = wCoords(p); if (Math.abs(c1) < 1e-9 || Math.abs(c2) < 1e-9 || Math.abs(P.wl2 - P.wl1) < 1e-9) return [];
+  return [Math.log(Math.abs(c1 / c2)) / (P.wl2 - P.wl1)];
+}
+function wRule(){
+  if (wIsRep()) return {kind: 'rep', l: P.wlam};
+  const l1 = P.wl1, l2 = P.wl2;
+  if (Math.abs(l1 - l2) < 1e-9) return {kind: 'star', l: l1};
+  const big = l2 > l1 ? 2 : 1, small = 3 - big;
+  if (l1 * l2 > 0){ const slow = Math.abs(l1) <= Math.abs(l2) ? 1 : 2; return {kind: l1 > 0 ? 'source' : 'sink', big, small, slow, fast: 3 - slow}; }
+  const stable = l1 < 0 ? 1 : 2; return {kind: 'saddle', big, small, stable, unstable: 3 - stable};
+}
+const wLamOf = k => k === 1 ? P.wl1 : P.wl2;
+const wName = k => 'λ' + (k === 1 ? '₁' : '₂') + ' = ' + ft(wLamOf(k));
+function wTag(k){ const ru = wRule(); if (ru.kind === 'rep') return 'repeated'; if (ru.kind === 'star') return 'equal'; if (ru.kind === 'saddle') return k === ru.stable ? 'stable' : 'unstable'; return k === ru.slow ? 'slow' : 'fast'; }
+function wRuleText(){
+  const ru = wRule();
+  if (ru.kind === 'star') return 'λ₁ = λ₂ with two independent eigenvectors: A = λI, the star node. Every ray is a trajectory and no eigenline is preferred (step ' + stepNo('Star node') + '). Make the two eigenvalues differ, or use a repeated-λ layer for the one-eigenline case.';
+  if (ru.kind === 'rep') return 'One eigenline. Both ends of every curve line up with it: tangent to it at (0, 0), which is the ' + (ru.l > 0 ? 'far past' : 'far future') + ', and parallel to it far away, with exactly a half turn in between.';
+  if (ru.kind === 'saddle') return 'Far away in the past the curve runs parallel to the stable line ' + wName(ru.stable) + ', moving inward; far away in the future it runs parallel to the unstable line ' + wName(ru.unstable) + ', moving outward. Near the origin it turns from one to the other without arriving.';
+  return 'Near (0, 0), which is the ' + (ru.kind === 'source' ? 'far past' : 'far future') + ': tangent to the slow line ' + wName(ru.slow) + '. Far away, which is the ' + (ru.kind === 'source' ? 'future' : 'past') + ': parallel to the fast line ' + wName(ru.fast) + '.';
+}
+function wLamCalc(){
+  const ru = wRule();
+  if (ru.kind === 'rep') return C.ln(R`\lambda_1 = \lambda_2 = ${f(P.wlam)}`, 'one dot on the line: the slow and the fast eigenline are the same line') + C.res(wRuleText());
+  if (ru.kind === 'star') return C.res(wRuleText(), true);
+  let h = C.ln(R`\lambda_{${ru.small}} = ${f(wLamOf(ru.small))} < \lambda_{${ru.big}} = ${f(wLamOf(ru.big))}`, 'the larger eigenvalue, further to the right on the line, wins the future; the smaller one wins the past');
+  if (ru.kind !== 'saddle') h += C.ln(R`|\lambda_{${ru.slow}}| = ${f(Math.abs(wLamOf(ru.slow)))} < |\lambda_{${ru.fast}}| = ${f(Math.abs(wLamOf(ru.fast)))}`, 'closer to 0 is the slow line (owns the origin); further from 0 is the fast line (owns far away)');
+  else h += C.ln(R`\lambda_{${ru.stable}} = ${f(wLamOf(ru.stable))} < 0 < \lambda_{${ru.unstable}} = ${f(wLamOf(ru.unstable))}`, 'negative: the stable line, motion inward; positive: the unstable line, motion outward');
+  return h + C.res(wRuleText());
+}
+function wDecompCalc(p){
+  const A = wA(); if (!A) return '';
+  const [v1, v2] = wVecs(), rep = wIsRep();
+  let h = C.ln(R`\bp = ${vtx(p, 3)}`, 'the start, taken as the state at t = 0');
+  if (rep){
+    const l = P.wlam, q = wPieces(0, p), n = Math.hypot(q.Np[0], q.Np[1]), r = Math.hypot(p[0], p[1]);
+    h += C.ln(R`\bN = \bA - \lambda\bI = ${mat(A[0] - l, A[1], A[2], A[3] - l, 3)},\qquad \bN\bp = ${vtx(q.Np, 3)}`, 'N sends every vector onto the one eigenline (N² = 0), so Np points along the blue line');
+    h += C.ln(R`\bx(t) = \exp(${f(l)}t)\,\bigl[\,\ca{\bp} + \ct{t\,\bN\bp}\,\bigr]`, 'piece 1 (amber) keeps the direction of p; piece 2 (teal) lies along the eigenline');
+    if (n < 1e-9) return h + C.res('Np = 0: the start is on the eigenline, so the motion is a straight run along it.');
+    h += C.ln(R`\frac{|\text{piece 2}|}{|\text{piece 1}|} = \frac{|t|\,|\bN\bp|}{|\bp|} = ${f(n / r, 3)}\,|t|`, 'grows without limit at BOTH ends of time: the t-piece wins both races, so both ends of the curve line up with the one eigenline');
+    h += C.ln(R`\text{hand-over at } t = \pm\frac{|\bp|}{|\bN\bp|} = \pm ${f(r / n, 3)}`, 'between these two times piece 1 is longer and the curve is making its half turn');
+    return h + C.res(wRuleText());
+  }
+  const [c1, c2] = wCoords(p), l1 = P.wl1, l2 = P.wl2;
+  h += C.ln(R`\bp = c_1\bv_1 + c_2\bv_2:\quad c_1 = ${f(c1, 3)},\ c_2 = ${f(c2, 3)}`, 'split the start along the two eigenlines (two equations, two unknowns)');
+  h += C.ln(R`\bx(t) = \ca{${f(c1, 3)}\exp(${f(l1)}t)\,${vtx(v1, 3)}} + \ct{${f(c2, 3)}\exp(${f(l2)}t)\,${vtx(v2, 3)}}`, 'piece 1 (amber) and piece 2 (teal): fixed directions, only their lengths change');
+  if (Math.abs(c1) < 1e-9 || Math.abs(c2) < 1e-9) return h + C.res('One constant is 0: the start lies on an eigenline, so the motion is a straight run along that line and there is no race.');
+  if (Math.abs(l2 - l1) < 1e-9) return h + C.res(wRuleText(), true);
+  h += C.ln(R`\frac{|\text{piece 2}|}{|\text{piece 1}|} = \left|\frac{c_2}{c_1}\right|\exp\bigl((\lambda_2-\lambda_1)t\bigr) = ${f(Math.abs(c2 / c1), 3)}\,\exp(${f(l2 - l1)}\,t)`, l2 > l1 ? 'exponent positive: piece 2 wins the future, piece 1 wins the past' : 'exponent negative: piece 1 wins the future, piece 2 wins the past');
+  const ts = wCross(p)[0];
+  h += C.ln(R`t^* = \frac{\ln|c_1/c_2|}{\lambda_2-\lambda_1} = \frac{\ln ${f(Math.abs(c1 / c2), 3)}}{${f(l2 - l1)}} = ${f(ts, 3)}`, 'the hand-over: the two pieces are equally long here');
+  return h + C.res(wRuleText());
+}
+function wPieceCalc(t, p){
+  const q = wPieces(t, p), rep = wIsRep(), [v1, v2] = wVecs(), ang = Math.atan2(q.x[1], q.x[0]) * 180 / Math.PI;
+  let h = '';
+  if (rep) h += C.ln(R`\exp(\lambda t) = \exp(${f(P.wlam)}\cdot ${f(t)}) = ${f(q.e, 4)}`) + C.ln(R`\ca{\exp(\lambda t)\,\bp} = ${vtx(q.q1, 3)},\qquad |\cdot| = ${f(q.s1, 4)}`, 'piece 1') + C.ln(R`\ct{t\exp(\lambda t)\,\bN\bp} = ${vtx(q.q2, 3)},\qquad |\cdot| = ${f(q.s2, 4)}`, 'piece 2, along the eigenline');
+  else h += C.ln(R`\ca{c_1\exp(\lambda_1 t)} = ${f(q.c1, 3)}\cdot\exp(${f(P.wl1 * t, 3)}) = ${f(q.c1 * q.e1, 4)}`, 'signed length of piece 1 (the sign says which side of the line)') + C.ln(R`\ct{c_2\exp(\lambda_2 t)} = ${f(q.c2, 3)}\cdot\exp(${f(P.wl2 * t, 3)}) = ${f(q.c2 * q.e2, 4)}`, 'signed length of piece 2');
+  h += C.ln(R`\bx(${f(t)}) = ${vtx(q.q1, 3)} + ${vtx(q.q2, 3)} = ${vtx(q.x, 3)}`, 'head to tail: the parallelogram in the figure');
+  if (q.s1 < 1e-12 && q.s2 < 1e-12) return h;
+  const win = q.s1 >= q.s2 ? 1 : 2, ratio = q.s2 / Math.max(q.s1, 1e-300);
+  h += C.ln(R`\frac{|\text{piece 2}|}{|\text{piece 1}|} = ${f(ratio, 4)}`, win === 1 ? 'less than 1: piece 1 is winning now, so x(t) leans toward its line' : 'more than 1: piece 2 is winning now, so x(t) leans toward its line');
+  const u = rep ? v1 : (win === 1 ? v1 : v2), la = Math.atan2(u[1], u[0]) * 180 / Math.PI;
+  let d = ((ang - la) % 180 + 180) % 180; if (d > 90) d -= 180;
+  h += C.ln(R`\text{direction of } \bx(t) = \operatorname{atan2}(${f(q.x[1], 3)},\ ${f(q.x[0], 3)}) = ${f(ang, 1)}^\circ`, 'the winning line is at ' + ft(la, 1) + '° (mod 180°): the gap is ' + ft(Math.abs(d), 1) + '°, and it closes as the winner wins by more');
+  return h;
+}
+STEPS.push({
+  nav: 'Which eigenline', title: 'Which eigenline does a trajectory hug? Near the origin and far away, for every sign pattern',
+  fig: () => '<b>' + esc(wcase().name) + ', stage ' + P.wstage + ' of 4:</b> ' + WSTAGES[P.wstage - 1] + '. Tap the phase plane to choose a start; tap the size plot to pick a time.',
+  eq: () => wIsRep() ? R`\bx(t) = \exp(${f(P.wlam)}t)\,\bigl[\ca{\bp} + \ct{t\,\bN\bp}\bigr]` : R`\bx(t) = \ca{c_1\exp(${f(P.wl1)}t)\,\bv_1} + \ct{c_2\exp(${f(P.wl2)}t)\,\bv_2}`,
+  anim: true,
+  rebuildKeys: ['wcase'],
+  focusSecs(){ return ['Layer ' + wIdx(), 'Stage ' + P.wstage]; },
+  get controls(){
+    const rep = wIsRep(), c = P.wcase;
+    const sl = rep ? [
+      {r: 'wlam', label: 'Repeated eigenvalue λ', min: c === 'degpos' ? 0.1 : -3, max: c === 'degpos' ? 3 : -0.1, step: 0.05},
+      {r: 'wb', label: 'Strength b of the push onto the line', min: 0.1, max: 3, step: 0.01},
+      {r: 'wth', label: 'Direction of the eigenline (°)', min: -90, max: 180, step: 1},
+      {r: 'wph', label: 'Direction that is pushed onto it (°)', min: -90, max: 180, step: 1}
+    ] : [
+      {r: 'wl1', label: 'λ₁ (amber line)', min: c === 'nsource' ? 0.1 : -3, max: c === 'nsink' || c === 'saddle' ? -0.1 : 3, step: 0.05},
+      {r: 'wl2', label: 'λ₂ (teal line)', min: c === 'nsink' ? -3 : 0.1, max: c === 'nsink' ? -0.1 : 3, step: 0.05},
+      {r: 'wa1', label: 'Direction of v₁ (°)', min: -90, max: 180, step: 1},
+      {r: 'wa2', label: 'Direction of v₂ (°)', min: -90, max: 180, step: 1}
+    ];
+    return [
+      {types: WCASES, key: 'wcase', pick: pickWCase},
+      {stages: WSTAGES, key: 'wstage'},
+      ...sl,
+      {r: 'wx', label: 'Start x', min: -3, max: 3, step: 0.01},
+      {r: 'wy', label: 'Start y', min: -3, max: 3, step: 0.01},
+      {r: 'wt', label: 'Time t', min: () => -wT(), max: () => wT(), step: 0.01},
+      {chk: 'wplay', label: 'Play time'},
+      {chk: 'wfield', label: 'Velocity arrows (stages 2 to 4)'},
+      {btns: [['Previous stage', () => { P.wstage = Math.max(1, P.wstage - 1); }], ['Next stage', () => { P.wstage = Math.min(4, P.wstage + 1); }], ['Restart time', () => { P.wt = 0; P.wplay = false; }]]},
+      {btns: (WPRESETS[c] || []).map(([t, vals]) => [t, () => { Object.assign(P, vals); P.wt = 0; }])}
+    ];
+  },
+  secsMap: {field: ['Stage 1'], eig1: ['Stage 2', 'How to draw the eigenlines'], eig2: ['Stage 2', 'How to draw the eigenlines'], traj: ['Stage 3', 'The race rule'], start: ['Stage 3'], dot: ['Stage 3', 'The one formula'], piece1: ['The one formula', 'Stage 3'], piece2: ['The one formula', 'Stage 3'], size1: ['The race rule'], size2: ['The race rule'], cross: ['The race rule'], cursor: ['Stage 3'], family: ['Stage 4', 'checklist'], lam: ['Slow and fast', 'Saddles']},
+  psecsMap: {traj: ['The race rule', 'From ends of time'], time: ['The one formula']},
+  text: () => R`
+<h2>Which eigenline does a trajectory hug?</h2>
+<p>A node has two eigenlines, and every one of its curves is <b>tangent</b> to one of them at the origin and <b>parallel</b> to the other one far away. A saddle's curves come in beside one line and go out beside the other. A degenerate node has only one line, and its curves use it at both ends. This step gives the rule that says <b>which line is which</b>, read straight off the eigenvalues, and shows it for all five sign patterns. Pick a layer under the figure (one per sign pattern), then go through its four stages: the matrix and its eigenvalues, drawing the eigenlines, one trajectory followed through time, and the whole portrait with the rule written on it. Every layer has preset examples and sliders of its own; the matrix is always <i>built</i> from the eigenvalues and directions you choose, so you can see exactly what each one does.</p>
+<h3>The one formula behind every case</h3>
+<p>With two different real eigenvalues $\lambda_1,\lambda_2$ and eigenvectors $\bv_1,\bv_2$ (how to find them: step ${stepNo('Drawing eigenlines')}, and stage 2 of every layer here), every solution is a sum of two pieces:</p>
+$$\bx(t)=\ca{c_1\exp(\lambda_1t)\,\bv_1}+\ct{c_2\exp(\lambda_2t)\,\bv_2}.$$
+<p><span class="c-a">Piece 1</span> always points along the eigenline of $\lambda_1$ and <span class="c-t">piece 2</span> along the eigenline of $\lambda_2$: only their <i>lengths</i>, $|c_1|\exp(\lambda_1t)$ and $|c_2|\exp(\lambda_2t)$, change with time. The position is the vector sum, drawn in the figure as a parallelogram (stage 3). So the direction of $\bx(t)$ is settled by a single question at every moment: <b>which piece is longer right now?</b> When one piece is much longer than the other, $\bx(t)$ points almost exactly along that piece's eigenline.</p>
+<h3>The race rule: larger λ wins the future, smaller λ wins the past</h3>
+<p>Divide the two lengths:</p>
+$$\frac{|\text{piece 2}|}{|\text{piece 1}|}=\frac{|c_2|\exp(\lambda_2t)}{|c_1|\exp(\lambda_1t)}=\left|\frac{c_2}{c_1}\right|\exp\bigl((\lambda_2-\lambda_1)\,t\bigr).$$
+<p>Everything sits in the exponent $(\lambda_2-\lambda_1)t$. If $\lambda_2&gt;\lambda_1$ it is positive for $t&gt;0$ and negative for $t&lt;0$, so the ratio runs off to infinity as $t\to+\infty$ and shrinks to zero as $t\to-\infty$: piece 2 wins the future, piece 1 wins the past. The constants $c_1,c_2$ only move the moment of the hand-over (and decide which side of each line the curve is on); they never change who wins. Worked numbers with $\lambda_1=1$, $\lambda_2=3$, $c_1=c_2=1$, $\bv_1=(1,0)$, $\bv_2=(0,1)$:</p>
+<table class="num"><tr><th>t</th><th>piece 1: exp(t)</th><th>piece 2: exp(3t)</th><th>ratio exp(2t)</th><th>direction of x(t)</th></tr>
+<tr><td>−2</td><td>0.135</td><td>0.0025</td><td>0.018</td><td>1.0° (almost v₁, the x-axis)</td></tr>
+<tr><td>−1</td><td>0.368</td><td>0.050</td><td>0.135</td><td>7.7°</td></tr>
+<tr><td>0</td><td>1</td><td>1</td><td>1</td><td>45°</td></tr>
+<tr><td>1</td><td>2.72</td><td>20.1</td><td>7.39</td><td>82.3°</td></tr>
+<tr><td>2</td><td>7.39</td><td>403</td><td>54.6</td><td>89.0° (almost v₂, the y-axis)</td></tr></table>
+<div class="box key"><b>The race rule</b>As $t\to+\infty$ the direction of $\bx(t)$ tends to the eigenvector of the <b>larger</b> eigenvalue (the one further to the right on the number line). As $t\to-\infty$ it tends to the eigenvector of the <b>smaller</b> eigenvalue. The hand-over happens at $t^*=\dfrac{\ln|c_1/c_2|}{\lambda_2-\lambda_1}$, where the two pieces are equally long (0 in the table). Nothing else about the matrix matters.</div>
+<p>Mind the words: <i>larger</i> means further to the right on the real line, so $-1$ is larger than $-3$. The rule compares signed numbers, never sizes.</p>
+<h3>From ends of time to places in the picture</h3>
+<p>The rule speaks of $t\to\pm\infty$, but the question was about places: near the origin and far away. The bridge is <b>where the origin sits in time</b>, which the signs decide:</p>
+<ul>
+<li><b>Both positive.</b> Both $\exp(\lambda t)\to0$ as $t\to-\infty$: the origin is the far past, infinity is the future.</li>
+<li><b>Both negative.</b> Both $\exp(\lambda t)\to0$ as $t\to+\infty$: the origin is the far future, infinity is the past.</li>
+<li><b>Opposite signs.</b> One piece blows up at each end: the curve is far away at both ends and never reaches the origin (unless it starts on the stable line, where $c_2=0$).</li>
+</ul>
+<table class="num" style="text-align:left"><tr><th style="text-align:left">eigenvalues</th><th style="text-align:left">t → −∞ (smaller λ wins)</th><th style="text-align:left">t → +∞ (larger λ wins)</th><th style="text-align:left">so, near (0, 0)</th><th style="text-align:left">so, far away</th></tr>
+<tr><td style="text-align:left">0 &lt; λ₁ &lt; λ₂</td><td style="text-align:left">at the origin, along v₁</td><td style="text-align:left">far away, along v₂</td><td style="text-align:left">tangent to the λ₁ line</td><td style="text-align:left">parallel to the λ₂ line</td></tr>
+<tr><td style="text-align:left">λ₁ &lt; λ₂ &lt; 0</td><td style="text-align:left">far away, along v₁</td><td style="text-align:left">at the origin, along v₂</td><td style="text-align:left">tangent to the λ₂ line</td><td style="text-align:left">parallel to the λ₁ line</td></tr>
+<tr><td style="text-align:left">λ₁ &lt; 0 &lt; λ₂</td><td style="text-align:left">far away, along v₁, coming in</td><td style="text-align:left">far away, along v₂, going out</td><td style="text-align:left">turns from v₁ to v₂ without arriving</td><td style="text-align:left">parallel to v₁ in the past, to v₂ in the future</td></tr></table>
+<h3>Slow and fast: one sentence for both kinds of node</h3>
+<p>Call the eigenvalue closer to 0 the <b>slow</b> one ($|\lambda|$ smaller) and the other the <b>fast</b> one. For a source, $0&lt;\lambda_1&lt;\lambda_2$, the slow one is $\lambda_1$, the smaller; for a sink, $\lambda_1&lt;\lambda_2&lt;0$, the slow one is $\lambda_2$, the larger (closer to 0). Put that into the table and both node rows say the same thing:</p>
+<div class="box key"><b>Nodes</b>Near $(0,0)$ every curve is tangent to the <b>slow</b> eigenline; far away it is parallel to the <b>fast</b> eigenline. A source's curves leave the origin along the slow line and swing round towards the fast one; a sink's curves are the same curves run backwards: they come in from far away parallel to the fast line and land on the origin along the slow line.</div>
+<p>Why the slow line owns the origin: near the origin both pieces are small, but the fast piece is smaller by a factor that is itself exponential, $\exp\bigl(-(|\lambda_{\text{fast}}|-|\lambda_{\text{slow}}|)\,|t|\bigr)$, so only the slow piece is left to set the direction. Far away the same factor works the other way round and the fast piece dwarfs the slow one.</p>
+<h3>Saddles: stable line in, unstable line out</h3>
+<p>With $\lambda_1&lt;0&lt;\lambda_2$ the line of the negative eigenvalue is the <b>stable</b> line (motion inward) and that of the positive one the <b>unstable</b> line (motion outward). The race rule gives: far back in the past the curve runs parallel to the stable line, coming inward; far in the future it runs parallel to the unstable line, going out. In between it swerves past the origin. Worked example $\bA=\begin{bmatrix}1&2\\2&1\end{bmatrix}$ ($\lambda=-1$ along $(1,-1)$, $\lambda=3$ along $(1,1)$) through $(2,0)$:</p>
+$$\bx(t)=\bigl(\exp(-t)+\exp(3t),\ -\exp(-t)+\exp(3t)\bigr),$$
+<p>which is $\approx\exp(-t)\,(1,-1)$ for very negative $t$ (coming in beside the stable line) and $\approx\exp(3t)\,(1,1)$ for large $t$ (leaving beside the unstable line). Its distance from the origin, $\sqrt{2\exp(-2t)+2\exp(6t)}$, is smallest at $t=-\tfrac{\ln 3}{8}\approx-0.137$: the closest approach, $1.87$ units, and the curve never gets closer.</p>
+<h3>Repeated eigenvalue, one eigenline: both ends on the same line</h3>
+<p>When $\lambda_1=\lambda_2=\lambda$ and $\bA\neq\lambda\bI$ there is one eigenline and the solution is (step ${stepNo('Reading a calculation')})</p>
+$$\bx(t)=\exp(\lambda t)\,\bigl[\ca{\bp}+\ct{t\,\bN\bp}\bigr],\qquad \bN=\bA-\lambda\bI,$$
+<p>where $\bN\bp$ always lies <i>on</i> the eigenline. The two pieces are now $\exp(\lambda t)\,\bp$ and $t\exp(\lambda t)\,\bN\bp$, and their ratio is $|t|\,|\bN\bp|/|\bp|$: it grows without limit at <b>both</b> ends of time. The $t$-piece wins both races, so the curve lines up with the single eigenline both near the origin and far away. The slow and fast lines have merged into one. Because $t$ changes sign, the direction is $-\bN\bp$ at one end and $+\bN\bp$ at the other: the half turn of step ${stepNo('Tangent & parallel')}. The sign of $\lambda$ only says which end is the origin: the past for $\lambda&gt;0$, the future for $\lambda&lt;0$. Hand-over times: $t=\pm|\bp|/|\bN\bp|$.</p>
+<h3>How to draw the eigenlines (stage 2 of every layer)</h3>
+<ol>
+<li>Eigenvalues: solve $\lambda^2-\Tr\,\lambda+\Det=0$.</li>
+<li>For each real $\lambda$, subtract it from the two diagonal entries of $\bA$ and write out one row of $(\bA-\lambda\bI)\bv=\mathbf0$ (the other row says the same thing, because the determinant is 0). That one equation gives $v_2$ in terms of $v_1$; choose $v_1=1$.</li>
+<li>Plot the multiples $s\,\bv$ for $s=\pm1,\pm2,\dots$: a straight line through the origin with slope $v_2/v_1$. Label it with its $\lambda$.</li>
+<li>Arrows: outward if $\lambda&gt;0$, inward if $\lambda&lt;0$ (none if $\lambda=0$).</li>
+</ol>
+<p>Step ${stepNo('Drawing eigenlines')} does this slowly with a test point; here the live panel repeats it for whatever matrix the sliders build, and the figure draws each line in the colour of its piece: <span class="c-a">amber</span> for $\lambda_1$, <span class="c-t">teal</span> for $\lambda_2$ (<span class="c-b">blue</span> for the single line of a repeated eigenvalue). The dots on each line are the multiples $\pm\bv,\pm2\bv,\pm3\bv$.</p>
+<h3>Stage 1: the matrix and its eigenvalues</h3>
+<p>The matrix is built from the eigenvalues and directions on the sliders, and the live panel then works back from it: trace, determinant, discriminant, the two roots. The bottom-right panel puts the eigenvalues on the real number line with their labels already attached (slow, fast, stable, unstable), because that line is where the race is decided: further to the right wins the future. The top-right panel shows the two growth rates $\exp(\lambda t)$ on a log scale, where each is a straight line whose slope is its $\lambda$. The grey arrows in the phase plane are the rule of motion itself, before any line is drawn.</p>
+<h3>Stage 2: draw the eigenlines</h3>
+<p>Each eigenline appears in the colour of its piece, with the multiples $\pm\bv,\pm2\bv,\pm3\bv$ as dots, its $\lambda$ and its label, and arrows by the sign of $\lambda$. The live panel solves $(\bA-\lambda\bI)\bv=\mathbf 0$ for each line, one row at a time, exactly as in the recipe below.</p>
+<h3>Stage 3: one trajectory, and the race between its two pieces</h3>
+<p>Tap the phase plane to choose a start. The amber and teal arrows are the two pieces, head to tail; the dot is their sum. The top-right panel shows the two lengths racing, with the hand-over time $t^*$ marked. Press “Play time” or drag the time slider and watch the winner change at $t^*$ while the dot swings from one line to the other.</p>
+<h3>Stage 4: the rule, and the whole family</h3>
+<p>The rest of the portrait appears, and the rule for this layer is written at the top of the figure. Every curve obeys it; tap any of them to see its own split into pieces.</p>
+<h3>Layer 1: both positive (nodal source)</h3>
+<p>Preset “Textbook [1 1; 0 2]”: $\lambda_1=1$ along $(1,0)$ (slow), $\lambda_2=2$ along $(1,1)$ (fast). Through the start $(1,\ 0.5)$: $c_1=0.5$, $c_2=0.5\sqrt2$, so</p>
+$$\bx(t)=\bigl(0.5\exp(t)+0.5\exp(2t),\ 0.5\exp(2t)\bigr),\qquad \frac{y}{x}=\frac{\exp(t)}{1+\exp(t)}.$$
+<p>As $t\to-\infty$ the slope $\to0$: the curve leaves the origin tangent to the $x$-axis, the slow line. As $t\to+\infty$ the slope $\to1$: far away it runs parallel to $y=x$, the fast line. Try “Nearly equal”: with $\lambda=2$ and $2.3$ the hand-over is slow, the curves hug the slow line for a long way, and the picture is on its way to becoming a degenerate node (the two lines about to merge, step ${stepNo('Node ↔ spiral')}).</p>
+<h3>Layer 2: both negative (nodal sink)</h3>
+<p>Preset “Textbook [−1 1; 0 −2]”: $\lambda_1=-1$ along $(1,0)$ (slow: closer to 0), $\lambda_2=-2$ along $(1,-1)$ (fast). Through $(0,1)$:</p>
+$$\bx(t)=\bigl(\exp(-t)-\exp(-2t),\ \exp(-2t)\bigr),\qquad \frac{y}{x}=\frac{1}{\exp(t)-1}.$$
+<p>As $t\to+\infty$ the slope $\to0$: the curve lands on the origin tangent to the $x$-axis, the slow line (larger $\lambda$, namely $-1$). As $t\to-\infty$ the slope $\to-1$: far away in the past it ran parallel to $y=-x$, the fast line ($-2$). The same shape as layer 1 with the arrows reversed: slow line at the origin, fast line far away.</p>
+<h3>Layer 3: opposite signs (saddle)</h3>
+<p>Preset “Textbook [1 2; 2 1]”: $\lambda_1=-1$ along $(1,-1)$ (stable), $\lambda_2=3$ along $(1,1)$ (unstable). The worked curve above comes in parallel to the stable line and leaves parallel to the unstable one, passing the origin at a distance of $1.87$. Try “Slow escape” ($\lambda=-2$ and $0.3$): the inward pull is strong and the outward push weak, so curves dive almost onto the stable line, creep along near the origin, and only slowly peel away along the unstable one. The rule is the same; only the timing changes.</p>
+<h3>Layer 4: repeated λ &gt; 0, one eigenline (degenerate source)</h3>
+<p>Preset “Textbook [1 2; 0 1]”: the eigenline is the $x$-axis. Through $(0,1)$: $\bN\bp=(2,0)$, so $\bx(t)=\exp(t)\,(2t,\ 1)$. For very negative $t$ the direction is $\approx(-1,0)$: leaving the origin to the left, tangent to the axis; for large $t$ it is $\approx(1,0)$: far away, parallel to the axis, on the right. Hand-overs at $t=\pm|\bp|/|\bN\bp|=\pm0.5$. The second preset, $\begin{bmatrix}3&-1\\1&1\end{bmatrix}$, is the same picture skewed so that the eigenline is $y=x$ (step ${stepNo('Eigenlines')}).</p>
+<h3>Layer 5: repeated λ &lt; 0, one eigenline (degenerate sink)</h3>
+<p>Preset “Mirror of the textbook [−1 2; 0 −1]”: the same curves as layer 4 travelled backwards, with the hooks bending the other way (step ${stepNo('Repel or attract')}). Far away in the past the curve is parallel to the eigenline; it arrives at the origin tangent to it. The “Critically damped” preset is the companion matrix of $\ddot x+2\dot x+x=0$: eigenvalue $-1$ repeated, eigenline along $(1,-1)$ (step ${stepNo('Three ODEs')}).</p>
+<h3>A checklist for predicting any portrait from its eigenvalues</h3>
+<table class="num" style="text-align:left"><tr><th style="text-align:left">eigenvalues</th><th style="text-align:left">portrait</th><th style="text-align:left">near (0, 0)</th><th style="text-align:left">far away</th><th style="text-align:left">as t increases, the direction tends to</th></tr>
+<tr><td style="text-align:left">0 &lt; λ_slow &lt; λ_fast</td><td style="text-align:left">nodal source</td><td style="text-align:left">tangent to the slow line (the past)</td><td style="text-align:left">parallel to the fast line (the future)</td><td style="text-align:left">the fast line</td></tr>
+<tr><td style="text-align:left">λ_fast &lt; λ_slow &lt; 0</td><td style="text-align:left">nodal sink</td><td style="text-align:left">tangent to the slow line (the future)</td><td style="text-align:left">parallel to the fast line (the past)</td><td style="text-align:left">the slow line</td></tr>
+<tr><td style="text-align:left">λ₋ &lt; 0 &lt; λ₊</td><td style="text-align:left">saddle</td><td style="text-align:left">passes by, turning from the stable to the unstable line</td><td style="text-align:left">stable line (past), unstable line (future)</td><td style="text-align:left">the unstable line</td></tr>
+<tr><td style="text-align:left">λ₁ = λ₂ &gt; 0, A ≠ λI</td><td style="text-align:left">degenerate source</td><td style="text-align:left">tangent to the one line (the past)</td><td style="text-align:left">parallel to the one line (the future)</td><td style="text-align:left">the one line</td></tr>
+<tr><td style="text-align:left">λ₁ = λ₂ &lt; 0, A ≠ λI</td><td style="text-align:left">degenerate sink</td><td style="text-align:left">tangent to the one line (the future)</td><td style="text-align:left">parallel to the one line (the past)</td><td style="text-align:left">the one line</td></tr></table>
+<p>The last column answers “to which line is it parallel as $t$ increases?” in one phrase: the line of the <b>larger</b> eigenvalue, always. Whether that reads as “parallel far away” or “tangent at the origin” depends only on whether the curve is growing or shrinking at that end. And “which line does it start out tangent to?” is the same question asked about $t\to-\infty$: the line of the <b>smaller</b> eigenvalue.</p>
+<h3>When the rule does not apply</h3>
+<p><b>Star node</b> ($\bA=\lambda\bI$): the two pieces have the same rate, so there is no race and no preferred line; every ray is a trajectory (step ${stepNo('Star node')}). If you slide $\lambda_1$ onto $\lambda_2$ in a node layer, the figure says so. <b>Complex eigenvalues</b>: no real eigenvectors, so no eigenlines at all; the motion rotates (step ${stepNo('Sinks & sources')}). <b>One zero eigenvalue</b>: the race is won by the nonzero eigenvalue at one end and by nobody at the other, which gives the comb of step ${stepNo('Combs')}.</p>
+<div class="box try"><b>Try it</b>Pick layer 1, stage 3, and press “Play time”: the amber arrow wins to the left of the hand-over time and the teal one to the right, while the dot lines up with the amber line near the origin and the teal line far away. Switch to layer 2 with the same start: the same race, read backwards. In layer 3 tap a start close to the stable line and see how long the curve hugs it before escaping. In layers 4 and 5 move the start off the eigenline and watch the teal $t$-piece win both ends.</div>`,
+  explain: () => R`<p>Layer ${wIdx()}: ${esc(wcase().name)}. Stage ${P.wstage}: ${WSTAGES[P.wstage - 1].toLowerCase()}. Left: the phase plane. Top right: the sizes of the two pieces against time, on a log scale (straight lines, because the sizes are exponentials). Bottom right: the eigenvalues on the real number line. <span class="c-a">Amber</span> is always eigenline 1 and piece 1, <span class="c-t">teal</span> eigenline 2 and piece 2 (<span class="c-b">blue</span> the single line of a repeated eigenvalue), <span class="c-m">magenta</span> the trajectory.</p>` + TAPHINT,
+  parts(){
+    const A = wA(); if (!A) return [];
+    const rep = wIsRep(), st = P.wstage, p = [P.wx, P.wy], out = [];
+    if (st === 1 || P.wfield) out.push({id: 'field', name: 'Velocity arrows (grey)', col: '#7f8896', short: 'the rule of motion Ax at grid points, before any line is drawn. Tap one to follow it.', detail: () => groupNote('arrow')});
+    if (st >= 2){
+      if (rep) out.push({id: 'eig1', name: 'The one eigenline (blue), λ = ' + ft(P.wlam), col: COL.blue, short: 'both ends of every curve line up with it.', detail: () => eigenStepCalc(A, P.wlam, 1) + C.p('$\\mathbf A-\\lambda\\mathbf I$ is not the zero matrix, so there is no second line (step ' + stepNo('Eigenlines') + ').')});
+      else [1, 2].forEach(k => out.push({id: 'eig' + k, name: 'Eigenline ' + k + ' (' + (k === 1 ? 'amber' : 'teal') + '), ' + wName(k) + ': ' + wTag(k), col: WCOL[k - 1], short: (wTag(k) === 'slow' ? 'curves are tangent to it at the origin.' : wTag(k) === 'fast' ? 'curves are parallel to it far away.' : wTag(k) === 'stable' ? 'curves come in beside it (the past).' : wTag(k) === 'unstable' ? 'curves leave beside it (the future).' : 'equal eigenvalues: no preference.'), detail: () => eigenStepCalc(A, wLamOf(k), k) + C.ln(R`\text{arrows: } ${wLamOf(k) > 0 ? '\\text{outward, since } \\lambda > 0' : '\\text{inward, since } \\lambda < 0'}`)}));
+    }
+    if (st >= 3){
+      out.push({id: 'traj', name: 'The trajectory through (' + ft(P.wx) + ', ' + ft(P.wy) + ') (magenta)', col: COL.mag, short: 'one curve, followed through time.', detail: () => wDecompCalc(p) + trajCalc(A, p, {startWhy: 'your start'})});
+      out.push({id: 'start', name: 'Start point', col: '#555', short: 'the state at t = 0; tap the phase plane to move it.', detail: () => C.ln(R`\bp = ${vtx(p, 3)}`)});
+      out.push({id: 'dot', name: 'The point at time t', col: COL.mag, short: 'where the curve is now.', detail: () => wPieceCalc(P.wt, p)});
+      if (st === 3){
+        out.push({id: 'piece1', name: rep ? 'Piece 1: exp(λt)·p (amber arrow)' : 'Piece 1: c₁exp(λ₁t)v₁ (amber arrow)', col: COL.amb, short: rep ? 'keeps the direction of the start; only its length changes.' : 'always along eigenline 1; only its length changes.', detail: () => wPieceCalc(P.wt, p)});
+        out.push({id: 'piece2', name: rep ? 'Piece 2: t·exp(λt)·Np (teal arrow)' : 'Piece 2: c₂exp(λ₂t)v₂ (teal arrow)', col: COL.teal, short: rep ? 'always along the eigenline; wins both ends of time.' : 'always along eigenline 2; only its length changes.', detail: () => wPieceCalc(P.wt, p)});
+      }
+      out.push({id: 'size1', name: 'Size of piece 1 (amber curve)', col: COL.amb, short: 'log₁₀ of its length against time: a straight line of slope ' + ft(rep ? P.wlam : P.wl1) + '/ln 10.', detail: () => wDecompCalc(p)});
+      out.push({id: 'size2', name: 'Size of piece 2 (teal curve)', col: COL.teal, short: rep ? 'log₁₀ of |t|·exp(λt)·|Np|: it dives at t = 0 and wins both ends.' : 'log₁₀ of its length: a straight line of slope ' + ft(P.wl2) + '/ln 10.', detail: () => wDecompCalc(p)});
+      out.push({id: 'cross', name: 'Hand-over time t* (grey dashed)', col: '#6b7280', short: 'where the two pieces are equally long.', detail: () => { const cs = wCross(p); return cs.length ? C.ln(R`t^* = ${cs.map(t => f(t, 3)).join(',\\ ')}`, 'the race changes hands here') + C.p('To the left of it the piece with the smaller growth rate is longer; to the right the other one is.') : C.p('No hand-over: the start lies on an eigenline, so only one piece exists.'); }});
+      out.push({id: 'cursor', name: 'Time cursor', col: '#6b7280', short: 't = ' + ft(P.wt) + '; drag the slider, press Play, or tap the size plot.', detail: () => wPieceCalc(P.wt, p)});
+    } else {
+      out.push({id: 'size1', name: rep ? 'exp(λt) (amber curve)' : 'exp(λ₁t) (amber curve)', col: COL.amb, short: 'the growth rate of piece 1, on a log scale: a straight line of slope ' + ft(rep ? P.wlam : P.wl1) + '/ln 10.', detail: () => C.ln(R`\log_{10}\exp(\lambda t) = \frac{\lambda}{\ln 10}\,t = ${f((rep ? P.wlam : P.wl1) / Math.LN10, 3)}\,t`, 'an exponential is a straight line on a log scale; its slope is the eigenvalue')});
+      out.push({id: 'size2', name: rep ? '|t|·exp(λt) (teal curve)' : 'exp(λ₂t) (teal curve)', col: COL.teal, short: rep ? 'the growth rate of the t-piece: the same line plus log₁₀|t|.' : 'the growth rate of piece 2, slope ' + ft(P.wl2) + '/ln 10.', detail: () => rep ? C.ln(R`\log_{10}\bigl(|t|\exp(\lambda t)\bigr) = \log_{10}|t| + \frac{\lambda}{\ln 10}\,t`, 'the extra log|t| is tiny compared with the straight line far from t = 0, but it is what makes this piece win both ends') : C.ln(R`\log_{10}\exp(\lambda_2 t) = ${f(P.wl2 / Math.LN10, 3)}\,t`, 'the steeper line belongs to the larger eigenvalue')});
+    }
+    if (st >= 4) out.push({id: 'family', name: 'The whole family (dark)', col: '#3a3f48', short: 'every curve obeys the same rule. Tap one to analyse it.', detail: () => groupNote('trajectory') + C.res(wRuleText())});
+    out.push({id: 'lam', name: 'The eigenvalues on the real line', col: COL.ink, short: 'further right wins the future; closer to 0 is slow.', detail: () => wLamCalc()});
+    return out;
+  },
+  draw(){
+    const pad = 8, wide = CW > CH * 1.05, st = P.wstage, A = wA(), rep = wIsRep(), [v1, v2] = wVecs();
+    let pv, sv, lv;
+    if (wide){ const w1 = Math.min(Math.round(CW * 0.56), CH + 60); pv = [pad, pad, w1 - 2 * pad, CH - 2 * pad]; const h2 = Math.round((CH - 3 * pad) * 0.6); sv = [w1, pad, CW - w1 - pad, h2]; lv = [w1, 2 * pad + h2, CW - w1 - pad, CH - 3 * pad - h2]; }
+    else { const h1 = Math.round(CH * 0.5), h2 = Math.round(CH * 0.27); pv = [pad, pad, CW - 2 * pad, h1 - 2 * pad]; sv = [pad, h1, CW - 2 * pad, h2]; lv = [pad, h1 + h2 + pad, CW - 2 * pad, CH - h1 - h2 - 2 * pad]; }
+    const bf = '600 12.5px Instrument Sans, system-ui, sans-serif', sf = '12px Instrument Sans, system-ui, sans-serif', bg = 'rgba(255,255,255,.9)';
+    panel(pv[0], pv[1], pv[2], pv[3], wcase().name + ': stage ' + st + ', ' + WSTAGES[st - 1].toLowerCase());
+    const v = sqView(pv[0] + 4, pv[1] + 20, pv[2] - 8, pv[3] - 24, 3.2); this._v = v; clipTo(v); grid(v, 1); axes(v, 'x', 'y', false);
+    const c = vclip(v);
+    if (!A){ label('the two directions are (almost) the same:', v.X(0), v.Y(0) - 10, COL.org, 'center', 'middle', bf, bg); label('move one of the angle sliders', v.X(0), v.Y(0) + 10, COL.org, 'center', 'middle', bf, bg); ctx.restore(); this._s = null; this._l = null; return; }
+    const T = wT(); P.wt = clamp(P.wt, -T, T);
+    const p = [P.wx, P.wy], ru = wRule();
+    if (st === 1 || P.wfield) velocityField(v, A, Math.max(30, Math.min(CW, CH) / 15), st === 1 ? '#7f8896' : '#c3c8d0', 'field');
+    if (st >= 4 && Math.max(...A.map(Math.abs)) > 1e-9) portrait(v, A, seedsCircle(3.05, 14), '#3a3f48', 1.2, [0.5], 'family');
+    if (st >= 2){
+      const lines = rep ? [{u: v1, l: P.wlam, k: 1, col: COL.blue, sub: ''}] : (ru.kind === 'star' ? [] : [{u: v1, l: P.wl1, k: 1, col: WCOL[0], sub: '₁'}, {u: v2, l: P.wl2, k: 2, col: WCOL[1], sub: '₂'}]);
+      if (ru.kind === 'star'){ ctx.fillStyle = 'rgba(36,71,199,.08)'; ctx.fillRect(v.x0, v.y0, v.W, v.H); label('λ₁ = λ₂ with two independent eigenvectors', v.X(0), v.y0 + v.H - 34, COL.blue, 'center', 'middle', bf, bg); label('A = λI: every line through the origin is an eigenline', v.X(0), v.y0 + v.H - 16, COL.blue, 'center', 'middle', bf, bg); }
+      for (const L of lines){
+        const u = L.u, big = v.R * 3;
+        ctx.strokeStyle = L.col; ctx.lineWidth = 2.8; ctx.beginPath(); ctx.moveTo(v.X(-big * u[0]), v.Y(-big * u[1])); ctx.lineTo(v.X(big * u[0]), v.Y(big * u[1])); ctx.stroke();
+        regLine('eig' + L.k, [[v.X(-big * u[0]), v.Y(-big * u[1])], [v.X(big * u[0]), v.Y(big * u[1])]], L.col, 2.8, c);
+        for (let m = -3; m <= 3; m++){ if (!m) continue; dot(v, m * u[0], m * u[1], L.col, 3.2); }
+        if (Math.abs(L.l) > 1e-9) for (const s of [-1, 1]) for (const r of [0.55, 1.5, 2.5]){ const ang = Math.atan2(-s * u[1], s * u[0]) + (L.l > 0 ? 0 : Math.PI); head(v.X(s * r * u[0]), v.Y(s * r * u[1]), ang, 9, L.col); }
+        const r0 = Math.min(2.15, 2.15 / Math.max(Math.abs(u[0]), Math.abs(u[1]))), sgn0 = u[1] >= -0.01 ? 1 : -1, sgn = L.k === 2 ? -sgn0 : sgn0, px = sgn * r0 * u[0], py = sgn * r0 * u[1];
+        let nx = -u[1] * sgn, ny = u[0] * sgn; if ((px > 0.05 && nx > 0) || (px < -0.05 && nx < 0)){ nx = -nx; ny = -ny; }
+        const tag = rep ? 'repeated' : wTag(L.k);
+        label('λ' + L.sub + ' = ' + ft(L.l) + ' (' + tag + ')', v.X(px) + nx * 13, v.Y(py) - ny * 13, L.col, Math.abs(px) > 0.05 ? (px > 0 ? 'right' : 'left') : (nx < 0 ? 'right' : 'left'), 'middle', bf, bg);
+      }
+    }
+    if (st >= 3 && ru.kind !== 'star'){
+      const pts = orbit(A, p, v.R * 1.6, v.R * 0.003);
+      path(v, pts, COL.mag, st === 4 ? 2.4 : 3, [0.3, 0.75]); regPath('traj', v, pts, COL.mag, 3);
+      const q = wPieces(P.wt, p), okq = isFinite(q.x[0]) && isFinite(q.x[1]) && Math.hypot(q.x[0], q.x[1]) < v.R * 60;
+      if (st === 3 && okq){
+        const both = q.s1 > 1e-9 && q.s2 > 1e-9;
+        if (both){
+          ctx.setLineDash([5, 4]); ctx.strokeStyle = 'rgba(13,122,116,.45)'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(v.X(0), v.Y(0)); ctx.lineTo(v.X(q.q2[0]), v.Y(q.q2[1])); ctx.stroke();
+          ctx.strokeStyle = 'rgba(168,104,12,.45)'; ctx.beginPath(); ctx.moveTo(v.X(q.q2[0]), v.Y(q.q2[1])); ctx.lineTo(v.X(q.x[0]), v.Y(q.x[1])); ctx.stroke(); ctx.setLineDash([]);
+        }
+        if (q.s1 > 1e-9){ arrowW(v, 0, 0, q.q1[0], q.q1[1], COL.amb, 2.8, 10); regArrow('piece1', v.X(0), v.Y(0), v.X(q.q1[0]), v.Y(q.q1[1]), COL.amb, 2.8, 10, c); label('piece 1' + (q.s1 >= q.s2 ? ' (winning)' : ''), v.X(q.q1[0] / 2) + 8, v.Y(q.q1[1] / 2) + 12, COL.amb, 'left', 'middle', bf, bg); }
+        if (q.s2 > 1e-9){ arrowW(v, q.q1[0], q.q1[1], q.x[0], q.x[1], COL.teal, 2.8, 10); regArrow('piece2', v.X(q.q1[0]), v.Y(q.q1[1]), v.X(q.x[0]), v.Y(q.x[1]), COL.teal, 2.8, 10, c); label('piece 2' + (q.s2 > q.s1 ? ' (winning)' : ''), v.X((q.q1[0] + q.x[0]) / 2) + 8, v.Y((q.q1[1] + q.x[1]) / 2) - 12, COL.teal, 'left', 'middle', bf, bg); }
+      }
+      const pt = probeOn('time', 'wsize'); if (pt){ const g = wPieces(pt.t, p); if (isFinite(g.x[0]) && Math.hypot(g.x[0], g.x[1]) < v.R * 60){ ringAt(v.X(g.x[0]), v.Y(g.x[1])); regPt('probe', v.X(g.x[0]), v.Y(g.x[1]), 6, PROBE_COL, c); } }
+      dot(v, p[0], p[1], '#555', 4.5); regPt('start', v.X(p[0]), v.Y(p[1]), 4.5, '#555', c);
+      if (okq){ dot(v, q.x[0], q.x[1], COL.mag, 6.5, true); regPt('dot', v.X(q.x[0]), v.Y(q.x[1]), 6.5, COL.mag, c); }
+    }
+    if (st >= 4 && ru.kind !== 'star'){
+      const txt = rep ? ['near (0,0): tangent to the one eigenline', 'far away: parallel to it, on the other side'] : ru.kind === 'saddle' ? ['past, far away: beside the stable line ' + wName(ru.stable), 'future, far away: beside the unstable line ' + wName(ru.unstable)] : ['near (0,0): tangent to the slow line ' + wName(ru.slow), 'far away: parallel to the fast line ' + wName(ru.fast)];
+      const cols = rep ? [COL.blue, COL.blue] : ru.kind === 'saddle' ? [WCOL[ru.stable - 1], WCOL[ru.unstable - 1]] : [WCOL[ru.slow - 1], WCOL[ru.fast - 1]];
+      txt.forEach((s, i) => label(s, v.x0 + 8, v.y0 + 14 + 18 * i, cols[i], 'left', 'middle', '600 12px Instrument Sans, system-ui, sans-serif', 'rgba(255,255,255,.92)'));
+    }
+    drawTrajProbe(v, A, 'main');
+    ctx.restore();
+    /* size plot: the two pieces against time, log scale */
+    panel(sv[0], sv[1], sv[2], sv[3], st >= 3 ? 'size of each piece against time (log₁₀ scale)' : (rep ? 'exp(λt) and |t|·exp(λt) on a log₁₀ scale' : 'the two growth rates exp(λ₁t) and exp(λ₂t) on a log₁₀ scale'));
+    const N = 240, f1 = [], f2 = []; let lo = Infinity, hi = -Infinity;
+    const sz = t => { if (st >= 3) { const q = wPieces(t, p); return [q.s1, q.s2]; } if (rep){ const e = Math.exp(P.wlam * t); return [e, Math.abs(t) * e]; } return [Math.exp(P.wl1 * t), Math.exp(P.wl2 * t)]; };
+    for (let i = 0; i <= N; i++){ const t = -T + 2 * T * i / N, [a, b] = sz(t); if (a > 1e-12 && isFinite(a)){ const la = Math.log10(a); f1.push([t, la]); lo = Math.min(lo, la); hi = Math.max(hi, la); } if (b > 1e-12 && isFinite(b)){ const lb = Math.log10(b); f2.push([t, lb]); lo = Math.min(lo, lb); hi = Math.max(hi, lb); } }
+    if (!isFinite(lo)){ lo = -1; hi = 1; } lo = Math.max(lo, -6); hi = Math.min(hi, 6); if (hi - lo < 1){ hi += 0.5; lo -= 0.5; }
+    const u = view(sv[0] + 4, sv[1] + 20, sv[2] - 8, sv[3] - 24, -T * 1.04, T * 1.04, lo - 0.12 * (hi - lo), hi + 0.3 * (hi - lo), false); this._s = u; clipTo(u); grid(u); axes(u, 't', 'log₁₀', true);
+    path(u, f1.filter(q => q[1] > lo - 1), COL.amb, 2.4); regPath('size1', u, f1, COL.amb, 2.4);
+    path(u, f2.filter(q => q[1] > lo - 1), COL.teal, 2.4); regPath('size2', u, f2, COL.teal, 2.4);
+    const winAt = t => { const [a, b] = sz(t); return a >= b ? 1 : 2; };
+    const wlab = (t, X, al) => { const k = winAt(t); label('piece ' + k + ' wins', X, u.y0 + 13, WCOL[k - 1], al, 'middle', '600 11.5px Instrument Sans, system-ui, sans-serif', bg); };
+    if (st >= 3){
+      const cs = wCross(p).filter(t => Math.abs(t) < T);
+      cs.forEach((t, i) => { ctx.setLineDash([5, 4]); ctx.strokeStyle = '#6b7280'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(u.X(t), u.y0); ctx.lineTo(u.X(t), u.y0 + u.H); ctx.stroke(); ctx.setLineDash([]); regLine('cross#' + i, [[u.X(t), u.y0], [u.X(t), u.y0 + u.H]], '#6b7280', 1.4, vclip(u)); label('t* = ' + ft(t, 2), u.X(t) + 4, u.y0 + u.H - 12, '#5a6373', 'left', 'middle', sf, bg); });
+      if (cs.length){ wlab(-T * 0.98, u.x0 + 8, 'left'); wlab(T * 0.98, u.x0 + u.W - 8, 'right'); if (rep && cs.length === 2) wlab(0, u.X(0), 'center'); }
+      else { const k = winAt(0.3 * T); label(k === 1 && sz(0.3 * T)[1] < 1e-12 ? 'only piece 1 exists: the start is on an eigenline' : (k === 2 && sz(0.3 * T)[0] < 1e-12 ? 'only piece 2 exists: the start is on an eigenline' : 'piece ' + k + ' wins'), u.x0 + u.W / 2, u.y0 + 13, '#5a6373', 'center', 'middle', sf, bg); }
+      const q = wPieces(P.wt, p);
+      ctx.setLineDash([3, 4]); ctx.strokeStyle = '#6b7280'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(u.X(P.wt), u.y0); ctx.lineTo(u.X(P.wt), u.y0 + u.H); ctx.stroke(); ctx.setLineDash([]);
+      regLine('cursor', [[u.X(P.wt), u.y0], [u.X(P.wt), u.y0 + u.H]], '#6b7280', 1.2, vclip(u));
+      if (q.s1 > 1e-12) dot(u, P.wt, Math.log10(q.s1), COL.amb, 5, true);
+      if (q.s2 > 1e-12) dot(u, P.wt, Math.log10(q.s2), COL.teal, 5, true);
+      const pt = probeOn('time', 'wsize');
+      if (pt){ const g = wPieces(pt.t, p); ctx.setLineDash([6, 4]); ctx.strokeStyle = PROBE_COL; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(u.X(pt.t), u.y0); ctx.lineTo(u.X(pt.t), u.y0 + u.H); ctx.stroke(); ctx.setLineDash([]); regLine('probe', [[u.X(pt.t), u.y0], [u.X(pt.t), u.y0 + u.H]], PROBE_COL, 2, vclip(u)); if (g.s1 > 1e-12) ringAt(u.X(pt.t), u.Y(Math.log10(g.s1))); if (g.s2 > 1e-12) ringAt(u.X(pt.t), u.Y(Math.log10(g.s2))); }
+    } else {
+      wlab(-T * 0.98, u.x0 + 8, 'left'); wlab(T * 0.98, u.x0 + u.W - 8, 'right');
+      label(rep ? 'slope of the straight line = λ / ln 10' : 'slope of each line = its λ / ln 10', u.x0 + u.W / 2, u.y0 + u.H - 12, '#5a6373', 'center', 'middle', sf, bg);
+    }
+    ctx.restore();
+    /* the eigenvalues on the real line */
+    panel(lv[0], lv[1], lv[2], lv[3], 'the eigenvalues on the real line');
+    const mx = rep ? Math.abs(P.wlam) : Math.max(Math.abs(P.wl1), Math.abs(P.wl2)), Rl = Math.max(3.4, mx * 1.35);
+    const w = view(lv[0] + 8, lv[1] + 20, lv[2] - 16, lv[3] - 24, -Rl, Rl, -1, 1, false); this._l = w; clipTo(w);
+    const Y0 = w.Y(0), compact = w.H < 120, yUp = compact ? Y0 - 20 : Y0 - 28, yDn = compact ? Y0 + 24 : Y0 + 32;
+    const clab = (txt, X, Y, col, font, al) => { ctx.font = font; const tw = ctx.measureText(txt).width; if (al === 'left' && X + tw + 6 > w.x0 + w.W){ al = 'right'; X -= 18; } else if (al === 'right' && X - tw - 6 < w.x0){ al = 'left'; X += 18; } if (al === 'center') X = clamp(X, w.x0 + tw / 2 + 4, w.x0 + w.W - tw / 2 - 4); label(txt, X, Y, col, al, 'middle', font, bg); };
+    ctx.strokeStyle = COL.axis; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(w.x0, Y0); ctx.lineTo(w.x0 + w.W, Y0); ctx.stroke();
+    head(w.x0 + w.W - 2, Y0, 0, 8, COL.axis); head(w.x0 + 2, Y0, Math.PI, 8, COL.axis);
+    const tstep = Rl > 6 ? 2 : 1;
+    for (let k = Math.ceil(-Rl); k <= Math.floor(Rl); k += tstep){ const X = w.X(k); ctx.strokeStyle = k === 0 ? COL.ink : COL.axis; ctx.lineWidth = k === 0 ? 2 : 1; ctx.beginPath(); ctx.moveTo(X, Y0 - (k === 0 ? 9 : 5)); ctx.lineTo(X, Y0 + (k === 0 ? 9 : 5)); ctx.stroke(); label(String(k).replace('-', '−'), X, Y0 + (compact ? 12 : 16), '#7b8290', 'center', 'middle', '11px Instrument Sans, system-ui, sans-serif'); }
+    if (w.W > 520 && !compact){ label('larger →', w.x0 + w.W - 6, Y0 - 12, '#7b8290', 'right', 'middle', '11px Instrument Sans, system-ui, sans-serif'); label('← smaller', w.x0 + 6, Y0 - 12, '#7b8290', 'left', 'middle', '11px Instrument Sans, system-ui, sans-serif'); }
+    if (rep || ru.kind === 'star'){
+      const l = rep ? P.wlam : P.wl1, X = w.X(l);
+      dot(w, l, 0, COL.blue, 7.5, true); regPt('lam#0', X, Y0, 7.5, COL.blue, vclip(w));
+      clab('λ = ' + ft(l) + ', repeated', X, yDn, COL.blue, bf, 'center');
+      clab(rep ? 'slow and fast are the same line' : 'equal, with two eigenvectors: a star', X, yUp, COL.blue, sf, 'center');
+    } else {
+      const sm = ru.small;
+      [1, 2].forEach(k => { const l = wLamOf(k), X = w.X(l), isSmall = k === sm;
+        dot(w, l, 0, WCOL[k - 1], 7.5, true); regPt('lam#' + (k - 1), X, Y0, 7.5, WCOL[k - 1], vclip(w));
+        clab('λ' + (k === 1 ? '₁' : '₂') + ' = ' + ft(l) + ' · ' + wTag(k) + ' · wins the ' + (isSmall ? 'past' : 'future'), X, isSmall ? yUp : yDn, WCOL[k - 1], bf, 'center');
+      });
+    }
+    ctx.restore();
+  },
+  tick(dt){ if (!P.wplay) return false; const T = wT(); P.wt += dt * T / 4; if (P.wt > T) P.wt = -T; return true; },
+  hubTick: true,
+  hover(X, Y){ const v = this._v, u = this._s; if (v && X >= v.x0 && X <= v.x0 + v.W && Y >= v.y0 && Y <= v.y0 + v.H) return 'crosshair'; if (u && X >= u.x0 && X <= u.x0 + u.W && Y >= u.y0 && Y <= u.y0 + u.H) return 'ew-resize'; return 'default'; },
+  down(X, Y, phase){
+    const v = this._v, u = this._s;
+    const inv = v && X >= v.x0 && X <= v.x0 + v.W && Y >= v.y0 && Y <= v.y0 + v.H, inu = u && X >= u.x0 && X <= u.x0 + u.W && Y >= u.y0 && Y <= u.y0 + u.H;
+    if (phase === 'down') this._mode = inv ? 'start' : inu ? 'time' : null;
+    if (this._mode === 'start'){ P.wx = clamp(rnd2(v.ix(X)), -3, 3); P.wy = clamp(rnd2(v.iy(Y)), -3, 3); if (P.wstage < 3) P.wstage = 3; }
+    else if (this._mode === 'time'){ P.wt = clamp(rnd2(u.ix(X)), -wT(), wT()); P.wplay = false; }
+  },
+  tapSel(){ return this._mode === 'start' ? 'traj' : this._mode === 'time' ? 'cursor' : null; },
+  up(){ this._mode = null; },
+  probe(X, Y){
+    const v = this._v, u = this._s; if (!wA()) return null;
+    if (v && X >= v.x0 && X <= v.x0 + v.W && Y >= v.y0 && Y <= v.y0 + v.H) return {kind: 'traj', panel: 'main', x: rnd2(v.ix(X)), y: rnd2(v.iy(Y))};
+    if (u && X >= u.x0 && X <= u.x0 + u.W && Y >= u.y0 && Y <= u.y0 + u.H) return {kind: 'time', panel: 'wsize', t: clamp(rnd2(u.ix(X)), -wT(), wT())};
+    return null;
+  },
+  probeInfo(pr){
+    const A = wA(); if (!A) return {title: 'No matrix', html: C.p('Move one of the angle sliders: the two directions must differ.')};
+    if (pr.kind === 'time') return {title: 'Both pieces of your trajectory at t = ' + ft(pr.t), html: wPieceCalc(pr.t, [P.wx, P.wy])};
+    return {title: 'Trajectory through (' + ft(pr.x) + ', ' + ft(pr.y) + ')', html: wDecompCalc([pr.x, pr.y]) + trajCalc(A, [pr.x, pr.y])};
+  },
+  calc(){
+    const A = wA(); if (!A) return C.p('Move one of the angle sliders: the two directions must differ.');
+    const E = eig(A), st = P.wstage, rep = wIsRep(), ru = wRule(), p = [P.wx, P.wy];
+    let h = C.h('Layer ' + wIdx() + ': ' + esc(wcase().name));
+    h += C.h('Stage 1: the matrix built from your choices') + C.ln(R`\bA = ${mat(A[0], A[1], A[2], A[3], 3)}`, rep ? 'built so that its only eigenvector points at ' + ft(P.wth, 0) + '°, with A ≠ λI (the push b = ' + ft(P.wb) + ' sends the ' + ft(P.wph, 0) + '° direction onto the line)' : 'built so that v₁ at ' + ft(P.wa1, 0) + '° has eigenvalue λ₁ = ' + ft(P.wl1) + ' and v₂ at ' + ft(P.wa2, 0) + '° has eigenvalue λ₂ = ' + ft(P.wl2) + ': A = V·diag(λ₁, λ₂)·V⁻¹');
+    h += C.ln(R`\Tr = ${f(E.T, 3)},\quad \Det = ${f(E.D, 3)},\quad \Delta = \Tr^2 - 4\Det = ${f(E.disc, 3)}`) + C.ln(R`\lambda^2 ${sg(-E.T, 3)}\,\lambda ${sg(E.D, 3)} = 0 \ \Rightarrow\ ${eigTex(E, 3)}`, E.type === 'rep' ? 'repeated: on the critical parabola' : 'two different real eigenvalues: below the parabola');
+    h += C.res('<span class="tag">' + esc(regionName(E.T, E.D)) + '</span>' + (ru.kind === 'star' ? '' : rep ? ' slow and fast have merged' : ru.kind === 'saddle' ? ' stable: ' + esc(wName(ru.stable)) + ', unstable: ' + esc(wName(ru.unstable)) : ' slow: ' + esc(wName(ru.slow)) + ', fast: ' + esc(wName(ru.fast))));
+    if (st >= 2){
+      h += C.h('Stage 2: drawing the eigenlines');
+      if (ru.kind === 'star') h += C.res('A = λI: every vector is an eigenvector and every line through the origin is an eigenline.', true);
+      else if (rep) h += eigenStepCalc(A, P.wlam, 1) + C.p('A − λI is not the zero matrix, so there is no second line: one eigenline only (step ' + stepNo('Eigenlines') + ').');
+      else [1, 2].forEach(k => { h += C.p('<b>Eigenline ' + k + ' (' + (k === 1 ? 'amber' : 'teal') + '), ' + wName(k) + ', ' + wTag(k) + ':</b>') + eigenStepCalc(A, wLamOf(k), k) + C.p('arrows ' + (wLamOf(k) > 0 ? 'outward, because λ > 0' : 'inward, because λ < 0')); });
+    }
+    if (st >= 3 && ru.kind !== 'star'){
+      h += C.h('Stage 3: the race between the two pieces') + wDecompCalc(p);
+      h += C.h('At t = ' + ft(P.wt)) + wPieceCalc(P.wt, p);
+    }
+    h += C.h('The rule for this layer') + wLamCalc();
+    return h;
+  }
+});
+/* ===================================================================
    GLOSSARY: every term used in the app, alphabetically, with where it is developed
    =================================================================== */
 STEPS.push({
@@ -4519,12 +4944,12 @@ STEPS.push({
 <h3>Cayley–Hamilton theorem</h3><p>A square matrix satisfies its own characteristic equation: for a 2×2 matrix, $\bA^2-(\Tr)\bA+(\Det)\bI=\mathbf 0$. Used to show $\bN^2=q\bI$ for the trace-free part $\bN$. Step 4.</p>
 <h3>Centre</h3><p>Purely imaginary eigenvalues $\pm\omega i$: closed elliptical orbits, period $2\pi/\omega$. On the map, the positive Det axis. Stable but not asymptotically stable. Steps 2, 3.</p>
 <h3>Characteristic polynomial</h3><p>$\det(\bA-\lambda\bI)=\lambda^2-\Tr\,\lambda+\Det$. Its roots are the <i>eigenvalues</i>. Step 6.</p>
-<h3>Comb</h3><p>The phase portrait of a matrix with one zero and one nonzero eigenvalue: a spine of stationary points (the 0-eigenline) with straight teeth parallel to the other eigenline. Attracting when the other eigenvalue (= Tr) is negative, repelling when it is positive. Combs fill the Tr axis of the map, except the origin. Steps 16, 18.</p>
+<h3>Comb</h3><p>The phase portrait of a matrix with one zero and one nonzero eigenvalue: a spine of stationary points (the 0-eigenline) with straight teeth parallel to the other eigenline. Attracting when the other eigenvalue (= Tr) is negative, repelling when it is positive. Combs fill the Tr axis of the map, except the origin. Steps 16, 19.</p>
 <h3>Companion matrix</h3><p>$\begin{bmatrix}0&1\\-\Det&\Tr\end{bmatrix}$, the matrix of the second-order equation $\ddot x-\Tr\,\dot x+\Det\,x=0$ written as a system with $y=\dot x$. One convenient representative of each point of the map. Step 5.</p>
 <h3>Complex eigenvalues</h3><p>Roots $a\pm bi$ of the characteristic polynomial when the <i>discriminant</i> is negative, with $i^2=-1$. They always come as a conjugate pair. By Euler's formula they give solutions $\exp(at)\cos(bt)$ and $\exp(at)\sin(bt)$: rotation at angular speed $b$ with size set by $\exp(at)$. Step 2.</p>
 <h3>Critical parabola</h3><p>The curve $\Det=\Tr^2/4$ in the trace–determinant plane: the points where the <i>discriminant</i> is zero and the two eigenvalues coincide. The border between nodes and spirals, and the subject of this app. Steps 1, 6.</p>
 <h3>Critically damped</h3><p>A damped oscillator $\ddot x+p\dot x+qx=0$ with $p^2=4q$: the fastest return to rest without oscillation; repeated exponent, so it sits on the critical parabola. Overdamped ($p^2&gt;4q$, node) and underdamped ($p^2&lt;4q$, spiral) are its neighbours. Step 5.</p>
-<h3>Degenerate case</h3><p>A system on a boundary between the big regions of the trace–determinant plane: centres (positive Det axis), degenerate and star nodes (critical parabola), combs (Tr axis), and the origin. Structurally unstable. Steps 16, 19, 21.</p>
+<h3>Degenerate case</h3><p>A system on a boundary between the big regions of the trace–determinant plane: centres (positive Det axis), degenerate and star nodes (critical parabola), combs (Tr axis), and the origin. Structurally unstable. Steps 16, 20, 22.</p>
 <h3>Degenerate node</h3><p>Also improper or defective node. Repeated nonzero eigenvalue with only one <i>eigenline</i> ($\bA\neq\lambda\bI$). Curves are tangent to the eigenline at the origin and parallel to it far away, bending once. Source for $\lambda&gt;0$, sink for $\lambda&lt;0$. Steps 7 to 12.</p>
 <h3>Determinant</h3><p>$\det\bA=ad-bc$ for $\bA=\begin{bmatrix}a&b\\c&d\end{bmatrix}$; equals the product of the eigenvalues, $\lambda_1\lambda_2$. Its sign separates saddles ($\Det&lt;0$) from everything else. Steps 1, 2.</p>
 <h3>Discriminant</h3><p>$\Delta=\Tr^2-4\Det$, the quantity under the square root in the quadratic formula for the eigenvalues; equal to $(\lambda_1-\lambda_2)^2$. $\Delta&gt;0$: two real eigenvalues; $\Delta=0$: repeated; $\Delta&lt;0$: complex pair. Steps 1, 6.</p>
@@ -4538,21 +4963,23 @@ STEPS.push({
 <h3>Log scale</h3><p>An axis on which each unit step multiplies the value by 10 ($\log_{10}$). An exponential $\exp(\lambda t)$ becomes a straight line of slope $\lambda/\ln10$. Step 9.</p>
 <h3>Matrix exponential</h3><p>$\exp(\bA t)=\bI+\bA t+\frac{\bA^2t^2}{2}+\cdots$. The solution of $\dot\bx=\bA\bx$ through $\bp$ is $\exp(\bA t)\bp$. For 2×2 matrices it collapses to $\exp(mt)[C(t)\bI+S(t)\bN]$. Step 4.</p>
 <h3>Non-isolated critical point</h3><p>An equilibrium with other equilibria arbitrarily close to it, as on a whole line of stationary points when $\Det=0$. Contrast an isolated equilibrium, like the origin of a node, spiral or saddle. Step 16.</p>
-<h3>Node</h3><p>Two real eigenvalues of the same sign (nodal sink if both negative, nodal source if both positive). No rotation; curves tangent to the slow eigenline near the origin, parallel to the fast one far away. Below the parabola, above the Tr axis. Steps 2, 3.</p>
+<h3>Node</h3><p>Two real eigenvalues of the same sign (nodal sink if both negative, nodal source if both positive). No rotation; curves tangent to the slow eigenline near the origin, parallel to the fast one far away. Below the parabola, above the Tr axis. Steps 2, 3, ${stepNo('Which eigenline')}.</p>
 <h3>Phase plane, phase portrait</h3><p>The $(x,y)$ plane in which solutions are drawn as curves, and the picture of many such curves with arrows. Steps 1, 3.</p>
-<h3>Perturbation</h3><p>A small change to the entries of a matrix, as when a coefficient is measured or rounded slightly differently, or when a tank gets a small leak. Step 21.</p>
+<h3>Perturbation</h3><p>A small change to the entries of a matrix, as when a coefficient is measured or rounded slightly differently, or when a tank gets a small leak. Step 22.</p>
 <h3>Probe</h3><p>The orange trajectory, point or value drawn when an empty spot of a figure is tapped, with its line-by-line calculation in the live panel. Step 4 explains the calculation.</p>
+<h3>Race rule</h3><p>For $\bx(t)=c_1\exp(\lambda_1t)\bv_1+c_2\exp(\lambda_2t)\bv_2$, the direction of $\bx(t)$ tends to the eigenvector of the larger eigenvalue as $t\to+\infty$ and to that of the smaller eigenvalue as $t\to-\infty$, because the ratio of the two pieces is $|c_2/c_1|\exp((\lambda_2-\lambda_1)t)$. It decides which eigenline a node or saddle hugs near the origin and far away. Step ${stepNo('Which eigenline')}.</p>
 <h3>Rank</h3><p>The number of independent rows of a matrix. A nonzero 2×2 matrix with zero determinant has rank 1: its rows are proportional, so $\bN\bu=\mathbf0$ is one equation and its solutions form one line. Step 7.</p>
 <h3>Resonance</h3><p>Forcing a system at exactly its own natural rate, so the responses add up instead of averaging out; the running total shows up as a factor $t$. Step 8.</p>
-<h3>Semistable</h3><p>Also neutrally stable. All solutions stay bounded, but not all tend to 0. Centres (undamped oscillators) and attracting combs (such as the two tanks). Step 20.</p>
-<h3>Saddle</h3><p>Real eigenvalues of opposite sign ($\Det&lt;0$). One eigenline attracts, the other repels; typical trajectories approach and then leave. Unstable. Steps 2, 3.</p>
+<h3>Semistable</h3><p>Also neutrally stable. All solutions stay bounded, but not all tend to 0. Centres (undamped oscillators) and attracting combs (such as the two tanks). Step 21.</p>
+<h3>Saddle</h3><p>Real eigenvalues of opposite sign ($\Det&lt;0$). One eigenline attracts, the other repels; typical trajectories come in beside the stable line and leave beside the unstable one. Unstable. Steps 2, 3, ${stepNo('Which eigenline')}.</p>
 <h3>Sink, source</h3><p>Sink: every nearby trajectory approaches the equilibrium as $t\to+\infty$ (all real parts negative). Source: every nearby trajectory leaves (all real parts positive). Steps 2, 9, 10.</p>
+<h3>Slow and fast eigenlines</h3><p>In a node, the eigenline whose eigenvalue is closer to 0 is the slow line and the other is the fast line. Curves are tangent to the slow line at the origin and parallel to the fast line far away, for sources and sinks alike. In a saddle the corresponding words are stable (negative eigenvalue, motion inward) and unstable (positive eigenvalue, motion outward). Step ${stepNo('Which eigenline')}.</p>
 <h3>Spiral</h3><p>Also focus. Complex eigenvalues: trajectories wind around the origin, shrinking (spiral sink, $\Tr&lt;0$) or growing (spiral source, $\Tr&gt;0$). Above the parabola. Steps 2, 3.</p>
-<h3>Stable, unstable</h3><p>As used in the textbook: a system is stable when all trajectories tend to 0 as $t\to+\infty$, and unstable when some trajectories are unbounded. The test for 2×2 systems is $\operatorname{tr}\bA&lt;0$ and $\det\bA&gt;0$. (In general dynamical-systems language, the textbook's “stable” is called asymptotically stable.) Steps 3, 20.</p>
-<h3>Structural stability</h3><p>A system is structurally stable when small perturbations of the entries of $\bA$ do not change the type of its phase portrait. For 2×2 systems: exactly the big regions of the map (saddles, nodes, spirals); every boundary case is structurally unstable. Step 21.</p>
+<h3>Stable, unstable</h3><p>As used in the textbook: a system is stable when all trajectories tend to 0 as $t\to+\infty$, and unstable when some trajectories are unbounded. The test for 2×2 systems is $\operatorname{tr}\bA&lt;0$ and $\det\bA&gt;0$. (In general dynamical-systems language, the textbook's “stable” is called asymptotically stable.) Steps 3, 21.</p>
+<h3>Structural stability</h3><p>A system is structurally stable when small perturbations of the entries of $\bA$ do not change the type of its phase portrait. For 2×2 systems: exactly the big regions of the map (saddles, nodes, spirals); every boundary case is structurally unstable. Step 22.</p>
 <h3>Star node</h3><p>Also proper node. $\bA=\lambda\bI$: every vector is an eigenvector, every trajectory a straight ray. Same point of the map as the degenerate node with that $\lambda$. Step 14.</p>
 <h3>Stationary point</h3><p>Another name for an <i>equilibrium</i>: a constant solution. In the two-tank example, any state with equal heights. Step 16.</p>
-<h3>Trace–determinant plane</h3><p>The plane with axes Tr and Det, in which each system $\dot\bx=\bA\bx$ is one point. Not to be confused with the phase plane, in which the same system is a whole picture of trajectories. Steps 1, 19.</p>
+<h3>Trace–determinant plane</h3><p>The plane with axes Tr and Det, in which each system $\dot\bx=\bA\bx$ is one point. Not to be confused with the phase plane, in which the same system is a whole picture of trajectories. Steps 1, 20.</p>
 <h3>Trace</h3><p>$\operatorname{tr}\bA=a+d$, the sum of the diagonal entries; equals the sum of the eigenvalues, $\lambda_1+\lambda_2$. Its sign decides sink versus source whenever the eigenvalues share a sign. Steps 1, 2.</p>
 <h3>Trajectory</h3><p>The curve a solution traces in the phase plane; equivalently an orbit. Arrows mark increasing time. Exactly one passes through each point. Step 3.</p>
 <h3>Uniqueness theorem</h3><p>For $\dot\bx=\bA\bx$, each starting point has exactly one solution. Hence trajectories never cross, and a general solution needs exactly two constants, $x(0)$ and $y(0)$. Steps 4, 9.</p>
@@ -4589,7 +5016,7 @@ STEPS.push({
 const S = {step: 0, sel: null, hov: null, hovXY: null, hovLocal: false, hovName: null, inspect: false, probe: null};
 // related-section tables travel with their step, then the steps take their final order
 STEPS.forEach((st, i) => { st._secs = st.secsMap || SECS[i] || {}; st._psecs = st.psecsMap || PSECS[i] || {}; });
-const ORDER = ['Parabola map', 'Sinks & sources', 'Portrait gallery', 'Reading a calculation', 'Companion matrix', 'Repeated eigenvalue', 'Eigenlines', 'Solving', 'Why these solutions', 'Repel or attract', 'Tangent & parallel', 'Drawing it', 'Node ↔ spiral', 'Star node', 'All cases', 'Two tanks (λ = 0)', 'Drawing eigenlines', 'Combs', 'Full map', 'Stability', 'Structural stability', 'Worked example', 'Solve an IVP', 'Three ODEs', 'Glossary'];
+const ORDER = ['Parabola map', 'Sinks & sources', 'Portrait gallery', 'Reading a calculation', 'Companion matrix', 'Repeated eigenvalue', 'Eigenlines', 'Solving', 'Why these solutions', 'Repel or attract', 'Tangent & parallel', 'Drawing it', 'Node ↔ spiral', 'Star node', 'All cases', 'Two tanks (λ = 0)', 'Drawing eigenlines', 'Which eigenline', 'Combs', 'Full map', 'Stability', 'Structural stability', 'Worked example', 'Solve an IVP', 'Three ODEs', 'Glossary'];
 STEPS.sort((a, b) => ORDER.indexOf(a.nav) - ORDER.indexOf(b.nav));
 document.body.classList.add('mode-' + MODE);
 const navEl = $('nav');
@@ -4632,8 +5059,8 @@ function renderText(){ const st = STEPS[S.step], el = $('text'); el.innerHTML = 
 function relatedKeys(){ const st = STEPS[S.step]; let keys = []; const si = selInfo(); if (si && si.secs) keys = keys.concat(si.secs); if (st.focusSecs) keys = keys.concat(st.focusSecs()); return keys; }
 const secMatches = (d, keys) => { const t = (d.dataset.title || '').toLowerCase(); return keys.some(k => t.includes(String(k).toLowerCase())); };
 function markRelated(){
-  const keys = relatedKeys(), stageKeys = keys.some(k => /^stage/i.test(k));
-  for (const d of $('text').querySelectorAll('section.sec')){ const rel = keys.length > 0 && secMatches(d, keys); d.classList.toggle('rel', rel); d.classList.toggle('dim', stageKeys && !rel && /^stage/i.test(d.dataset.title)); }
+  const keys = relatedKeys(), stageKeys = keys.some(k => /^(stage|layer)/i.test(k));
+  for (const d of $('text').querySelectorAll('section.sec')){ const rel = keys.length > 0 && secMatches(d, keys); d.classList.toggle('rel', rel); d.classList.toggle('dim', stageKeys && !rel && /^(stage|layer)/i.test(d.dataset.title)); }
 }
 function scrollRelated(){ if (MODE !== 'main') return; const el = $('text'), d = el.querySelector('section.rel'); if (d) el.scrollTo({top: d.offsetTop - 8, behavior: 'smooth'}); }
 function relatedHTML(){
@@ -4710,8 +5137,8 @@ function buildControls(){
     if (c.r){
       chips = null;
       const row = document.createElement('div'); row.className = 'crow'; row.dataset.key = c.r;
-      const id = 'in_' + c.r, mx = typeof c.max === 'function' ? c.max() : c.max;
-      row.innerHTML = '<label class="lbl" for="' + id + '">' + esc(c.label) + '</label><input type="range" id="' + id + '" min="' + c.min + '" max="' + mx + '" step="' + c.step + '"><output></output>';
+      const id = 'in_' + c.r, mx = typeof c.max === 'function' ? c.max() : c.max, mn = typeof c.min === 'function' ? c.min() : c.min;
+      row.innerHTML = '<label class="lbl" for="' + id + '">' + esc(c.label) + '</label><input type="range" id="' + id + '" min="' + mn + '" max="' + mx + '" step="' + c.step + '"><output></output>';
       const inp = row.querySelector('input'); inp.value = P[c.r];
       inp.addEventListener('input', () => { lastInput = performance.now(); P[c.r] = parseFloat(inp.value); if (c.r === 'tr') lockDet(); if (c.r === 'det' && P.lockPar) P.lockPar = false; if (c.r === 'tt') P.play = false; changed(); });
       row._c = c; box.appendChild(row);
@@ -4723,7 +5150,7 @@ function buildControls(){
     } else if (c.types){
       chips = null;
       const row = document.createElement('div'); row.className = 'stages full types'; row.dataset.key = c.key;
-      c.types.forEach(t => { const b = document.createElement('button'); b.type = 'button'; b.className = 'stage'; b.dataset.val = t.id; b.innerHTML = '<span class="sw" style="background:' + t.col + '"></span><span class="t">' + esc(t.name) + '</span>'; b.onclick = () => { pickType(t.id); buildControls(); changed(true); }; row.appendChild(b); });
+      c.types.forEach(t => { const b = document.createElement('button'); b.type = 'button'; b.className = 'stage'; b.dataset.val = t.id; b.innerHTML = '<span class="sw" style="background:' + t.col + '"></span><span class="t">' + esc(t.name) + '</span>'; b.onclick = () => { (c.pick || pickType)(t.id); buildControls(); changed(true); }; row.appendChild(b); });
       box.appendChild(row);
     } else if (c.sel){
       chips = null;
@@ -4758,6 +5185,7 @@ function syncControls(){
     if (c){
       const inp = row.querySelector('input');
       if (typeof c.max === 'function') inp.max = c.max();
+      if (typeof c.min === 'function') inp.min = c.min();
       if (document.activeElement !== inp) inp.value = P[c.r];
       row.querySelector('output').textContent = fmtVal(c, P[c.r]);
       if (c.only){ const on = c.only(); inp.disabled = !on; row.style.opacity = on ? 1 : .45; }
